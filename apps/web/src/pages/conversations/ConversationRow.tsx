@@ -4,12 +4,14 @@ import { Link } from 'react-router-dom';
 
 import bellOffIconURL from '../../assets/rn/assets/icons/imm28/bell-off.solid.svg';
 import pinIconURL from '../../assets/rn/assets/icons/imm28/pin.solid.svg';
-import { ConversationAssetIcon } from './ConversationAssetIcon.js';
+import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import {
+  getRNAvatarGradient,
+  getRNAvatarInitial,
+} from '../../components/rn-avatar-view.js';
 import {
   formatConversationListTime,
   formatConversationUnread,
-  getConversationAvatarGradient,
-  getConversationAvatarInitial,
   getConversationDisplayPreview,
   getConversationTitle,
 } from './conversation-list-view.js';
@@ -31,7 +33,9 @@ export function ConversationRow({ item }: ConversationRowProps) {
   const unread = Math.max(0, Math.trunc(conversation.unreadCount));
   // avatarStyle 复用 RN fallback 渐变算法。
   const avatarStyle = {
-    '--conversation-avatar-gradient': getConversationAvatarGradient(conversation),
+    '--conversation-avatar-gradient': getRNAvatarGradient(
+      conversation.targetID || title,
+    ),
   } as CSSProperties;
 
   return (
@@ -42,7 +46,7 @@ export function ConversationRow({ item }: ConversationRowProps) {
     >
       <span className="rn-conversation-avatar" style={avatarStyle}>
         <span className="rn-conversation-avatar-fallback">
-          {getConversationAvatarInitial(conversation)}
+          {getRNAvatarInitial(title)}
         </span>
         {conversation.faceURL ? (
           <img
@@ -60,7 +64,7 @@ export function ConversationRow({ item }: ConversationRowProps) {
         <span className="rn-conversation-row-top">
           <strong>{title}</strong>
           {conversation.isPinned ? (
-            <ConversationAssetIcon
+            <RNAssetIcon
               assetURL={pinIconURL}
               className="rn-conversation-pin"
             />
@@ -79,7 +83,7 @@ export function ConversationRow({ item }: ConversationRowProps) {
             {preview.text}
           </span>
           {conversation.isMuted ? (
-            <ConversationAssetIcon
+            <RNAssetIcon
               assetURL={bellOffIconURL}
               className="rn-conversation-muted"
             />

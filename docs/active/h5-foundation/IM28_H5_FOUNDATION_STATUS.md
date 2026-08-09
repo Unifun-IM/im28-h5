@@ -1,11 +1,11 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a3 RN conversation shell/list parity`
-- next_step: `freeze the RN conversation source/API/route card, then replace the generic list shell without changing sync ownership`
+- current_step: `W6.a5 remaining auth/tab route decomposition`
+- next_step: `freeze one bounded W6.a5 route/capability card before restoring any remaining RN entry`
 - blockers: `W5.a3 browser matrix remains blocked-environment; W3.real-gateway and final data-backed acceptance require Gateway test credentials`
-- gate_state: `W6.a2 is done-local but not parity-accepted; exact light/dark viewport matrix and real login success remain gated while W6.a3 may proceed`
-- latest_evidence: `2026-08-09 W6.a2: RN account form/assets/agreement migrated; live public terms loaded; dark 458x786 interaction/refresh smoke passed; npm verify passed with 466 assets and 20 files / 55 tests`
+- gate_state: `W6.a2/W6.a3/W6.a4 are done-local but not parity-accepted; real account evidence remains gated while W6.a5 decomposition may proceed`
+- latest_evidence: `2026-08-09 W6.a4: RN header/list/bubbles/tails/status/composer migrated; deterministic 390x844 light/dark and 760x900 responsive proof passed without overflow; guest chat deep-link guard and npm verify passed with 466 assets and 20 files / 55 tests`
 
 ## Current Readout
 
@@ -17,19 +17,19 @@
 | `W3` | `gated` | browser orchestration、account SQLite 与 privacy gate 已通过，等待真实 smoke |
 | `W4` | `gated` | HTTP MVP、默认 routes、新消息/会话/update 与 same-tab ordering 已本地完成；真实 flow gated |
 | `W5` | `gated` | W5.a1/W5.a2 done-local；W5.a3 code done-local，真实三浏览器矩阵 pending |
-| `W6` | `active` | account-login core done-local/acceptance-gated；conversation parity active |
+| `W6` | `active` | account-login/conversation/chat core done-local/acceptance-gated；remaining auth/tab route decomposition active |
 
 ## Active Slice Definition
 
 | field | value |
 | :--- | :--- |
-| slice_id | `W6.a3-conversation-parity` |
-| goal | 将 RN home/chat tab 的会话列表视觉、资源、交互状态迁入 `/conversations` |
-| source_anchor | `ChatHomeScreen.tsx`; `ConversationListScreen.tsx`; list rows/header/empty-state components; RN theme/assets |
-| target_owner | `apps/web/src/pages/conversations/**`; React Router `/conversations`; existing `runtime.getSync()` caller |
-| expected_deliverable | RN header/list row/avatar/unread/loading/empty/error states、light/dark responsive layout和现有 cache/sync 链 |
-| verification_shape | source card + asset check + type/build + viewport/theme screenshots + refresh/chat-back/API smoke |
-| stop_condition | required conversation operation absent from Web facade; record gap instead of page fetch/mock |
+| slice_id | `W6.a5-auth-tab-route-decomposition` |
+| goal | 将 remaining auth 与 primary tab RN states 拆成有稳定 URL、能力 owner 和验收门的 bounded slices；本片不批量恢复 UI |
+| source_anchor | `AuthFlowScreen.tsx`; `screens/auth/types.ts`; `ChatHomeScreen.tsx`; `HomeTabBar.tsx` |
+| target_owner | `apps/web/src/app/App.tsx` route ledger；后续 feature page；`@im28/im-sdk-web` capability facade |
+| expected_deliverable | ordered route/capability/dependency ledger，并选择首个最多 3 个 API operation 的实现 slice |
+| verification_shape | RN source trace + API owner trace + React Router URL/guard/back ownership review + first-slice acceptance card |
+| stop_condition | required API/shared Web export absent or a route requires multiple unresolved capability families；记录 gap 后停止 UI 实现 |
 
 ## Residual Ledger
 
@@ -43,17 +43,17 @@
 | same-tab semantic locking | resolved | shared FIFO 覆盖 full sync/history/send/realtime，3 个交错/失败回归通过 | no |
 | Worker execution | verification | production App 已显式注入 Worker；真实账号浏览器 open/migrate 待 W5.a3 harness/环境证据 | no |
 | multi-tab writer | verification gate | lifecycle Web Lock 已本地实现，真实三浏览器 two-tab evidence 缺失 | yes |
-| RN visual parity | migration | login core 已迁移但仍缺最终矩阵；conversation/chat 继续按 W6.a3/a4 移除 generic UI | yes |
+| RN visual parity | migration | login/conversation/chat core 已本地迁移且仍有真实账号 gate；remaining auth/tab routes 进入 W6.a5 decomposition | yes |
 | RN asset mirror | resolved | 466 文件按源路径复制并由 SHA-256 verify gate 保护 | no |
 | snapshot failure poisoning | resolved | fatal discard、subsequent reject、close no-repersist 与 Worker terminate 回归通过 | no |
-| Initial Git commit | repository/debt | 已关联 `origin`，尚未创建和推送首次提交 | no |
+| Initial Git commit | resolved | `main/origin/main` 已存在 `07a0424` baseline；该外部提交发生于 W6.a3 执行期间 | no |
 
 ## Latest Closeout Verdict
 
 | field | value |
 | :--- | :--- |
-| closed_slice | `W6.a2-account-login-parity` |
+| closed_slice | `W6.a4-chat-parity` |
 | deliverable_verdict | `done-local/acceptance-gated` |
-| gate_verdict | `RN core layout/assets/interactions + live public terms + verify passed; no mock, page fetch or duplicate route owner` |
-| debt_or_drift | `real login success and exact 390x844/desktop light/dark evidence remain; W6.a5 owns deferred auth/network entries` |
-| next_activation_decision | `activate W6.a3 locally; retain W6.a2 final acceptance and W3/W5 external gates` |
+| gate_verdict | `RN header/list/bubbles/tails/status/composer + existing history/pull/send/dataVersion chain + route guard + responsive light/dark proof + verify passed; no mock, page fetch or duplicate owner` |
+| debt_or_drift | `real account history/send/realtime/list-back proof missing; presence/group profile/settings/voice/emoji/attachment/retry/media interactions lack Web facades and remain omitted` |
+| next_activation_decision | `activate W6.a5 decomposition; retain W6.a2/W6.a3/W6.a4 final acceptance and W3/W5 external gates` |

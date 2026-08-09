@@ -1,7 +1,7 @@
 # Architecture (im28-h5)
 
 > TYPE: SYSTEM_MAP / WEB_IM_CONTRACT
-> STATUS: CONVERSATION_MESSAGE_MVP_LOCAL / WORKER_WEB_LOCK_STORAGE_LOCAL / RN_PARITY_FOUNDATION
+> STATUS: CONVERSATION_MESSAGE_MVP_LOCAL / WORKER_WEB_LOCK_STORAGE_LOCAL / RN_PARITY_CORE_LOCAL
 > AXIOM: `im28-h5` is a browser IM client. Gateway owns remote truth; local SQLite is an account-scoped, rebuildable cache persisted through IndexedDB.
 
 ## 1. Current State
@@ -13,7 +13,7 @@
 | RN migration contract | `frozen` | `docs/rn-h5-migration-contract.md` |
 | RN static asset mirror | `implemented/hash-verified` | 466 files under `apps/web/src/assets/rn/**` |
 | RN light/dark theme tokens | `foundation-copied` | `apps/web/src/styles/rn-theme.css` |
-| RN page visual parity | `active/not-accepted` | account-login core is `done-local`; conversation/chat remain functional scaffolds |
+| RN page visual parity | `active/not-accepted` | account-login、conversation、chat core are `done-local/acceptance-gated`; remaining auth/tab routes are under decomposition |
 | Browser SDK facade | `MVP` | `packages/im-sdk-web` |
 | Shared SDK contracts | `linked` | `@im28/im-sdk/web` |
 | Gateway runtime contract | `frozen` | `docs/runtime-contracts/web-gateway-runtime.md` |
@@ -69,12 +69,13 @@ account lifecycle
 | Path | Owns | Must not own |
 | :--- | :--- | :--- |
 | `apps/web/src/app/App.tsx` | React Router 装配和页面匹配 | Gateway、SQL、页面业务逻辑 |
+| `apps/web/src/components/**` | 跨页面 RN SVG mask 与 avatar fallback 浏览器适配 | 业务状态、页面布局、Gateway/SDK 调用 |
 | `apps/web/src/pages/**` | 由 RN 源映射驱动的页面组合、可见交互与 feature hook 调用 | 共享 DTO、直接 SQL、React Native 能力、直接 Gateway/API 调用 |
 | `apps/web/src/styles/rn-theme.css` | RN light/dark/profile/chat token 的浏览器 CSS 映射 | 页面专属几何、独立设计系统 |
 | `apps/web/src/assets/rn/**` | RN 业务资产的字节级镜像和哈希清单 | 手工重绘、近似替代、远程热链 |
 | `packages/im-sdk-web/src/index.ts` | 浏览器 SDK facade 和共享 Web SDK 具名重导出 | 页面 UI、重复核心 SDK 语义 |
 | `packages/im-sdk-web/src/runtime/**` | browser config、auth session、Gateway lifecycle 与 generated-operation-backed public term adapter | 页面 UI、生成接口复制、SQLite token persistence |
-| `packages/im-sdk-web/src/sync/**` | auth/account-bound cache read、HTTP sync、history pull、optimistic send、realtime persistence/recovery | token storage、页面 UI、重复 Gateway DTO mapping |
+| `packages/im-sdk-web/src/sync/**` | auth/account-bound cache read、conversation + latest-message list composition、HTTP sync、history pull、optimistic send、realtime persistence/recovery | token storage、页面 UI、重复 Gateway DTO mapping |
 | `packages/im-sdk-web/src/storage/account-database-lifecycle.ts` | 单 tab 账户数据库 open/migrate/switch/close 与显式 Worker adapter 组合 | token、Gateway 请求、跨 tab writer ownership |
 | `packages/im-sdk-web/src/storage/sqlite/sqljs-indexeddb-database-adapter.ts` | Worker 内 SQL execution、transactions、snapshot timing 与 fatal discard；caller-thread 仅供显式测试/兼容组合 | auth, sync, UI |
 | `packages/im-sdk-web/src/storage/sqlite/indexeddb-sqlite-binary-store.ts` | IndexedDB schema, binary read/write/delete | SQL execution, message semantics |
@@ -116,11 +117,12 @@ The W5.a2 adapter reports success only after IndexedDB commit. Any post-mutation
 - The production App now injects a Dedicated Worker; real browser SQL open/migrate still lacks an authenticated account smoke, while Vite Worker/WASM build and in-process protocol parity are verified.
 - `/login`、`/conversations`、`/conversations/:conversationID` 已由 React Router 接入真实 runtime/sync API；缺部署配置时 fail-closed。
 - `/login` 的账号密码核心表单、RN 资产、协议确认和真实平台条款查询已完成本地迁移；剩余 auth 入口归 W6.a5，真实登录成功与 390/desktop 明暗截图矩阵未验收，因此仍不得标记为 `parity-accepted`。
-- `/conversations` 与 `/conversations/:conversationID` 仍是 API 骨架，其通用图标和现有 `app.css` 尚未完成 RN 样式/资产迁移。
+- `/conversations` 已完成 RN header/search/72px row/avatar/preview/time/pinned/muted/unread/loading/empty/error 的本地迁移，且只消费 `WebIMConversationSync.listCachedItems/sync`；真实账号数据与 RN global-search/group-action/long-press operations 仍未验收。
+- `/conversations/:conversationID` 已完成 RN header、message list/bubble/tail/status、text composer 与明暗主题的本地迁移，并只消费现有 history/pull/send 与 runtime `dataVersion` cache reread 链；真实账号 Network/list-back 证据仍缺失。
 - Browser fetch、device identity、login/restore/refresh/logout 与 realtime orchestration 已实现，但尚无真实 Gateway 凭据 smoke 证据。
 - 会话全分页同步、历史拉取与文本发送已通过本地 sql.js/Repository 回归；认证后的真实会话/聊天 UI 尚无部署 smoke 证据。
 - 新消息与会话变更事件已由 runtime 默认串行落库；seq 缺口按本地 cursor 正序分页补拉，成功后通过 `dataVersion` 驱动当前路由页面重读 cache。
 - 消息编辑与删除/全员撤回已使用独立 `update_seq` cursor 落库，不改变 `msg_seq/unread`；cursorless 旧编辑按服务端时间拒绝。
 - 全量会话同步、history、send 与 realtime delta 已共享同 tab FIFO 业务队列；该保证不扩展到多标签页 writer。
 - 共享 `@im28/im-sdk` 的原始 Gateway WebSocket message data 日志已在 canonical owner 清除，并通过共享 SDK 与 H5 回归验证。
-- Media、RTC、notifications 和 service worker behavior 不在当前 MVP slice。
+- 图片、音频、视频、文件和卡片可只读投影已有真实 payload；上传、播放、下载、failed-message retry、RTC、notifications 和 service worker behavior 不在当前 MVP slice，必须由后续 Web facade 提供操作语义。

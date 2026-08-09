@@ -1,86 +1,71 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-} from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Conversation, Message } from '@im28/im-sdk-web';
-import { ArrowLeft, Send } from 'lucide-react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { ChatComposer } from './ChatComposer.js';
+import { ChatHeader } from './ChatHeader.js';
+import { ChatMessageList } from './ChatMessageList.js';
+import './chat-page.css';
 
-/** 聊天页消费 cache/pull/send API，不接触 Gateway 或 Repository。 */
+/** RN chat detail 页面只编排 Web SDK cache/pull/send/realtime facade。 */
 export function ChatPage() {
-  // conversationID 由 React Router path param 管理。
+  // conversationID 由 React Router path param 管理并自动解码。
   const { conversationID = '' } = useParams();
-  // runtime context 提供 auth guard 和聚合 sync facade。
-  const { runtime, snapshot, restoring } = useWebIMRuntime();
-  // sync 与 runtime 生命周期一致。
+  // runtime context 提供 auth guard、配置错误和聚合 sync facade。
+  const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  // sync 与 runtime 生命周期一致，页面不实例化 Gateway 或 Repository。
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
-  // conversation 用于顶部身份展示。
+  // conversation 为 RN header 提供会话缓存身份。
   const [conversation, setConversation] = useState<Conversation | null>(null);
   // messages 保持 Repository newest-first 结果。
   const [messages, setMessages] = useState<readonly Message[]>([]);
-  // draft 是当前输入框文本，不写入 token/session storage。
-  const [draft, setDraft] = useState('');
-  // loading 标记首次 cache 与 remote pull。
+  // loading 标记首次 cache 与 remote history 窗口恢复。
   const [loading, setLoading] = useState(true);
-  // sending 防止重复提交同一 draft。
+  // sending 防止 composer 重复提交同一文本。
   const [sending, setSending] = useState(false);
-  // error 显式展示 pull/send failure。
+  // error 显式展示 history/send failure，不回退 fake-success。
   const [error, setError] = useState<string | null>(null);
-  // messageEnd 用于新消息后保持底部可见。
-  const messageEnd = useRef<HTMLDivElement>(null);
+  // messageListRef 持有唯一消息滚动容器。
+  const messageListRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!sync || !snapshot.userID || !conversationID) {
-      return;
-    }
+    if (!sync || !snapshot.userID || !conversationID) return;
     // active 阻止路由切换后的旧请求回写。
     let active = true;
+    setLoading(true);
+    setError(null);
+    setConversation(null);
+    setMessages([]);
     void (async () => {
       try {
-        // cachedConversations 确认页面目标属于当前账号 cache。
+        // cachedConversations 确认目标属于当前认证账号 SQLite。
         const cachedConversations = await sync.conversations.listCached({
           limit: 500,
         });
-        // target 是当前路由对应的会话。
+        // target 是当前路由对应的真实缓存会话。
         const target = cachedConversations.find(
           item => item.conversationID === conversationID,
         );
-        if (!target) {
-          throw new Error('会话不存在或尚未同步');
-        }
-        if (active) {
-          setConversation(target);
-        }
-        // cachedMessages 先呈现 SQLite 历史。
+        if (!target) throw new Error('会话不存在或尚未同步');
+        if (active) setConversation(target);
+        // cachedMessages 先呈现当前账号本地历史。
         const cachedMessages = await sync.messages.getCachedHistory({
           conversationID,
           limit: 50,
         });
-        if (active) {
-          setMessages(cachedMessages);
-        }
-        // remoteMessages 从 seq 0 恢复当前首屏窗口。
+        if (active) setMessages(cachedMessages);
+        // remoteMessages 从会话最新 seq 拉取并由 facade 落库后返回。
         const remoteMessages = await sync.messages.pullHistory({
           conversationID,
           fromSeq: target.lastMsgSeq ?? '0',
           limit: 50,
         });
-        if (active) {
-          setMessages(remoteMessages);
-        }
+        if (active) setMessages(remoteMessages);
       } catch (cause) {
-        if (active) {
-          setError(readErrorMessage(cause));
-        }
+        if (active) setError(readErrorMessage(cause));
       } finally {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
     })();
     return () => {
@@ -105,7 +90,7 @@ export function ChatPage() {
     ])
       .then(([cachedConversations, cachedMessages]) => {
         if (!active) return;
-        // target 使用当前 cache 的会话资料刷新顶部状态。
+        // target 用当前 cache 刷新 header 的会话资料。
         const target = cachedConversations.find(
           item => item.conversationID === conversationID,
         );
@@ -120,22 +105,19 @@ export function ChatPage() {
     };
   }, [conversationID, snapshot.dataVersion, snapshot.userID, sync]);
 
-  // orderedMessages 转为聊天阅读所需 oldest-first 顺序。
-  const orderedMessages = useMemo(() => [...messages].reverse(), [messages]);
-
   useEffect(() => {
-    messageEnd.current?.scrollIntoView({ block: 'end' });
-  }, [orderedMessages.length]);
+    // frame 等待新消息 DOM 完成布局后再保持列表底部可见。
+    const frame = requestAnimationFrame(() => {
+      // list 是页面唯一滚动 owner，避免 scrollIntoView 推动整个 viewport。
+      const list = messageListRef.current;
+      list?.scrollTo({ top: list.scrollHeight });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [messages.length]);
 
-  /** 发送文本并重新读取本地状态，失败消息也会呈现。 */
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!sync || !draft.trim() || sending) {
-      return;
-    }
-    // text 在清空输入前保存本轮提交值。
-    const text = draft;
-    setDraft('');
+  /** 发送真实文本并从账号 SQLite 重读 sent/failed 最终状态。 */
+  async function handleSend(text: string) {
+    if (!sync || sending) return;
     setSending(true);
     setError(null);
     try {
@@ -144,7 +126,7 @@ export function ChatPage() {
       setError(readErrorMessage(cause));
     } finally {
       try {
-        // cached 包含 sent 或 failed 的最终本地状态。
+        // cached 包含 facade 持久化的 sent 或 failed 消息状态。
         const cached = await sync.messages.getCachedHistory({
           conversationID,
           limit: 50,
@@ -159,105 +141,57 @@ export function ChatPage() {
   }
 
   if (restoring) {
-    return <main className="page-state"><strong>正在恢复会话</strong></main>;
+    return <ChatPageState label="正在恢复会话" />;
   }
-  if (!runtime || !snapshot.userID) {
+  if (!runtime) {
+    return <ChatPageState label="运行配置不可用" detail={startupError} />;
+  }
+  if (!snapshot.userID) {
     return <Navigate to="/login" replace />;
   }
 
-  // title 在资料缺失时回退 conversation ID。
-  const title = conversation?.name?.trim() || conversation?.targetID || '会话';
+  // isGroup 只由真实 Conversation type 决定群消息排列。
+  const isGroup = conversation?.type === 'group';
   return (
-    <main className="chat-page">
-      <header className="chat-topbar">
-        <Link className="icon-button" to="/conversations" aria-label="返回会话" title="返回会话">
-          <ArrowLeft size={20} />
-        </Link>
-        <div>
-          <h1>{title}</h1>
-          <p>{conversation?.type === 'group' ? '群聊' : '单聊'}</p>
-        </div>
-      </header>
-      {error ? <p className="sync-warning" role="alert">{error}</p> : null}
-      <section className="message-list" aria-label="消息记录">
-        {loading ? <p className="message-empty">正在加载消息</p> : null}
-        {!loading && !orderedMessages.length ? (
-          <p className="message-empty">暂无消息</p>
+    <main className="rn-chat-page">
+      <section className="rn-chat-surface">
+        <ChatHeader conversation={conversation} />
+        {error ? (
+          <p className="rn-chat-error" role="status">
+            {error}
+          </p>
         ) : null}
-        {orderedMessages.map(message => (
-          <MessageBubble key={message.clientMsgID} message={message} />
-        ))}
-        <div ref={messageEnd} />
-      </section>
-      <form className="message-composer" onSubmit={handleSubmit}>
-        <input
-          value={draft}
-          onChange={event => setDraft(event.target.value)}
-          placeholder="输入消息"
-          aria-label="消息内容"
-          disabled={sending}
+        <ChatMessageList
+          messages={messages}
+          isGroup={isGroup}
+          loading={loading}
+          listRef={messageListRef}
         />
-        <button
-          className="send-button"
-          type="submit"
-          disabled={sending || !draft.trim()}
-          aria-label="发送消息"
-          title="发送消息"
-        >
-          <Send size={19} />
-        </button>
-      </form>
+        <ChatComposer sending={sending} onSend={handleSend} />
+      </section>
     </main>
   );
 }
 
-/** 单条消息按 direction 和 status 呈现。 */
-function MessageBubble({ message }: { readonly message: Message }) {
-  // text 从共享 mapper 保存的 structured body 中读取。
-  const text = readMessageText(message.payload);
+/** 统一承载启动和配置错误的全屏状态。 */
+function ChatPageState({
+  label,
+  detail,
+}: {
+  readonly label: string;
+  readonly detail?: string | null;
+}) {
   return (
-    <article className={`message-row message-row-${message.direction}`}>
-      <div className={`message-bubble message-bubble-${message.direction}`}>
-        <p>{text}</p>
-        <footer>
-          <time>{formatMessageTime(message.sendTime)}</time>
-          {message.status === 'sending' ? <span>发送中</span> : null}
-          {message.status === 'failed' ? <span className="message-failed">发送失败</span> : null}
-        </footer>
-      </div>
-    </article>
+    <main className="rn-chat-page-state">
+      <strong>{label}</strong>
+      {detail ? <span>{detail}</span> : null}
+    </main>
   );
-}
-
-/** 从 Gateway text body 读取文本，未知消息显示类型占位。 */
-function readMessageText(payload: unknown): string {
-  if (!payload || typeof payload !== 'object') {
-    return '[暂不支持的消息]';
-  }
-  // body 兼容 `{ text: { text } }` 与旧 `{ textElem }`。
-  const body = payload as Record<string, unknown>;
-  if (body.text && typeof body.text === 'object') {
-    // textBody 只读取 string 文本字段。
-    const textBody = body.text as Record<string, unknown>;
-    if (typeof textBody.text === 'string') {
-      return textBody.text;
-    }
-  }
-  return '[暂不支持的消息]';
-}
-
-/** 使用用户当前 locale 呈现短消息时间。 */
-function formatMessageTime(timestamp: number): string {
-  if (!timestamp) {
-    return '';
-  }
-  return new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(timestamp);
 }
 
 /** 将消息异常转换为不包含敏感数据的文本。 */
 function readErrorMessage(cause: unknown): string {
-  return cause instanceof Error && cause.message ? cause.message : '消息操作失败';
+  return cause instanceof Error && cause.message
+    ? cause.message
+    : '消息操作失败';
 }

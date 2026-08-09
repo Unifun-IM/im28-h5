@@ -24,9 +24,9 @@
 | hairline/font baseline | `../im28-phone/src/theme/applyHairlineWidth.ts`; `applyGlobalBoldText.ts` | CSS root tokens/reset | `foundation-copied` |
 | auth flow | `../im28-phone/src/screens/auth/AuthFlowScreen.tsx`; `../im28-phone/src/screens/auth/types.ts` | `/login` 与后续 `/auth/**` routes | `functional-scaffold/not-parity` |
 | account login UI | `../im28-phone/src/screens/auth/screens/AccountLoginScreen.tsx`; `../im28-phone/src/screens/auth/styles.ts` | `apps/web/src/pages/login/**` | `core-done-local/acceptance-gated` |
-| conversation list | `../im28-phone/src/screens/chat/conversationList/ConversationListScreen.tsx` | `apps/web/src/pages/conversations/**` | `functional-scaffold/not-parity` |
-| chat detail | `../im28-phone/src/screens/chat/chatDetail/ChatDetailScreen.tsx`; `../im28-phone/src/screens/chat/components/chatDetailStyles.ts` | `apps/web/src/pages/chat/**` | `functional-scaffold/not-parity` |
-| chat header/composer/list | `../im28-phone/src/screens/chat/components/ChatDetailHeader.tsx`; `ChatComposer.tsx`; `ChatMessageList.tsx` | chat feature components | `planned` |
+| conversation list | `../im28-phone/src/screens/chat/conversationList/ConversationListScreen.tsx` | `apps/web/src/pages/conversations/**` | `core-done-local/acceptance-gated` |
+| chat detail | `../im28-phone/src/screens/chat/chatDetail/ChatDetailScreen.tsx`; `../im28-phone/src/screens/chat/components/chatDetailStyles.ts` | `apps/web/src/pages/chat/**` | `core-done-local/acceptance-gated` |
+| chat header/composer/list | `../im28-phone/src/screens/chat/components/ChatDetailHeader.tsx`; `ChatComposer.tsx`; `ChatMessageList.tsx` | `apps/web/src/pages/chat/**` | `core-done-local/acceptance-gated` |
 | shell/tab hierarchy | `../im28-phone/src/screens/chat/home/ChatHomeScreen.tsx`; `HomeTabBar.tsx` | nested React Router app layout | `planned` |
 | static assets | RN asset roots listed below | `apps/web/src/assets/rn/**` | `466 files/hash-verified` |
 | platform-neutral SDK | `../im28-phone/packages/im-sdk/src/web.ts` | dependency of `@im28/im-sdk-web` | `linked` |
@@ -69,8 +69,8 @@ Current canonical routes:
 | :--- | :--- | :--- | :--- |
 | `/` | App boot/auth decision | redirect into the conversations auth guard; guest resolves to `/login` | `implemented` |
 | `/login` | account branch in `AuthFlowScreen` | guest route; authenticated user replace to conversations | `core-done-local/acceptance-gated` |
-| `/conversations` | `ChatHomeScreen` chats tab + `ConversationListScreen` | authenticated route; list state survives child navigation | `implemented/not-parity` |
-| `/conversations/:conversationID` | `ChatDetailScreen` | encoded ID, refresh restore, browser back returns list | `implemented/not-parity` |
+| `/conversations` | `ChatHomeScreen` chats tab + `ConversationListScreen` | authenticated route; list state survives child navigation | `core-done-local/acceptance-gated` |
+| `/conversations/:conversationID` | `ChatDetailScreen` | encoded ID, refresh restore, browser back returns list | `core-done-local/acceptance-gated` |
 | `*` | no RN equivalent | explicit 404 and safe return | `implemented` |
 
 Future full-screen RN states must receive stable routes before UI migration. Auth branches use `/auth/phone`, `/auth/email`, `/auth/account`, `/auth/register`, `/auth/invite`, `/auth/complete-profile` and `/settings/network`; primary tabs use `/conversations`, `/contacts`, `/calls`, `/me`. Bottom sheets and short-lived previews remain modal state only when they are not independently addressable. Production deployment must return `index.html` for valid SPA deep links.
@@ -89,7 +89,7 @@ A page/capability is `parity-accepted` only when all gates pass:
 | browser quality | keyboard/focus, safe area, scroll ownership, no overlap/horizontal overflow, accessible names pass |
 | regression | `npm run verify` passes; final capability acceptance includes real Gateway smoke where data is required |
 
-Current conversation and chat pages remain API-capable scaffolds, not RN visual parity evidence. Account-login core no longer uses a generic mark/Lucide icon, but it remains below `parity-accepted` until its exact viewport/theme matrix and real login success gate pass.
+Account-login、conversation-list 与 chat-detail core 均已移除 generic/Lucide 视觉并完成本地 RN 迁移证据。三者仍低于 `parity-accepted`：必须分别通过卡片中记录的真实账号 Network、跨路由和数据更新门禁；未具备 Web facade 的 RN 控件保持省略，不得恢复为无效按钮。
 
 ## 6. Ordered Migration
 
@@ -98,9 +98,9 @@ Current conversation and chat pages remain API-capable scaffolds, not RN visual 
 | `W6.a0` | freeze this contract and source inventory | RN repository readable | `done` |
 | `W6.a1` | mirror all assets; establish complete RN light/dark CSS token base | `W6.a0` | `done-foundation` |
 | `W6.a2` | account login visual/interaction/API parity | `W6.a1`; existing auth runtime | `done-local/acceptance-gated` |
-| `W6.a3` | conversation shell/list visual/interaction/API parity | `W6.a2`; existing conversation sync | `active` |
-| `W6.a4` | chat detail/header/list/composer visual/interaction/API parity | `W6.a3`; existing message sync | `planned` |
-| `W6.a5` | remaining auth routes and primary tab route shell | route/API contract per capability | `planned` |
+| `W6.a3` | conversation shell/list visual/interaction/API parity | `W6.a2`; existing conversation sync | `done-local/acceptance-gated` |
+| `W6.a4` | chat detail/header/list/composer visual/interaction/API parity | `W6.a3`; existing message sync | `done-local/acceptance-gated` |
+| `W6.a5` | remaining auth routes and primary tab route shell | route/API contract per capability | `active-decomposition` |
 | `W6.closeout` | cross-route responsive/browser/real-Gateway parity review | prior slices | `planned` |
 
 W5 browser-storage evidence and W3 real-Gateway credentials remain independent external gates. They do not block local W6 visual implementation, but they block production acceptance for affected data flows.
@@ -123,3 +123,43 @@ W5 browser-storage evidence and W3 real-Gateway credentials remain independent e
 | acceptance gate | exact `390x844 + desktop` light/dark screenshots and approved-account login success/redirect remain required |
 
 W6.a2 does not render nonfunctional alternate-auth or network-setting links. Their omission is bounded slice scope, not permission to replace them with placeholders; W6.a5 must restore those RN entries together with their real routes and API contracts.
+
+## 8. W6.a3 Migration Card
+
+| field | value |
+| :--- | :--- |
+| feature slice | authenticated conversation shell/list core |
+| phase | vertical migration / Web SDK composition + route caller |
+| production flow | `ChatHomeScreen.tsx` -> `ConversationListScreen.tsx` -> cache-first conversation sync |
+| operations | `listCachedItems({ archived:false })`; `sync()` -> `POST /v1/conversation/list`; realtime `dataVersion` -> cache reread |
+| current status | `done-local/acceptance-gated` |
+| must-have fields | conversation identity/name/avatar/draft/pinned/muted/unread/updatedAt + latest message contentType/body/sendTime |
+| adapters | `WebIMConversationSync.listCachedItems`; existing `WebIMConversationSync.sync`; React Router `/conversations` caller |
+| route | `/conversations` -> encoded `/conversations/:conversationID`; guest deep link -> `/login` |
+| source assets | `empty-chat.svg`; `search.regular.svg`; `xmark-circle.solid.svg`; `pin.solid.svg`; `bell-off.solid.svg` |
+| local evidence | 390x844 light/dark deterministic visual proof: no overflow, four row states/assets rendered; 760px frame -> 480px centered surface; guest deep-link guard passed; `npm run verify`: 466 assets, 20 test files / 55 tests, type/build green |
+| no-fake verdict | no page fetch、no local mock/default placeholder、no parallel route/API owner；temporary visual harness removed after proof |
+| open gaps | approved-account cache/sync/chat-back Network smoke；RN global search、group action、archive/long-press mutations、presence/group-member avatar require future Web facades；primary tab shell belongs to W6.a5 |
+| acceptance gate | real account proves cache-first -> Gateway sync -> latest-message reread -> chat/back chain；missing operations receive bounded slices before their UI is restored |
+
+W6.a3 uses the RN component's real local-search branch rather than rendering a nonfunctional global-search route. Missing action menus and tab destinations are omitted, not mocked; their RN UI may return only with matching Web facade and React Router owners.
+
+## 9. W6.a4 Migration Card
+
+| field | value |
+| :--- | :--- |
+| feature slice | authenticated chat detail core: header、message list/bubbles、text composer |
+| phase | vertical migration / existing Web message sync + React Router caller |
+| production flow | `ChatDetailScreen.tsx` -> `ChatDetailHeader` / `ChatMessageList` / `ChatComposer` -> cache-first history、pull、send、`dataVersion` cache reread |
+| operations | `getCachedHistory(conversationID)`; `pullHistory(conversationID)` -> `POST /v1/message/pull`; `sendText(conversationID, text)` -> `POST /v1/message/send`; realtime 只以 runtime `dataVersion` 触发 cache reread，不新增页面 operation |
+| current status | `done-local/acceptance-gated` |
+| must-have fields | conversation ID/name/avatar/type/muted；message ID/sender/direction/contentType/status/sendTime/payload |
+| adapters | existing `WebIMMessageSync`; runtime snapshot subscription; React Router `/conversations/:conversationID` caller |
+| route | encoded conversation ID deep link；guest -> `/login`；header back -> `/conversations` |
+| source assets | navbar `nav-arrow-left.svg`; `bell-off.solid.svg`; light/dark incoming/outgoing bubble tails; send、speak/play、document assets |
+| local evidence | deterministic 390x844 light/dark: header/list/composer、6 bubbles、3 tails、draft/send state、no overflow；760x900: 480px centered surface；guest deep-link guard and clean console passed；`npm run verify`: 466 assets、20 test files / 55 tests、type/build green |
+| no-fake verdict | page 无 fetch、Gateway/Repository 直连、local mock、fake sent 或第二 route/API owner；临时 visual harness 已删除；不具 facade 的操作控件未渲染 |
+| open gaps | approved account history/pull/send/realtime/list-back Network proof；presence、group member profile/avatar/name、settings、voice/emoji/attachment、failed-message retry mutation、media playback/download 需要独立 Web facades |
+| acceptance gate | 真实账号证明 cache history -> pull -> send -> realtime cache reread -> list-back 链；390x844 与 desktop 的 authenticated light/dark 截图复核；缺失能力按独立 bounded slice 恢复 |
+
+W6.a4 对图片、音频、视频、文件和卡片 payload 只投影已有真实消息数据；没有 Web operation 的播放、下载、上传和 RTC 交互不渲染。文本输入保留 RN 的 1000 字符约束，并以 Enter 发送、Shift+Enter 换行完成浏览器键盘适配。

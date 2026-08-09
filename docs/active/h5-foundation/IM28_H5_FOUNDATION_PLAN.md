@@ -37,7 +37,7 @@
 | area | current truth | source |
 | :--- | :--- | :--- |
 | Web application | Vite + React Router 根壳与 404 返回路由已实现 | `apps/web`; `architecture.md` |
-| RN parity foundation | 迁移合同已冻结；466 个资产按字节同步；light/dark CSS token 已建立；三个现有页面尚未视觉验收 | `docs/rn-h5-migration-contract.md`; `apps/web/src/assets/rn`; `apps/web/src/styles/rn-theme.css` |
+| RN parity foundation | 迁移合同已冻结；466 个资产按字节同步；light/dark CSS token 已建立；account-login/conversation/chat core 均为 done-local/acceptance-gated；remaining auth/tab route decomposition active | `docs/rn-h5-migration-contract.md`; `apps/web/src/assets/rn`; `apps/web/src/styles/rn-theme.css` |
 | shared SDK | `@im28/im-sdk/web` 已提供平台中立 contract、Repository 和 Gateway client | `../im28-phone/packages/im-sdk/src/web.ts` |
 | Web SDK/runtime | `sql.js + IndexedDB`、auth-bound lifecycle、共享 mutation queue、HTTP/realtime sync 与 public platform-term adapter 已实现；当前 workspace 共 55 个聚焦测试 | `packages/im-sdk-web/src/runtime/**`; `packages/im-sdk-web/src/storage/**`; `packages/im-sdk-web/src/sync/**` |
 | Gateway runtime | 本地 auth/realtime/account DB 实现与验证已通过；真实环境 smoke 保留为 deployment gate | `docs/runtime-contracts/web-gateway-runtime.md` |

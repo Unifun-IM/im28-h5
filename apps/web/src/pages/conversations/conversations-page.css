@@ -110,16 +110,6 @@
   cursor: pointer;
 }
 
-.conversation-asset-icon {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  flex: 0 0 auto;
-  background: currentColor;
-  mask: var(--conversation-asset-icon) center / contain no-repeat;
-  -webkit-mask: var(--conversation-asset-icon) center / contain no-repeat;
-}
-
 .rn-conversation-error {
   margin: 0;
   padding: 8px 16px;

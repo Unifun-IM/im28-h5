@@ -5,8 +5,8 @@ import { Navigate } from 'react-router-dom';
 import emptyChatIconURL from '../../assets/rn/assets/icons/empty-chat.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
+import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
-import { ConversationAssetIcon } from './ConversationAssetIcon.js';
 import { ConversationRow } from './ConversationRow.js';
 import {
   filterConversationListItems,
@@ -131,7 +131,7 @@ export function ConversationsPage() {
           </div>
           <label className="rn-conversation-search">
             <span className="sr-only">搜索</span>
-            <ConversationAssetIcon assetURL={searchIconURL} />
+            <RNAssetIcon assetURL={searchIconURL} />
             <input
               type="search"
               value={keyword}
@@ -144,7 +144,7 @@ export function ConversationsPage() {
                 aria-label="清除"
                 onClick={() => setKeyword('')}
               >
-                <ConversationAssetIcon assetURL={clearIconURL} />
+                <RNAssetIcon assetURL={clearIconURL} />
               </button>
             ) : null}
           </label>

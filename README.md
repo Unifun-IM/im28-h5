@@ -27,11 +27,11 @@ The development app is served by Vite at `http://localhost:5173/` by default.
 
 ## Current Scope
 
-- implemented/local-verified: npm workspace, Vite React App, React Router login/conversation/chat routes, browser SDK facade, typed Gateway configuration, tab-scoped auth session, stable device identity, login/restore/refresh/logout and realtime lifecycle, public platform-term adapter, auth-bound account SQLite, conversation full sync, cached/pulled history, optimistic text send, shared same-tab mutation queue, realtime message/conversation persistence with paged HTTP gap recovery, independent message edit/delete update cursor, Dedicated Worker sql.js + IndexedDB persistence, account-lifecycle Web Lock ownership, 466-file RN asset mirror, RN light/dark CSS token foundation and account-login core migration
-- active: RN conversation shell/list parity; account-login core is done-local but still requires exact light/dark viewport evidence and a real login success smoke for final acceptance
+- implemented/local-verified: npm workspace, Vite React App, React Router login/conversation/chat routes, browser SDK facade, typed Gateway configuration, tab-scoped auth session, stable device identity, login/restore/refresh/logout and realtime lifecycle, public platform-term adapter, auth-bound account SQLite, conversation full sync + latest-message list composition, cached/pulled history, optimistic text send, shared same-tab mutation queue, realtime message/conversation persistence with paged HTTP gap recovery, independent message edit/delete update cursor, Dedicated Worker sql.js + IndexedDB persistence, account-lifecycle Web Lock ownership, 466-file RN asset mirror, RN light/dark CSS token foundation, account-login, conversation-list and chat-detail core migration
+- active: W6.a5 remaining auth/tab route decomposition; account-login, conversation and chat core are done-local/acceptance-gated pending real-account evidence
 - pending gate: real Gateway login/WebSocket/conversation/history/send smoke variables
 - pending gate: Chromium/Firefox/Safari same-account two-tab close/crash matrix
-- deferred: media, RTC and notifications
+- deferred: media upload/playback/download, failed-message retry, RTC and notifications until matching Web facades exist
 
 The App expects `VITE_GATEWAY_HTTP_URL` and `VITE_GATEWAY_WS_URL`; without them it displays a fail-closed configuration state.
 

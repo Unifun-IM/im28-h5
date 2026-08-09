@@ -10,18 +10,6 @@ export interface ConversationListPreview {
   readonly text: string;
 }
 
-/** RN 头像 fallback 使用的稳定渐变色表。 */
-const AVATAR_COLOR_PAIRS = [
-  ['#D98AF2', '#C94EE4'],
-  ['#65CCF4', '#2698ED'],
-  ['#4BDFD1', '#20BEB6'],
-  ['#9BDF78', '#35C565'],
-  ['#FFC968', '#FF9850'],
-  ['#FF9A91', '#F46575'],
-  ['#8EA1FF', '#596EEB'],
-  ['#F7A0D4', '#E561B1'],
-] as const;
-
 /** RN 会话预览中有固定文案的消息类型。 */
 const MESSAGE_PREVIEW_LABELS: Readonly<Record<number, string>> = {
   102: '[图片]',
@@ -39,45 +27,6 @@ const MESSAGE_PREVIEW_LABELS: Readonly<Record<number, string>> = {
 /** 使用 RN 相同的 name -> title 回退顺序。 */
 export function getConversationTitle(conversation: Conversation): string {
   return conversation.name?.trim() || conversation.targetID || '会话';
-}
-
-/** 提取头像首个中文、字母或数字字符。 */
-export function getConversationAvatarInitial(
-  conversation: Conversation,
-): string {
-  // title 是头像文案和 fallback 身份的共同来源。
-  const title = getConversationTitle(conversation);
-  for (const character of Array.from(title)) {
-    if (/^[\u3400-\u9FFF]$/.test(character)) {
-      return character;
-    }
-    if (/^[A-Za-z]$/.test(character)) {
-      return character.toUpperCase();
-    }
-    if (/^[0-9]$/.test(character)) {
-      return character;
-    }
-  }
-  return '?';
-}
-
-/** 按 RN FNV-1a 规则为同一会话生成稳定头像渐变。 */
-export function getConversationAvatarGradient(
-  conversation: Conversation,
-): string {
-  // key 优先使用稳定目标 ID，名称只作为缺省身份。
-  const key = (conversation.targetID || getConversationTitle(conversation)).trim();
-  // hash 与 RN avatar helper 使用相同初始值和乘数。
-  let hash = 2166136261;
-  for (let index = 0; index < key.length; index += 1) {
-    hash ^= key.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  // pair 从同一八色表按无符号 hash 选择。
-  const pair =
-    AVATAR_COLOR_PAIRS[(hash >>> 0) % AVATAR_COLOR_PAIRS.length] ??
-    AVATAR_COLOR_PAIRS[0];
-  return `linear-gradient(135deg, ${pair[0]} 7%, ${pair[1]} 96%)`;
 }
 
 /** 将会话草稿和最新消息转换为 RN 会话行摘要。 */

@@ -27,6 +27,7 @@
 | operation | input | remote call | durable result | failure result |
 | :--- | :--- | :--- | :--- | :--- |
 | `listConversations` | `limit/offset` | none | SQLite ordered list | DB error rejects |
+| `listConversationItems` | `limit/offset/archived` | none | SQLite ordered conversations + latest message rows | DB error rejects |
 | `syncConversations` | optional page limit | `listConversations` until page token empty | save latest messages -> atomic `replaceAll` conversations | existing cache unchanged; reject |
 | `getMessageHistory` | conversation, window | none | SQLite history, newest first | DB error rejects |
 | `pullMessageHistory` | conversation, `fromSeq`, limit | `pullMessages` | mapped messages upserted; return SQLite window | existing cache unchanged; reject |
@@ -90,11 +91,22 @@
 | contract freeze | this document + production anchors | `passed` |
 | shared mapper | `gateway-domain-mappers.test.mjs` + shared SDK typecheck/build | `passed` |
 | browser sync | 6 sql.js/Repository tests: pages、failure retention、history、send convergence | `passed-local` |
-| default caller | `/login`; `/conversations`; `/conversations/:conversationID` use runtime sync facade | `passed-local: build + config/login responsive smoke` |
+| default caller | `/login`; `/conversations`; `/conversations/:conversationID` use runtime sync facade | `passed-local: build + auth guard; conversation and chat 390x844 light/dark + 760px responsive proof` |
 | realtime created/conversation | serialized persistence、replay、account isolation、paged gap recovery、runtime cache publication | `passed-local: 5 focused tests + workspace gate` |
 | realtime message updates | edit、stale cursorless guard、gap recovery、delete-all、runtime publication | `passed-local: sql.js + raw WebSocket integration` |
 | same-tab mutation ordering | delayed full sync -> realtime、history -> send -> realtime、failure continuation | `passed-local: 3 concurrency regressions` |
 | real environment | login + conversation + history + send smoke | `blocked: Gateway variables absent` |
+
+## W6.a4 Caller Projection
+
+| page behavior | canonical operation | UI constraint |
+| :--- | :--- | :--- |
+| initial/cache refresh | `getCachedHistory(conversationID)` | loading/empty/error and ordered message projection only；no page SQL |
+| remote history | `pullHistory(conversationID)` | remote failure stays visible/rejects；no fake empty success |
+| text send | `sendText(conversationID, text)` | preserve `sending -> sent/failed` row；page does not synthesize sent state |
+| realtime refresh | runtime snapshot `dataVersion` -> `getCachedHistory` | event persistence remains sync owner；page only rereads cache |
+
+W6.a4 renders read-only snapshots for supported media/card payloads. Presence、group-member enrichment、voice/emoji/attachment upload、retry、playback and download remain absent until a named `@im28/im-sdk-web` facade owns their operation and failure semantics.
 
 ## Production Anchors
 

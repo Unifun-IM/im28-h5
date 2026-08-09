@@ -3,7 +3,7 @@
 | field | value |
 | :--- | :--- |
 | status | `active` |
-| active_slice | `W6.a3-conversation-parity` |
+| active_slice | `W6.a5-auth-tab-route-decomposition` |
 | verification_floor | `npm run verify` plus local browser smoke |
 
 ## Workstream Ledger
@@ -43,31 +43,32 @@
 | `W6.a0-migration-contract` | contract/docs | docs + RN source inventory | 样式、资产、SDK/API、React Router 四类硬约束与验收门 | source-path cross-check | `done` | closed 2026-08-09 |
 | `W6.a1-assets-theme` | code/docs | web styles/assets | 466 文件字节镜像、SHA-256 gate、完整 RN light/dark token foundation | `npm run assets:check`; CSS/source review | `done-foundation` | closed 2026-08-09 |
 | `W6.a2-account-login-parity` | code/verification | web login + sdk facade | RN 账号登录布局、资产、协议状态、真实登录/条款 caller | 466 assets + 20/55 verify + dark mobile interaction/refresh/live-term smoke | `done-local/acceptance-gated` | exact viewport/theme + real login evidence available |
-| `W6.a3-conversation-parity` | code/verification | web conversations + sdk facade | RN home shell/conversation list parity | responsive light/dark + cache/sync route smoke | `active` | W6.a2 local implementation passed |
-| `W6.a4-chat-parity` | code/verification | web chat + sdk facade | RN header/message list/composer parity | responsive light/dark + history/send/realtime route smoke | `planned` | W6.a3 passed |
-| `W6.a5-auth-tab-routes` | code/verification | web app routes + features | remaining auth full screens and contacts/calls/me route shell | deep-link/back/forward/auth-guard matrix | `planned` | per-capability Web API contract available |
+| `W6.a3-conversation-parity` | code/verification | web conversations + sdk facade | RN home shell/conversation list parity | 390x844 light/dark + 760px responsive + auth guard + cache composition test + verify | `done-local/acceptance-gated` | real account cache/sync/chat-back evidence available |
+| `W6.a4-chat-parity` | code/verification | web chat + sdk facade | RN header/message list/composer parity | 390x844 light/dark + 760x900 responsive + guest guard + existing sync chain review + verify | `done-local/acceptance-gated` | approved account history/send/realtime/list-back evidence available |
+| `W6.a5-auth-tab-routes` | design/code/verification | web app routes + features | remaining auth and contacts/calls/me capabilities as bounded route slices | source/API/route ledger, then per-slice deep-link/back/forward/auth-guard matrix | `active-decomposition` | W6.a4 local implementation passed；select one facade-backed bounded slice |
 | `W6.closeout` | verification/docs | web app + sdk + docs | migrated route parity evidence and residual ledger | `npm run verify` + browser matrix + real Gateway flow | `planned` | W6.a2-a5 accepted |
 
 ## Active Slice Card
 
 | field | value |
 | :--- | :--- |
-| slice_id | `W6.a3-conversation-parity` |
-| goal | 让 `/conversations` 在 RN 视觉/交互约束下复用现有 Web SDK cache/sync 链 |
-| source_anchor | RN `ChatHomeScreen.tsx`; `ConversationListScreen.tsx`; conversation row/header/empty states; theme/assets |
-| target_owner | `apps/web/src/pages/conversations/**`; existing `/conversations` React Router route |
-| expected_deliverable | RN shell/header/row/avatar/unread/loading/empty/error states and chat route transition |
-| verification_shape | source trace + asset hash + responsive light/dark + refresh/chat-back/cache-sync smoke + verify |
-| stop_condition | required conversation operation absent from Web facade; record contract gap instead of page fetch/mock |
-| residual_seed | `W6.a4-chat-parity` |
+| slice_id | `W6.a5-auth-tab-route-decomposition` |
+| goal | 冻结 remaining auth/primary tab 的有序 route ledger，并选择一个最多 3 个 API operation 的首个实现 slice |
+| source_anchor | RN `AuthFlowScreen.tsx`; `screens/auth/types.ts`; `ChatHomeScreen.tsx`; `HomeTabBar.tsx` |
+| target_owner | `apps/web/src/app/App.tsx`; `docs/rn-h5-migration-contract.md`; future feature owner + `@im28/im-sdk-web` facade |
+| expected_deliverable | route/state/capability/dependency matrix；首片 source/API/route/acceptance card；不得一次恢复全部页面 |
+| verification_shape | source trace + shared Web export/API owner trace + route URL/guard/back ownership review |
+| stop_condition | missing API/shared facade or cross-capability dependency cannot fit bounded slice；记录 gap，不渲染无效 RN entry |
+| residual_seed | `W6.closeout` and remaining ordered W6.a5 slices |
 
 ## Deferred Residuals
 
 | item | reason_not_active | likely_owner | candidate_verification |
 | :--- | :--- | :--- | :--- |
 | Real Gateway smoke | 缺部署 URL 与测试账号环境变量 | deployment owner | `npm run smoke:gateway` |
-| authenticated conversation/chat UI smoke | 本地 routes 已实现，缺真实 Gateway 账号 | `apps/web/src/pages` | real browser flow smoke |
+| authenticated conversation UI smoke | RN core 与 route 已本地实现，缺真实 Gateway 账号 | `apps/web/src/pages/conversations` | cache-first/sync/chat-back real browser flow smoke |
+| authenticated chat UI smoke | RN core 与 route 已本地实现，缺真实 Gateway 账号 | `apps/web/src/pages/chat` | history/send/realtime/list-back real browser flow smoke |
 | Worker SQL runtime | `done-local`: production App Worker、RPC/fatal parity 与 Vite build passed | storage worker | real-browser DB open evidence joins W5.a3 |
 | multi-tab writer | `done-local/gated-browser`: lifecycle owner 已接入，缺真实浏览器矩阵 | storage runtime | three-browser two-tab concurrency test |
-| Current generic H5 visuals | login core done-local；conversation/chat 仍是 generic API 骨架 | `apps/web/src/pages/**` | W6.a2 final gate + W6.a3/a4 source/visual/route/API matrix |
+| Remaining RN route surfaces | login/conversation/chat core 均已移除 generic 视觉；remaining auth/contacts/calls/me 尚未进入 bounded migration | `apps/web/src/app` + future feature owners | W6.a5 route/capability decomposition and per-slice evidence |
 | upstream raw WS log | `resolved 2026-08-09`: canonical owner 已清除原始 payload 日志 | `im28-phone/packages/im-sdk` | shared SDK test + H5 `npm run verify` passed |
