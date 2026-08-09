@@ -1,0 +1,126 @@
+/** 标识 H5 应用正在消费的浏览器 SDK facade。 */
+export const IM28_WEB_SDK_PACKAGE = '@im28/im-sdk-web' as const;
+
+/** 复用共享 SDK 的浏览器安全 Repository、Gateway client 和错误模型。 */
+export {
+  ConversationRepository,
+  IMError,
+  MessageRepository,
+  createGatewayHTTPClient,
+  createGatewayRealtimeClient,
+  createIMClient,
+  mapGatewayConversationToCore,
+  mapGatewayMessageToCore,
+  normalizeGatewayRealtimeEvents,
+  parseGatewayRealtimePayload,
+} from '@im28/im-sdk/web';
+
+/** 导出认证账号绑定的会话 cache/sync service。 */
+export {
+  createWebIMConversationSync,
+  createWebIMMessageSync,
+  createWebIMSync,
+} from './sync/index.js';
+/** 导出浏览器会话同步 contract。 */
+export type {
+  WebIMConversationSync,
+  WebIMConversationSyncDependencies,
+  WebIMConversationSyncOptions,
+  WebIMMessageSync,
+  WebIMMessageSyncDependencies,
+  WebIMPullMessageHistoryOptions,
+  WebIMSendTextMessageOptions,
+  WebIMSync,
+  WebIMSyncDependencies,
+} from './sync/index.js';
+/** 透传共享 SDK 的平台中立领域、数据库和运行时类型。 */
+export type {
+  Attachment,
+  ConnectionState,
+  Conversation,
+  ConversationListOptions,
+  ConversationType,
+  DatabaseAdapter,
+  DatabaseExecuteResult,
+  DatabaseExecutor,
+  DatabaseMigration,
+  DatabaseParams,
+  DatabaseRow,
+  DatabaseStatement,
+  DatabaseTransaction,
+  DatabaseValue,
+  GatewayConversation,
+  GatewayFetch,
+  GatewayForgotPasswordData,
+  GatewayForgotPasswordRequest,
+  GatewayHTTPClient,
+  GatewayHTTPClientOptions,
+  GatewayMessage,
+  GatewayRealtimeClient,
+  GatewayRealtimeClientOptions,
+  GatewayRealtimeEvent,
+  GatewayRealtimeEventHandler,
+  GatewayResetPasswordRequest,
+  GatewayUser,
+  GatewayWebSocketConstructor,
+  Group,
+  IMClient,
+  IMClientConfig,
+  IMEventBus,
+  IMEventHandler,
+  IMEventMap,
+  IMEventName,
+  IMRuntimeTarget,
+  IMSdkPackageInfo,
+  LoginParams,
+  Message,
+  MessageDirection,
+  MessageHistoryOptions,
+  MessageStatus,
+  SessionState,
+  Unsubscribe,
+  User,
+} from '@im28/im-sdk/web';
+
+/** 导出浏览器 Gateway runtime 配置、认证会话与 lifecycle 基础。 */
+export {
+  WebIMRuntimeError,
+  createBrowserGatewayFetch,
+  createWebIMAuthSessionStore,
+  createWebIMDeviceIdentityStore,
+  createWebIMRuntime,
+  parseWebIMRuntimeConfig,
+  transitionWebIMRuntimeState,
+} from './runtime/index.js';
+/** 导出浏览器 Gateway runtime 的公开 contract 类型。 */
+export type {
+  WebIMAuthSession,
+  WebIMAuthSessionStore,
+  WebIMDeviceIdentityStore,
+  WebIMLoginRequest,
+  WebIMPersistentStorage,
+  WebIMRuntime,
+  WebIMRuntimeConfig,
+  WebIMRuntimeErrorCode,
+  WebIMRuntimeEvent,
+  WebIMRuntimeOptions,
+  WebIMRuntimeSnapshot,
+  WebIMRuntimeState,
+  WebIMSessionStorage,
+} from './runtime/index.js';
+
+/** 导出 H5 Web IM storage foundation。 */
+export {
+  createWebIMAccountDatabaseLifecycle,
+  createAccountDatabaseName,
+  createIndexedDBSQLiteBinaryStore,
+  createSqlJsIndexedDBDatabaseAdapter,
+} from './storage/index.js';
+/** 导出 Web IM storage foundation 的公开类型。 */
+export type {
+  IndexedDBSQLiteBinaryStoreOptions,
+  SQLiteBinaryStore,
+  SqlJsIndexedDBDatabaseAdapterOptions,
+  WebIMAccountDatabaseLifecycle,
+  WebIMAccountDatabaseLifecycleOptions,
+} from './storage/index.js';
