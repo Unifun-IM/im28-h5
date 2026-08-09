@@ -135,7 +135,11 @@ describe('Web IM runtime', () => {
 
     await expect(
       runtime.login({ type: 'account', account: 'alice', password: 'secret' }),
-    ).resolves.toEqual({ state: 'connecting', userID: 'user-1' });
+    ).resolves.toEqual({
+      state: 'connecting',
+      userID: 'user-1',
+      dataVersion: 0,
+    });
     // 登录请求必须使用 runtime 注入的稳定 device ID。
     const loginRequest = requests.find(request =>
       request.input.endsWith('/v1/auth/user-login'),
@@ -157,6 +161,7 @@ describe('Web IM runtime', () => {
     expect(runtime.getSnapshot()).toEqual({
       state: 'online',
       userID: 'user-1',
+      dataVersion: 0,
     });
     // Auth frame 由共享 realtime client 生成，runtime 只注入配置。
     const authFrame = JSON.parse(socket?.sentFrames[0] ?? '{}');
@@ -169,7 +174,11 @@ describe('Web IM runtime', () => {
     });
 
     await runtime.signOut();
-    expect(runtime.getSnapshot()).toEqual({ state: 'anonymous', userID: null });
+    expect(runtime.getSnapshot()).toEqual({
+      state: 'anonymous',
+      userID: null,
+      dataVersion: 0,
+    });
     expect(authSessionStore.load()).toBeNull();
     expect(socket?.closed).toBe(true);
     runtime.dispose();
@@ -214,6 +223,7 @@ describe('Web IM runtime', () => {
     expect(runtime.getSnapshot()).toEqual({
       state: 'connecting',
       userID: 'user-2',
+      dataVersion: 0,
     });
     expect(realtime.sockets).toHaveLength(1);
     await runtime.signOut();
@@ -250,7 +260,11 @@ describe('Web IM runtime', () => {
     await expect(
       runtime.login({ type: 'account', account: 'alice', password: 'secret' }),
     ).rejects.toMatchObject({ code: 'INVALID_AUTH_RESPONSE' });
-    expect(runtime.getSnapshot()).toEqual({ state: 'anonymous', userID: null });
+    expect(runtime.getSnapshot()).toEqual({
+      state: 'anonymous',
+      userID: null,
+      dataVersion: 0,
+    });
     expect(authSessionStore.load()).toBeNull();
     expect(realtime.sockets).toHaveLength(0);
     runtime.dispose();
@@ -291,7 +305,11 @@ describe('Web IM runtime', () => {
 
     await expect(runtime.signOut()).resolves.toBeUndefined();
     expect(authSessionStore.load()).toBeNull();
-    expect(runtime.getSnapshot()).toEqual({ state: 'anonymous', userID: null });
+    expect(runtime.getSnapshot()).toEqual({
+      state: 'anonymous',
+      userID: null,
+      dataVersion: 0,
+    });
     runtime.dispose();
   });
 });

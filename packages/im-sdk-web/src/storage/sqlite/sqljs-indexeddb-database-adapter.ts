@@ -20,6 +20,22 @@ export interface SqlJsIndexedDBDatabaseAdapterOptions {
   readonly locateWasmFile: (fileName: string) => string;
 }
 
+/** 标识 SQLite 内存状态已领先 durable snapshot 的致命持久化失败。 */
+export class SqlJsPersistenceError extends Error {
+  override readonly cause: unknown;
+
+  /** 保留原始 IndexedDB 异常供 Worker 错误归一化。 */
+  constructor(cause: unknown) {
+    super(
+      cause instanceof Error
+        ? cause.message
+        : 'Web SQLite snapshot persistence failed.',
+    );
+    this.name = 'SqlJsPersistenceError';
+    this.cause = cause;
+  }
+}
+
 /** 创建与 im-sdk SQL Repository 兼容的浏览器 DatabaseAdapter。 */
 export function createSqlJsIndexedDBDatabaseAdapter(
   options: SqlJsIndexedDBDatabaseAdapterOptions,
@@ -37,6 +53,8 @@ class SqlJsIndexedDBDatabaseAdapter implements DatabaseAdapter {
   private operationQueue: Promise<void> = Promise.resolve();
   // 内存数据库在 open/close 之间唯一存在。
   private database: Database | null = null;
+  // 持久化失败后禁止继续使用或在 close 时写回非 durable 状态。
+  private fatalPersistenceCause: unknown = null;
 
   /** 保存配置并暴露稳定的账号数据库名。 */
   constructor(options: SqlJsIndexedDBDatabaseAdapterOptions) {
@@ -55,6 +73,10 @@ class SqlJsIndexedDBDatabaseAdapter implements DatabaseAdapter {
   async close(): Promise<void> {
     return this.runSerialized(async () => {
       if (!this.database) {
+        return;
+      }
+      if (this.fatalPersistenceCause) {
+        this.discardDatabaseDirect();
         return;
       }
       await this.persistDirect(this.database);
@@ -149,6 +171,12 @@ class SqlJsIndexedDBDatabaseAdapter implements DatabaseAdapter {
 
   /** 获取已打开数据库，必要时执行幂等初始化。 */
   private async requireDatabaseDirect(): Promise<Database> {
+    if (this.fatalPersistenceCause) {
+      throw new AggregateError(
+        [this.fatalPersistenceCause],
+        'Web SQLite adapter is faulted after a persistence failure.',
+      );
+    }
     await this.openDirect();
     if (!this.database) {
       throw new Error('sql.js database failed to open.');
@@ -160,7 +188,19 @@ class SqlJsIndexedDBDatabaseAdapter implements DatabaseAdapter {
   private async persistDirect(database: Database): Promise<void> {
     // export 返回完整 SQLite 文件，binary store 负责再次复制所有权。
     const bytes = database.export();
-    await this.options.binaryStore.write(this.name, bytes);
+    try {
+      await this.options.binaryStore.write(this.name, bytes);
+    } catch (cause) {
+      this.fatalPersistenceCause = cause;
+      this.discardDatabaseDirect();
+      throw new SqlJsPersistenceError(cause);
+    }
+  }
+
+  /** 丢弃非 durable 内存数据库，禁止 close 将失败写入重新持久化。 */
+  private discardDatabaseDirect(): void {
+    this.database?.close();
+    this.database = null;
   }
 }
 

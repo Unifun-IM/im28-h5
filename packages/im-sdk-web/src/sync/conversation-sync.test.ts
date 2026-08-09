@@ -106,6 +106,21 @@ describe('Web IM conversation sync', () => {
       { conversationID: 'sg_group-1', isPinned: true },
       { conversationID: 'si_user-2', latestMessageID: 'client-1' },
     ]);
+    await expect(
+      service.listCachedItems({ archived: false }),
+    ).resolves.toMatchObject([
+      {
+        conversation: { conversationID: 'sg_group-1' },
+        latestMessage: null,
+      },
+      {
+        conversation: { conversationID: 'si_user-2' },
+        latestMessage: {
+          clientMsgID: 'client-1',
+          payload: { text: { text: '第一页' } },
+        },
+      },
+    ]);
     // latest message 必须可由共享 Repository 独立读取。
     const messages = new MessageRepository(harness.database);
     await expect(messages.getByClientMsgID('client-1')).resolves.toMatchObject({

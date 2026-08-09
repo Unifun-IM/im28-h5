@@ -6,6 +6,11 @@ export { createBrowserGatewayFetch } from './browser-gateway-fetch.js';
 export { createWebIMDeviceIdentityStore } from './device-identity-store.js';
 /** 解析部署环境中的 Gateway runtime 配置。 */
 export { parseWebIMRuntimeConfig } from './runtime-config.js';
+/** 创建复用 generated OpenAPI operation 的平台条款 client。 */
+export {
+  WEB_IM_PLATFORM_TERM_KEYS,
+  createWebIMPlatformTermsClient,
+} from './platform-terms-client.js';
 /** 执行严格的 Web IM runtime 状态转换。 */
 export { transitionWebIMRuntimeState } from './runtime-lifecycle.js';
 /** 创建复用共享 Gateway clients 的浏览器 IM runtime。 */
@@ -25,6 +30,13 @@ export type {
 } from './device-identity-store.js';
 /** 导出类型化 Gateway runtime 配置。 */
 export type { WebIMRuntimeConfig } from './runtime-config.js';
+/** 导出平台条款查询的稳定公开 contract。 */
+export type {
+  WebIMPlatformTerm,
+  WebIMPlatformTermKey,
+  WebIMPlatformTermsClient,
+  WebIMPlatformTermsClientOptions,
+} from './platform-terms-client.js';
 /** 导出 runtime 状态机的状态和事件类型。 */
 export type {
   WebIMRuntimeEvent,

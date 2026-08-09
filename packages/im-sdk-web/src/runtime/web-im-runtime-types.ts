@@ -8,6 +8,10 @@ import type { WebIMAccountDatabaseLifecycle } from '../storage/index.js';
 import type { WebIMSync } from '../sync/index.js';
 import type { WebIMAuthSessionStore } from './auth-session-store.js';
 import type { WebIMDeviceIdentityStore } from './device-identity-store.js';
+import type {
+  WebIMPlatformTerm,
+  WebIMPlatformTermKey,
+} from './platform-terms-client.js';
 import type { WebIMRuntimeConfig } from './runtime-config.js';
 import type { WebIMRuntimeState } from './runtime-lifecycle.js';
 
@@ -18,11 +22,13 @@ export type WebIMLoginRequest = Omit<GatewayUserLoginRequest, 'device_id'>;
 export interface WebIMRuntimeSnapshot {
   readonly state: WebIMRuntimeState;
   readonly userID: string | null;
+  readonly dataVersion: number;
 }
 
 /** Web runtime 对页面开放的最小认证与连接 API。 */
 export interface WebIMRuntime {
   login(request: WebIMLoginRequest): Promise<WebIMRuntimeSnapshot>;
+  getPlatformTerm(key: WebIMPlatformTermKey): Promise<WebIMPlatformTerm>;
   restore(): Promise<boolean>;
   signOut(): Promise<void>;
   getSnapshot(): WebIMRuntimeSnapshot;

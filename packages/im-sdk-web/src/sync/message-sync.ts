@@ -10,8 +10,14 @@ import {
 import {
   createWebIMSyncError,
   requireWebIMSyncContext,
+  type WebIMSyncContext,
   type WebIMSyncContextDependencies,
 } from './sync-context.js';
+import {
+  createWebIMSyncMutationQueue,
+  type WebIMSyncMutationQueue,
+  type WebIMSyncMutationQueueDependencies,
+} from './sync-mutation-queue.js';
 
 /** Gateway 历史拉取参数保留 uint64 seq 字符串。 */
 export interface WebIMPullMessageHistoryOptions {
@@ -40,10 +46,21 @@ export interface WebIMMessageSync {
 
 /** 消息同步依赖复用 runtime 的 transport/account owners。 */
 export interface WebIMMessageSyncDependencies
-  extends WebIMSyncContextDependencies {
+  extends WebIMSyncContextDependencies,
+    WebIMSyncMutationQueueDependencies {
   readonly gatewayClient: GatewayHTTPClient;
   readonly createClientMessageID?: () => string;
   readonly now?: () => number;
+}
+
+/** 已校验并落库前准备完成的文本发送上下文。 */
+interface PreparedTextSend {
+  readonly conversationID: string;
+  readonly text: string;
+  readonly clientMsgID: string;
+  readonly localMessage: Message;
+  readonly conversationRepository: ConversationRepository;
+  readonly messageRepository: MessageRepository;
 }
 
 /** 创建认证账号绑定的浏览器消息同步服务。 */
@@ -57,10 +74,14 @@ export function createWebIMMessageSync(
 class WebIMMessageSyncImpl implements WebIMMessageSync {
   // dependencies 动态读取当前认证账号和 database。
   private readonly dependencies: WebIMMessageSyncDependencies;
+  // mutationQueue 在聚合 facade 中与会话和 realtime 共用。
+  private readonly mutationQueue: WebIMSyncMutationQueue;
 
   /** 保存 runtime owners，不持有独立认证或数据库状态。 */
   constructor(dependencies: WebIMMessageSyncDependencies) {
     this.dependencies = dependencies;
+    this.mutationQueue =
+      dependencies.mutationQueue ?? createWebIMSyncMutationQueue();
   }
 
   /** 从当前账号 SQLite 返回 newest-first 历史窗口。 */
@@ -80,6 +101,16 @@ class WebIMMessageSyncImpl implements WebIMMessageSync {
   ): Promise<readonly Message[]> {
     // context 固定本轮账号与 database owner。
     const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
+    return this.mutationQueue.enqueue(() =>
+      this.pullHistoryDirect(context, options),
+    );
+  }
+
+  /** 在共享队列内完成历史拉取、映射和持久化。 */
+  private async pullHistoryDirect(
+    context: WebIMSyncContext,
+    options: WebIMPullMessageHistoryOptions,
+  ): Promise<readonly Message[]> {
     // conversationID 是远端和本地分区共同主键。
     const conversationID = options.conversationID.trim();
     // fromSeq 保留 uint64 string，禁止经过 JS number 截断。
@@ -119,6 +150,32 @@ class WebIMMessageSyncImpl implements WebIMMessageSync {
   async sendText(options: WebIMSendTextMessageOptions): Promise<Message> {
     // context 保证发送账号与消息 direction 一致。
     const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
+    return this.mutationQueue.enqueue(() =>
+      this.sendTextDirect(context, options),
+    );
+  }
+
+  /** 在共享队列内完整执行 optimistic send 状态机。 */
+  private async sendTextDirect(
+    context: WebIMSyncContext,
+    options: WebIMSendTextMessageOptions,
+  ): Promise<Message> {
+    // prepared 在任何 sending 写入前完成目标和内容校验。
+    const prepared = await this.prepareTextSend(context, options);
+    await prepared.messageRepository.upsert(prepared.localMessage);
+    await prepared.conversationRepository.updateLatestMessage(
+      prepared.conversationID,
+      prepared.clientMsgID,
+      prepared.localMessage.sendTime,
+    );
+    return this.completeTextSend(context, prepared);
+  }
+
+  /** 校验会话并创建稳定的本地 sending 消息。 */
+  private async prepareTextSend(
+    context: WebIMSyncContext,
+    options: WebIMSendTextMessageOptions,
+  ): Promise<PreparedTextSend> {
     // conversationID 必须指向当前 cache 的已有会话。
     const conversationID = options.conversationID.trim();
     // text 在创建 optimistic row 前统一 trim。
@@ -158,40 +215,55 @@ class WebIMMessageSyncImpl implements WebIMMessageSync {
     };
     // messageRepository 管理 sending -> sent/failed 状态。
     const messageRepository = new MessageRepository(context.database);
-    await messageRepository.upsert(localMessage);
-    await conversationRepository.updateLatestMessage(
+    return {
       conversationID,
+      text,
       clientMsgID,
-      sendTime,
-    );
+      localMessage,
+      conversationRepository,
+      messageRepository,
+    };
+  }
+
+  /** 调用 Gateway 并将 sending 状态收敛为 sent 或 failed。 */
+  private async completeTextSend(
+    context: WebIMSyncContext,
+    prepared: PreparedTextSend,
+  ): Promise<Message> {
     try {
       // remoteMessage 必须回显相同幂等 ID，避免产生双消息。
       const remoteMessage = await this.dependencies.gatewayClient.sendMessage({
-        conversation_id: conversationID,
-        client_msg_id: clientMsgID,
-        body: { text: { text } },
+        conversation_id: prepared.conversationID,
+        client_msg_id: prepared.clientMsgID,
+        body: { text: { text: prepared.text } },
       });
       // sentMessage 复用唯一 shared mapper。
       const sentMessage = mapGatewayMessageToCore(remoteMessage, {
         currentUserID: context.userID,
-        conversationID,
+        conversationID: prepared.conversationID,
       });
-      if (sentMessage.clientMsgID !== clientMsgID) {
+      if (sentMessage.clientMsgID !== prepared.clientMsgID) {
         throw createWebIMSyncError(
           'CLIENT_MESSAGE_ID_MISMATCH',
           'Gateway returned a different client message ID.',
         );
       }
-      await messageRepository.upsert({ ...sentMessage, status: 'sent' });
-      await conversationRepository.updateLatestMessage(
-        conversationID,
-        clientMsgID,
+      await prepared.messageRepository.upsert({
+        ...sentMessage,
+        status: 'sent',
+      });
+      await prepared.conversationRepository.updateLatestMessage(
+        prepared.conversationID,
+        prepared.clientMsgID,
         sentMessage.sendTime,
       );
       return { ...sentMessage, status: 'sent' };
     } catch (cause) {
       try {
-        await messageRepository.updateStatus(clientMsgID, 'failed');
+        await prepared.messageRepository.updateStatus(
+          prepared.clientMsgID,
+          'failed',
+        );
       } catch (statusCause) {
         throw new AggregateError(
           [cause, statusCause],

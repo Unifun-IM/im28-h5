@@ -1,6 +1,8 @@
 import {
   WebIMRuntimeError,
   createBrowserGatewayFetch,
+  createBrowserSqlJsDatabaseWorker,
+  createAccountDatabaseLeaseManager,
   createWebIMAccountDatabaseLifecycle,
   createWebIMAuthSessionStore,
   createWebIMDeviceIdentityStore,
@@ -35,6 +37,11 @@ export function createConfiguredWebIMRuntime(): WebIMRuntime {
   const accountDatabase = createWebIMAccountDatabaseLifecycle({
     indexedDB: globalThis.indexedDB,
     locateWasmFile: () => sqlWasmURL,
+    wasmURL: sqlWasmURL,
+    createDatabaseWorker: createBrowserSqlJsDatabaseWorker,
+    accountDatabaseLeaseManager: createAccountDatabaseLeaseManager(
+      globalThis.navigator.locks,
+    ),
   });
   return createWebIMRuntime({
     config,

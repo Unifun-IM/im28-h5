@@ -5,6 +5,7 @@ export type WebIMRuntimeErrorCode =
   | 'CORRUPT_DEVICE_ID'
   | 'BROWSER_CAPABILITY_UNAVAILABLE'
   | 'INVALID_AUTH_RESPONSE'
+  | 'INVALID_PLATFORM_TERM_RESPONSE'
   | 'INVALID_LIFECYCLE_TRANSITION';
 
 /** Web IM runtime 的结构化错误，避免调用方依赖易变文案。 */

@@ -1,0 +1,2730 @@
+{
+  "source": {
+    "fileKey": "9c3nw0IayETS0m5pmq1wVd",
+    "nodeId": "26142:14112",
+    "figmaUrl": "https://www.figma.com/design/9c3nw0IayETS0m5pmq1wVd/IMM-28?node-id=26142-14112",
+    "syncedAt": "2026-07-01T08:59:05.107Z",
+    "format": "svg"
+  },
+  "icons": [
+    {
+      "id": "54258:88648",
+      "name": "add-user",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "add-user",
+      "file": "src/assets/icons/imm28/add-user.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19724:11996",
+      "name": "AI",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "ai",
+      "file": "src/assets/icons/imm28/ai.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53928:9026",
+      "name": "announcement-megaphone",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "announcement-megaphone",
+      "file": "src/assets/icons/imm28/announcement-megaphone.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53613:18300",
+      "name": "arrow-down-circle",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "arrow-down-circle.dynamic",
+      "file": "src/assets/icons/imm28/arrow-down-circle.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53613:18303",
+      "name": "arrow-down-circle",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "arrow-down-circle.regular",
+      "file": "src/assets/icons/imm28/arrow-down-circle.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53613:18306",
+      "name": "arrow-down-circle",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "arrow-down-circle.solid",
+      "file": "src/assets/icons/imm28/arrow-down-circle.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53613:18311",
+      "name": "arrow-up-circle",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "arrow-up-circle.dynamic",
+      "file": "src/assets/icons/imm28/arrow-up-circle.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53613:18314",
+      "name": "arrow-up-circle",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "arrow-up-circle.regular",
+      "file": "src/assets/icons/imm28/arrow-up-circle.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53613:18317",
+      "name": "arrow-up-circle",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "arrow-up-circle.solid",
+      "file": "src/assets/icons/imm28/arrow-up-circle.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19651:14745",
+      "name": "arrow-up-right",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "arrow-up-right.dynamic",
+      "file": "src/assets/icons/imm28/arrow-up-right.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19651:14747",
+      "name": "arrow-up-right",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "arrow-up-right.regular",
+      "file": "src/assets/icons/imm28/arrow-up-right.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19651:14749",
+      "name": "arrow-up-right",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "arrow-up-right.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19724:12007",
+      "name": "AVI",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "avi",
+      "file": "src/assets/icons/imm28/avi.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54426:26757",
+      "name": "bell-off",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "bell-off.dynamic",
+      "file": "src/assets/icons/imm28/bell-off.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54426:26760",
+      "name": "bell-off",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "bell-off.regular",
+      "file": "src/assets/icons/imm28/bell-off.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54426:26763",
+      "name": "bell-off",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "bell-off.solid",
+      "file": "src/assets/icons/imm28/bell-off.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54426:23567",
+      "name": "bell",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "bell.dynamic",
+      "file": "src/assets/icons/imm28/bell.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54426:26748",
+      "name": "bell",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "bell.regular",
+      "file": "src/assets/icons/imm28/bell.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54426:26751",
+      "name": "bell",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "bell.solid",
+      "file": "src/assets/icons/imm28/bell.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:816",
+      "name": "bookmark",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "bookmark.dynamic",
+      "file": "src/assets/icons/imm28/bookmark.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:818",
+      "name": "bookmark",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "bookmark.regular",
+      "file": "src/assets/icons/imm28/bookmark.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:820",
+      "name": "bookmark",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "bookmark.solid",
+      "file": "src/assets/icons/imm28/bookmark.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:838",
+      "name": "camera",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "camera.dynamic",
+      "file": "src/assets/icons/imm28/camera.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:841",
+      "name": "camera",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "camera.regular",
+      "file": "src/assets/icons/imm28/camera.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:844",
+      "name": "camera",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "camera.solid",
+      "file": "src/assets/icons/imm28/camera.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19731:5170",
+      "name": "chat-bubble-check",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "chat-bubble-check.dynamic",
+      "file": "src/assets/icons/imm28/chat-bubble-check.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19731:5173",
+      "name": "chat-bubble-check",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "chat-bubble-check.regular",
+      "file": "src/assets/icons/imm28/chat-bubble-check.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19731:5176",
+      "name": "chat-bubble-check",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "chat-bubble-check.solid",
+      "file": "src/assets/icons/imm28/chat-bubble-check.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19650:13725",
+      "name": "chat-bubble-empty",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "chat-bubble-empty.dynamic",
+      "file": "src/assets/icons/imm28/chat-bubble-empty.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19650:13727",
+      "name": "chat-bubble-empty",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "chat-bubble-empty.regular",
+      "file": "src/assets/icons/imm28/chat-bubble-empty.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19650:13729",
+      "name": "chat-bubble-empty",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "chat-bubble-empty.solid",
+      "file": "src/assets/icons/imm28/chat-bubble-empty.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:712",
+      "name": "check-circle",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "check-circle.dynamic",
+      "file": "src/assets/icons/imm28/check-circle.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:715",
+      "name": "check-circle",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "check-circle.regular",
+      "file": "src/assets/icons/imm28/check-circle.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:718",
+      "name": "check-circle",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "check-circle.solid",
+      "file": "src/assets/icons/imm28/check-circle.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:706",
+      "name": "check",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "check.dynamic",
+      "file": "src/assets/icons/imm28/check.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:708",
+      "name": "check",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "check.regular",
+      "file": "src/assets/icons/imm28/check.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:710",
+      "name": "check",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "check.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19667:5968",
+      "name": "circle",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "circle.dynamic",
+      "file": "src/assets/icons/imm28/circle.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19667:5970",
+      "name": "circle",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "circle.regular",
+      "file": "src/assets/icons/imm28/circle.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19667:5972",
+      "name": "circle",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "circle.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6748",
+      "name": "cloud-download",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "cloud-download.dynamic",
+      "file": "src/assets/icons/imm28/cloud-download.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6751",
+      "name": "cloud-download",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "cloud-download.regular",
+      "file": "src/assets/icons/imm28/cloud-download.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6754",
+      "name": "cloud-download",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "cloud-download.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6740",
+      "name": "cloud-upload",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "cloud-upload.dynamic",
+      "file": "src/assets/icons/imm28/cloud-upload.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6743",
+      "name": "cloud-upload",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "cloud-upload.regular",
+      "file": "src/assets/icons/imm28/cloud-upload.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6746",
+      "name": "cloud-upload",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "cloud-upload.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19730:5121",
+      "name": "电脑",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "computer",
+      "file": "src/assets/icons/imm28/computer.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19708:9926",
+      "name": "computer",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "computer.dynamic",
+      "file": "src/assets/icons/imm28/computer.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54426:26775",
+      "name": "computer",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "computer.dynamic-2",
+      "file": "src/assets/icons/imm28/computer.dynamic-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19708:9930",
+      "name": "computer",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "computer.regular",
+      "file": "src/assets/icons/imm28/computer.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54426:26770",
+      "name": "computer",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "computer.regular-2",
+      "file": "src/assets/icons/imm28/computer.regular-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19708:9934",
+      "name": "computer",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "computer.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "54426:26772",
+      "name": "computer",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "computer.solid-2",
+      "file": "src/assets/icons/imm28/computer.solid-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6821",
+      "name": "copy",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "copy.dynamic",
+      "file": "src/assets/icons/imm28/copy.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6824",
+      "name": "copy",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "copy.regular",
+      "file": "src/assets/icons/imm28/copy.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6827",
+      "name": "copy",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "copy.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "54428:26823",
+      "name": "coupon",
+      "variant": "ticket-percent",
+      "type": "COMPONENT",
+      "fileBaseName": "coupon.ticket-percent",
+      "file": "src/assets/icons/imm28/coupon.ticket-percent.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26825",
+      "name": "coupon",
+      "variant": "ticket-percent",
+      "type": "COMPONENT",
+      "fileBaseName": "coupon.ticket-percent-2",
+      "file": "src/assets/icons/imm28/coupon.ticket-percent-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26827",
+      "name": "coupon",
+      "variant": "ticket-percent",
+      "type": "COMPONENT",
+      "fileBaseName": "coupon.ticket-percent-3",
+      "file": "src/assets/icons/imm28/coupon.ticket-percent-3.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54478:106695",
+      "name": "dabble- check",
+      "variant": "tick-double",
+      "type": "COMPONENT",
+      "fileBaseName": "dabble-check.tick-double",
+      "file": "src/assets/icons/imm28/dabble-check.tick-double.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54478:106697",
+      "name": "dabble- check",
+      "variant": "tick-double",
+      "type": "COMPONENT",
+      "fileBaseName": "dabble-check.tick-double-2",
+      "file": "src/assets/icons/imm28/dabble-check.tick-double-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54478:106699",
+      "name": "dabble- check",
+      "variant": "tick-double",
+      "type": "COMPONENT",
+      "fileBaseName": "dabble-check.tick-double-3",
+      "file": "src/assets/icons/imm28/dabble-check.tick-double-3.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6813",
+      "name": "data-transfer-both",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "data-transfer-both.dynamic",
+      "file": "src/assets/icons/imm28/data-transfer-both.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6816",
+      "name": "data-transfer-both",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "data-transfer-both.regular",
+      "file": "src/assets/icons/imm28/data-transfer-both.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6819",
+      "name": "data-transfer-both",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "data-transfer-both.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19724:11878",
+      "name": "DOC",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "doc",
+      "file": "src/assets/icons/imm28/doc.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:30764",
+      "name": "edit-e",
+      "variant": "edit-rectangle",
+      "type": "COMPONENT",
+      "fileBaseName": "edit-e.edit-rectangle",
+      "file": "src/assets/icons/imm28/edit-e.edit-rectangle.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:30766",
+      "name": "edit-e",
+      "variant": "edit-rectangle",
+      "type": "COMPONENT",
+      "fileBaseName": "edit-e.edit-rectangle-2",
+      "file": "src/assets/icons/imm28/edit-e.edit-rectangle-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:30771",
+      "name": "edit-e",
+      "variant": "edit-rectangle",
+      "type": "COMPONENT",
+      "fileBaseName": "edit-e.edit-rectangle-3",
+      "file": "src/assets/icons/imm28/edit-e.edit-rectangle-3.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6837",
+      "name": "edit",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "edit.dynamic",
+      "file": "src/assets/icons/imm28/edit.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6840",
+      "name": "edit",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "edit.regular",
+      "file": "src/assets/icons/imm28/edit.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6843",
+      "name": "edit",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "edit.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19721:9728",
+      "name": "emoji",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "emoji.dynamic",
+      "file": "src/assets/icons/imm28/emoji.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19721:9733",
+      "name": "emoji",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "emoji.regular",
+      "file": "src/assets/icons/imm28/emoji.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19721:9740",
+      "name": "emoji",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "emoji.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6915",
+      "name": "enlarge",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "enlarge.dynamic",
+      "file": "src/assets/icons/imm28/enlarge.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6918",
+      "name": "enlarge",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "enlarge.regular",
+      "file": "src/assets/icons/imm28/enlarge.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6921",
+      "name": "enlarge",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "enlarge.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6710",
+      "name": "erase",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "erase.dynamic",
+      "file": "src/assets/icons/imm28/erase.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6714",
+      "name": "erase",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "erase.regular",
+      "file": "src/assets/icons/imm28/erase.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6718",
+      "name": "erase",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "erase.solid",
+      "file": "src/assets/icons/imm28/erase.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54679:18848",
+      "name": "expend-up",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "expend-up",
+      "file": "src/assets/icons/imm28/expend-up.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19606:7216",
+      "name": "eye-closed",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "eye-closed.regular",
+      "file": "src/assets/icons/imm28/eye-closed.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19606:7228",
+      "name": "eye-closed",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "eye-closed.solid",
+      "file": "src/assets/icons/imm28/eye-closed.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19606:7202",
+      "name": "eye",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "eye.regular",
+      "file": "src/assets/icons/imm28/eye.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19606:7212",
+      "name": "eye",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "eye.solid",
+      "file": "src/assets/icons/imm28/eye.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19738:5189",
+      "name": "fast-arrow-down",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "fast-arrow-down.dynamic",
+      "file": "src/assets/icons/imm28/fast-arrow-down.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19738:5192",
+      "name": "fast-arrow-down",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "fast-arrow-down.regular",
+      "file": "src/assets/icons/imm28/fast-arrow-down.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19738:5195",
+      "name": "fast-arrow-down",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "fast-arrow-down.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19738:5181",
+      "name": "fast-arrow-up",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "fast-arrow-up.dynamic",
+      "file": "src/assets/icons/imm28/fast-arrow-up.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19738:5184",
+      "name": "fast-arrow-up",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "fast-arrow-up.regular",
+      "file": "src/assets/icons/imm28/fast-arrow-up.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19738:5187",
+      "name": "fast-arrow-up",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "fast-arrow-up.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "54428:26808",
+      "name": "file",
+      "variant": "collection",
+      "type": "COMPONENT",
+      "fileBaseName": "file.collection",
+      "file": "src/assets/icons/imm28/file.collection.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26810",
+      "name": "file",
+      "variant": "collection",
+      "type": "COMPONENT",
+      "fileBaseName": "file.collection-2",
+      "file": "src/assets/icons/imm28/file.collection-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26816",
+      "name": "file",
+      "variant": "collection",
+      "type": "COMPONENT",
+      "fileBaseName": "file.collection-3",
+      "file": "src/assets/icons/imm28/file.collection-3.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:824",
+      "name": "filter-alt",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "filter-alt.dynamic",
+      "file": "src/assets/icons/imm28/filter-alt.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:826",
+      "name": "filter-alt",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "filter-alt.regular",
+      "file": "src/assets/icons/imm28/filter-alt.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:828",
+      "name": "filter-alt",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "filter-alt.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19724:11889",
+      "name": "GIF",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "gif",
+      "file": "src/assets/icons/imm28/gif.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:792",
+      "name": "heart",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "heart.dynamic",
+      "file": "src/assets/icons/imm28/heart.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6860",
+      "name": "heart",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "heart.dynamic-2",
+      "file": "src/assets/icons/imm28/heart.dynamic-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:794",
+      "name": "heart",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "heart.regular",
+      "file": "src/assets/icons/imm28/heart.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6862",
+      "name": "heart",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "heart.regular-2",
+      "file": "src/assets/icons/imm28/heart.regular-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:796",
+      "name": "heart",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "heart.solid",
+      "file": "src/assets/icons/imm28/heart.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6864",
+      "name": "heart",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "heart.solid-2",
+      "file": "src/assets/icons/imm28/heart.solid-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6867",
+      "name": "home-simple",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "home-simple.dynamic",
+      "file": "src/assets/icons/imm28/home-simple.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6870",
+      "name": "home-simple",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "home-simple.regular",
+      "file": "src/assets/icons/imm28/home-simple.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6873",
+      "name": "home-simple",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "home-simple.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19572:670",
+      "name": "info-circle",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "info-circle.dynamic",
+      "file": "src/assets/icons/imm28/info-circle.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:674",
+      "name": "info-circle",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "info-circle.regular",
+      "file": "src/assets/icons/imm28/info-circle.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:678",
+      "name": "info-circle",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "info-circle.solid",
+      "file": "src/assets/icons/imm28/info-circle.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19722:9754",
+      "name": "input-voice",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "input-voice",
+      "file": "src/assets/icons/imm28/input-voice.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19724:11900",
+      "name": "JPG",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "jpg",
+      "file": "src/assets/icons/imm28/jpg.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54114:58944",
+      "name": "keyboard",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "keyboard",
+      "file": "src/assets/icons/imm28/keyboard.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54258:88650",
+      "name": "lock",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "lock",
+      "file": "src/assets/icons/imm28/lock.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26857",
+      "name": "lock-off",
+      "variant": "unlock",
+      "type": "COMPONENT",
+      "fileBaseName": "lock-off.unlock",
+      "file": "src/assets/icons/imm28/lock-off.unlock.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26859",
+      "name": "lock-off",
+      "variant": "unlock",
+      "type": "COMPONENT",
+      "fileBaseName": "lock-off.unlock-2",
+      "file": "src/assets/icons/imm28/lock-off.unlock-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26862",
+      "name": "lock-off",
+      "variant": "unlock",
+      "type": "COMPONENT",
+      "fileBaseName": "lock-off.unlock-3",
+      "file": "src/assets/icons/imm28/lock-off.unlock-3.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6937",
+      "name": "lock-slash",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "lock-slash.dynamic",
+      "file": "src/assets/icons/imm28/lock-slash.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6943",
+      "name": "lock-slash",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "lock-slash.regular",
+      "file": "src/assets/icons/imm28/lock-slash.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6949",
+      "name": "lock-slash",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "lock-slash.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6931",
+      "name": "lock",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "lock.dynamic",
+      "file": "src/assets/icons/imm28/lock.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26844",
+      "name": " lock",
+      "variant": "lock",
+      "type": "COMPONENT",
+      "fileBaseName": "lock.lock",
+      "file": "src/assets/icons/imm28/lock.lock.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26846",
+      "name": " lock",
+      "variant": "lock",
+      "type": "COMPONENT",
+      "fileBaseName": "lock.lock-2",
+      "file": "src/assets/icons/imm28/lock.lock-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26849",
+      "name": " lock",
+      "variant": "lock",
+      "type": "COMPONENT",
+      "fileBaseName": "lock.lock-3",
+      "file": "src/assets/icons/imm28/lock.lock-3.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6933",
+      "name": "lock",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "lock.regular",
+      "file": "src/assets/icons/imm28/lock.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6935",
+      "name": "lock",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "lock.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "54258:88647",
+      "name": "magnet",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "magnet",
+      "file": "src/assets/icons/imm28/magnet.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6756",
+      "name": "mail",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "mail.dynamic",
+      "file": "src/assets/icons/imm28/mail.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6759",
+      "name": "mail",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "mail.regular",
+      "file": "src/assets/icons/imm28/mail.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6762",
+      "name": "mail",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "mail.solid",
+      "file": "src/assets/icons/imm28/mail.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:799",
+      "name": "map-pin",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "map-pin.dynamic",
+      "file": "src/assets/icons/imm28/map-pin.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:802",
+      "name": "map-pin",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "map-pin.regular",
+      "file": "src/assets/icons/imm28/map-pin.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:806",
+      "name": "map-pin",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "map-pin.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6875",
+      "name": "maps-arrow-diagonal",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "maps-arrow-diagonal.dynamic",
+      "file": "src/assets/icons/imm28/maps-arrow-diagonal.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6877",
+      "name": "maps-arrow-diagonal",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "maps-arrow-diagonal.regular",
+      "file": "src/assets/icons/imm28/maps-arrow-diagonal.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6879",
+      "name": "maps-arrow-diagonal",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "maps-arrow-diagonal.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6688",
+      "name": "menu",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "menu.dynamic",
+      "file": "src/assets/icons/imm28/menu.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6692",
+      "name": "menu",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "menu.regular",
+      "file": "src/assets/icons/imm28/menu.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6696",
+      "name": "menu",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "menu.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:7002",
+      "name": "microphone-mute",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "microphone-mute.dynamic",
+      "file": "src/assets/icons/imm28/microphone-mute.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7007",
+      "name": "microphone-mute",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "microphone-mute.regular",
+      "file": "src/assets/icons/imm28/microphone-mute.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7012",
+      "name": "microphone-mute",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "microphone-mute.solid",
+      "file": "src/assets/icons/imm28/microphone-mute.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6989",
+      "name": "microphone",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "microphone.dynamic",
+      "file": "src/assets/icons/imm28/microphone.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6993",
+      "name": "microphone",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "microphone.regular",
+      "file": "src/assets/icons/imm28/microphone.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6997",
+      "name": "microphone",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "microphone.solid",
+      "file": "src/assets/icons/imm28/microphone.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:659",
+      "name": "minus-circle",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "minus-circle.dynamic",
+      "file": "src/assets/icons/imm28/minus-circle.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:662",
+      "name": "minus-circle",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "minus-circle.regular",
+      "file": "src/assets/icons/imm28/minus-circle.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:665",
+      "name": "minus-circle",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "minus-circle.solid",
+      "file": "src/assets/icons/imm28/minus-circle.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53613:18293",
+      "name": "minus",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "minus.dynamic",
+      "file": "src/assets/icons/imm28/minus.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53613:18295",
+      "name": "minus",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "minus.regular",
+      "file": "src/assets/icons/imm28/minus.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53613:18297",
+      "name": "minus",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "minus.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19724:11911",
+      "name": "MKV",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "mkv",
+      "file": "src/assets/icons/imm28/mkv.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:356",
+      "name": "more-horiz",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "more-horiz.dynamic",
+      "file": "src/assets/icons/imm28/more-horiz.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:360",
+      "name": "more-horiz",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "more-horiz.regular",
+      "file": "src/assets/icons/imm28/more-horiz.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:367",
+      "name": "more-horiz",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "more-horiz.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19572:369",
+      "name": "more-vert",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "more-vert.dynamic",
+      "file": "src/assets/icons/imm28/more-vert.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:373",
+      "name": "more-vert",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "more-vert.regular",
+      "file": "src/assets/icons/imm28/more-vert.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:380",
+      "name": "more-vert",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "more-vert.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19724:11923",
+      "name": "MP3",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "mp3",
+      "file": "src/assets/icons/imm28/mp3.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:382",
+      "name": "nav-arrow-down",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-down.dynamic",
+      "file": "src/assets/icons/imm28/nav-arrow-down.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:384",
+      "name": "nav-arrow-down",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-down.regular",
+      "file": "src/assets/icons/imm28/nav-arrow-down.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:387",
+      "name": "nav-arrow-down",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-down.solid",
+      "file": "src/assets/icons/imm28/nav-arrow-down.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:404",
+      "name": "nav-arrow-left",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-left.dynamic",
+      "file": "src/assets/icons/imm28/nav-arrow-left.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:406",
+      "name": "nav-arrow-left",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-left.regular",
+      "file": "src/assets/icons/imm28/nav-arrow-left.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:408",
+      "name": "nav-arrow-left",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-left.solid",
+      "file": "src/assets/icons/imm28/nav-arrow-left.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:397",
+      "name": "nav-arrow-right",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-right.dynamic",
+      "file": "src/assets/icons/imm28/nav-arrow-right.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:399",
+      "name": "nav-arrow-right",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-right.regular",
+      "file": "src/assets/icons/imm28/nav-arrow-right.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:401",
+      "name": "nav-arrow-right",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-right.solid",
+      "file": "src/assets/icons/imm28/nav-arrow-right.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:390",
+      "name": "nav-arrow-up",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-up.dynamic",
+      "file": "src/assets/icons/imm28/nav-arrow-up.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:392",
+      "name": "nav-arrow-up",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-up.regular",
+      "file": "src/assets/icons/imm28/nav-arrow-up.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:394",
+      "name": "nav-arrow-up",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "nav-arrow-up.solid",
+      "file": "src/assets/icons/imm28/nav-arrow-up.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:761",
+      "name": "open-new-window",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "open-new-window.dynamic",
+      "file": "src/assets/icons/imm28/open-new-window.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:764",
+      "name": "open-new-window",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "open-new-window.regular",
+      "file": "src/assets/icons/imm28/open-new-window.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:767",
+      "name": "open-new-window",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "open-new-window.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19724:11934",
+      "name": "PDF",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "pdf",
+      "file": "src/assets/icons/imm28/pdf.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19735:139",
+      "name": "phone-disabled",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "phone-disabled.dynamic",
+      "file": "src/assets/icons/imm28/phone-disabled.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19735:142",
+      "name": "phone-disabled",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "phone-disabled.regular",
+      "file": "src/assets/icons/imm28/phone-disabled.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19735:145",
+      "name": "phone-disabled",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "phone-disabled.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19735:168",
+      "name": "phone-out",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "phone-out.dynamic",
+      "file": "src/assets/icons/imm28/phone-out.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19735:172",
+      "name": "phone-out",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "phone-out.solid",
+      "file": "src/assets/icons/imm28/phone-out.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19735:147",
+      "name": "phone-paused",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "phone-paused.dynamic",
+      "file": "src/assets/icons/imm28/phone-paused.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19735:151",
+      "name": "phone-paused",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "phone-paused.regular",
+      "file": "src/assets/icons/imm28/phone-paused.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19735:155",
+      "name": "phone-paused",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "phone-paused.solid",
+      "file": "src/assets/icons/imm28/phone-paused.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19735:160",
+      "name": "phone",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "phone.dynamic",
+      "file": "src/assets/icons/imm28/phone.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19735:162",
+      "name": "phone",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "phone.regular",
+      "file": "src/assets/icons/imm28/phone.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19735:164",
+      "name": "phone",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "phone.solid",
+      "file": "src/assets/icons/imm28/phone.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26834",
+      "name": "picture",
+      "variant": "image-rectangle",
+      "type": "COMPONENT",
+      "fileBaseName": "picture.image-rectangle",
+      "file": "src/assets/icons/imm28/picture.image-rectangle.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26836",
+      "name": "picture",
+      "variant": "image-rectangle",
+      "type": "COMPONENT",
+      "fileBaseName": "picture.image-rectangle-2",
+      "file": "src/assets/icons/imm28/picture.image-rectangle-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26838",
+      "name": "picture",
+      "variant": "image-rectangle",
+      "type": "COMPONENT",
+      "fileBaseName": "picture.image-rectangle-3",
+      "file": "src/assets/icons/imm28/picture.image-rectangle-3.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19731:5141",
+      "name": "pin-slash",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "pin-slash.dynamic",
+      "file": "src/assets/icons/imm28/pin-slash.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19731:5145",
+      "name": "pin-slash",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "pin-slash.regular",
+      "file": "src/assets/icons/imm28/pin-slash.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19731:5149",
+      "name": "pin-slash",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "pin-slash.solid",
+      "file": "src/assets/icons/imm28/pin-slash.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19731:5127",
+      "name": "pin",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "pin.dynamic",
+      "file": "src/assets/icons/imm28/pin.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19731:5131",
+      "name": "pin",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "pin.regular",
+      "file": "src/assets/icons/imm28/pin.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19731:5135",
+      "name": "pin",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "pin.solid",
+      "file": "src/assets/icons/imm28/pin.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19739:8128",
+      "name": "播放",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "play",
+      "file": "src/assets/icons/imm28/play.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53449:7199",
+      "name": "play",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "play.regular",
+      "file": "src/assets/icons/imm28/play.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53449:7200",
+      "name": "play",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "play.solid",
+      "file": "src/assets/icons/imm28/play.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:684",
+      "name": "plus-circle",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "plus-circle.dynamic",
+      "file": "src/assets/icons/imm28/plus-circle.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:687",
+      "name": "plus-circle",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "plus-circle.regular",
+      "file": "src/assets/icons/imm28/plus-circle.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:690",
+      "name": "plus-circle",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "plus-circle.solid",
+      "file": "src/assets/icons/imm28/plus-circle.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19646:5545",
+      "name": "plus",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "plus.dynamic",
+      "file": "src/assets/icons/imm28/plus.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19646:5547",
+      "name": "plus",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "plus.regular",
+      "file": "src/assets/icons/imm28/plus.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19646:5549",
+      "name": "plus",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "plus.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19724:11943",
+      "name": "PPT",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "ppt",
+      "file": "src/assets/icons/imm28/ppt.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19724:11954",
+      "name": "PSD",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "psd",
+      "file": "src/assets/icons/imm28/psd.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19700:8162",
+      "name": "quote",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "quote.dynamic",
+      "file": "src/assets/icons/imm28/quote.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19700:8165",
+      "name": "quote",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "quote.regular",
+      "file": "src/assets/icons/imm28/quote.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19700:8168",
+      "name": "quote",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "quote.solid",
+      "file": "src/assets/icons/imm28/quote.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6923",
+      "name": "reduce",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "reduce.dynamic",
+      "file": "src/assets/icons/imm28/reduce.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6926",
+      "name": "reduce",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "reduce.regular",
+      "file": "src/assets/icons/imm28/reduce.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6929",
+      "name": "reduce",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "reduce.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19700:8172",
+      "name": "refresh-double",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "refresh-double.dynamic",
+      "file": "src/assets/icons/imm28/refresh-double.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19700:8177",
+      "name": "refresh-double",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "refresh-double.regular",
+      "file": "src/assets/icons/imm28/refresh-double.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19700:8182",
+      "name": "refresh-double",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "refresh-double.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19572:769",
+      "name": "refresh",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "refresh.dynamic",
+      "file": "src/assets/icons/imm28/refresh.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:772",
+      "name": "refresh",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "refresh.regular",
+      "file": "src/assets/icons/imm28/refresh.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:775",
+      "name": "refresh",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "refresh.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6903",
+      "name": "rotate-camera-left",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "rotate-camera-left.dynamic",
+      "file": "src/assets/icons/imm28/rotate-camera-left.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6908",
+      "name": "rotate-camera-left",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "rotate-camera-left.regular",
+      "file": "src/assets/icons/imm28/rotate-camera-left.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6913",
+      "name": "rotate-camera-left",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "rotate-camera-left.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19572:830",
+      "name": "search",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "search.dynamic",
+      "file": "src/assets/icons/imm28/search.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19646:5537",
+      "name": "search",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "search.dynamic-2",
+      "file": "src/assets/icons/imm28/search.dynamic-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:833",
+      "name": "search",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "search.regular",
+      "file": "src/assets/icons/imm28/search.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19646:5540",
+      "name": "search",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "search.regular-2",
+      "file": "src/assets/icons/imm28/search.regular-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:836",
+      "name": "search",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "search.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19646:5543",
+      "name": "search",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "search.solid-2",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "54258:88649",
+      "name": "set",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "set",
+      "file": "src/assets/icons/imm28/set.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6680",
+      "name": "share-ios",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "share-ios.dynamic",
+      "file": "src/assets/icons/imm28/share-ios.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6683",
+      "name": "share-ios",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "share-ios.regular",
+      "file": "src/assets/icons/imm28/share-ios.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6686",
+      "name": "share-ios",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "share-ios.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19724:9769",
+      "name": "share",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "share.dynamic",
+      "file": "src/assets/icons/imm28/share.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19724:9770",
+      "name": "share",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "share.solid",
+      "file": "src/assets/icons/imm28/share.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6951",
+      "name": "simple-cart",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "simple-cart.dynamic",
+      "file": "src/assets/icons/imm28/simple-cart.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6955",
+      "name": "simple-cart",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "simple-cart.regular",
+      "file": "src/assets/icons/imm28/simple-cart.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6959",
+      "name": "simple-cart",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "simple-cart.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6829",
+      "name": "smartphone-device",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "smartphone-device.dynamic",
+      "file": "src/assets/icons/imm28/smartphone-device.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6832",
+      "name": "smartphone-device",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "smartphone-device.regular",
+      "file": "src/assets/icons/imm28/smartphone-device.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6835",
+      "name": "smartphone-device",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "smartphone-device.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:7038",
+      "name": "sound-high",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-high.dynamic",
+      "file": "src/assets/icons/imm28/sound-high.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7042",
+      "name": "sound-high",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-high.regular",
+      "file": "src/assets/icons/imm28/sound-high.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7046",
+      "name": "sound-high",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-high.solid",
+      "file": "src/assets/icons/imm28/sound-high.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7051",
+      "name": "sound-low",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-low.dynamic",
+      "file": "src/assets/icons/imm28/sound-low.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7054",
+      "name": "sound-low",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-low.regular",
+      "file": "src/assets/icons/imm28/sound-low.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7057",
+      "name": "sound-low",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-low.solid",
+      "file": "src/assets/icons/imm28/sound-low.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7018",
+      "name": "sound-min",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-min.dynamic",
+      "file": "src/assets/icons/imm28/sound-min.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7021",
+      "name": "sound-min",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-min.regular",
+      "file": "src/assets/icons/imm28/sound-min.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7024",
+      "name": "sound-min",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-min.solid",
+      "file": "src/assets/icons/imm28/sound-min.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7028",
+      "name": "sound-off",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-off.dynamic",
+      "file": "src/assets/icons/imm28/sound-off.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7031",
+      "name": "sound-off",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-off.regular",
+      "file": "src/assets/icons/imm28/sound-off.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:7034",
+      "name": "sound-off",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "sound-off.solid",
+      "file": "src/assets/icons/imm28/sound-off.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19737:5122",
+      "name": "speech-left",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "speech-left",
+      "file": "src/assets/icons/imm28/speech-left.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53500:11791",
+      "name": "speech-right",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "speech-right",
+      "file": "src/assets/icons/imm28/speech-right.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19650:13706",
+      "name": "split-square-dashed",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "split-square-dashed.dynamic",
+      "file": "src/assets/icons/imm28/split-square-dashed.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19650:13714",
+      "name": "split-square-dashed",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "split-square-dashed.regular",
+      "file": "src/assets/icons/imm28/split-square-dashed.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19650:13722",
+      "name": "split-square-dashed",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "split-square-dashed.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19572:808",
+      "name": "star",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "star.dynamic",
+      "file": "src/assets/icons/imm28/star.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:810",
+      "name": "star",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "star.regular",
+      "file": "src/assets/icons/imm28/star.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:812",
+      "name": "star",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "star.solid",
+      "file": "src/assets/icons/imm28/star.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19724:11963",
+      "name": "SVG",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "svg",
+      "file": "src/assets/icons/imm28/svg.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6969",
+      "name": "system-restart",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "system-restart.dynamic",
+      "file": "src/assets/icons/imm28/system-restart.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6978",
+      "name": "system-restart",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "system-restart.regular",
+      "file": "src/assets/icons/imm28/system-restart.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6987",
+      "name": "system-restart",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "system-restart.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6961",
+      "name": "thumbs-up",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "thumbs-up.dynamic",
+      "file": "src/assets/icons/imm28/thumbs-up.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6964",
+      "name": "thumbs-up",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "thumbs-up.regular",
+      "file": "src/assets/icons/imm28/thumbs-up.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6967",
+      "name": "thumbs-up",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "thumbs-up.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "54428:26870",
+      "name": "trash",
+      "variant": "property-34",
+      "type": "COMPONENT",
+      "fileBaseName": "trash.property-34",
+      "file": "src/assets/icons/imm28/trash.property-34.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:30754",
+      "name": "trash",
+      "variant": "trash",
+      "type": "COMPONENT",
+      "fileBaseName": "trash.trash",
+      "file": "src/assets/icons/imm28/trash.trash.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:30757",
+      "name": "trash",
+      "variant": "trash",
+      "type": "COMPONENT",
+      "fileBaseName": "trash.trash-2",
+      "file": "src/assets/icons/imm28/trash.trash-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19724:11974",
+      "name": "TXT",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "txt",
+      "file": "src/assets/icons/imm28/txt.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54207:65710",
+      "name": "user-delete",
+      "variant": "default",
+      "type": "COMPONENT",
+      "fileBaseName": "user-delete",
+      "file": "src/assets/icons/imm28/user-delete.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26782",
+      "name": "user",
+      "variant": "user-circle",
+      "type": "COMPONENT",
+      "fileBaseName": "user.user-circle",
+      "file": "src/assets/icons/imm28/user.user-circle.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26784",
+      "name": "user",
+      "variant": "user-circle",
+      "type": "COMPONENT",
+      "fileBaseName": "user.user-circle-2",
+      "file": "src/assets/icons/imm28/user.user-circle-2.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "54428:26786",
+      "name": "user",
+      "variant": "user-circle",
+      "type": "COMPONENT",
+      "fileBaseName": "user.user-circle-3",
+      "file": "src/assets/icons/imm28/user.user-circle-3.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6895",
+      "name": "video-camera-off",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "video-camera-off.dynamic",
+      "file": "src/assets/icons/imm28/video-camera-off.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6898",
+      "name": "video-camera-off",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "video-camera-off.regular",
+      "file": "src/assets/icons/imm28/video-camera-off.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6901",
+      "name": "video-camera-off",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "video-camera-off.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "53500:11775",
+      "name": "video-camera-right",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "video-camera-right.dynamic",
+      "file": "src/assets/icons/imm28/video-camera-right.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53500:11777",
+      "name": "video-camera-right",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "video-camera-right.regular",
+      "file": "src/assets/icons/imm28/video-camera-right.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "53500:11779",
+      "name": "video-camera-right",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "video-camera-right.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6889",
+      "name": "video-camera",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "video-camera.dynamic",
+      "file": "src/assets/icons/imm28/video-camera.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6891",
+      "name": "video-camera",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "video-camera.regular",
+      "file": "src/assets/icons/imm28/video-camera.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6893",
+      "name": "video-camera",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "video-camera.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19572:777",
+      "name": "wallet",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "wallet.dynamic",
+      "file": "src/assets/icons/imm28/wallet.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:781",
+      "name": "wallet",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "wallet.regular",
+      "file": "src/assets/icons/imm28/wallet.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:786",
+      "name": "wallet",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "wallet.solid",
+      "file": "src/assets/icons/imm28/wallet.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:645",
+      "name": "warning-circle",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "warning-circle.dynamic",
+      "file": "src/assets/icons/imm28/warning-circle.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:649",
+      "name": "warning-circle",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "warning-circle.regular",
+      "file": "src/assets/icons/imm28/warning-circle.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:653",
+      "name": "warning-circle",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "warning-circle.solid",
+      "file": "src/assets/icons/imm28/warning-circle.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:631",
+      "name": "warning-triangle",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "warning-triangle.dynamic",
+      "file": "src/assets/icons/imm28/warning-triangle.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:635",
+      "name": "warning-triangle",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "warning-triangle.regular",
+      "file": "src/assets/icons/imm28/warning-triangle.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:639",
+      "name": "warning-triangle",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "warning-triangle.solid",
+      "file": "src/assets/icons/imm28/warning-triangle.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6799",
+      "name": "wifi-off",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "wifi-off.dynamic",
+      "file": "src/assets/icons/imm28/wifi-off.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6805",
+      "name": "wifi-off",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "wifi-off.regular",
+      "file": "src/assets/icons/imm28/wifi-off.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6811",
+      "name": "wifi-off",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "wifi-off.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19631:6787",
+      "name": "wifi",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "wifi.dynamic",
+      "file": "src/assets/icons/imm28/wifi.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6792",
+      "name": "wifi",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "wifi.regular",
+      "file": "src/assets/icons/imm28/wifi.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19631:6797",
+      "name": "wifi",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "wifi.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19724:11985",
+      "name": "XLS",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "xls",
+      "file": "src/assets/icons/imm28/xls.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:695",
+      "name": "xmark-circle",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "xmark-circle.dynamic",
+      "file": "src/assets/icons/imm28/xmark-circle.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:698",
+      "name": "xmark-circle",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "xmark-circle.regular",
+      "file": "src/assets/icons/imm28/xmark-circle.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:701",
+      "name": "xmark-circle",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "xmark-circle.solid",
+      "file": "src/assets/icons/imm28/xmark-circle.solid.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:723",
+      "name": "xmark",
+      "variant": "dynamic",
+      "type": "COMPONENT",
+      "fileBaseName": "xmark.dynamic",
+      "file": "src/assets/icons/imm28/xmark.dynamic.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:725",
+      "name": "xmark",
+      "variant": "regular",
+      "type": "COMPONENT",
+      "fileBaseName": "xmark.regular",
+      "file": "src/assets/icons/imm28/xmark.regular.svg",
+      "status": "downloaded"
+    },
+    {
+      "id": "19572:727",
+      "name": "xmark",
+      "variant": "solid",
+      "type": "COMPONENT",
+      "fileBaseName": "xmark.solid",
+      "status": "missing_image_url"
+    },
+    {
+      "id": "19724:12019",
+      "name": "ZIP",
+      "variant": "default",
+      "type": "FRAME",
+      "fileBaseName": "zip",
+      "file": "src/assets/icons/imm28/zip.svg",
+      "status": "downloaded"
+    }
+  ]
+}

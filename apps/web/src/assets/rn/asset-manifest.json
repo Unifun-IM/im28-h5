@@ -1,0 +1,2338 @@
+{
+  "version": 1,
+  "source": "../im28-phone/src",
+  "generatedBy": "npm run assets:sync",
+  "fileCount": 466,
+  "files": [
+    {
+      "path": "assets/audio/rtc-calling.mp3",
+      "bytes": 105106,
+      "sha256": "48f81595292da385995bd85b8654407b1bc1fdff97fcac19b4b83e60c279d721"
+    },
+    {
+      "path": "assets/audio/rtc-hangup.mp3",
+      "bytes": 62576,
+      "sha256": "281e43437a5d2f1f72b730ce1fe516a1f7927d47d1c1744415306e0a63c6ca48"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/001-smiling-face-with-sunglasses.png",
+      "bytes": 24860,
+      "sha256": "b837b8e7da70619b433b65b5430d2cf3ed4e0c35378dc72d51069f677c5fcf95"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/002-smiling-face-with-smiling-eyes.png",
+      "bytes": 21697,
+      "sha256": "e5a4ac783c28eac806f2f3ec9b643863ccd134c19a163b1cd5a84641f8b09698"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/003-smiling-face-with-heart-eyes.png",
+      "bytes": 22982,
+      "sha256": "bc29133b08f7aa165309466cf14077cb41df639120f32432f83afb7299873069"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/004-kissing-face-with-smiling-eyes.png",
+      "bytes": 22786,
+      "sha256": "ae66673552bae60f35ca17b7aa0e94898ab2874e9ffe2c5170fd3d7c11992121"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/005-relieved-face.png",
+      "bytes": 22437,
+      "sha256": "777d137b9e18cab70b96ad594fed2560c9603576bde0462d92e16419118fa9ad"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/006-smirking-face.png",
+      "bytes": 21017,
+      "sha256": "9c5e9135acb12369ea9c50bab863e2a0697aa4e8e4bc7d5f7f08c708ec6f766c"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/007-face-savouring-food.png",
+      "bytes": 22898,
+      "sha256": "05a33db222febfe63631292e639809af677e04322ff9cfe780ec04d5c8d54aa0"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/008-winking-face-with-tongue.png",
+      "bytes": 23080,
+      "sha256": "2096d84b850085c93bdfbd84b707012a60c647c05877dc46730cba497cd7688e"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/009-sleepy-face.png",
+      "bytes": 22788,
+      "sha256": "8822cdd09054679ef7964fb29f1574aef23477c4c5e373fa0c73ee7f1cbecd96"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/010-face-with-tongue.png",
+      "bytes": 21839,
+      "sha256": "f5cda5eade07ff11c3dc1d8243ca9de248d61eef11ecac9eb2d840664a2d8086"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/011-worried-face.png",
+      "bytes": 21702,
+      "sha256": "4b70d2d821d105b1911369641dd9d67e92746cf7efeedd216b16976e61de5fa4"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/012-disappointed-face.png",
+      "bytes": 20557,
+      "sha256": "a7b7e8f4530b247a33acac4a18f31af886b1fce1ceb420b5f01de60797f606ab"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/013-tired-face.png",
+      "bytes": 23225,
+      "sha256": "4f449ba397b02fb81fe81a78a2bddfa5fb6254f144d5278bcd5d9e123b419b23"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/014-squinting-face-with-tongue.png",
+      "bytes": 21866,
+      "sha256": "c25f50ea47b2b328a266b673797734f82cc22579d1c1b412e5a7e410aff54434"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/015-grimacing-face.png",
+      "bytes": 19938,
+      "sha256": "71e3a27a21a7dc5e0a206269b281d61b89ae3c6adc6b54c85aea196d2336ce8a"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/016-loudly-crying-face.png",
+      "bytes": 19749,
+      "sha256": "2d0c7ff9ebde54a4d70acc66eb54dd357e909f9dbb00923708a36a26fa694bd2"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/017-face-exhaling.png",
+      "bytes": 23054,
+      "sha256": "b7e026f6d20ce76836f5ee909ae8237af68bdbd98d3c2ff8547eeede015baed8"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/018-face-with-open-mouth.png",
+      "bytes": 20147,
+      "sha256": "45d1e7953433a86137806bb19b0b4514c8304e03153edc811971311359731269"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/019-hushed-face.png",
+      "bytes": 20743,
+      "sha256": "f4fd4f4e85a0f29d97dfdc848107b2e9a0fcdb0fb16697fa2eaf6339c4aa1caf"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/020-grinning-cat-with-smiling-eyes.png",
+      "bytes": 19828,
+      "sha256": "389e09e4f62edfbe46c3fc3d7ba1818fbdbf5e9c354d0d4a04a720932b0ab972"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/021-happy-face-with-enlarged-eyes.png",
+      "bytes": 21107,
+      "sha256": "ccb9d10108860ed1f7feadb65ea27e2eb470b37166fad2e0d61c550886d88cb7"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/022-beaming-face-with-smiling-eyes.png",
+      "bytes": 20746,
+      "sha256": "7fa030273fddf2b1313e7c57c4cf4283af858d1c4f8d74b55369e5bbb502869f"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/023-face-with-tears-of-joy.png",
+      "bytes": 23328,
+      "sha256": "4cff79a7eec8767d7c63e2199c6383b7385d13d8d9c83486f7f1f583f61fad49"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/024-happy-face.png",
+      "bytes": 21298,
+      "sha256": "9b8477da6b2163cb96a7a57537ce0fea4ff2616ca53e56a80b02759cb20840cb"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/025-grinning-face-with-smiling-eyes.png",
+      "bytes": 21563,
+      "sha256": "bd0a4c8f7245c8fb757773d52c332df5c148eb06b3ab1445275a5e6c0d028d02"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/026-grinning-face-with-sweat.png",
+      "bytes": 22556,
+      "sha256": "25ff7d0ae3bc9fc5d5d05e580bccb6c056d20cf447c647bd1709bdec6a075839"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/027-grinning-squinting-face.png",
+      "bytes": 21602,
+      "sha256": "de8e1f02fecd31dcc443fdedf0a2764fe0763e6945812c5bbadd2d6ad5d14b96"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/028-smiling-face-with-halo.png",
+      "bytes": 24726,
+      "sha256": "937721105199f70f02a90753fb2fc4ee628b215621b437d52c0f153151054bbc"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/029-face-with-medical-mask.png",
+      "bytes": 23883,
+      "sha256": "39f1deb98e78f823f0f4e966599d69c609500f1619ecfe08c53e8ee19eda0470"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/030-face-without-mouth.png",
+      "bytes": 19709,
+      "sha256": "50b54556f85d79a5e2695eb67280fd260406e8cf89deff8e4b5f617fdf19fcc1"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/031-dizzy-face.png",
+      "bytes": 22192,
+      "sha256": "375665d5ac1a04fd5018dfef77687d9fccf0fcf166e339871036e41a49046506"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/032-face-with-spiral-eyes.png",
+      "bytes": 25909,
+      "sha256": "ae799643c621ee0635cbfeba9b010522d0d8e4516f7aa9b398fc5bf734b2b4f4"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/033-sleeping-face.png",
+      "bytes": 23220,
+      "sha256": "5743ee7fc7d5fed8f61b654da568c9b59f70ceda59bd680c93d047612f047fcf"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/034-flushed-face.png",
+      "bytes": 20904,
+      "sha256": "3799880da3a7f29242d3fea32a736d0cd709263d6d14bd1f8d5b4eabeab1022d"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/035-astonished-face.png",
+      "bytes": 21017,
+      "sha256": "378f4b1aa845fb0af9578f928a64182648491e6a6e574ee9f1d3164cc5c964a2"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/036-face-screaming-in-fear.png",
+      "bytes": 22323,
+      "sha256": "e084349627fb58b665d8345957a301ba74b2d3df9a5bf2e087a514dd776615fe"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/037-anxious-face-with-sweat.png",
+      "bytes": 21748,
+      "sha256": "b857cd3decec7d9055e78a355e566fd66112eb54a6cb5bb503049cb77b08348f"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/038-weary-face.png",
+      "bytes": 22993,
+      "sha256": "1572ea8862990ccfb181ad232552f4cada2b3360b0c5c127ebcc1e58c8a6b05c"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/039-fearful-face.png",
+      "bytes": 21253,
+      "sha256": "e91391a5aef306ed42846e08011625e10876f0386b815ecbdfa46d6c7b369a27"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/040-anguished-face.png",
+      "bytes": 21103,
+      "sha256": "3f7b1396bff85e621a16d0281c09b50fef8ff61d6013f24ab5e9f7f6df4973db"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/041-frowning-face-with-open-mouth.png",
+      "bytes": 19104,
+      "sha256": "5b8072f1902a29ae42bdcbc4b5186ecf23817c3d50a0843e13085b8cb0af2f19"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/042-face-with-steam-from-nose.png",
+      "bytes": 24956,
+      "sha256": "1deaddf610285b88d1f3274aa5110842a335911018ce9204167dcb845d187f7d"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/043-persevering-face.png",
+      "bytes": 22654,
+      "sha256": "4cf8c494ba80e3345c0dd7bdabe695d963aed7ae1fd5a412ed491f873bb9f56c"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/044-crying-face.png",
+      "bytes": 22609,
+      "sha256": "5fb841c59dd1f5a61e580b8be6bc53a13abd8556122be439c658c362f6cc8069"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/045-pouting-face.png",
+      "bytes": 21838,
+      "sha256": "f74ef9dfc69d9eccc8170eaa10641a4d38060b63867e177c26790f66f570eee7"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/046-angry-face.png",
+      "bytes": 21482,
+      "sha256": "893a5757ba76100a4826d8053da7c77088f84de0e02a09714aa849558f777f72"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/047-kissing-face-with-closed-eyes.png",
+      "bytes": 20465,
+      "sha256": "04588c04d4fbb83d6ae3f98fa4e1165e5cb4be17032c958150729bdc721b2cef"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/048-face-blowing-a-kiss.png",
+      "bytes": 24464,
+      "sha256": "73ed1fae55caaea05aa521fec0e85beddb1578f74673d0cdcd7d1ec9ffc7b252"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/049-kissing-face.png",
+      "bytes": 20952,
+      "sha256": "760d96170e23cb48c80629f9180c314cf78e8bce0163e5e9b5db16cbb41fdfd6"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/050-confounded-face.png",
+      "bytes": 22539,
+      "sha256": "836c5c3569dd756cd3eb878630bb7bf9fb7c0e550d9036bc9ce5f59769b2501a"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/051-confused-face.png",
+      "bytes": 21206,
+      "sha256": "5a199a6ef424e4c2f266f107d0152973ce6fe935bbcc53d1a668cd9ced3c8a34"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/052-disappointed-face-2.png",
+      "bytes": 21691,
+      "sha256": "b00aee6cb885776e5ae279efe14ac423663c7728e7af2609dd7bcc53b4b1c233"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/053-downcast-face-with-sweat.png",
+      "bytes": 21232,
+      "sha256": "2f35071aa7130b585998ee8abdcbd6a8fef30b8f1ecb64827001f1a094776802"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/054-unamused-face.png",
+      "bytes": 21384,
+      "sha256": "41dea5d14d24503c5e5dc6a1b39fca7df56dbe620eaea2818954e35b100b57cd"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/055-expressionless-face.png",
+      "bytes": 18442,
+      "sha256": "1d615b6171014064af6ddd22ab731afc9a526148eeb6b80779c0a30ce0b27e88"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/056-neutral-face.png",
+      "bytes": 20222,
+      "sha256": "c3e531cdaa539121489019cdc3fcc0ee2814c6280cf439aa006946f22dd19e6d"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/057-winking-face.png",
+      "bytes": 22779,
+      "sha256": "bbc4ca63dcfda51333fa362fcb1fde59a04d12ae0941d7ee09d23c5ac0207280"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/058-smiling-face-with-horns.png",
+      "bytes": 22729,
+      "sha256": "f292d10a6ca49c88d7b4178b011d73ef2f1d0214c63f3e8f7d119ac07b7cb49f"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/059-face-in-clouds.png",
+      "bytes": 29423,
+      "sha256": "28a05a7ac430a1915a623d64a7d66429981941d94624523e1b60b74a09c4aea8"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/060-firecracker.png",
+      "bytes": 11688,
+      "sha256": "70b964f8942356872026048935a5b814cee0164a6b0cf2675fcf7ee85434841c"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/061-red-envelope.png",
+      "bytes": 21480,
+      "sha256": "3356f35ea757cd21757ea510f3dbfad6101d6c487dbde8ffdb695f88a6a4e4c8"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/062-sled.png",
+      "bytes": 10134,
+      "sha256": "820819544bf4648de6fd0027989fbb320d25dd4ec4b653d4bf7c28eb263c4f69"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/063-framed-picture.png",
+      "bytes": 19437,
+      "sha256": "51bc54bf028a2fa1d4756390213332d71ba795bac61fa9b1d6281fc97198e09a"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/064-mahjong-red-dragon.png",
+      "bytes": 10125,
+      "sha256": "f5ccaaa928967edb03f3b1942890e9217fba4275996d0c6c3b60ffe4f81bd615"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/065-badminton.png",
+      "bytes": 16657,
+      "sha256": "88b9392321ef2e1f8096b4e86bbf1ccb17fde2b32a52705afd32bf5d9ff1f20b"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/066-ping-pong.png",
+      "bytes": 15370,
+      "sha256": "3236cbe9bd6670a9a9c50345170ebc12c89b4969370c73d32bbb9de72b1a740b"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/067-ice-hockey.png",
+      "bytes": 10686,
+      "sha256": "d93e3ac84ee9a8dce32c1257a2e63bd31c86a34a662f1bd1b121ae025f93aaeb"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/068-field-hockey.png",
+      "bytes": 12204,
+      "sha256": "fd764b3d9c31702edabd01de5d2ea14fdcf1b04558e373bdde2f1f8d4a345f56"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/069-volleyball.png",
+      "bytes": 21968,
+      "sha256": "944c3849f55b2eae6dc7cfe95a60ff81aa215407182664ec5fd915b2d5cf50db"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/070-cricket-game.png",
+      "bytes": 9617,
+      "sha256": "08e0128a75e03d4c96e8d553521208ec1af2415894545b1be59ddb2bbfc4e779"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/071-rugby-football.png",
+      "bytes": 20864,
+      "sha256": "e3d158cc60cffacc3afc35b789b68c4700f65850a3bfc1635d5e00ed1bb8706a"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/072-american-football.png",
+      "bytes": 22136,
+      "sha256": "dddd29ba2ecdd30d57efe2031320409da3e0ea9138ff3c7b582e9a46f6f52463"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/073-trophy.png",
+      "bytes": 15780,
+      "sha256": "01d403a3257495b50f1ded10066be2505d45106c6d58565c3c5a8c96ca4ee525"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/074-sports-medal.png",
+      "bytes": 18717,
+      "sha256": "3efe056f9fb4d0efe1d3251d447b8d37af5c05fde7b0773e941ea3cc37f737c5"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/075-basketball.png",
+      "bytes": 22556,
+      "sha256": "fd26760e2fe1b1c718c7eda71bd84830b5b2494c6fd2ef9a86c7969181d639b2"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/076-ice-skate.png",
+      "bytes": 16017,
+      "sha256": "72b908cf187dfc6ffaea814f41d7c6fa75e7d682596febd406485ad17b141e3a"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/077-tennis.png",
+      "bytes": 17764,
+      "sha256": "109587f776b41e970bb1ce0f0f070b63a2af4e1c1f1656411bbab4b650369369"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/078-t-shirt.png",
+      "bytes": 15315,
+      "sha256": "d6ad907820cf62cd7dacdabae7067dd4beee1ee0b9e12cb05fed8943dc73bd0f"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/079-painting-on-the-wall.png",
+      "bytes": 14077,
+      "sha256": "90c1ea1d9803a309439cf3dac4625e2bc8ebb203863d560e9258aac280e0a6b0"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/080-bowling.png",
+      "bytes": 17944,
+      "sha256": "385e723f0ea234ea4aabb75182b57711285354df7f2f460cdd72cd4c0ded1443"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/081-game-die.png",
+      "bytes": 17868,
+      "sha256": "b2a35ccd7668225571baeedd155abd05a071a5c89399e3b1d53b0c2fec27d997"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/082-pool-8-ball.png",
+      "bytes": 18793,
+      "sha256": "67961bb0a9bc99c8698157ab68fd5723aa57569a268deb020d92c2c11d05700b"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/083-slot-machine.png",
+      "bytes": 19637,
+      "sha256": "6d0892a011a8a47e3a8255552c05f3f949ec6c7f1b32ec0bed5f43765ee280c0"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/084-bullseye.png",
+      "bytes": 20686,
+      "sha256": "56e6851e86bb054ee0ff1e153d3e82eab2bcf8c2ac37523d407b9ff7883dbe0c"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/085-video-game.png",
+      "bytes": 16452,
+      "sha256": "2b2adf16554380f4d173257e434a546cf887e0e7af5278c7ac6de49041863125"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/086-performing-arts.png",
+      "bytes": 16834,
+      "sha256": "76e6d9a9c4d1546427df67143aa03f52efa7326fd76b8990b0c74fc708063e45"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/087-ticket.png",
+      "bytes": 10199,
+      "sha256": "2128b2aa15b42cd2ecd414c76a539e19f8612e2bb1271905123b6a1e84f6fad8"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/088-artist-palette.png",
+      "bytes": 17307,
+      "sha256": "abfc8590795ff45d006fc2efaebb2c865751ff1b623371a5542fb4785ae9d51b"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/089-fishing-pole.png",
+      "bytes": 13605,
+      "sha256": "dae67212f66dab14e4c5a825545e36a1736243273c654ef8fbaae57e6dd67d27"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/090-joker.png",
+      "bytes": 12160,
+      "sha256": "ab152c060880251a30ddc6f22fa3472b58806d32e554ef4129bee3fe7ba2e9c9"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/091-cat-with-tears-of-joy.png",
+      "bytes": 21384,
+      "sha256": "d6b446c01c1a72f04ddf464a30dd67ec501ebdca63d4b2b6b76839d32859a4dd"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/092-thread.png",
+      "bytes": 18333,
+      "sha256": "c96975b4d35ad58757cc28d3ca7689342796c319e74f54c05d3b92a9b6b946a3"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/093-puzzle-piece.png",
+      "bytes": 14454,
+      "sha256": "ee54c28fbc9539f2ad5fbf2b6b26f15fae6be6e1ec48c470203fd8fb59e237a6"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/094-yarn.png",
+      "bytes": 16411,
+      "sha256": "c79752ee59ec1f3b3fb73db6e124372747e38086867f94713dd5d3efbbb41644"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/095-teddy-bear.png",
+      "bytes": 22020,
+      "sha256": "f520b3e7ad3b2e85b6713fc4fb2dfb99ba780fbde65a54b39ff1b0da37868545"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/096-nazar-amulet.png",
+      "bytes": 19571,
+      "sha256": "b012c3888648de6dc16e8c5c9f06999ce35a5d0ebb5581c86c9df297caf219b0"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/097-confetti-ball.png",
+      "bytes": 19305,
+      "sha256": "6e80f4bcd0b8ebdfd1da734757d10ab90e53156d811eca4b169cdbc58801af26"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/098-tanabata-tree.png",
+      "bytes": 16905,
+      "sha256": "7d23cf26a09a80b679ed5844c18324b224a57fdda0d982362f55d7f9c8dff5e5"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/099-large-orange-diamond.png",
+      "bytes": 11285,
+      "sha256": "9157f78e4205b79c0d8b7d3b2864b2bf3a7148b56e83c8c3662d5f00b2b8f381"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/100-sparkles.png",
+      "bytes": 11696,
+      "sha256": "57d3010b5373c6ca612de667956a7a0b1104c339ed4a7e458ebe5d7139d68fc0"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/101-knot.png",
+      "bytes": 19328,
+      "sha256": "4022c6013538fd295b9fe601dc482d457d7582cb3cca50481925c18b293d21ba"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/102-soccer-ball.png",
+      "bytes": 21473,
+      "sha256": "983e1a242b70435339488189529ceeee6cc1d88c90372f01ce94c6f9f9048b91"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/103-baseball.png",
+      "bytes": 22419,
+      "sha256": "48e34f17e676aaafa05ea29f14f86ef4cbc4cfeafab2b2d5da00885af07bc118"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/104-flag-in-hole.png",
+      "bytes": 12873,
+      "sha256": "8c20823439bb64e0900c0f4ccb6d5fee275a6234b369abd8befacd82c9c1580e"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/105-ice-skate-2.png",
+      "bytes": 14213,
+      "sha256": "455372c6e3900ec86f83dbe5136f7afeb98c57537172bd7c7b85150dcda91076"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/106-chess-pawn.png",
+      "bytes": 10531,
+      "sha256": "2f80e85bba084eb2ceab326ee4162649d6e61ba376ea7937f766efe05756fa47"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/107-spade-suit.png",
+      "bytes": 15853,
+      "sha256": "fe89c187d1a1a80fb74b34cc056523a3468f04f9f4dcedb229db6e855e33f9bb"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/108-sewing-needle.png",
+      "bytes": 12468,
+      "sha256": "2bdac9f562627edecd1b75e720e282e87890b528c893cc09e85d5dcad93c34d6"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/109-nesting-dolls.png",
+      "bytes": 17083,
+      "sha256": "39ccf19e5c7a4700a027ec3c28f0ad7fe8ec4f2805d919e351b5f76371003bb1"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/110-pinata.png",
+      "bytes": 16359,
+      "sha256": "9cedfe04f8760b0d7d8a8141bc51adb6c505d2f5101d485ca0bdb12e8df5889b"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/111-magic-wand.png",
+      "bytes": 9895,
+      "sha256": "46092f92db829d50ee7258922dcea54e1224ebe11bc89e3455b1e503ad1b964e"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/112-kite.png",
+      "bytes": 15156,
+      "sha256": "53671dd94d80fb4e06ce9cbd45e0981c74ccb5d94a5a6161bb617c7d9d261d1e"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/113-yo-yo.png",
+      "bytes": 16413,
+      "sha256": "7d3c3ea9979285cc6601b0f92a954826e4ac07ebc12e3dd296eb4f29338d7410"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/114-3rd-place-medal.png",
+      "bytes": 17492,
+      "sha256": "7957cd352c41c7a0b75993402cf0bcdd3916a293895b42d8283d96a737646f71"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/115-joystick.png",
+      "bytes": 15691,
+      "sha256": "d51ffa6d39c31b30ffe8b4c348bbd3912fb3c8167f6576dace1f4b567d36b3fe"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/116-2nd-place-medal.png",
+      "bytes": 17354,
+      "sha256": "3b578f9076840a8324fdf396b1a97f27edf53ac1b0e05382a06d323df9ac21d9"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/117-1st-place-medal.png",
+      "bytes": 15544,
+      "sha256": "5445b86c2107a4d64b18da3908cf8e8e9b436a268af7da7c9c1aac72de35714b"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/118-reminder-ribbon.png",
+      "bytes": 16445,
+      "sha256": "663944e852b455d0b04f3f4df6cfd973157a816187088339746f2bad7c3a0bcd"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/119-military-medal.png",
+      "bytes": 16296,
+      "sha256": "e1f1f6b50b052c493cd7dab390b5bb88fea1635c5cf5e130a496628ba54574b3"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/120-halloween.png",
+      "bytes": 17823,
+      "sha256": "331bfd8eb4d371c0143b461c7806857a4f8609d54a6c20465b815cfebf9de0bc"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/121-christmas-tree.png",
+      "bytes": 13495,
+      "sha256": "346942fea8934591c4f2c0c4ba96a0710ab93157c534f3b3b32a0356363ec8a5"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/122-fireworks.png",
+      "bytes": 25689,
+      "sha256": "e5d1069b451591eff0486900cbecbb6e554e37034b7359445e79c333ab64a3f6"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/123-sparkler.png",
+      "bytes": 25052,
+      "sha256": "81c1b92d562bc48573b0628549d0e131e3700d57bb5c28c4c1749cdaed050da8"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/124-party-popper.png",
+      "bytes": 20113,
+      "sha256": "7ddba80134466f7b629e2ab97594b1aa1979e478a5c1b417892622a2224a25ff"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/125-ribbon.png",
+      "bytes": 18023,
+      "sha256": "5e3713e5cf6ad730529eb25bb95f178f9d43cf8de03f2f8e43e2c112a809deb6"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/126-softball.png",
+      "bytes": 24839,
+      "sha256": "027418c936c9b591f63dd364c987a4e3fb03f5da98f204f6949e66c53fbfb831"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/127-lacrosse.png",
+      "bytes": 13223,
+      "sha256": "225411ab1adc664dd165c03f4d3bbea327cf3924a5a851ce9841da0ab1f39dd2"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/128-martial-arts-uniform.png",
+      "bytes": 15003,
+      "sha256": "3ae6816a24357337e8bd5d0f8d092bac37c2e818d6e432a58acaac6f7f852661"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/129-boxing-glove.png",
+      "bytes": 14566,
+      "sha256": "cfeeeab66ccd0ddd0048609248fccaf05db681b6c81c23ecfb1eaaadd90693c2"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/130-diving-mask.png",
+      "bytes": 16428,
+      "sha256": "36aa1c43a1b33f6a81ecfdc347b94ef38208e49cb8894f7bc28092336c7e15d4"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/131-crystal-ball.png",
+      "bytes": 17156,
+      "sha256": "0b93069e7f50999212e2e1a68f090b79b8fca2c7d05b3eb77b3bf110dde422c0"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/132-admission-ticket.png",
+      "bytes": 12855,
+      "sha256": "7f9f68c219912eb7517b8d9e5517133493f3b5d1a4c633de9b38750f01dfd098"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/133-carp-streamer.png",
+      "bytes": 18554,
+      "sha256": "ded3707ed9cf4a3cfe36375a4303d42ad1aee53e2dff9aa67323289041187447"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/134-japanese-dolls.png",
+      "bytes": 16949,
+      "sha256": "4d2abeb410d1eae8b5864be904cd1a08049d12d7c1dce28f87db41d39061102c"
+    },
+    {
+      "path": "assets/emoji/figma-pack-2/135-pine-decoration.png",
+      "bytes": 19501,
+      "sha256": "188d856042800e1e10ae7dd62516db3a2ef313f03a47a2cf445ac629382a76b5"
+    },
+    {
+      "path": "assets/icons/chat/album.svg",
+      "bytes": 847,
+      "sha256": "ead01997a315e3fcb135f2e45866684bdcee1f226f3c2df58ce8002916ece32a"
+    },
+    {
+      "path": "assets/icons/chat/bubbletail-left-dark.svg",
+      "bytes": 1045,
+      "sha256": "207e344862bdb92b9207dbe461b64a5da2117b3042dbbe99b834287a49461fb1"
+    },
+    {
+      "path": "assets/icons/chat/bubbletail-left-light.svg",
+      "bytes": 1044,
+      "sha256": "afd965780325657da587ed563a99856c10b225b3b2f3caa916bcab9145dbe1e9"
+    },
+    {
+      "path": "assets/icons/chat/bubbletail-left-skeleton.svg",
+      "bytes": 515,
+      "sha256": "4d29c542ce84a290180f15bc20166efd2de83c5e937813ffbf722a477790201b"
+    },
+    {
+      "path": "assets/icons/chat/bubbletail-right.svg",
+      "bytes": 412,
+      "sha256": "41640a266447777edc30cb3f47136ab52f7c0ef5a42be1f9737ed3acb6153661"
+    },
+    {
+      "path": "assets/icons/chat/camera.svg",
+      "bytes": 565,
+      "sha256": "3df5d47d101ab3d95f9f97523e0034867d9090945f2c81bf9f16ece9966d3607"
+    },
+    {
+      "path": "assets/icons/chat/file.svg",
+      "bytes": 463,
+      "sha256": "93095b01d1bc6c03cbb575dda541c1a6dab380ae4b7028314d6bb5dcd1e4d8bb"
+    },
+    {
+      "path": "assets/icons/chat/video-call.svg",
+      "bytes": 361,
+      "sha256": "9273161010712fd9f473a2b08ca738e17b8e500097375a7e8346b370d1b83ef1"
+    },
+    {
+      "path": "assets/icons/chat/voice-call.svg",
+      "bytes": 700,
+      "sha256": "9dfb6441d9172c23504a50402714a796be7b8573738000cf95f7524cf3e722c9"
+    },
+    {
+      "path": "assets/icons/empty-chat.svg",
+      "bytes": 6643,
+      "sha256": "ee27b73c639d868d5cb2608f6e04a38a2e17f204ad5c9e8796233472a1ec3612"
+    },
+    {
+      "path": "assets/icons/imm28/add-friend-icon.svg",
+      "bytes": 2765,
+      "sha256": "c069ac7d4397c851c37e654bd417353e053a830f91e98c643f9b10c14cfcc71e"
+    },
+    {
+      "path": "assets/icons/imm28/add-user.svg",
+      "bytes": 814,
+      "sha256": "424b66c6f6382333fc7d5c3deb9e833b7bbd54543201a390e3914694fe6b3137"
+    },
+    {
+      "path": "assets/icons/imm28/ai.svg",
+      "bytes": 9534,
+      "sha256": "11d9d68c9f41d3a5bbda7346fa2637f6b5bc8a4531aa095a99b27ce19f812bc8"
+    },
+    {
+      "path": "assets/icons/imm28/album.svg",
+      "bytes": 752,
+      "sha256": "49af30b52297884992f02496910b1b9a29ea5da0d23abea419984cb58d59f2ec"
+    },
+    {
+      "path": "assets/icons/imm28/annoncement-megaphone.svg",
+      "bytes": 2163,
+      "sha256": "d3642f746d1de5b45217944132b93bc94bd3f8e7f8c032fd533627756ed063ba"
+    },
+    {
+      "path": "assets/icons/imm28/announcement-megaphone.svg",
+      "bytes": 2351,
+      "sha256": "16bfb1c93b89c726f38055aaedb21e9eabc83853ea30a62b08bb162df1421bb2"
+    },
+    {
+      "path": "assets/icons/imm28/arrow-down-circle.dynamic.svg",
+      "bytes": 451,
+      "sha256": "ffc3910c9f061fe1b6dbb61218ad8d39159b64f264c0fc7eb207cce3bd885596"
+    },
+    {
+      "path": "assets/icons/imm28/arrow-down-circle.regular.svg",
+      "bytes": 950,
+      "sha256": "0519f39cfad3eece8a31ceef58e79454b279e4a2b6ae079b31ce9eab8b2fe49b"
+    },
+    {
+      "path": "assets/icons/imm28/arrow-down-circle.solid.svg",
+      "bytes": 678,
+      "sha256": "1af5285ad437c4e4cdb7a04eceded9de361a4257d5d7e0992e1857151c4377ad"
+    },
+    {
+      "path": "assets/icons/imm28/arrow-up-circle.dynamic.svg",
+      "bytes": 450,
+      "sha256": "2bb3621a406c09f474ea4044c80adcbf996ea61b79611ef296264dc09487d5de"
+    },
+    {
+      "path": "assets/icons/imm28/arrow-up-circle.regular.svg",
+      "bytes": 955,
+      "sha256": "a6a99bfc96d5a4e0e02680363fd6d73368adc301ea7a920ebc635d87b5d23105"
+    },
+    {
+      "path": "assets/icons/imm28/arrow-up-circle.solid.svg",
+      "bytes": 691,
+      "sha256": "b59b004aeecfd8206e104ae83ada61f429184f1122cdbc50ee5586ea861ad468"
+    },
+    {
+      "path": "assets/icons/imm28/arrow-up-right.dynamic.svg",
+      "bytes": 251,
+      "sha256": "587f007d46267b9fe5dac19a8f3c7bc6576e8e7bd4a02e3b5770825339fcfda7"
+    },
+    {
+      "path": "assets/icons/imm28/arrow-up-right.regular.svg",
+      "bytes": 512,
+      "sha256": "9d18bbbab7c929a47ab956b774b50c66b124acafbd8c8828a99d22bb0f829f5f"
+    },
+    {
+      "path": "assets/icons/imm28/avi.svg",
+      "bytes": 13294,
+      "sha256": "1cefe462ae119a0c7baa5608dfb6544726042b12b424e14d53be5593704ae963"
+    },
+    {
+      "path": "assets/icons/imm28/bell-off.dynamic.svg",
+      "bytes": 4031,
+      "sha256": "2fa2eb53fcf975bcf5d5018b6d7c537e8c5202cf8cf344f9dd4dc5d77c47ca38"
+    },
+    {
+      "path": "assets/icons/imm28/bell-off.regular.svg",
+      "bytes": 4031,
+      "sha256": "2fa2eb53fcf975bcf5d5018b6d7c537e8c5202cf8cf344f9dd4dc5d77c47ca38"
+    },
+    {
+      "path": "assets/icons/imm28/bell-off.solid.svg",
+      "bytes": 1169,
+      "sha256": "d5e1b237fb172dcdb96aa00906fe4f613c07798a3936067ff45d13c5611434ad"
+    },
+    {
+      "path": "assets/icons/imm28/bell.dynamic.svg",
+      "bytes": 2949,
+      "sha256": "5182b42a0c3c35e0ada18b8175dbf95d6fa7a12d1dcb00ab1d365aec95bda3b6"
+    },
+    {
+      "path": "assets/icons/imm28/bell.regular.svg",
+      "bytes": 2949,
+      "sha256": "5182b42a0c3c35e0ada18b8175dbf95d6fa7a12d1dcb00ab1d365aec95bda3b6"
+    },
+    {
+      "path": "assets/icons/imm28/bell.solid.svg",
+      "bytes": 845,
+      "sha256": "4296e80ff94db78e74ba5b7d9a43c8cfbad843242efebcb6180a3943c93a3a76"
+    },
+    {
+      "path": "assets/icons/imm28/bookmark.dynamic.svg",
+      "bytes": 337,
+      "sha256": "e6e93bc34f2b189a12a4a218d53e1ede4d3ddee212a261dadaf2e52b3d8a4cd7"
+    },
+    {
+      "path": "assets/icons/imm28/bookmark.regular.svg",
+      "bytes": 682,
+      "sha256": "2f0c6093f1c519174ceb001772faf75a3caef4e247891ba7213eea9051b546e6"
+    },
+    {
+      "path": "assets/icons/imm28/bookmark.solid.svg",
+      "bytes": 848,
+      "sha256": "e7aa4032177553669e85bd6d24830305c97661487fad03a47138704b5b9a88bf"
+    },
+    {
+      "path": "assets/icons/imm28/business-card.svg",
+      "bytes": 912,
+      "sha256": "2ac23cd637c1457e169129d3bd92df36b721cc9d55d5f524474b7a3952c5bcff"
+    },
+    {
+      "path": "assets/icons/imm28/camera-icon.svg",
+      "bytes": 527,
+      "sha256": "c0e7e2eedbaa060d712eabc73b854126023b6f862135a91e2d71cc84ed7fadf6"
+    },
+    {
+      "path": "assets/icons/imm28/camera.dynamic.svg",
+      "bytes": 702,
+      "sha256": "faed2c61312bd4a97702f345ed649907f84424721e27dbb88d7dfa768b232f26"
+    },
+    {
+      "path": "assets/icons/imm28/camera.regular.svg",
+      "bytes": 1166,
+      "sha256": "5cd5ca6db044b7bd712ba21dd07f6c1d72f124dea432c42540abfd471a37149e"
+    },
+    {
+      "path": "assets/icons/imm28/camera.solid.svg",
+      "bytes": 658,
+      "sha256": "3fa0d0704d4bbc6f71fd652910517e0709b69e19c0cf488a6c8989639a54b4d1"
+    },
+    {
+      "path": "assets/icons/imm28/chat-bubble-check.dynamic.svg",
+      "bytes": 496,
+      "sha256": "f966a6c685574219f5a4df9f8e68e969db7d33a83d2ce879c21f2dda8f685da5"
+    },
+    {
+      "path": "assets/icons/imm28/chat-bubble-check.regular.svg",
+      "bytes": 1221,
+      "sha256": "f5c02775c6e78798aa06a5d9d8d17c82518026276b17824a186a43d72bc3322f"
+    },
+    {
+      "path": "assets/icons/imm28/chat-bubble-check.solid.svg",
+      "bytes": 774,
+      "sha256": "9f4f97775a352789230356359c0c07744dc58c161bed53a1807c8d3198681780"
+    },
+    {
+      "path": "assets/icons/imm28/chat-bubble-empty.dynamic.svg",
+      "bytes": 378,
+      "sha256": "76707920aae2870924a7d7881b28f186eecb69f143df905f0d7505f188c3f63a"
+    },
+    {
+      "path": "assets/icons/imm28/chat-bubble-empty.regular.svg",
+      "bytes": 827,
+      "sha256": "0956ddf6b715c81e55414517e57dbb9be4257697396bd754d4952872781308e3"
+    },
+    {
+      "path": "assets/icons/imm28/chat-bubble-empty.solid.svg",
+      "bytes": 500,
+      "sha256": "6dcb32f9f83801ed75ec13815c6f343e8514fd0c6e8a7824c56445cb5e305cd2"
+    },
+    {
+      "path": "assets/icons/imm28/check-circle.dynamic.svg",
+      "bytes": 440,
+      "sha256": "32d4a032f7d02faaca8c34758db8502ab94da8450dc33b614ff8e77905c81a45"
+    },
+    {
+      "path": "assets/icons/imm28/check-circle.regular.svg",
+      "bytes": 872,
+      "sha256": "0d9d730dedf86a4bd2b3a2dbfcba4c4db419eea0fc5bac4adce8ed208f032e77"
+    },
+    {
+      "path": "assets/icons/imm28/check-circle.solid.svg",
+      "bytes": 601,
+      "sha256": "d1bf504ef3254357169b63b49b0dd6666610ccca6123bac875cc388a889ad95a"
+    },
+    {
+      "path": "assets/icons/imm28/check.dynamic.svg",
+      "bytes": 219,
+      "sha256": "eaeff6b39a445a248d7f0cb3cd13b9da8ffe9fc454112a529deb5b269a5be330"
+    },
+    {
+      "path": "assets/icons/imm28/check.regular.svg",
+      "bytes": 497,
+      "sha256": "508b2f1daed56410e933e66d9547ffe99a2d51c6b740b2c88255e9f91903fa9a"
+    },
+    {
+      "path": "assets/icons/imm28/circle.dynamic.svg",
+      "bytes": 317,
+      "sha256": "a6c19ea942c52d4ab2ac501fa78b40c9a5a5a8d2d8ba4bfba364721e262b9102"
+    },
+    {
+      "path": "assets/icons/imm28/circle.regular.svg",
+      "bytes": 478,
+      "sha256": "ce6e6ee723a11396ca2867e553dbd57cc406ad0616af526078ded9c00e8cff4d"
+    },
+    {
+      "path": "assets/icons/imm28/cloud-download.dynamic.svg",
+      "bytes": 485,
+      "sha256": "89ec519f95f041cf745c228e3244e8c5977e91b3b228337982ed3f700a1880f0"
+    },
+    {
+      "path": "assets/icons/imm28/cloud-download.regular.svg",
+      "bytes": 1964,
+      "sha256": "3577ef8f0a52ce521c8e98bfef96ec81f2b1a05bf137eb149b7a6ef3719430af"
+    },
+    {
+      "path": "assets/icons/imm28/cloud-upload.dynamic.svg",
+      "bytes": 485,
+      "sha256": "07ada6aec4dd009c407590a28493ef4336a4ff8789acb4f8a058f447b4d1ba48"
+    },
+    {
+      "path": "assets/icons/imm28/cloud-upload.regular.svg",
+      "bytes": 1964,
+      "sha256": "1861d46f1d1c606de3d5cd23e5c686d92e69efd83c71f35c7ea393eae2520e9d"
+    },
+    {
+      "path": "assets/icons/imm28/computer.dynamic-2.svg",
+      "bytes": 687,
+      "sha256": "a5978dc194382a1abd2b30194d09b299857255dbe60c88d6a4e8d667cfae3f3f"
+    },
+    {
+      "path": "assets/icons/imm28/computer.dynamic.svg",
+      "bytes": 721,
+      "sha256": "71b42618043a35e64ca0a9adb2447da4fef2db094aa9499b9d54d44202e9b12f"
+    },
+    {
+      "path": "assets/icons/imm28/computer.regular-2.svg",
+      "bytes": 1071,
+      "sha256": "29edd3618a96554522f1cb1306da48415ca9ae414b117dc647d2666ad5fbbc2e"
+    },
+    {
+      "path": "assets/icons/imm28/computer.regular.svg",
+      "bytes": 877,
+      "sha256": "32bedcb98e987a4b9894c831c0ffcf43f3ec5f35d47a97c313e97880f91ab52a"
+    },
+    {
+      "path": "assets/icons/imm28/computer.solid-2.svg",
+      "bytes": 484,
+      "sha256": "e629d1a666f50e933f72bff564f56a82ab49130bdde039bf0963c0ffd0ecdfa0"
+    },
+    {
+      "path": "assets/icons/imm28/computer.svg",
+      "bytes": 517,
+      "sha256": "ae38d5e9bbae5758d8302b378bb037f355de7baa824f20544a6800f27204df2a"
+    },
+    {
+      "path": "assets/icons/imm28/contact-groups.svg",
+      "bytes": 5086,
+      "sha256": "140596738eae15862715068c77b60fa7743f0fedb0d6150ea2d7be4bd25298b1"
+    },
+    {
+      "path": "assets/icons/imm28/contact-new-friends.svg",
+      "bytes": 2758,
+      "sha256": "6d1a9f0f37d883674b763a304c1dfe83d248087c614dafb2aab0f3649d69d89b"
+    },
+    {
+      "path": "assets/icons/imm28/contact-tags.svg",
+      "bytes": 990,
+      "sha256": "0fec75d3360ee070010be67915dbdc89b644ae508d505122cf6d7943e60d93ed"
+    },
+    {
+      "path": "assets/icons/imm28/conversation-action-archive.svg",
+      "bytes": 804,
+      "sha256": "5722b122822cb5dc3b9a0a051cf4fd6a496581ea89622dd14649ddb1cb6b9777"
+    },
+    {
+      "path": "assets/icons/imm28/conversation-action-unarchive.svg",
+      "bytes": 707,
+      "sha256": "79089ca1d43891f0a82234ebaf17d89d89ab6a3642c28f09b1590d5a0af0788b"
+    },
+    {
+      "path": "assets/icons/imm28/copy.dynamic.svg",
+      "bytes": 546,
+      "sha256": "82729a893b3c4040e04ed43c44a9bd3321de325aaff605d44047f7e0384fbad1"
+    },
+    {
+      "path": "assets/icons/imm28/copy.regular.svg",
+      "bytes": 750,
+      "sha256": "6bcb020ff156e6d1a822fc47b6b066698284c20ab89fea4d83d8c4d831dfd878"
+    },
+    {
+      "path": "assets/icons/imm28/country-code-chevron.svg",
+      "bytes": 472,
+      "sha256": "3fb930838c804ccb88a932c15d71c9a5bcec5c468bfde4cc2ec4429c6a3e4bb7"
+    },
+    {
+      "path": "assets/icons/imm28/coupon.ticket-percent-2.svg",
+      "bytes": 1052,
+      "sha256": "147c1e267d60ca41e1d6ea208b1cbf14ff07351cc2df44ce59453710da87801a"
+    },
+    {
+      "path": "assets/icons/imm28/coupon.ticket-percent-3.svg",
+      "bytes": 1165,
+      "sha256": "6f356217b6f2457e1c58f16209f52136ab625bfe57b565c59b8893da250953fe"
+    },
+    {
+      "path": "assets/icons/imm28/coupon.ticket-percent.svg",
+      "bytes": 3276,
+      "sha256": "65572f608c2b3245e40eb20dd4dcecc5200d936961c70ffab5c6ae12c5d8394d"
+    },
+    {
+      "path": "assets/icons/imm28/dabble-check.tick-double-2.svg",
+      "bytes": 949,
+      "sha256": "9c4522765c434a6eac5851563d476c17d49f78f7a03093080e6eca3c76b5921c"
+    },
+    {
+      "path": "assets/icons/imm28/dabble-check.tick-double-3.svg",
+      "bytes": 990,
+      "sha256": "af5ef3b8f76e110bc0e9fa524ae5f733eb86d5dcb86050fcabcb5f2490f96b55"
+    },
+    {
+      "path": "assets/icons/imm28/dabble-check.tick-double.svg",
+      "bytes": 349,
+      "sha256": "139d29cb8ab03d8b9f827374e1acca0a1715513cc542890b274fdf696192c58b"
+    },
+    {
+      "path": "assets/icons/imm28/data-transfer-both-rotate-90.dynamic.svg",
+      "bytes": 389,
+      "sha256": "2ce8afde71d4c42e85e3540f7a67d98aca055192c8fa99a0c7c73e56952d17df"
+    },
+    {
+      "path": "assets/icons/imm28/data-transfer-both.dynamic.svg",
+      "bytes": 351,
+      "sha256": "2c8c1faadf0faa5d13924188c62dc3396e3798d6ac8a85d9215b4c9c0bae04d5"
+    },
+    {
+      "path": "assets/icons/imm28/data-transfer-both.regular.svg",
+      "bytes": 1047,
+      "sha256": "4697205d54a7b6f34f79a821d59ab5c331cc363832aabe088b5482db6d0e3eeb"
+    },
+    {
+      "path": "assets/icons/imm28/delete-key.svg",
+      "bytes": 472,
+      "sha256": "ae07909432abac9b93b8991876ce2be94cb85f638f5757316868e295eb2f94d0"
+    },
+    {
+      "path": "assets/icons/imm28/doc.svg",
+      "bytes": 19319,
+      "sha256": "b2db5cd76f9b5ef457b7d551a6f39d5e58f454e3e48ae6f8dfd6cabf9a55924c"
+    },
+    {
+      "path": "assets/icons/imm28/edit-e.edit-rectangle-2.svg",
+      "bytes": 1181,
+      "sha256": "ffb148e35072b7188aed5074e186477094e192de375e6c2e2b16d1de62064c31"
+    },
+    {
+      "path": "assets/icons/imm28/edit-e.edit-rectangle-3.svg",
+      "bytes": 1223,
+      "sha256": "2f70afb816a6e68accf39dedbbff88e7a62d9cbd17a8f9cf076f2bb9f3a5fe32"
+    },
+    {
+      "path": "assets/icons/imm28/edit-e.edit-rectangle.svg",
+      "bytes": 721,
+      "sha256": "6c3667d1ee5a0263724c06bcb3c7755cf2d2664316905168db88562506808f1d"
+    },
+    {
+      "path": "assets/icons/imm28/edit.dynamic.svg",
+      "bytes": 584,
+      "sha256": "a1f168ddee177e315812d9e1bd42fa3c281792cf7ded6930b26ddcfba240b260"
+    },
+    {
+      "path": "assets/icons/imm28/edit.regular.svg",
+      "bytes": 1028,
+      "sha256": "aefb010974a6fa9fde67e99b409c03aaf431b21a91c317eb6b9fe54bbddf8439"
+    },
+    {
+      "path": "assets/icons/imm28/emoji.dynamic.svg",
+      "bytes": 952,
+      "sha256": "0aec0b6263c84b2450334fb0fd2c98855bb2f3488a032ed6ec2eea1abe50ad3f"
+    },
+    {
+      "path": "assets/icons/imm28/emoji.regular.svg",
+      "bytes": 2427,
+      "sha256": "21cfba5fd6bcaed84ecefe36c7cc199ca84391a1868e826d7889f20926de9d85"
+    },
+    {
+      "path": "assets/icons/imm28/enlarge.dynamic.svg",
+      "bytes": 345,
+      "sha256": "7154a323371ceb3b5579855648bb10feed283ba19e5d5bdf0c7db2beab7d387a"
+    },
+    {
+      "path": "assets/icons/imm28/enlarge.regular.svg",
+      "bytes": 899,
+      "sha256": "b72ba88941000a26e5174008dc3db1cb0b86b2c1c8b264be653f18a3203e252a"
+    },
+    {
+      "path": "assets/icons/imm28/erase.dynamic.svg",
+      "bytes": 742,
+      "sha256": "5c2dc3fa4be7be554b516d673d06c9d66f962df3a527ab37d4f0dbb8a42f4a59"
+    },
+    {
+      "path": "assets/icons/imm28/erase.regular.svg",
+      "bytes": 1360,
+      "sha256": "e4432b8306b255372c6c1bfe869058e3a42abb255141ac8ac788e6fb7d9dc743"
+    },
+    {
+      "path": "assets/icons/imm28/erase.solid.svg",
+      "bytes": 974,
+      "sha256": "f6f43df15ba35b9fb305e8dcee246ec210eb771e11f54ebfba486ec37548b042"
+    },
+    {
+      "path": "assets/icons/imm28/expend-up.svg",
+      "bytes": 676,
+      "sha256": "4a48bab1afe14b1677d0616a9f349effade3664d9bad6865ec9b99ac9ca2185a"
+    },
+    {
+      "path": "assets/icons/imm28/eye-closed.regular.svg",
+      "bytes": 2207,
+      "sha256": "309163936e5bba38f7cedf623f7e4e5cabedc8ee5810c552f67830dc5e7cfdd9"
+    },
+    {
+      "path": "assets/icons/imm28/eye-closed.solid.svg",
+      "bytes": 1263,
+      "sha256": "5d3a087ece3e1580f213a97f42f7c6814b53d1b13f8f8d997a4ecd2332edc6ba"
+    },
+    {
+      "path": "assets/icons/imm28/eye.regular.svg",
+      "bytes": 1797,
+      "sha256": "24f46e15939055ef2684b4021ba473e1ffbe2653e3aac4432574c85ed839b9b5"
+    },
+    {
+      "path": "assets/icons/imm28/eye.solid.svg",
+      "bytes": 989,
+      "sha256": "5c3f7b2a53168a31449e49217e1817b17df9b6c4fc05f5272b254dd37d822334"
+    },
+    {
+      "path": "assets/icons/imm28/fast-arrow-down.dynamic.svg",
+      "bytes": 337,
+      "sha256": "e2bd0ce467c2b0dac405ddab65fff5b6d590b4d9ce209375284595245dd825d4"
+    },
+    {
+      "path": "assets/icons/imm28/fast-arrow-down.regular.svg",
+      "bytes": 881,
+      "sha256": "7603a5941fe45241732293fae0ebb88f16e5240f75e0b1de02e8d51c38d86fc1"
+    },
+    {
+      "path": "assets/icons/imm28/fast-arrow-up.dynamic.svg",
+      "bytes": 338,
+      "sha256": "25e79cb22cfe5e5e9986513a57e97b9aa5ad77cadcfb2dd96e277dd84453763a"
+    },
+    {
+      "path": "assets/icons/imm28/fast-arrow-up.regular.svg",
+      "bytes": 881,
+      "sha256": "22e7205e18d1298e4e949fc8183c64e8b8981295c65a5bf656fe0da6b9471f14"
+    },
+    {
+      "path": "assets/icons/imm28/file.collection-2.svg",
+      "bytes": 568,
+      "sha256": "84795d71f08340af59498a08e7f2a7223d5d6ff59fdb4f6ff92ed1d13e505fc9"
+    },
+    {
+      "path": "assets/icons/imm28/file.collection-3.svg",
+      "bytes": 717,
+      "sha256": "6f01ab9578b85dfa4b481079a2ebd41929f2661430e4d22b9ebaa766ae94a1fb"
+    },
+    {
+      "path": "assets/icons/imm28/file.collection.svg",
+      "bytes": 452,
+      "sha256": "e51e446420dc660346f8b50100cf38adc459593cd2c94c23414b7ae8f0d52d46"
+    },
+    {
+      "path": "assets/icons/imm28/filter-alt.dynamic.svg",
+      "bytes": 558,
+      "sha256": "5a6b47ddd88e7cb64143cde630d83e5c9eb738ba4757192e74aac27e8a4f2655"
+    },
+    {
+      "path": "assets/icons/imm28/filter-alt.regular.svg",
+      "bytes": 1042,
+      "sha256": "dfc656fabffbcdfcd71039fa8dad624de247ca2c899cb5b9420506e69765f575"
+    },
+    {
+      "path": "assets/icons/imm28/folder-icon.svg",
+      "bytes": 463,
+      "sha256": "93095b01d1bc6c03cbb575dda541c1a6dab380ae4b7028314d6bb5dcd1e4d8bb"
+    },
+    {
+      "path": "assets/icons/imm28/gif.svg",
+      "bytes": 15796,
+      "sha256": "5c8c11a7b930c6b90268cf9588d67b4eba1f91a569573a7be4baa1dd2046db92"
+    },
+    {
+      "path": "assets/icons/imm28/group-action-add-friend.svg",
+      "bytes": 2795,
+      "sha256": "9f4fcf4d49e290bbe3073d52c43fe06937a2fc1b361c236ebb439a5ffcb0993e"
+    },
+    {
+      "path": "assets/icons/imm28/group-action-scan.svg",
+      "bytes": 877,
+      "sha256": "f37829209d67c7c4c096f8e296de49845c52a7ba955a48058be3d8868890e3a4"
+    },
+    {
+      "path": "assets/icons/imm28/group-action-start-group.svg",
+      "bytes": 555,
+      "sha256": "843ecbf7cf971b8b59ea8b58d55e7afdd06778a20f913e8ef4921524f9f83f08"
+    },
+    {
+      "path": "assets/icons/imm28/group-messaging.svg",
+      "bytes": 1451,
+      "sha256": "073d1633012a00fda30b8e77b0415028dfa136e904286ace131608510a3e56d4"
+    },
+    {
+      "path": "assets/icons/imm28/heart.dynamic-2.svg",
+      "bytes": 590,
+      "sha256": "5c5ec68896fad85c295898e6bf5e709d0de4b1a6b49f8a6db69acef62c97e0c2"
+    },
+    {
+      "path": "assets/icons/imm28/heart.dynamic.svg",
+      "bytes": 590,
+      "sha256": "5c5ec68896fad85c295898e6bf5e709d0de4b1a6b49f8a6db69acef62c97e0c2"
+    },
+    {
+      "path": "assets/icons/imm28/heart.regular-2.svg",
+      "bytes": 1200,
+      "sha256": "366333cc556e6ecbe9b6bbca22e78f906327cfc20568f255ba49fd732f867aed"
+    },
+    {
+      "path": "assets/icons/imm28/heart.regular.svg",
+      "bytes": 1200,
+      "sha256": "366333cc556e6ecbe9b6bbca22e78f906327cfc20568f255ba49fd732f867aed"
+    },
+    {
+      "path": "assets/icons/imm28/heart.solid-2.svg",
+      "bytes": 635,
+      "sha256": "ab07f8baca5ef9d7963a72149a3bb9f03b11e6a85515867d8267b849c7e45d70"
+    },
+    {
+      "path": "assets/icons/imm28/heart.solid.svg",
+      "bytes": 635,
+      "sha256": "ab07f8baca5ef9d7963a72149a3bb9f03b11e6a85515867d8267b849c7e45d70"
+    },
+    {
+      "path": "assets/icons/imm28/home-simple.dynamic.svg",
+      "bytes": 547,
+      "sha256": "78e8c2fc561e95a188e40d2c5bf250828aa344d307fa2a2aa92c71afaa779be7"
+    },
+    {
+      "path": "assets/icons/imm28/home-simple.regular.svg",
+      "bytes": 948,
+      "sha256": "fcc64a0ba69b16eac9601aa4f0f87eed30de019aebb138a49d8c465d79c83cfe"
+    },
+    {
+      "path": "assets/icons/imm28/icon28.svg",
+      "bytes": 2324,
+      "sha256": "001a3ca74423e20c84323f47eeef9bdbb2432d6975182085a997905b24b52135"
+    },
+    {
+      "path": "assets/icons/imm28/info-circle.dynamic.svg",
+      "bytes": 554,
+      "sha256": "5e71ee4749453ad79dea2965a235fcc81b0002f027ef35a2ba6e21a571dac36e"
+    },
+    {
+      "path": "assets/icons/imm28/info-circle.regular.svg",
+      "bytes": 1041,
+      "sha256": "0fa5743aabfb49b5d45f0c0a613b6051497b33f95d37217051cd338c9e146139"
+    },
+    {
+      "path": "assets/icons/imm28/info-circle.solid.svg",
+      "bytes": 696,
+      "sha256": "d598b34fa2eccf59d71df825ba36c90e31ab51b45f6ff8fadb652f5b1fe784f2"
+    },
+    {
+      "path": "assets/icons/imm28/input-voice.svg",
+      "bytes": 1395,
+      "sha256": "1cfd552074b376eb3e429a6f27b1905a7d841f543e74571d2517a4fc19d55127"
+    },
+    {
+      "path": "assets/icons/imm28/jpg.svg",
+      "bytes": 17648,
+      "sha256": "578cc183b8d0feef8c62b0a186563b1248d12e1b6d0282cc9ec5533a66aff8ff"
+    },
+    {
+      "path": "assets/icons/imm28/keyboard.svg",
+      "bytes": 1732,
+      "sha256": "633a51036869ef25d0ca9badb36e1c486900527e82a33176cd725389f6de1acc"
+    },
+    {
+      "path": "assets/icons/imm28/lock-off.unlock-2.svg",
+      "bytes": 682,
+      "sha256": "74314863071ce50a32fc056f96cdbbbd14feb48bad8aa9a23dd443977d6735bb"
+    },
+    {
+      "path": "assets/icons/imm28/lock-off.unlock-3.svg",
+      "bytes": 693,
+      "sha256": "186cc9f6b42ff19d1f63068384aac434ae307de226d3d335b351723d7989446f"
+    },
+    {
+      "path": "assets/icons/imm28/lock-off.unlock.svg",
+      "bytes": 516,
+      "sha256": "c8969489d6a79845be1b860b6288fd5ec6667bb77019e05e3e67010f286fca2a"
+    },
+    {
+      "path": "assets/icons/imm28/lock-slash.dynamic.svg",
+      "bytes": 877,
+      "sha256": "c277813b587e209eb4317bdffa6fda70e23dfad32ae1ff140fac8ceb087384ff"
+    },
+    {
+      "path": "assets/icons/imm28/lock-slash.regular.svg",
+      "bytes": 1855,
+      "sha256": "f21d4c6c48c598f804a03a423b83246adec1108b047107bf053ccabb5865302f"
+    },
+    {
+      "path": "assets/icons/imm28/lock.dynamic.svg",
+      "bytes": 409,
+      "sha256": "b8b9fd2b81f09ddd1f05efda9657fae48c63e2d851201644e0f4b36bfe2dc841"
+    },
+    {
+      "path": "assets/icons/imm28/lock.lock-2.svg",
+      "bytes": 608,
+      "sha256": "cfdaf6c43650e83e93e406ce1ec0e51e62d3c2daf768d6823f74d8cc851b17da"
+    },
+    {
+      "path": "assets/icons/imm28/lock.lock-3.svg",
+      "bytes": 595,
+      "sha256": "e9887bb1f0edc9a425becb1a3a1706f0ff39ca92941e7d6f88b3498a6aef80b4"
+    },
+    {
+      "path": "assets/icons/imm28/lock.lock.svg",
+      "bytes": 507,
+      "sha256": "f36d4233381e221989b4391ba3f598e26dd7d00c2354951b9f0e823df562b0e9"
+    },
+    {
+      "path": "assets/icons/imm28/lock.regular.svg",
+      "bytes": 765,
+      "sha256": "b9f461d4661d5f08214fe6091d28391f8cfbdae79b5f92951f9c8b69ca30d719"
+    },
+    {
+      "path": "assets/icons/imm28/lock.svg",
+      "bytes": 578,
+      "sha256": "39fd046d5d9d519d046c7c13b57c568fdc7df869e45b872ad191ff124395f377"
+    },
+    {
+      "path": "assets/icons/imm28/log-out.svg",
+      "bytes": 590,
+      "sha256": "edcedcdd6909219825de7218b1055c274bdc8d81d5328eee42d4368cac794588"
+    },
+    {
+      "path": "assets/icons/imm28/magnet.svg",
+      "bytes": 562,
+      "sha256": "cf28eb3459c5f602af36e0f68626533ac809fd402eeed19e25de38511893d74f"
+    },
+    {
+      "path": "assets/icons/imm28/mail.dynamic.svg",
+      "bytes": 395,
+      "sha256": "93a34bfd800ceeb943cf2e150bdd9ad200cbe7cd43ddbca6bcdfcf459d85b6d4"
+    },
+    {
+      "path": "assets/icons/imm28/mail.regular.svg",
+      "bytes": 876,
+      "sha256": "6d2d68dfad8176d6dcf820111906aeccdcf4d8441bdb91b741ee7ef4280cbda7"
+    },
+    {
+      "path": "assets/icons/imm28/mail.solid.svg",
+      "bytes": 609,
+      "sha256": "76de5d7bac98eecef788699912a0d3c0679bbf9db324901f044f6a3c9a19322b"
+    },
+    {
+      "path": "assets/icons/imm28/manifest.json",
+      "bytes": 75736,
+      "sha256": "fb7af4e76df0c8e5f8b32623bfc8dde9457b706497620374ac556341b6699907"
+    },
+    {
+      "path": "assets/icons/imm28/map-pin.dynamic.svg",
+      "bytes": 497,
+      "sha256": "7aec3e782fc226a646595d9ba965cb9709e5b187ea6d8621e1e864d455bc2609"
+    },
+    {
+      "path": "assets/icons/imm28/map-pin.regular.svg",
+      "bytes": 1934,
+      "sha256": "95aa36a181c0083baf2f41496eefd9c61333b956749e6f197c7313233cb244be"
+    },
+    {
+      "path": "assets/icons/imm28/maps-arrow-diagonal.dynamic.svg",
+      "bytes": 623,
+      "sha256": "34d4e814ec1afa9f9eb5be1f22bb4978fc719fc0803aaadcaec71efa2bd60cf0"
+    },
+    {
+      "path": "assets/icons/imm28/maps-arrow-diagonal.regular.svg",
+      "bytes": 676,
+      "sha256": "5f3068af6140819719376a3a459a78161dc576c526277d4d1437052008656bf8"
+    },
+    {
+      "path": "assets/icons/imm28/menu.dynamic.svg",
+      "bytes": 429,
+      "sha256": "998b75e1d1962d07ee21a7e8964041b0337001e0a1da496d203359cc8366cbd4"
+    },
+    {
+      "path": "assets/icons/imm28/menu.regular.svg",
+      "bytes": 787,
+      "sha256": "46823741b9b85ae1a21cb5610c6d8d0508522e8f87bfaf2a16562d8fe98dc2f3"
+    },
+    {
+      "path": "assets/icons/imm28/microphone-mute.dynamic.svg",
+      "bytes": 701,
+      "sha256": "c91393e98eebe307d7b05729648297cc24092d58df9e023263859dfcb73d3504"
+    },
+    {
+      "path": "assets/icons/imm28/microphone-mute.regular.svg",
+      "bytes": 1580,
+      "sha256": "d2fb35e8617315924dc0fce13f0db140e8776e8358d2db3f0af2273a6d022043"
+    },
+    {
+      "path": "assets/icons/imm28/microphone-mute.solid.svg",
+      "bytes": 1291,
+      "sha256": "4735a701d7746267c0dc84d23cbe6ef2127454d2a5d34db32c764da7bd92be8c"
+    },
+    {
+      "path": "assets/icons/imm28/microphone.dynamic.svg",
+      "bytes": 484,
+      "sha256": "9205e47e4639af7a3de2c85f89a8133f3445ae26ce9057b5cb656a970ea55cb9"
+    },
+    {
+      "path": "assets/icons/imm28/microphone.regular.svg",
+      "bytes": 1182,
+      "sha256": "d2651036f378c15e4817ce6040a1441cd959f987f4c02e4681c955ada39c0f68"
+    },
+    {
+      "path": "assets/icons/imm28/microphone.solid.svg",
+      "bytes": 773,
+      "sha256": "3e884cc59f48cf91867126a8ee405f5b3e69a1430bcffaa95ce95c6d124b0199"
+    },
+    {
+      "path": "assets/icons/imm28/minus-circle.dynamic.svg",
+      "bytes": 426,
+      "sha256": "8ab3faf2682d8161e8556509accf1d9a1ab1dd0107095339257f9f6557cb62f2"
+    },
+    {
+      "path": "assets/icons/imm28/minus-circle.regular.svg",
+      "bytes": 709,
+      "sha256": "f4ec9839331882c3fba6a4d85d54325c0f6d55ec49fe75b3122a78a3d7436a39"
+    },
+    {
+      "path": "assets/icons/imm28/minus-circle.solid.svg",
+      "bytes": 445,
+      "sha256": "7bab55758a203913dc14aa9cdc9eacf565c92a2975922abcdcd0ce962f225790"
+    },
+    {
+      "path": "assets/icons/imm28/minus.dynamic.svg",
+      "bytes": 212,
+      "sha256": "3204f842198edfb018b59c10ebf528b1cfd09ca4c1df4441ca490831f40db566"
+    },
+    {
+      "path": "assets/icons/imm28/minus.regular.svg",
+      "bytes": 334,
+      "sha256": "67fbd6871ce58826d56c04c73d8c52f19532a8333deffd2570d0b177887207e6"
+    },
+    {
+      "path": "assets/icons/imm28/mkv.svg",
+      "bytes": 17083,
+      "sha256": "a847cf396d79ccc61f58ca979e1fd23618a67b4a9e298055279229ff71b05880"
+    },
+    {
+      "path": "assets/icons/imm28/more-horiz.dynamic.svg",
+      "bytes": 892,
+      "sha256": "5a945409c739fee83761d64ce8a580fd7ece37a1d223dc3d674ceb648cedd7a0"
+    },
+    {
+      "path": "assets/icons/imm28/more-horiz.regular.svg",
+      "bytes": 1777,
+      "sha256": "8a346ec246c9d83a9cd42aa94845034bf51de3834143c34bde0ee546620c22fb"
+    },
+    {
+      "path": "assets/icons/imm28/more-vert.dynamic.svg",
+      "bytes": 892,
+      "sha256": "d754bb54af35e960d2ac21259c4b09e7851066ed24949fd14f12d87013476996"
+    },
+    {
+      "path": "assets/icons/imm28/more-vert.regular.svg",
+      "bytes": 1777,
+      "sha256": "116c080a102b820744432434661402734499887d9c239a5132cfe993c5cdea60"
+    },
+    {
+      "path": "assets/icons/imm28/mp3.svg",
+      "bytes": 20076,
+      "sha256": "2407a20954ac8530bb9c4fba0aa8a1627d69c937112e19f30325f67d5e6dcf4c"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-down.dynamic.svg",
+      "bytes": 219,
+      "sha256": "255ccc9c96778fb2163a2ec59d993bdc12c5e6cb67d93f4b8b728f32bfcccf4e"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-down.regular.svg",
+      "bytes": 608,
+      "sha256": "f0af8db5f1918ae2aef0dfb1893a354b2760ef71812ba89399aceafd78a7923a"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-down.solid.svg",
+      "bytes": 457,
+      "sha256": "88953c37771ed9f14a5347143b1076a5f0414c89973ab32d2ab38a61444595f6"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-left.dynamic.svg",
+      "bytes": 220,
+      "sha256": "2af3583a847b802b5ebc5c31236719abf3d4777d54c24b6b2ebed0ca911e8933"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-left.regular.svg",
+      "bytes": 492,
+      "sha256": "ab2f87ab32eb51f08f38ca058521a9a4cf4fe144768fe0621486e85dbececb61"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-left.solid.svg",
+      "bytes": 458,
+      "sha256": "08f1d6d65cf537238452c742c7b7e6f847f0fc14143212d5ef9e9a49c53891ff"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-right.dynamic.svg",
+      "bytes": 219,
+      "sha256": "3f6ceee17c873bf5650d8f61772dd36ca621ed798a2dc2f47ee5a29f9cb52d25"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-right.regular.svg",
+      "bytes": 492,
+      "sha256": "e5b4e9fa0e84e6b5197824fc5ddb8baa24ff7f0fe21a1045ccf8d205cf998a5e"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-right.solid.svg",
+      "bytes": 458,
+      "sha256": "175a0469d5ebbff457ca59e90f4dfbb0597c58721b3afdf4f7b60ea0c61cb111"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-up.dynamic.svg",
+      "bytes": 220,
+      "sha256": "5433cae2e88fb9cc7b59bb786bb2d9ca4528a8f39b2eded555ce0d786382403b"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-up.regular.svg",
+      "bytes": 492,
+      "sha256": "1b578fdf57526a64854ccfe4e441d1f794c27cd6100a2afa4990e99fc3bb2fa0"
+    },
+    {
+      "path": "assets/icons/imm28/nav-arrow-up.solid.svg",
+      "bytes": 457,
+      "sha256": "6fa3dac6f4926a845be32320c7b2474468a8eed5839558bd3c13bdcb65d0a9e1"
+    },
+    {
+      "path": "assets/icons/imm28/open-new-window.dynamic.svg",
+      "bytes": 398,
+      "sha256": "1910e9a73a013e1ac1493f7016b06a2ebdfb3198af7187ae25ab9298187067cb"
+    },
+    {
+      "path": "assets/icons/imm28/open-new-window.regular.svg",
+      "bytes": 967,
+      "sha256": "4c9b32b94205ac04f16bab2c1113db09368031f25884dca524d3505dc4852f55"
+    },
+    {
+      "path": "assets/icons/imm28/pdf.svg",
+      "bytes": 14217,
+      "sha256": "c3c44ef0fc7bb11b14d661bd149aae89713ae4b6cef8083275f2805b8d3d4117"
+    },
+    {
+      "path": "assets/icons/imm28/phone-disabled.dynamic.svg",
+      "bytes": 648,
+      "sha256": "7335afb7d523cb3d5ffe1fdd7f76a1b9870eda4ec14646a09f5ccd96cf8544aa"
+    },
+    {
+      "path": "assets/icons/imm28/phone-disabled.regular.svg",
+      "bytes": 1770,
+      "sha256": "3c384f72841b13cb7b8887275fcdad08172a6ac85bad10b14cc042903971f3b0"
+    },
+    {
+      "path": "assets/icons/imm28/phone-out.dynamic.svg",
+      "bytes": 702,
+      "sha256": "5fb8c37e62be64a78bfb0f112038c9f5d0615be466114302b0d161e2f7fee2ec"
+    },
+    {
+      "path": "assets/icons/imm28/phone-out.solid.svg",
+      "bytes": 862,
+      "sha256": "13b994afb62b1f74477e19c6b91e99375a454099ac33be3e8b293cf533ded988"
+    },
+    {
+      "path": "assets/icons/imm28/phone-paused.dynamic.svg",
+      "bytes": 738,
+      "sha256": "bdb81507c6c3ddd969f58685a55eaea67a4054fd306f483f971c2a464842c715"
+    },
+    {
+      "path": "assets/icons/imm28/phone-paused.regular.svg",
+      "bytes": 1606,
+      "sha256": "24871eeaafccc6e6ecd14397604cd174c79f9361c2e771938d15d8c803f851a5"
+    },
+    {
+      "path": "assets/icons/imm28/phone-paused.solid.svg",
+      "bytes": 1176,
+      "sha256": "eeaa67e17694a2f0d382cfc473f6b6a8ba4af53e45fdaa14f74b9fc8ef5840cc"
+    },
+    {
+      "path": "assets/icons/imm28/phone-paused.svg",
+      "bytes": 1468,
+      "sha256": "bcdd80c2a53af07bc4e259bb84425ec1940969a26b9d625797c7c4052050c3a4"
+    },
+    {
+      "path": "assets/icons/imm28/phone.dynamic.svg",
+      "bytes": 516,
+      "sha256": "703254ae73a4ac9ee10e5c314d3a66c56816b5ebafbfa6e60fa7f37f961562e0"
+    },
+    {
+      "path": "assets/icons/imm28/phone.regular.svg",
+      "bytes": 1130,
+      "sha256": "69bba73d79e4fda550ca75dbbf7366aa55ad9918dce510951b74f08357189a17"
+    },
+    {
+      "path": "assets/icons/imm28/phone.solid.svg",
+      "bytes": 700,
+      "sha256": "9dfb6441d9172c23504a50402714a796be7b8573738000cf95f7524cf3e722c9"
+    },
+    {
+      "path": "assets/icons/imm28/picture.image-rectangle-2.svg",
+      "bytes": 716,
+      "sha256": "d8c4fe42747aaca830910b5a9d514c606b2cb4109c25d4153926c6d89184cc7f"
+    },
+    {
+      "path": "assets/icons/imm28/picture.image-rectangle-3.svg",
+      "bytes": 595,
+      "sha256": "71e1daffe7519c1a12d4398bca725256337a435006148028ec60749b2c80745c"
+    },
+    {
+      "path": "assets/icons/imm28/picture.image-rectangle.svg",
+      "bytes": 553,
+      "sha256": "189a2930299e004f6dba462bc225eacada16fc7fd5c6abca8deb17a3318bc4bb"
+    },
+    {
+      "path": "assets/icons/imm28/pin-slash.dynamic.svg",
+      "bytes": 576,
+      "sha256": "ff932d6652a92a016d105d106b3eae4fddff0e5b1feefc8e8e428c8a73368536"
+    },
+    {
+      "path": "assets/icons/imm28/pin-slash.regular.svg",
+      "bytes": 2041,
+      "sha256": "a0915ccf96a0b8dac20a5236c2aeb0a207f8daa984651c184faee6ec18d328b0"
+    },
+    {
+      "path": "assets/icons/imm28/pin-slash.solid.svg",
+      "bytes": 2130,
+      "sha256": "fec809baa2ef6d50d773bfbafbe47aa259d01f1e2901508c2033201ac37b10c9"
+    },
+    {
+      "path": "assets/icons/imm28/pin.dynamic.svg",
+      "bytes": 463,
+      "sha256": "e051f1ceba89dfb5e700c2284afd8180bef0cbfda890b7d7b49871af5195220d"
+    },
+    {
+      "path": "assets/icons/imm28/pin.regular.svg",
+      "bytes": 1448,
+      "sha256": "376f288286bfb044aa34dbf67772b2bca27c22eea17af2f8a7cb18883d3cfb24"
+    },
+    {
+      "path": "assets/icons/imm28/pin.solid.svg",
+      "bytes": 1625,
+      "sha256": "510a35795e7e31e556f619e21e1ca84465e00ebce238d2b13c581f69eacc8a00"
+    },
+    {
+      "path": "assets/icons/imm28/play.regular.svg",
+      "bytes": 815,
+      "sha256": "e56a4cb7d2deea65608cf3415e16af988dc4622d26b91de42da1a0f432648707"
+    },
+    {
+      "path": "assets/icons/imm28/play.solid.svg",
+      "bytes": 920,
+      "sha256": "4760eb46a6c206a1f5002cbc4759e54680a0018a00d23606f87d46c8a2e3d48f"
+    },
+    {
+      "path": "assets/icons/imm28/play.svg",
+      "bytes": 428,
+      "sha256": "aa811b910a9ae0ad870810679953ebd41004c3cc3362aa425d7dc0564b50e2dd"
+    },
+    {
+      "path": "assets/icons/imm28/plus-circle.dynamic.svg",
+      "bytes": 452,
+      "sha256": "41a8cf3e68e8fbf17b4adb0c21dc9f5c5b125658b055e80f785a6c5d4bc06f75"
+    },
+    {
+      "path": "assets/icons/imm28/plus-circle.regular.svg",
+      "bytes": 882,
+      "sha256": "193ad51f9d5ea571d6b89773ec67e4e1bddb07ef07ea0f097b7492ad801518c1"
+    },
+    {
+      "path": "assets/icons/imm28/plus-circle.solid.svg",
+      "bytes": 618,
+      "sha256": "51d88ced6dfd17466a2d1e391986baaec2a2fd1ced29614c058dcf4966467e01"
+    },
+    {
+      "path": "assets/icons/imm28/plus.dynamic.svg",
+      "bytes": 238,
+      "sha256": "190d793b214e445ced31f41e4eb118ead18b8e275e999e30cbbd4437e5b725ca"
+    },
+    {
+      "path": "assets/icons/imm28/plus.regular.svg",
+      "bytes": 507,
+      "sha256": "dfc16af8a20463911dd8b819ac84653f65315382b3f51e0cd48586c920418034"
+    },
+    {
+      "path": "assets/icons/imm28/ppt.svg",
+      "bytes": 14178,
+      "sha256": "5edb84eed4ef157cbb05fa5b83990ecb561bacaab05a948f3e2fd1e8842f1a01"
+    },
+    {
+      "path": "assets/icons/imm28/psd.svg",
+      "bytes": 18222,
+      "sha256": "5f73b1310c7305036de97fce28cd1c93cfbf68885e6e8852609103f10d7f28b6"
+    },
+    {
+      "path": "assets/icons/imm28/qr-logo.png",
+      "bytes": 4890,
+      "sha256": "27585c6b3c88229489534a8c971110bdf14c649e941330f6cd30a2414fa47a54"
+    },
+    {
+      "path": "assets/icons/imm28/qrcode-small.svg",
+      "bytes": 4231,
+      "sha256": "8fdf08befc4b2037ed4e3e04fba21ebf41919f278adc2c5007c4873c3abb2b10"
+    },
+    {
+      "path": "assets/icons/imm28/quote.dynamic.svg",
+      "bytes": 521,
+      "sha256": "012e9692b4b0572336882b18e0bdf75eae169e75592e3099b574dc73a1db4786"
+    },
+    {
+      "path": "assets/icons/imm28/quote.regular.svg",
+      "bytes": 1334,
+      "sha256": "4e9fc746c7526337ddf34ecf1beb7df4861da0dcee983736b92ce34479967045"
+    },
+    {
+      "path": "assets/icons/imm28/quote.solid.svg",
+      "bytes": 1082,
+      "sha256": "31779cb6ccceb0470881db12ed6058b921e33ccf77c70a5c29ae59711abec764"
+    },
+    {
+      "path": "assets/icons/imm28/reduce.dynamic.svg",
+      "bytes": 345,
+      "sha256": "ed30d92b2d4cb5035fdc00f2424905f982798748d85c0bac766d909ce1d67631"
+    },
+    {
+      "path": "assets/icons/imm28/reduce.regular.svg",
+      "bytes": 899,
+      "sha256": "50aba7cbf02225041eff43a9653716bd800d66346c6b696d68bd0cdd6e49119f"
+    },
+    {
+      "path": "assets/icons/imm28/refresh-double.dynamic.svg",
+      "bytes": 773,
+      "sha256": "aeeb336bc49e9b54291454047e7e487c5e3b268ed0fb3514ad8e539314def1b3"
+    },
+    {
+      "path": "assets/icons/imm28/refresh-double.regular.svg",
+      "bytes": 1610,
+      "sha256": "2e06227d5c304556d509fc3f58cde1d8a5b7efb4c2e9ed36e10808b58eea0df8"
+    },
+    {
+      "path": "assets/icons/imm28/refresh.dynamic.svg",
+      "bytes": 477,
+      "sha256": "e32567e3a26419c85648169b780ac415c1529c069c165c3f669f38e488e4ffde"
+    },
+    {
+      "path": "assets/icons/imm28/refresh.regular.svg",
+      "bytes": 951,
+      "sha256": "7456bea51f92b78da660aaeb52a334173f017db27e8a71a84e09ab5e5d771371"
+    },
+    {
+      "path": "assets/icons/imm28/rotate-camera-left.dynamic.svg",
+      "bytes": 1351,
+      "sha256": "102d0cdabae47994050c7af1541c879c5f8766eb742a7309437974d5122b7449"
+    },
+    {
+      "path": "assets/icons/imm28/rotate-camera-left.regular.svg",
+      "bytes": 2135,
+      "sha256": "f2c3275876ccdd3f744d25d9f4d7a7131e765f764e937bb50313a3f97f277e08"
+    },
+    {
+      "path": "assets/icons/imm28/scan-icon.svg",
+      "bytes": 1145,
+      "sha256": "183788d2fe747e5b71b1758027a69b5d00f4c985aeb2c29806ab134428b98236"
+    },
+    {
+      "path": "assets/icons/imm28/search.dynamic-2.svg",
+      "bytes": 476,
+      "sha256": "7fe27b745aace74d4d46cb8c501a628a7efa3c46b0a59a6decd316c17c05c5d1"
+    },
+    {
+      "path": "assets/icons/imm28/search.dynamic.svg",
+      "bytes": 476,
+      "sha256": "7fe27b745aace74d4d46cb8c501a628a7efa3c46b0a59a6decd316c17c05c5d1"
+    },
+    {
+      "path": "assets/icons/imm28/search.regular-2.svg",
+      "bytes": 884,
+      "sha256": "c32abe96b951c18eafcd0f2da82b172bdb7e2dde8acbc96dd4e1a63f69731577"
+    },
+    {
+      "path": "assets/icons/imm28/search.regular.svg",
+      "bytes": 884,
+      "sha256": "c32abe96b951c18eafcd0f2da82b172bdb7e2dde8acbc96dd4e1a63f69731577"
+    },
+    {
+      "path": "assets/icons/imm28/send.svg",
+      "bytes": 683,
+      "sha256": "951d593763f03f352f41716c2da473a0d6b17672f5598660573e80c8beacef01"
+    },
+    {
+      "path": "assets/icons/imm28/set.svg",
+      "bytes": 1431,
+      "sha256": "a3c9a76bb5255869327f94190ef0ba404112e9768b2445a5baa8bea60edd7c26"
+    },
+    {
+      "path": "assets/icons/imm28/share-ios.dynamic.svg",
+      "bytes": 403,
+      "sha256": "124454be939efbf07bd8b8945ae739f58f980cf766621d5d21e24093a2bef001"
+    },
+    {
+      "path": "assets/icons/imm28/share-ios.regular.svg",
+      "bytes": 967,
+      "sha256": "3dd4082270d9c6043459000d8c618d340c620351f8f9be36eca4c235dfd3d9f5"
+    },
+    {
+      "path": "assets/icons/imm28/share-ios.svg",
+      "bytes": 406,
+      "sha256": "303eb6e6beb91e373c4b53159a2f0441c35f47e0313950aff35f0f678cc1a3ca"
+    },
+    {
+      "path": "assets/icons/imm28/share.dynamic.svg",
+      "bytes": 268,
+      "sha256": "3fe80ed6e65fdc6fcdd2e4bc97aa1e23bf02daba4840ded6e573bb40b668ca24"
+    },
+    {
+      "path": "assets/icons/imm28/share.solid.svg",
+      "bytes": 286,
+      "sha256": "b1c8dedd18f12ec7f62746604fe35b579663eb776d59cb2f07663c68e6f64ea9"
+    },
+    {
+      "path": "assets/icons/imm28/simple-cart.dynamic.svg",
+      "bytes": 572,
+      "sha256": "63c2c848fd459b089a3304828a4f77661d28b01ed638f98c09fd481121d7a200"
+    },
+    {
+      "path": "assets/icons/imm28/simple-cart.regular.svg",
+      "bytes": 1369,
+      "sha256": "6202e0083c867b95cf87a9a72db4088bc9879311cb63b14a28198ace87437b27"
+    },
+    {
+      "path": "assets/icons/imm28/smartphone-device.dynamic.svg",
+      "bytes": 419,
+      "sha256": "361286fa57060bcf5794e4da86f0f2389e35785f085685e91ee4c5f3fe57a94f"
+    },
+    {
+      "path": "assets/icons/imm28/smartphone-device.regular.svg",
+      "bytes": 699,
+      "sha256": "7c26aef700f03d1d7c2048b9864b87be30948e5dd2ece331d5f9acdfe77e104d"
+    },
+    {
+      "path": "assets/icons/imm28/sound-high.dynamic.svg",
+      "bytes": 782,
+      "sha256": "c4b337bc758032f1a22f3e993246c011eddb429026e32a05e1080c81be3213e8"
+    },
+    {
+      "path": "assets/icons/imm28/sound-high.regular.svg",
+      "bytes": 4045,
+      "sha256": "77c440396c6a969a19ad66d68cd51090816e2d06be69441926513985383adfa1"
+    },
+    {
+      "path": "assets/icons/imm28/sound-high.solid.svg",
+      "bytes": 3719,
+      "sha256": "b06e8a6f35579622c7d890a57ce39ee190aac89ddf8d0c8b78bae573a926ce13"
+    },
+    {
+      "path": "assets/icons/imm28/sound-low.dynamic.svg",
+      "bytes": 624,
+      "sha256": "6d318975b02d9cd3026ca5f47e243b778fb7b492c8e1335db881c3a9e664c930"
+    },
+    {
+      "path": "assets/icons/imm28/sound-low.regular.svg",
+      "bytes": 2321,
+      "sha256": "58250f18a8730d797c83bd543097feba8101630480c75a455a5388a68fc50134"
+    },
+    {
+      "path": "assets/icons/imm28/sound-low.solid.svg",
+      "bytes": 1995,
+      "sha256": "f45cd03500e36b5d7d7c8585ed954d23a917de2252dcafb723e8e78a3e2ea01c"
+    },
+    {
+      "path": "assets/icons/imm28/sound-min.dynamic.svg",
+      "bytes": 576,
+      "sha256": "a7cb3d73586385e8f1f5c73074ef0f11ea58581b614e752a411bb6cb16485912"
+    },
+    {
+      "path": "assets/icons/imm28/sound-min.regular.svg",
+      "bytes": 1091,
+      "sha256": "a034cb844dd6a873ac7d641a5960bdb4c26d8fac582857e76d64ab3740398180"
+    },
+    {
+      "path": "assets/icons/imm28/sound-min.solid.svg",
+      "bytes": 761,
+      "sha256": "ec5c16cb6ee84ba1fbb032a71196f30ace50672221419eaab937e3293df04d59"
+    },
+    {
+      "path": "assets/icons/imm28/sound-off.dynamic.svg",
+      "bytes": 783,
+      "sha256": "22d097094c9604e2a87d5ea958ada3aa2ead31e297e33776930f196ceb9b5fee"
+    },
+    {
+      "path": "assets/icons/imm28/sound-off.regular.svg",
+      "bytes": 1572,
+      "sha256": "9f2bb2c5e6417a77648616517c1236b120ab0ea93f2c7662566254c3937e49be"
+    },
+    {
+      "path": "assets/icons/imm28/sound-off.solid.svg",
+      "bytes": 1246,
+      "sha256": "709cf2d1378c1d791a78dab168e14602fe435608f5ca587e997544525da95c4e"
+    },
+    {
+      "path": "assets/icons/imm28/speak-right.svg",
+      "bytes": 1144,
+      "sha256": "506c593de13d38ade17e320af7cccb093facabd06eaab453d50c59d8c55518c5"
+    },
+    {
+      "path": "assets/icons/imm28/speak.svg",
+      "bytes": 1161,
+      "sha256": "f6e34140a73b945391f90116f21cea423a3ec5ebad7f5550cfa631d2aae86d85"
+    },
+    {
+      "path": "assets/icons/imm28/speech-left.svg",
+      "bytes": 1161,
+      "sha256": "f6e34140a73b945391f90116f21cea423a3ec5ebad7f5550cfa631d2aae86d85"
+    },
+    {
+      "path": "assets/icons/imm28/speech-right.svg",
+      "bytes": 1144,
+      "sha256": "506c593de13d38ade17e320af7cccb093facabd06eaab453d50c59d8c55518c5"
+    },
+    {
+      "path": "assets/icons/imm28/split-square-dashed.dynamic.svg",
+      "bytes": 875,
+      "sha256": "e3fb8eab42f5f08c1efa62deea66ac2eb1c72572fa7e807136398286a7ffcd34"
+    },
+    {
+      "path": "assets/icons/imm28/split-square-dashed.regular.svg",
+      "bytes": 1879,
+      "sha256": "4ae108f920b17d8f56dbf69748d3a70886fa306111236ea2721bbb09059212f1"
+    },
+    {
+      "path": "assets/icons/imm28/star.dynamic.svg",
+      "bytes": 614,
+      "sha256": "b4be4ad0bbe59848ff7e7a83fb8e615d08f0ca584fe8a38468efd4520b4815ff"
+    },
+    {
+      "path": "assets/icons/imm28/star.regular.svg",
+      "bytes": 1658,
+      "sha256": "08c27d73a544564e1eb9b5ba101cc5c2da5b462eb20503b48289f156bbba00ea"
+    },
+    {
+      "path": "assets/icons/imm28/star.solid.svg",
+      "bytes": 2093,
+      "sha256": "0f02558aaddd25ef13056dd1eda86c6f5d5de028b4c14ab5fd01b9fd3f224b91"
+    },
+    {
+      "path": "assets/icons/imm28/svg.svg",
+      "bytes": 22180,
+      "sha256": "8a103fefeece84a19dad86e5518a2f6b3f3e99e9eb36449ce277a39cfdaecd50"
+    },
+    {
+      "path": "assets/icons/imm28/system-restart.dynamic.svg",
+      "bytes": 1071,
+      "sha256": "9ac5cd48efa7af262294b1239d8709731abeaa6039d92f1548ba3e1563422fdd"
+    },
+    {
+      "path": "assets/icons/imm28/system-restart.regular.svg",
+      "bytes": 2271,
+      "sha256": "fac5ef3b3892df21d53dac988c332f589537e2b8a31789aaf6102ce91136f939"
+    },
+    {
+      "path": "assets/icons/imm28/tab-chat.selected.svg",
+      "bytes": 554,
+      "sha256": "8dd3d7e68311ae42fde502dca3ef6ada6331059dad233e9988b706de03d9544a"
+    },
+    {
+      "path": "assets/icons/imm28/tab-chat.svg",
+      "bytes": 556,
+      "sha256": "6d69d91b077d6f43f7d5a30a67fc51f05bf68da36878e28a741390b77b112df9"
+    },
+    {
+      "path": "assets/icons/imm28/tab-contacts.selected.svg",
+      "bytes": 1503,
+      "sha256": "63b1beb0531c227fcdca2019f6c0913cb5e1706d408e154d412556aae95f14f4"
+    },
+    {
+      "path": "assets/icons/imm28/tab-contacts.svg",
+      "bytes": 1598,
+      "sha256": "83e02198618cc74e9bda23e6c47b221a85b93c8f1503dddb0d860eba2a311584"
+    },
+    {
+      "path": "assets/icons/imm28/tab-me.selected.svg",
+      "bytes": 793,
+      "sha256": "db55344f729efb213806b9f0447d7e43d50071f3cb18493b792df4f9e68d4b80"
+    },
+    {
+      "path": "assets/icons/imm28/tab-me.svg",
+      "bytes": 997,
+      "sha256": "6a79c087e209eaf942fc966e5de9c1da380d3f228bf34ecb200b48437d7a62a6"
+    },
+    {
+      "path": "assets/icons/imm28/tab-phone.selected.svg",
+      "bytes": 702,
+      "sha256": "5d46cbabdf15e2c407e526c587e080dafb458ef7c4814efb17dd19e3c272cd4d"
+    },
+    {
+      "path": "assets/icons/imm28/tab-phone.svg",
+      "bytes": 747,
+      "sha256": "97575a469421e0c4fe266e434f031b54aab97d1b302ab28bf2791758c0553dba"
+    },
+    {
+      "path": "assets/icons/imm28/thumbs-up.dynamic.svg",
+      "bytes": 682,
+      "sha256": "ee48311c36ac7737cdefc1f3eaf33a1a9fc441513813d26976747fc472ca7983"
+    },
+    {
+      "path": "assets/icons/imm28/thumbs-up.regular.svg",
+      "bytes": 1200,
+      "sha256": "5d4e0a90f12b6dd0990852db7fa98e4599e3d26cf0b6b7fc84145905f0e3767d"
+    },
+    {
+      "path": "assets/icons/imm28/trash.dynamic.svg",
+      "bytes": 418,
+      "sha256": "9a837355a740135efc9ca860feb14ac60c83f005c9589ba28991a510dc91ceaa"
+    },
+    {
+      "path": "assets/icons/imm28/trash.property-34.svg",
+      "bytes": 1087,
+      "sha256": "eaef27302c510d83ebb4f1bd3e6aa8191d0461406d9e8d633fe35184940d1928"
+    },
+    {
+      "path": "assets/icons/imm28/trash.regular.svg",
+      "bytes": 1131,
+      "sha256": "70a122a812aaf29bf1cc4ba90eac3d07739a0563f0017a822cdbbf7cf95c53d2"
+    },
+    {
+      "path": "assets/icons/imm28/trash.solid.svg",
+      "bytes": 937,
+      "sha256": "78f0898bdc6117f76bf4ea4e8a29c1d0beb274e09e49bc37430d6cbbfce13bcd"
+    },
+    {
+      "path": "assets/icons/imm28/trash.trash-2.svg",
+      "bytes": 805,
+      "sha256": "13b1fbd3d0ee0242ad9d59ca3b03c29e9da41484d2996b6f9f0fdd58443bd4e2"
+    },
+    {
+      "path": "assets/icons/imm28/trash.trash.svg",
+      "bytes": 418,
+      "sha256": "9a837355a740135efc9ca860feb14ac60c83f005c9589ba28991a510dc91ceaa"
+    },
+    {
+      "path": "assets/icons/imm28/txt.svg",
+      "bytes": 14195,
+      "sha256": "a8739041557a1d9929193137fbc44df0e0a527c87306a7968cf5c7805f8054ca"
+    },
+    {
+      "path": "assets/icons/imm28/user-check.svg",
+      "bytes": 648,
+      "sha256": "bc16fde71dbfae124b2555ec0579cab8e68875c1e3c66ca41062c4737781c681"
+    },
+    {
+      "path": "assets/icons/imm28/user-delete.svg",
+      "bytes": 761,
+      "sha256": "346e59ece91f8b1ee78ad568bf2ba4ea98d93f62f49dbda7a4aeee9734ccd5b9"
+    },
+    {
+      "path": "assets/icons/imm28/user.svg",
+      "bytes": 781,
+      "sha256": "2a22440f44c9de99d349c9914d2b851f06cedcbc91ac9d196688ce435d884576"
+    },
+    {
+      "path": "assets/icons/imm28/user.user-circle-2.svg",
+      "bytes": 750,
+      "sha256": "9b2a7c9a5c74a9c3309e1a4c0202305f915abdcf19727ab6090cd9a52f3c9c6d"
+    },
+    {
+      "path": "assets/icons/imm28/user.user-circle-3.svg",
+      "bytes": 623,
+      "sha256": "cc42976f416e503be8d24cd95957418ecc1da657739e93a69fc20851cbab60c3"
+    },
+    {
+      "path": "assets/icons/imm28/user.user-circle.svg",
+      "bytes": 601,
+      "sha256": "1988a01c8885c6b21b659300a82c6d5ba05b0825a9ca90d315cb5f3a38ea449f"
+    },
+    {
+      "path": "assets/icons/imm28/video-call.svg",
+      "bytes": 361,
+      "sha256": "9273161010712fd9f473a2b08ca738e17b8e500097375a7e8346b370d1b83ef1"
+    },
+    {
+      "path": "assets/icons/imm28/video-camera-off.dynamic.svg",
+      "bytes": 571,
+      "sha256": "a38d1e341793e7c682ef8407905d271b43a5a42e88590809d1289afc5f115c9f"
+    },
+    {
+      "path": "assets/icons/imm28/video-camera-off.regular.svg",
+      "bytes": 1138,
+      "sha256": "e25d25ba252a9c2abfb7af05bf8879c8ee386add23e5a97a2f9f6f4660896277"
+    },
+    {
+      "path": "assets/icons/imm28/video-camera-right.dynamic.svg",
+      "bytes": 583,
+      "sha256": "55e8e1ecba86d61ca15343820f27a42f8d65bd469d36cdeeb8c7a8e4970cfa03"
+    },
+    {
+      "path": "assets/icons/imm28/video-camera-right.regular.svg",
+      "bytes": 555,
+      "sha256": "f59af652954d7a9b70404270ccc868cfc7eaed0df39ae104821c66e2300dd73c"
+    },
+    {
+      "path": "assets/icons/imm28/video-camera.dynamic.svg",
+      "bytes": 461,
+      "sha256": "642929397d092d80d814387288e4fb6b53d3bd7ad75f888f1a4a890df2c1bffb"
+    },
+    {
+      "path": "assets/icons/imm28/video-camera.regular.svg",
+      "bytes": 563,
+      "sha256": "d390c11c92935ff796c254036478e2880a1e004869af5a46c43cac4ea4b21581"
+    },
+    {
+      "path": "assets/icons/imm28/video-camera.solid.svg",
+      "bytes": 447,
+      "sha256": "ec2befc745d6f0821b187d4766303425b7e36d40960747205e63187e0b69ccc4"
+    },
+    {
+      "path": "assets/icons/imm28/video-camera.weight4.svg",
+      "bytes": 516,
+      "sha256": "446f14c3883eb12dee0575fc6f6590836e03ae95a99b79cf1d0f0ab32e4200f3"
+    },
+    {
+      "path": "assets/icons/imm28/voice.svg",
+      "bytes": 1395,
+      "sha256": "1cfd552074b376eb3e429a6f27b1905a7d841f543e74571d2517a4fc19d55127"
+    },
+    {
+      "path": "assets/icons/imm28/wallet.dynamic.svg",
+      "bytes": 692,
+      "sha256": "46f6c94674eb96059c2607be5b3047ead0dbfdfa6f17496ac05a6778b563c8dc"
+    },
+    {
+      "path": "assets/icons/imm28/wallet.regular.svg",
+      "bytes": 1401,
+      "sha256": "8fc732ca2992649f9ac0503feec199a36f1670cde3c51cad770d57b1e99f2120"
+    },
+    {
+      "path": "assets/icons/imm28/wallet.solid.svg",
+      "bytes": 569,
+      "sha256": "74e400b0c7846ee66e2bae4378863be11ffd61d97708e50db3450fa9191486db"
+    },
+    {
+      "path": "assets/icons/imm28/warning-circle.dynamic.svg",
+      "bytes": 553,
+      "sha256": "dadc3a3b42e4a9dece63b6d78bee234dd501810a38a12fc8449de21cf0860ba8"
+    },
+    {
+      "path": "assets/icons/imm28/warning-circle.regular.svg",
+      "bytes": 1035,
+      "sha256": "100e0cf18d88f17bd021f36ac7913bb64f98dbd4ec48a976292fe0d4683abf2a"
+    },
+    {
+      "path": "assets/icons/imm28/warning-circle.solid.svg",
+      "bytes": 684,
+      "sha256": "958ece8e1148c214193d42200d8ad51e80ce46610aa56299987e378a060f17c2"
+    },
+    {
+      "path": "assets/icons/imm28/warning-triangle.dynamic.svg",
+      "bytes": 569,
+      "sha256": "111c1795d12d206e4c58f60ceb0e9797bab0bdb7766ff7bc3925af485270ada8"
+    },
+    {
+      "path": "assets/icons/imm28/warning-triangle.regular.svg",
+      "bytes": 1124,
+      "sha256": "019e7cf15285a291fdf091cd74afc868a0584dd3455a8c761e6dca2afcd76caa"
+    },
+    {
+      "path": "assets/icons/imm28/warning-triangle.solid.svg",
+      "bytes": 822,
+      "sha256": "a489d6e82ece7fa9f0bed66e4b37a84155f5dc9e5879d1f812d75de411ec20dd"
+    },
+    {
+      "path": "assets/icons/imm28/wifi-off.dynamic.svg",
+      "bytes": 886,
+      "sha256": "0ac5e03e795f8c118d17f54f2a2b29704485446de9096c20223e6bde88e2e347"
+    },
+    {
+      "path": "assets/icons/imm28/wifi-off.regular.svg",
+      "bytes": 2407,
+      "sha256": "e5c4eb1b90472970d950e2b9faf16621a9ebc87bcceeb8897b2d1371848b98ac"
+    },
+    {
+      "path": "assets/icons/imm28/wifi.dynamic.svg",
+      "bytes": 623,
+      "sha256": "c627bffcd073664e25e2aaf4d1f02b77d7622890589266329e64688b31fa8771"
+    },
+    {
+      "path": "assets/icons/imm28/wifi.regular.svg",
+      "bytes": 1454,
+      "sha256": "4c0df75d3db33f1a775fc7a3e4d7b9fcb893f2639f5af7884c483bc7047357e5"
+    },
+    {
+      "path": "assets/icons/imm28/xls.svg",
+      "bytes": 18876,
+      "sha256": "f892e5526ff3fa4d3d53a5a61cae616f30ddb34b7c9f972ffa0c43c29db2c3e2"
+    },
+    {
+      "path": "assets/icons/imm28/xmark-circle.dynamic.svg",
+      "bytes": 524,
+      "sha256": "c8520d5651be527b6f1c76169a3fd0b44414a6bb5a218cdcb009f6d2c64fecaa"
+    },
+    {
+      "path": "assets/icons/imm28/xmark-circle.regular.svg",
+      "bytes": 1066,
+      "sha256": "75ad23db4193b436449219c855b5d7620bb0a2f1ec0b904d187d62cf304788f1"
+    },
+    {
+      "path": "assets/icons/imm28/xmark-circle.solid.svg",
+      "bytes": 787,
+      "sha256": "b28b7fd22394673de19ee01dec62010fa5589d58c78e4a9e1388bcc36185ad6f"
+    },
+    {
+      "path": "assets/icons/imm28/xmark.dynamic.svg",
+      "bytes": 312,
+      "sha256": "e9a0abf91d1990ff164b11cdaa312baa42b395971781a0a0b198ff271ae3c21a"
+    },
+    {
+      "path": "assets/icons/imm28/xmark.regular.svg",
+      "bytes": 675,
+      "sha256": "2660a54ed86818a575e4670d8a545b25a0b5d921344b3a78082d9261ee501088"
+    },
+    {
+      "path": "assets/icons/imm28/zip.svg",
+      "bytes": 12899,
+      "sha256": "07e7632be046eea36d4fe3cee8f1b771d83ee35713782d397084af478d54e77d"
+    },
+    {
+      "path": "assets/icons/qrcode/flashlight.svg",
+      "bytes": 1876,
+      "sha256": "180d5c48c005d1cffe2353ad17c157974217f50874eec02ac521a61df05db65a"
+    },
+    {
+      "path": "assets/icons/warning.svg",
+      "bytes": 852,
+      "sha256": "89aa5a039581d80e85ee8f968d71fa32ef20521e60e7ba03356798e122488c75"
+    },
+    {
+      "path": "assets/my/bg.jpg",
+      "bytes": 84636,
+      "sha256": "832a6f1fed1b1986a0b17537d3b75105988ab72a8213288273407d611042e9d1"
+    },
+    {
+      "path": "assets/splash/imm28-splash.png",
+      "bytes": 47380,
+      "sha256": "0f0a412684447239f01075a1abe1ad3a1b9c2f2c33d88556776b1e0ec9f31183"
+    },
+    {
+      "path": "components/navbar/nav-arrow-left.svg",
+      "bytes": 220,
+      "sha256": "2af3583a847b802b5ebc5c31236719abf3d4777d54c24b6b2ebed0ca911e8933"
+    },
+    {
+      "path": "screens/auth/assets/clear-icon.svg",
+      "bytes": 812,
+      "sha256": "e97ee0681fd6205aa75c8db8ab178ab3c41ab61c5b313cf9bf24e37d5fd2dd14"
+    },
+    {
+      "path": "screens/auth/assets/eye-closed-icon.svg",
+      "bytes": 2291,
+      "sha256": "10aa373d65f4a67c3a60472db5bda5efa84cc22b6798305099580ebb1330215e"
+    },
+    {
+      "path": "screens/auth/assets/eye-icon.svg",
+      "bytes": 1797,
+      "sha256": "24f46e15939055ef2684b4021ba473e1ffbe2653e3aac4432574c85ed839b9b5"
+    },
+    {
+      "path": "screens/auth/assets/startup-logo.png",
+      "bytes": 5954,
+      "sha256": "013b9410c4961629b8c69c5cfab91a831c6c9d66f164314f660fd2b868a5d3d8"
+    },
+    {
+      "path": "screens/auth/assets/startup-logo.svg",
+      "bytes": 3732,
+      "sha256": "069a27372783281133fffbb11ca37297521ed8df0329700d5629810e58c0e984"
+    }
+  ]
+}

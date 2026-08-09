@@ -6,6 +6,14 @@ import {
 import { createAccountDatabaseName } from './sqlite/account-database-name.js';
 import { createIndexedDBSQLiteBinaryStore } from './sqlite/indexeddb-sqlite-binary-store.js';
 import { createSqlJsIndexedDBDatabaseAdapter } from './sqlite/sqljs-indexeddb-database-adapter.js';
+import {
+  createWorkerDatabaseAdapter,
+  type WorkerDatabasePort,
+} from './worker/index.js';
+import type {
+  AccountDatabaseLease,
+  AccountDatabaseLeaseManager,
+} from './lock/index.js';
 
 /** 认证 runtime 使用的账户 SQLite 生命周期端口。 */
 export interface WebIMAccountDatabaseLifecycle {
@@ -19,6 +27,9 @@ export interface WebIMAccountDatabaseLifecycleOptions {
   readonly indexedDB: IDBFactory;
   readonly locateWasmFile: (file: string) => string;
   readonly storageDatabaseName?: string;
+  readonly createDatabaseWorker?: () => WorkerDatabasePort;
+  readonly wasmURL?: string;
+  readonly accountDatabaseLeaseManager?: AccountDatabaseLeaseManager;
 }
 
 /** 创建串行切换账号并执行共享 SDK migrations 的数据库 owner。 */
@@ -32,6 +43,8 @@ export function createWebIMAccountDatabaseLifecycle(
 class WebIMAccountDatabaseLifecycleImpl
   implements WebIMAccountDatabaseLifecycle
 {
+  // 完整配置用于显式选择 Worker 或 caller-thread adapter。
+  private readonly options: WebIMAccountDatabaseLifecycleOptions;
   // 二进制 store 在账号切换时复用同一 IndexedDB 容器。
   private readonly binaryStore;
   // WASM 定位函数由最终浏览器 bundler 注入。
@@ -42,9 +55,12 @@ class WebIMAccountDatabaseLifecycleImpl
   private currentDatabase: DatabaseAdapter | null = null;
   // 当前 userID 使用 trim 后的稳定值比较。
   private currentUserID: string | null = null;
+  // 当前 lease 从 Worker snapshot read 前持有到 close 完成后。
+  private currentLease: AccountDatabaseLease | null = null;
 
   /** 初始化共享 IndexedDB binary store。 */
   constructor(options: WebIMAccountDatabaseLifecycleOptions) {
+    this.options = options;
     this.binaryStore = createIndexedDBSQLiteBinaryStore({
       indexedDB: options.indexedDB,
       ...(options.storageDatabaseName
@@ -87,19 +103,57 @@ class WebIMAccountDatabaseLifecycleImpl
     await this.closeDirect();
     // databaseName 不包含 token，只由规范化 userID 派生。
     const databaseName = createAccountDatabaseName(normalizedUserID);
-    // 每次账号打开创建独立 adapter，避免跨账号 Repository 复用。
-    const database = createSqlJsIndexedDBDatabaseAdapter({
+    // Worker 生产路径必须先取得跨标签页 lease，禁止无锁降级。
+    const lease = await this.acquireWorkerLease(databaseName);
+    // database 在 lease 取得后创建，保证 Worker 不会提前读取 snapshot。
+    let database: DatabaseAdapter | null = null;
+    try {
+      // 每次账号打开创建独立 adapter，避免跨账号 Repository 复用。
+      database = this.createDatabaseAdapter(databaseName);
+      await runMigrations(database);
+    } catch (cause) {
+      await cleanupFailedDatabaseOpen(database, lease, cause);
+    }
+    this.currentDatabase = database;
+    this.currentUserID = normalizedUserID;
+    this.currentLease = lease;
+  }
+
+  /** Worker 模式取得独占 lease；caller-thread 测试兼容路径不声明跨 tab 安全。 */
+  private acquireWorkerLease(
+    databaseName: string,
+  ): Promise<AccountDatabaseLease | null> {
+    if (!this.options.createDatabaseWorker) {
+      return Promise.resolve(null);
+    }
+    if (!this.options.accountDatabaseLeaseManager) {
+      throw new Error(
+        'Worker database execution requires an account database lease manager.',
+      );
+    }
+    return this.options.accountDatabaseLeaseManager.acquire(databaseName);
+  }
+
+  /** 按显式配置创建 Worker 或 caller-thread adapter，不做运行时自动降级。 */
+  private createDatabaseAdapter(databaseName: string): DatabaseAdapter {
+    if (this.options.createDatabaseWorker) {
+      if (!this.options.wasmURL) {
+        throw new Error('Worker database execution requires a sql.js WASM URL.');
+      }
+      return createWorkerDatabaseAdapter({
+        databaseName,
+        wasmURL: this.options.wasmURL,
+        createWorker: this.options.createDatabaseWorker,
+        ...(this.options.storageDatabaseName
+          ? { storageDatabaseName: this.options.storageDatabaseName }
+          : {}),
+      });
+    }
+    return createSqlJsIndexedDBDatabaseAdapter({
       databaseName,
       binaryStore: this.binaryStore,
       locateWasmFile: this.locateWasmFile,
     });
-    try {
-      await runMigrations(database);
-    } catch (cause) {
-      await closeDatabaseAfterFailedMigration(database, cause);
-    }
-    this.currentDatabase = database;
-    this.currentUserID = normalizedUserID;
   }
 
   /** 执行当前 adapter 的持久化关闭。 */
@@ -110,23 +164,37 @@ class WebIMAccountDatabaseLifecycleImpl
       return;
     }
     await database.close();
+    // Worker 已确认无法继续写入后才允许结束 Web Locks callback。
+    await this.currentLease?.release();
     this.currentDatabase = null;
     this.currentUserID = null;
+    this.currentLease = null;
   }
 }
 
-/** migration 失败时关闭半初始化数据库并保留两个错误。 */
-async function closeDatabaseAfterFailedMigration(
-  database: DatabaseAdapter,
-  migrationCause: unknown,
+/** open/migration 失败时先销毁 Worker，再释放 lease，并保留全部异常。 */
+async function cleanupFailedDatabaseOpen(
+  database: DatabaseAdapter | null,
+  lease: AccountDatabaseLease | null,
+  openCause: unknown,
 ): Promise<never> {
+  // cleanupCauses 第一项固定保留原始 open/migration 错误。
+  const cleanupCauses: unknown[] = [openCause];
   try {
-    await database.close();
+    await database?.close();
   } catch (closeCause) {
+    cleanupCauses.push(closeCause);
+  }
+  try {
+    await lease?.release();
+  } catch (releaseCause) {
+    cleanupCauses.push(releaseCause);
+  }
+  if (cleanupCauses.length > 1) {
     throw new AggregateError(
-      [migrationCause, closeCause],
-      'Web IM account database migration and cleanup failed.',
+      cleanupCauses,
+      'Web IM account database open and cleanup failed.',
     );
   }
-  throw migrationCause;
+  throw openCause;
 }

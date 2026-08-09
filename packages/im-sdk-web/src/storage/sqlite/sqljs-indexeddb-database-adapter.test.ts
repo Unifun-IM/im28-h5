@@ -114,4 +114,34 @@ describe('sql.js IndexedDB database adapter', () => {
     expect(reopenedRows).toEqual([]);
     await reopenedRuntime.adapter.close();
   });
+
+  // 验证 snapshot 写失败后内存库被丢弃，close 不会让失败写入迟到生效。
+  it('poisons and discards memory state after a snapshot failure', async () => {
+    // writeCount 用于证明失败后的 close 没有执行第二次持久化。
+    let writeCount = 0;
+    // 故障 store 模拟 IndexedDB commit 失败。
+    const failingStore = {
+      read: async () => null,
+      write: async () => {
+        writeCount += 1;
+        throw new Error('snapshot unavailable');
+      },
+      delete: async () => undefined,
+    };
+    // adapter 使用真实 sql.js，仅替换 durable store 故障端口。
+    const adapter = createSqlJsIndexedDBDatabaseAdapter({
+      databaseName: 'faulted.sqlite',
+      binaryStore: failingStore,
+      locateWasmFile: () => SQLJS_WASM_PATH,
+    });
+
+    await expect(
+      adapter.execute(statement('CREATE TABLE faulted_items (id TEXT)')),
+    ).rejects.toThrow('snapshot unavailable');
+    await expect(
+      adapter.query(statement('SELECT * FROM faulted_items')),
+    ).rejects.toThrow('faulted after a persistence failure');
+    await expect(adapter.close()).resolves.toBeUndefined();
+    expect(writeCount).toBe(1);
+  });
 });

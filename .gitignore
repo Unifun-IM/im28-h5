@@ -2,3 +2,5 @@ dist/
 node_modules/
 coverage/
 *.tsbuildinfo
+.env.local
+.env.*.local

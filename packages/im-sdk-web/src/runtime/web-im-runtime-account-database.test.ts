@@ -217,7 +217,11 @@ describe('Web IM runtime account database lifecycle', () => {
       runtime.login({ type: 'account', account: 'a', password: 'p' }),
     ).rejects.toThrow('database migration failed');
     expect(authSessionStore.load()).toBeNull();
-    expect(runtime.getSnapshot()).toEqual({ state: 'anonymous', userID: null });
+    expect(runtime.getSnapshot()).toEqual({
+      state: 'anonymous',
+      userID: null,
+      dataVersion: 0,
+    });
     expect(realtime.sockets).toHaveLength(0);
   });
 
@@ -248,7 +252,11 @@ describe('Web IM runtime account database lifecycle', () => {
     await Promise.resolve();
     expect(database.getCloseCount()).toBe(1);
     expect(authSessionStore.load()).toBeNull();
-    expect(runtime.getSnapshot()).toEqual({ state: 'anonymous', userID: null });
+    expect(runtime.getSnapshot()).toEqual({
+      state: 'anonymous',
+      userID: null,
+      dataVersion: 0,
+    });
     expect(backgroundErrors).toEqual([]);
   });
 });

@@ -6,16 +6,19 @@
 
 1. `AGENTS.md`
 2. `architecture.md`
-3. `docs/web-im-storage.md`
-4. `docs/runtime-contracts/web-gateway-runtime.md` before auth, token, Gateway HTTP/WebSocket or runtime lifecycle changes
-5. `README.md`
-6. task-specific source under `apps/**` or `packages/**`
+3. `docs/rn-h5-migration-contract.md` before page, style, asset, route or capability migration changes
+4. `docs/web-im-storage.md`
+5. `docs/runtime-contracts/web-gateway-runtime.md` before auth, token, Gateway HTTP/WebSocket or runtime lifecycle changes
+6. `README.md`
+7. task-specific source under `apps/**` or `packages/**`
 
 ## Hard Rules
 
 - `im28-h5/` owns browser-only code and documentation; it must not import React Native modules.
-- Page switching must use React Router under the Web App owner; pages must not manipulate History API directly.
-- Reuse platform-neutral contracts from `@im28/im-sdk/web`; do not duplicate IM DTO or SQL repository semantics in page code.
+- `im28-phone/src/theme/**` and the corresponding RN screen/component `StyleSheet` are the visual truth; migrated H5 pages must record source mappings and may adapt browser mechanics without redesigning the page.
+- RN business assets must be mirrored byte-for-byte under `apps/web/src/assets/rn/**`; use `npm run assets:sync` and keep `npm run assets:check` passing. Do not substitute an RN asset with a generic icon when the RN source exists.
+- Page switching must use React Router SPA routes under the Web App owner; full-screen states need stable routes, pages must not manipulate History API directly, and valid deep links must survive refresh/back/forward.
+- App/page code imports SDK APIs only from `@im28/im-sdk-web`; that facade reuses platform-neutral contracts from `@im28/im-sdk/web`. Do not import `@im28/im-sdk/rn`, duplicate IM DTO/Repository semantics, call generated OpenAPI, or issue Gateway `fetch` from a page.
 - Keep Gateway HTTP/WebSocket, auth token and lifecycle logic behind `packages/im-sdk-web/src/runtime/**`; pages must not instantiate shared Gateway clients directly.
 - Browser SQLite uses `sql.js`; IndexedDB persists exported database bytes and is not a second query model.
 - Local data is a rebuildable cache; Gateway remains authoritative for messages, read state, conversation state, and sync cursors.
@@ -31,4 +34,5 @@
 - Use Node.js `>=22.11.0`.
 - Run commands from `im28-h5/`.
 - Storage changes require `npm run verify`.
+- Page migration requires source trace plus 390x844 and desktop light/dark visual evidence, route refresh/back/forward checks and focused API evidence.
 - Browser integration changes require a Chromium smoke; production browser acceptance still requires Chromium, Firefox and Safari evidence.

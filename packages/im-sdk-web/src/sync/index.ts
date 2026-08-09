@@ -4,10 +4,13 @@ export { createWebIMConversationSync } from './conversation-sync.js';
 export { createWebIMSync } from './web-im-sync.js';
 /** 创建消息 cache/history/send 服务。 */
 export { createWebIMMessageSync } from './message-sync.js';
+/** 创建 runtime 唯一 realtime 持久化队列。 */
+export { createWebIMRealtimeSync } from './realtime-sync.js';
 /** 导出页面与 runtime 共享的会话同步 contract。 */
 export type {
   WebIMConversationSync,
   WebIMConversationSyncDependencies,
+  WebIMConversationListItem,
   WebIMConversationSyncOptions,
 } from './conversation-sync.js';
 /** 导出消息同步 contract。 */
@@ -17,5 +20,10 @@ export type {
   WebIMPullMessageHistoryOptions,
   WebIMSendTextMessageOptions,
 } from './message-sync.js';
+/** 导出 realtime event 持久化 contract。 */
+export type {
+  WebIMRealtimeSync,
+  WebIMRealtimeSyncDependencies,
+} from './realtime-sync.js';
 /** 导出聚合同步 facade contract。 */
 export type { WebIMSync, WebIMSyncDependencies } from './web-im-sync.js';

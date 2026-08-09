@@ -1,43 +1,59 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Conversation } from '@im28/im-sdk-web';
-import { LogOut, MessageCircle, RefreshCw } from 'lucide-react';
-import { Link, Navigate } from 'react-router-dom';
+import type { WebIMConversationListItem } from '@im28/im-sdk-web';
+import { Navigate } from 'react-router-dom';
 
+import emptyChatIconURL from '../../assets/rn/assets/icons/empty-chat.svg';
+import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
+import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { ConversationAssetIcon } from './ConversationAssetIcon.js';
+import { ConversationRow } from './ConversationRow.js';
+import {
+  filterConversationListItems,
+  getConversationUnreadTotal,
+} from './conversation-list-view.js';
+import './conversations-page.css';
 
-/** 会话页先读取 SQLite cache，再用 Gateway 完整同步刷新。 */
+/** RN 会话列表页复用 Web SDK cache-first 同步链和 React Router 路由。 */
 export function ConversationsPage() {
-  // runtime context 决定 auth guard 与 sync owner。
+  // runtime context 是页面唯一允许消费的 SDK facade owner。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
-  // sync facade 动态绑定当前认证账号和 account database。
+  // sync 只在 runtime 已完成配置装配时存在。
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
-  // conversations 始终来自 Repository 返回的排序结果。
-  const [conversations, setConversations] = useState<readonly Conversation[]>([]);
-  // loading 只在首次 cache/remote 读取尚未完成时显示。
-  const [loading, setLoading] = useState(true);
-  // refreshing 区分工具栏主动刷新状态。
-  const [refreshing, setRefreshing] = useState(false);
-  // error 不覆盖已存在的 SQLite cache。
+  // items 保存由 SDK 组合的会话及其最新消息。
+  const [items, setItems] = useState<readonly WebIMConversationListItem[]>([]);
+  // keyword 对应 RN AppSearchBox 的本地过滤分支。
+  const [keyword, setKeyword] = useState('');
+  // loading 仅用于首次无缓存渲染，已有 cache 时保持列表稳定。
+  const [loading, setLoading] = useState(false);
+  // error 显示真实 sync 错误，不回退 fake-success。
   const [error, setError] = useState<string | null>(null);
 
-  /** 读取 cache 后执行真实远端全量同步。 */
+  /** 先读账号 SQLite cache，再执行 Gateway 全量同步并重读组合列表。 */
   const loadConversations = useCallback(async () => {
     if (!sync || !snapshot.userID) {
       return;
     }
+    setLoading(true);
     setError(null);
     try {
-      // cached 让刷新后的页面无需等待网络即可呈现。
-      const cached = await sync.conversations.listCached();
-      setConversations(cached);
-      // synced 只有在所有 Gateway pages 成功后替换 cache。
-      const synced = await sync.conversations.sync();
-      setConversations(synced);
+      // cachedItems 保证离线或慢网时先显示当前账号已有数据。
+      const cachedItems = await sync.conversations.listCachedItems({
+        archived: false,
+        limit: 100,
+      });
+      setItems(cachedItems);
+      await sync.conversations.sync();
+      // syncedItems 包含同步刚写入的 latest message cache。
+      const syncedItems = await sync.conversations.listCachedItems({
+        archived: false,
+        limit: 100,
+      });
+      setItems(syncedItems);
     } catch (cause) {
-      setError(readErrorMessage(cause));
+      setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, [snapshot.userID, sync]);
 
@@ -45,134 +61,137 @@ export function ConversationsPage() {
     void loadConversations();
   }, [loadConversations]);
 
-  /** 从工具栏触发一次显式远端刷新。 */
-  function handleRefresh() {
-    setRefreshing(true);
-    void loadConversations();
-  }
+  useEffect(() => {
+    if (!sync || !snapshot.userID) {
+      return;
+    }
+    // active 阻止路由卸载后的 cache 读取回写页面。
+    let active = true;
+    void sync.conversations
+      .listCachedItems({ archived: false, limit: 100 })
+      .then(cachedItems => {
+        if (active) {
+          setItems(cachedItems);
+        }
+      })
+      .catch(cause => {
+        if (active) {
+          setError(cause instanceof Error ? cause.message : String(cause));
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [snapshot.dataVersion, snapshot.userID, sync]);
 
-  /** 退出远端会话并清理当前 tab 的 account owners。 */
-  async function handleSignOut() {
-    await runtime?.signOut();
-  }
+  // filteredItems 保留 Repository 排序，只执行 RN 本地搜索条件。
+  const filteredItems = useMemo(
+    () => filterConversationListItems(items, keyword),
+    [items, keyword],
+  );
+  // unreadTotal 仅汇总非静音会话。
+  const unreadTotal = useMemo(() => getConversationUnreadTotal(items), [items]);
+  // hasPinned 控制 RN 在置顶区存在时延续到 header 的背景色。
+  const hasPinned = useMemo(
+    () => items.some(item => Boolean(item.conversation.isPinned)),
+    [items],
+  );
+  // headerTitle 对齐 RN 999+ 的总未读标题上限。
+  const headerTitle = unreadTotal
+    ? `聊天(${unreadTotal > 999 ? '999+' : unreadTotal})`
+    : '聊天';
 
   if (restoring) {
-    return <PageState title="正在恢复会话" />;
+    return <ConversationPageState label="正在恢复会话" />;
   }
+
   if (!runtime) {
     return (
-      <PageState
-        title="运行配置不可用"
-        {...(startupError ? { detail: startupError } : {})}
+      <ConversationPageState
+        label="运行配置不可用"
+        detail={startupError}
       />
     );
   }
+
   if (!snapshot.userID) {
     return <Navigate to="/login" replace />;
   }
 
   return (
-    <main className="im-page">
-      <header className="topbar">
-        <div className="topbar-title">
-          <span className="brand-mark brand-mark-small" aria-hidden="true">28</span>
-          <div>
-            <h1>消息</h1>
-            <p>{snapshot.userID}</p>
+    <main className="rn-conversation-page">
+      <section className="rn-conversation-surface" aria-busy={loading}>
+        <header
+          className={`rn-conversation-header${hasPinned ? ' has-pinned' : ''}`}
+        >
+          <div className="rn-conversation-header-top">
+            <span className="rn-conversation-header-side" aria-hidden="true" />
+            <h1>{headerTitle}</h1>
+            <span className="rn-conversation-header-side" aria-hidden="true" />
           </div>
-        </div>
-        <div className="toolbar" aria-label="会话工具栏">
-          <button
-            className="icon-button"
-            type="button"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            title="刷新会话"
-            aria-label="刷新会话"
-          >
-            <RefreshCw size={19} className={refreshing ? 'spin' : undefined} />
-          </button>
-          <button
-            className="icon-button"
-            type="button"
-            onClick={() => void handleSignOut()}
-            title="退出登录"
-            aria-label="退出登录"
-          >
-            <LogOut size={19} />
-          </button>
-        </div>
-      </header>
-      {error ? <p className="sync-warning" role="alert">{error}</p> : null}
-      <section className="conversation-list" aria-label="会话列表">
-        {loading ? (
-          <PageState title="正在加载会话" compact />
-        ) : conversations.length ? (
-          conversations.map(conversation => (
-            <ConversationRow
-              key={conversation.conversationID}
-              conversation={conversation}
+          <label className="rn-conversation-search">
+            <span className="sr-only">搜索</span>
+            <ConversationAssetIcon assetURL={searchIconURL} />
+            <input
+              type="search"
+              value={keyword}
+              placeholder="搜索"
+              onChange={event => setKeyword(event.target.value)}
             />
-          ))
-        ) : (
-          <PageState title="暂无会话" compact />
-        )}
+            {keyword ? (
+              <button
+                type="button"
+                aria-label="清除"
+                onClick={() => setKeyword('')}
+              >
+                <ConversationAssetIcon assetURL={clearIconURL} />
+              </button>
+            ) : null}
+          </label>
+        </header>
+
+        {error ? (
+          <p className="rn-conversation-error" role="status">
+            {error}
+          </p>
+        ) : null}
+
+        <section className="rn-conversation-list" aria-label="会话列表">
+          {loading && items.length === 0 ? (
+            <div className="rn-conversation-loading" aria-label="正在加载会话">
+              <span />
+            </div>
+          ) : filteredItems.length ? (
+            filteredItems.map(item => (
+              <ConversationRow
+                key={item.conversation.conversationID}
+                item={item}
+              />
+            ))
+          ) : (
+            <div className="rn-conversation-empty">
+              <img src={emptyChatIconURL} width="72" height="56" alt="" />
+              <p>{keyword.trim() ? '没有找到相关会话' : '还没有朋友和你聊天'}</p>
+            </div>
+          )}
+        </section>
       </section>
     </main>
   );
 }
 
-/** 单个会话行只负责路由入口和可扫描摘要。 */
-function ConversationRow({ conversation }: { readonly conversation: Conversation }) {
-  // name 允许后端资料缺失时回退 target identity。
-  const name = conversation.name?.trim() || conversation.targetID;
-  // initial 用于无远端头像时提供稳定识别符。
-  const initial = Array.from(name)[0]?.toUpperCase() ?? '#';
-  return (
-    <Link
-      className="conversation-row"
-      to={`/conversations/${encodeURIComponent(conversation.conversationID)}`}
-    >
-      {conversation.faceURL ? (
-        <img className="avatar" src={conversation.faceURL} alt="" />
-      ) : (
-        <span className="avatar avatar-fallback" aria-hidden="true">{initial}</span>
-      )}
-      <span className="conversation-copy">
-        <strong>{name}</strong>
-        <span>{conversation.type === 'group' ? '群聊' : '单聊'}</span>
-      </span>
-      {conversation.unreadCount > 0 ? (
-        <span className="unread-badge" aria-label={`${conversation.unreadCount} 条未读`}>
-          {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
-        </span>
-      ) : (
-        <MessageCircle className="row-hint" size={18} aria-hidden="true" />
-      )}
-    </Link>
-  );
-}
-
-/** 页面级加载、空态和配置错误使用统一非 card 布局。 */
-function PageState({
-  title,
+/** 统一承载启动和配置错误的全屏状态。 */
+function ConversationPageState({
+  label,
   detail,
-  compact = false,
 }: {
-  readonly title: string;
-  readonly detail?: string;
-  readonly compact?: boolean;
+  readonly label: string;
+  readonly detail?: string | null;
 }) {
   return (
-    <div className={compact ? 'page-state page-state-compact' : 'page-state'}>
-      <MessageCircle size={24} aria-hidden="true" />
-      <strong>{title}</strong>
+    <main className="rn-conversation-page-state">
+      <strong>{label}</strong>
       {detail ? <span>{detail}</span> : null}
-    </div>
+    </main>
   );
-}
-
-/** 将同步异常转换为不包含敏感数据的文本。 */
-function readErrorMessage(cause: unknown): string {
-  return cause instanceof Error && cause.message ? cause.message : '会话同步失败';
 }

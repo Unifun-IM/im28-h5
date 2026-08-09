@@ -88,6 +88,38 @@ export function ChatPage() {
     };
   }, [conversationID, snapshot.userID, sync]);
 
+  useEffect(() => {
+    if (
+      !sync ||
+      !snapshot.userID ||
+      !conversationID ||
+      snapshot.dataVersion === 0
+    ) {
+      return;
+    }
+    // active 阻止实时 cache 读取在路由切换后回写旧会话。
+    let active = true;
+    void Promise.all([
+      sync.conversations.listCached({ limit: 500 }),
+      sync.messages.getCachedHistory({ conversationID, limit: 50 }),
+    ])
+      .then(([cachedConversations, cachedMessages]) => {
+        if (!active) return;
+        // target 使用当前 cache 的会话资料刷新顶部状态。
+        const target = cachedConversations.find(
+          item => item.conversationID === conversationID,
+        );
+        if (target) setConversation(target);
+        setMessages(cachedMessages);
+      })
+      .catch(cause => {
+        if (active) setError(readErrorMessage(cause));
+      });
+    return () => {
+      active = false;
+    };
+  }, [conversationID, snapshot.dataVersion, snapshot.userID, sync]);
+
   // orderedMessages 转为聊天阅读所需 oldest-first 顺序。
   const orderedMessages = useMemo(() => [...messages].reverse(), [messages]);
 

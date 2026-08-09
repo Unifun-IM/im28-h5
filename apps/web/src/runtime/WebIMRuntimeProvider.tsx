@@ -32,6 +32,7 @@ type RuntimeInitialization =
 const ANONYMOUS_SNAPSHOT: WebIMRuntimeSnapshot = {
   state: 'anonymous',
   userID: null,
+  dataVersion: 0,
 };
 
 // Context 缺省值只用于检测 Provider 缺失。

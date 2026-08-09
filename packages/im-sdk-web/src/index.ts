@@ -19,16 +19,20 @@ export {
 export {
   createWebIMConversationSync,
   createWebIMMessageSync,
+  createWebIMRealtimeSync,
   createWebIMSync,
 } from './sync/index.js';
 /** 导出浏览器会话同步 contract。 */
 export type {
   WebIMConversationSync,
   WebIMConversationSyncDependencies,
+  WebIMConversationListItem,
   WebIMConversationSyncOptions,
   WebIMMessageSync,
   WebIMMessageSyncDependencies,
   WebIMPullMessageHistoryOptions,
+  WebIMRealtimeSync,
+  WebIMRealtimeSyncDependencies,
   WebIMSendTextMessageOptions,
   WebIMSync,
   WebIMSyncDependencies,
@@ -88,9 +92,11 @@ export {
   createBrowserGatewayFetch,
   createWebIMAuthSessionStore,
   createWebIMDeviceIdentityStore,
+  createWebIMPlatformTermsClient,
   createWebIMRuntime,
   parseWebIMRuntimeConfig,
   transitionWebIMRuntimeState,
+  WEB_IM_PLATFORM_TERM_KEYS,
 } from './runtime/index.js';
 /** 导出浏览器 Gateway runtime 的公开 contract 类型。 */
 export type {
@@ -98,6 +104,10 @@ export type {
   WebIMAuthSessionStore,
   WebIMDeviceIdentityStore,
   WebIMLoginRequest,
+  WebIMPlatformTerm,
+  WebIMPlatformTermKey,
+  WebIMPlatformTermsClient,
+  WebIMPlatformTermsClientOptions,
   WebIMPersistentStorage,
   WebIMRuntime,
   WebIMRuntimeConfig,
@@ -113,14 +123,28 @@ export type {
 export {
   createWebIMAccountDatabaseLifecycle,
   createAccountDatabaseName,
+  createBrowserSqlJsDatabaseWorker,
+  createAccountDatabaseLeaseManager,
+  createAccountDatabaseLockName,
   createIndexedDBSQLiteBinaryStore,
   createSqlJsIndexedDBDatabaseAdapter,
+  createWorkerDatabaseAdapter,
+  createWorkerDatabaseRuntime,
+  WorkerDatabaseError,
+  AccountDatabaseLeaseError,
 } from './storage/index.js';
 /** 导出 Web IM storage foundation 的公开类型。 */
 export type {
   IndexedDBSQLiteBinaryStoreOptions,
+  AccountDatabaseLease,
+  AccountDatabaseLeaseErrorCode,
+  AccountDatabaseLeaseManager,
   SQLiteBinaryStore,
   SqlJsIndexedDBDatabaseAdapterOptions,
+  WorkerDatabaseAdapterOptions,
+  WorkerDatabasePort,
+  WorkerDatabaseRuntimeDependencies,
+  WebLockManagerPort,
   WebIMAccountDatabaseLifecycle,
   WebIMAccountDatabaseLifecycleOptions,
 } from './storage/index.js';
