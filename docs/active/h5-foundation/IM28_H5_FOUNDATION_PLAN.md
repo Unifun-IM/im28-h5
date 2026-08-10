@@ -36,10 +36,10 @@
 
 | area | current truth | source |
 | :--- | :--- | :--- |
-| Web application | Vite + React Router 根壳与 404 返回路由已实现 | `apps/web`; `architecture.md` |
-| RN parity foundation | 迁移合同已冻结；466 个资产按字节同步；light/dark CSS token 已建立；account-login/conversation/chat core 均为 done-local/acceptance-gated；remaining auth/tab route decomposition active | `docs/rn-h5-migration-contract.md`; `apps/web/src/assets/rn`; `apps/web/src/styles/rn-theme.css` |
+| Web application | Vite + React Router 根壳、404 与 authenticated `PrimaryTabsLayout` 已实现 | `apps/web`; `architecture.md` |
+| RN parity foundation | 迁移合同已冻结；466 个资产按字节同步；light/dark CSS token 已建立；auth entry、conversation、chat、contacts、calls、me/profile/security、global tab shell core 均为 done-local/acceptance-gated；general-settings/remaining auth decomposition active | `docs/rn-h5-migration-contract.md`; `apps/web/src/assets/rn`; `apps/web/src/styles/rn-theme.css` |
 | shared SDK | `@im28/im-sdk/web` 已提供平台中立 contract、Repository 和 Gateway client | `../im28-phone/packages/im-sdk/src/web.ts` |
-| Web SDK/runtime | `sql.js + IndexedDB`、auth-bound lifecycle、共享 mutation queue、HTTP/realtime sync 与 public platform-term adapter 已实现；当前 workspace 共 55 个聚焦测试 | `packages/im-sdk-web/src/runtime/**`; `packages/im-sdk-web/src/storage/**`; `packages/im-sdk-web/src/sync/**` |
+| Web SDK/runtime | `sql.js + IndexedDB`、login/register/account-credential auth-bound lifecycle、共享 mutation queue、HTTP/realtime sync、remote contact list、call-record cache/sync/delete、current-profile read/update 与 public platform-term adapter 已实现；当前 workspace 共 70 个聚焦测试 | `packages/im-sdk-web/src/runtime/**`; `packages/im-sdk-web/src/storage/**`; `packages/im-sdk-web/src/sync/**` |
 | Gateway runtime | 本地 auth/realtime/account DB 实现与验证已通过；真实环境 smoke 保留为 deployment gate | `docs/runtime-contracts/web-gateway-runtime.md` |
 | package shape | npm workspace 已分为 `apps/web` 与 `packages/im-sdk-web` | `package.json` |
 
@@ -94,7 +94,7 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；缺少部署 URL �
 ### `W6` RN 页面 Parity 迁移
 
 - focus:
-  - 以 RN screen/component/theme/assets/service 为源，按 account login、conversation、chat、remaining auth/tab shell 的顺序迁移。
+  - 以 RN screen/component/theme/assets/service 为源，按 auth entry、conversation、chat、contacts、global tab shell、remaining auth/tabs 的顺序迁移。
   - 页面与全屏状态使用 React Router SPA；UI 只调用 `@im28/im-sdk-web` facade。
 - exit:
   - 已迁移页面具有源映射、RN 资产、明暗主题、响应式、路由和真实 API 证据；不存在 generic placeholder 视觉或第二条 API 链。

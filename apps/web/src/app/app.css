@@ -25,6 +25,17 @@ body {
   min-height: 100vh;
 }
 
+.rn-primary-tabs-layout,
+.rn-primary-tabs-content {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.rn-primary-tabs-layout.has-tab-bar .rn-primary-tabs-content {
+  --im-primary-tab-bar-space: var(--im-primary-tab-bar-height);
+  padding-bottom: var(--im-primary-tab-bar-height);
+}
+
 button,
 input,
 textarea,

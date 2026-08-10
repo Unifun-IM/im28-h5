@@ -6,6 +6,7 @@ import emptyChatIconURL from '../../assets/rn/assets/icons/empty-chat.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { usePrimaryTabBadges } from '../../components/primary-tabs/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { ConversationRow } from './ConversationRow.js';
 import {
@@ -16,6 +17,8 @@ import './conversations-page.css';
 
 /** RN 会话列表页复用 Web SDK cache-first 同步链和 React Router 路由。 */
 export function ConversationsPage() {
+  // reportConversationUnreadTotal 将真实页面汇总同步给全局底栏。
+  const { reportConversationUnreadTotal } = usePrimaryTabBadges();
   // runtime context 是页面唯一允许消费的 SDK facade owner。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // sync 只在 runtime 已完成配置装配时存在。
@@ -91,6 +94,10 @@ export function ConversationsPage() {
   );
   // unreadTotal 仅汇总非静音会话。
   const unreadTotal = useMemo(() => getConversationUnreadTotal(items), [items]);
+
+  useEffect(() => {
+    reportConversationUnreadTotal(unreadTotal);
+  }, [reportConversationUnreadTotal, unreadTotal]);
   // hasPinned 控制 RN 在置顶区存在时延续到 header 的背景色。
   const hasPinned = useMemo(
     () => items.some(item => Boolean(item.conversation.isPinned)),

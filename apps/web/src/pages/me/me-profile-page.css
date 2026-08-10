@@ -1,0 +1,252 @@
+.rn-me-profile-page {
+  min-height: 100dvh;
+  color: var(--im-profile-text-primary);
+  background: var(--im-profile-page-background);
+}
+
+.rn-me-profile-surface {
+  width: min(100%, 480px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--im-profile-page-background);
+  box-shadow: 0 0 36px rgba(31, 38, 46, 0.07);
+}
+
+.rn-me-profile-header {
+  display: grid;
+  height: calc(94px + var(--im-safe-top));
+  grid-template-columns: 72px minmax(0, 1fr) 72px;
+  align-items: end;
+  padding-top: var(--im-safe-top);
+}
+
+.rn-me-profile-header a,
+.rn-me-profile-header button,
+.rn-me-profile-header > span {
+  display: grid;
+  min-height: 48px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--im-profile-text-primary);
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.rn-me-profile-header button {
+  color: var(--im-profile-primary);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.rn-me-profile-header button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.rn-me-profile-header h1 {
+  align-self: center;
+  margin: 0;
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 27px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-me-profile-content,
+.rn-me-gender-content {
+  padding: 16px 16px 32px;
+}
+
+.rn-me-profile-card,
+.rn-me-gender-card {
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--im-profile-card-background);
+}
+
+.rn-me-profile-row {
+  position: relative;
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px 0 16px;
+  color: var(--im-profile-text-primary);
+  text-decoration: none;
+}
+
+.rn-me-profile-row:not(.is-last)::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 16px;
+  height: var(--im-hairline-width);
+  background: var(--im-profile-divider);
+  content: '';
+}
+
+.rn-me-profile-row > span {
+  min-width: 72px;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.rn-me-profile-row > strong {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--im-profile-text-muted);
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0;
+  line-height: 18px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-me-profile-row .rn-asset-icon {
+  color: var(--im-profile-text-muted);
+}
+
+.rn-me-profile-row.is-static {
+  cursor: text;
+}
+
+.rn-me-profile-row:active:not(.is-static) {
+  background: var(--im-profile-row-pressed);
+}
+
+.rn-me-profile-error,
+.rn-me-editor-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  color: var(--im-profile-danger);
+  font-size: 13px;
+}
+
+.rn-me-profile-error button {
+  border: 0;
+  color: var(--im-profile-primary);
+  background: transparent;
+}
+
+.rn-me-editor-error {
+  margin: 0 16px 8px;
+}
+
+.rn-me-nickname-content,
+.rn-me-bio-content {
+  padding: 16px;
+}
+
+.rn-me-nickname-input {
+  display: flex;
+  height: 56px;
+  align-items: center;
+  padding: 0 12px 0 16px;
+  border-radius: 8px;
+  background: var(--im-profile-input-background);
+}
+
+.rn-me-nickname-input input {
+  width: 100%;
+  height: 56px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--im-profile-text-primary);
+  background: transparent;
+  font-size: 16px;
+}
+
+.rn-me-nickname-input button {
+  display: grid;
+  width: 24px;
+  height: 32px;
+  flex: 0 0 24px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--im-profile-text-muted);
+  background: transparent;
+}
+
+.rn-me-nickname-input .rn-asset-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.rn-me-gender-card button {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  align-items: center;
+  padding: 0 16px;
+  border: 0;
+  color: var(--im-profile-text-primary);
+  background: transparent;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: left;
+}
+
+.rn-me-gender-card button:not(:last-child)::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 16px;
+  height: var(--im-hairline-width);
+  background: var(--im-profile-divider);
+  content: '';
+}
+
+.rn-me-gender-card button span {
+  flex: 1;
+}
+
+.rn-me-gender-card button strong {
+  color: var(--im-profile-primary);
+  font-size: 18px;
+}
+
+.rn-me-bio-content textarea {
+  display: block;
+  width: 100%;
+  min-height: 160px;
+  resize: none;
+  padding: 16px;
+  border: 0;
+  border-radius: 12px;
+  outline: 0;
+  color: var(--im-profile-text-primary);
+  background: var(--im-profile-card-background);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.rn-me-bio-content > span {
+  display: block;
+  margin-top: 8px;
+  color: var(--im-profile-text-muted);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .rn-me-profile-surface {
+    box-shadow: none;
+  }
+}

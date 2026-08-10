@@ -1,0 +1,117 @@
+:root {
+  --im-primary-tab-bar-height: max(91px, calc(59px + var(--im-safe-bottom)));
+}
+
+.rn-primary-tab-bar {
+  position: fixed;
+  z-index: 20;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  width: min(100%, 480px);
+  min-height: var(--im-primary-tab-bar-height);
+  align-items: flex-start;
+  margin: 0 auto;
+  padding: 8px 8px max(8px, var(--im-safe-bottom));
+  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+  background: var(--im-bg-card);
+  box-shadow: 0 -8px 22px rgba(31, 38, 46, 0.04);
+}
+
+.rn-primary-tab-item {
+  display: flex;
+  height: 51px;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 2px 0 0;
+  border: 0;
+  border-radius: 24px;
+  color: var(--im-icon-secondary);
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  flex-direction: column;
+}
+
+.rn-primary-tab-item.is-selected {
+  color: var(--im-icon-primary);
+}
+
+.rn-primary-tab-item:focus-visible {
+  outline-color: var(--im-brand-primary);
+}
+
+.rn-primary-tab-item:active:not(:disabled) {
+  background: var(--im-bg-pressed);
+}
+
+.rn-primary-tab-item:disabled {
+  color: var(--im-icon-secondary);
+  cursor: default;
+  opacity: 1;
+}
+
+.rn-primary-tab-icon-wrap {
+  position: relative;
+  display: grid;
+  width: 24px;
+  height: 22px;
+  flex: 0 0 22px;
+  place-items: center;
+}
+
+.rn-primary-tab-icon-wrap .rn-asset-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.rn-primary-tab-label {
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-primary-tab-badge {
+  position: absolute;
+  top: -6px;
+  right: -7px;
+  display: grid;
+  min-width: 16px;
+  height: 16px;
+  place-items: center;
+  padding: 0 4px;
+  border-radius: 8px;
+  color: var(--im-text-inverse);
+  background: var(--im-status-danger);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 14px;
+  text-align: center;
+}
+
+.rn-primary-tab-badge.is-wide {
+  right: -22px;
+  min-width: 36px;
+  padding: 0 5px;
+}
+
+@media (hover: hover) {
+  .rn-primary-tab-item:hover:not(:disabled) {
+    background: var(--im-bg-pressed);
+  }
+}
+
+@media (max-width: 480px) {
+  .rn-primary-tab-bar {
+    box-shadow: none;
+  }
+}

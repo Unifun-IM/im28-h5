@@ -1,21 +1,14 @@
-import {
-  createGatewayHTTPClient, createGatewayRealtimeClient, type GatewayHTTPClient,
-  type GatewayRealtimeClient, type GatewayRealtimeEvent,
-} from '@im28/im-sdk/web';
+import { createGatewayHTTPClient, createGatewayRealtimeClient, type GatewayAuthData, type GatewayHTTPClient, type GatewayRealtimeClient, type GatewayRealtimeEvent } from '@im28/im-sdk/web';
 import type { WebIMAuthSession } from './auth-session-store.js';
 import { createWebIMSync, type WebIMSync } from '../sync/index.js';
-import { normalizeGatewayAuthSession } from './gateway-auth-session.js';
-import {
-  createWebIMPlatformTermsClient, type WebIMPlatformTerm,
-  type WebIMPlatformTermKey, type WebIMPlatformTermsClient,
-} from './platform-terms-client.js';
+import { establishWebIMAuthSession, refreshWebIMAuthSession } from './web-im-authentication.js';
+import { createWebIMPlatformTermsClient, type WebIMPlatformTerm, type WebIMPlatformTermKey, type WebIMPlatformTermsClient } from './platform-terms-client.js';
 import { WebIMRuntimeError } from './runtime-error.js';
 import { transitionWebIMRuntimeState, type WebIMRuntimeEvent, type WebIMRuntimeState } from './runtime-lifecycle.js';
-import type { WebIMLoginRequest, WebIMRuntime, WebIMRuntimeOptions, WebIMRuntimeSnapshot } from './web-im-runtime-types.js';
+import type { WebIMLoginRequest, WebIMRegisterRequest, WebIMResetPasswordRequest, WebIMRuntime, WebIMRuntimeOptions, WebIMRuntimeSnapshot, WebIMSetAccountPasswordRequest } from './web-im-runtime-types.js';
+import { createWebIMUserSettings, type WebIMUserSettings } from './web-im-user-settings.js';
 /** 创建复用共享 Gateway HTTP/WebSocket clients 的浏览器 runtime。 */
-export function createWebIMRuntime(options: WebIMRuntimeOptions): WebIMRuntime {
-  return new WebIMRuntimeImpl(options);
-}
+export function createWebIMRuntime(options: WebIMRuntimeOptions): WebIMRuntime { return new WebIMRuntimeImpl(options); }
 /** Web runtime 实例显式持有 auth/realtime 状态和浏览器端口。 */
 class WebIMRuntimeImpl implements WebIMRuntime {
   // 构造配置和注入端口在 runtime 生命周期内不可替换。
@@ -28,6 +21,8 @@ class WebIMRuntimeImpl implements WebIMRuntime {
   private readonly platformTermsClient: WebIMPlatformTermsClient;
   // sync facade 固定持有唯一 realtime 串行队列。
   private readonly sync: WebIMSync;
+  // settings facade 动态绑定当前认证身份并复用同一个 Gateway client。
+  private readonly settings: WebIMUserSettings;
   // 监听器只接收无 token snapshot 变化通知。
   private readonly listeners = new Set<() => void>();
   // 状态只允许通过 applyLifecycleEvent 修改。
@@ -65,24 +60,52 @@ class WebIMRuntimeImpl implements WebIMRuntime {
       accountDatabase: this.options.accountDatabase,
       getCurrentUserID: () => this.currentSession?.userID ?? null,
     });
+    this.settings = createWebIMUserSettings({
+      gatewayClient: this.gatewayClient,
+      getCurrentUserID: () => this.currentSession?.userID ?? null,
+    });
   }
   /** 使用 Gateway 登录，完整会话验证通过后启动 realtime。 */
   async login(request: WebIMLoginRequest): Promise<WebIMRuntimeSnapshot> {
+    return this.authenticate(() => this.gatewayClient.login({
+      ...request,
+      device_id: this.deviceID,
+    }));
+  }
+  /** 使用 Gateway 注册，并复用登录后的会话、数据库和 realtime 收敛链。 */
+  async register(request: WebIMRegisterRequest): Promise<WebIMRuntimeSnapshot> {
+    return this.authenticate(() => this.gatewayClient.register({
+      ...request,
+      device_id: this.deviceID,
+    }));
+  }
+  /** 首次设置账号密码成功后保留当前认证会话。 */
+  async setAccountPassword(request: WebIMSetAccountPasswordRequest): Promise<void> {
+    this.requireAccountSecuritySession();
+    await this.gatewayClient.setAccountPassword({
+      account: request.account.trim(),
+      password: request.password,
+    });
+  }
+  /** 旧密码重置成功会撤销远端 session，并同步清除全部本地认证 owner。 */
+  async resetPassword(request: WebIMResetPasswordRequest): Promise<void> {
+    this.requireAccountSecuritySession();
+    await this.gatewayClient.resetPassword(request);
+    await this.invalidateLocalSession();
+  }
+  /** 将登录和注册返回的认证数据收敛为同一浏览器 runtime 状态。 */
+  private async authenticate(requestAuthData: () => Promise<GatewayAuthData>): Promise<WebIMRuntimeSnapshot> {
     this.stopRealtime();
     this.currentSession = null;
     this.options.authSessionStore.clear();
     this.applyLifecycleEvent('auth_started');
     try {
-      // 共享 client 负责 endpoint、envelope、Bearer 和错误语义。
-      const authData = await this.gatewayClient.login({
-        ...request,
-        device_id: this.deviceID,
+      // session 仅在 auth data 与账号 SQLite 均有效后返回。
+      const session = await establishWebIMAuthSession({
+        requestAuthData,
+        accountDatabase: this.options.accountDatabase,
+        authSessionStore: this.options.authSessionStore,
       });
-      // 只有完整有效会话才允许进入 sessionStorage。
-      const session = normalizeGatewayAuthSession(authData);
-      // 账号 SQLite 完成 migrations 后才允许发布 authenticated 状态。
-      await this.options.accountDatabase.open(session.userID);
-      this.options.authSessionStore.save(session);
       this.currentSession = session;
       this.applyLifecycleEvent('auth_succeeded');
     } catch (cause) {
@@ -94,9 +117,7 @@ class WebIMRuntimeImpl implements WebIMRuntime {
     return this.currentSnapshot;
   }
   /** 查询公开平台条款，不要求建立认证会话。 */
-  async getPlatformTerm(key: WebIMPlatformTermKey): Promise<WebIMPlatformTerm> {
-    return this.platformTermsClient.getTerm(key);
-  }
+  async getPlatformTerm(key: WebIMPlatformTermKey): Promise<WebIMPlatformTerm> { return this.platformTermsClient.getTerm(key); }
   /** 恢复 tab 会话，先 check-token，明确无效时再 refresh。 */
   async restore(): Promise<boolean> {
     // Store 会对损坏记录清理并抛错，不伪装成未登录。
@@ -142,31 +163,22 @@ class WebIMRuntimeImpl implements WebIMRuntime {
         }
       }
     } finally {
-      this.stopRealtime();
-      this.currentSession = null;
-      this.options.authSessionStore.clear();
-      this.applyLifecycleEvent('signed_out');
+      await this.invalidateLocalSession();
     }
-    await this.options.accountDatabase.close();
   }
   /** 返回 useSyncExternalStore 可消费的稳定 snapshot。 */
-  getSnapshot(): WebIMRuntimeSnapshot {
-    return this.currentSnapshot;
-  }
+  getSnapshot(): WebIMRuntimeSnapshot { return this.currentSnapshot; }
   /** 返回动态绑定当前 auth/account DB owner 的唯一同步入口。 */
-  getSync(): WebIMSync {
-    return this.sync;
-  }
+  getSync(): WebIMSync { return this.sync; }
+  /** 返回动态绑定当前认证会话的唯一用户设置入口。 */
+  getSettings(): WebIMUserSettings { return this.settings; }
   /** 订阅 runtime snapshot 变化。 */
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
   /** 释放 socket 与监听器但保留可恢复的 tab session。 */
-  dispose(): void {
-    this.stopRealtime();
-    this.listeners.clear();
-  }
+  dispose(): void { this.stopRealtime(); this.listeners.clear(); }
   /** 创建并连接与当前认证会话绑定的唯一 realtime client。 */
   private connectRealtime(): void {
     if (!this.currentSession) {
@@ -238,28 +250,11 @@ class WebIMRuntimeImpl implements WebIMRuntime {
   }
   /** 将连接中/在线状态统一标记为等待共享 client 重连。 */
   private markRealtimeDisconnected(): void {
-    if (this.currentState === 'connecting' || this.currentState === 'online') {
-      this.applyLifecycleEvent('realtime_disconnected');
-    }
+    if (this.currentState === 'connecting' || this.currentState === 'online') this.applyLifecycleEvent('realtime_disconnected');
   }
   /** 刷新服务端已判定失效的 access token。 */
-  private async refreshInvalidSession(
-    session: WebIMAuthSession,
-  ): Promise<WebIMAuthSession | null> {
-    if (!session.refreshToken) {
-      return null;
-    }
-    const authData = await this.gatewayClient.refreshToken({
-      refresh_token: session.refreshToken,
-      device_id: this.deviceID,
-    });
-    // Gateway 可能不重复返回 user，允许已验证旧 userID 回退。
-    const refreshedSession = normalizeGatewayAuthSession(
-      authData,
-      session.userID,
-    );
-    this.options.authSessionStore.save(refreshedSession);
-    return refreshedSession;
+  private async refreshInvalidSession(session: WebIMAuthSession): Promise<WebIMAuthSession | null> {
+    return refreshWebIMAuthSession(session, this.gatewayClient, this.deviceID, this.options.authSessionStore);
   }
   /** 关闭 realtime client 和事件订阅，不修改认证会话。 */
   private stopRealtime(): void {
@@ -273,6 +268,23 @@ class WebIMRuntimeImpl implements WebIMRuntime {
     this.stopRealtime();
     this.currentSession = null;
     this.options.authSessionStore.clear();
+  }
+  /** 拒绝未 restore 的 tab 直接执行账号安全 mutation。 */
+  private requireAccountSecuritySession(): void {
+    if (!this.currentSession) {
+      throw new WebIMRuntimeError(
+        'ACCOUNT_SECURITY_AUTH_REQUIRED',
+        'Account security requires an authenticated Web IM session.',
+      );
+    }
+  }
+  /** 清除本地认证、realtime 与账号数据库，不额外请求远端 logout。 */
+  private async invalidateLocalSession(): Promise<void> {
+    this.stopRealtime();
+    this.currentSession = null;
+    this.options.authSessionStore.clear();
+    this.applyLifecycleEvent('signed_out');
+    await this.options.accountDatabase.close();
   }
   /** 通过唯一状态机应用事件并发布 snapshot。 */
   private applyLifecycleEvent(event: WebIMRuntimeEvent): void {
@@ -290,10 +302,6 @@ class WebIMRuntimeImpl implements WebIMRuntime {
   }
   /** 创建不包含 token 的 runtime snapshot。 */
   private createSnapshot(): WebIMRuntimeSnapshot {
-    return {
-      state: this.currentState,
-      userID: this.currentSession?.userID ?? null,
-      dataVersion: this.dataVersion,
-    };
+    return { state: this.currentState, userID: this.currentSession?.userID ?? null, dataVersion: this.dataVersion };
   }
 }

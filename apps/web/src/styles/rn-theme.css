@@ -84,6 +84,10 @@
   --im-safe-left: env(safe-area-inset-left, 0px);
 }
 
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     --im-bg-app: #0f1115;
@@ -166,6 +170,7 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --im-bg-app: #0f1115;
   --im-bg-page: #111318;
   --im-bg-card: #1b1d24;

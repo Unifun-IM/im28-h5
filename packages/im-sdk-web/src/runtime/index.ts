@@ -15,8 +15,12 @@ export {
 export { transitionWebIMRuntimeState } from './runtime-lifecycle.js';
 /** 创建复用共享 Gateway clients 的浏览器 IM runtime。 */
 export { createWebIMRuntime } from './web-im-runtime.js';
+/** 导出未注册账号错误的标准化认证判断。 */
+export { isWebIMUnregisteredAccountError } from './web-im-authentication.js';
 /** 导出 Web IM runtime 的结构化错误。 */
 export { WebIMRuntimeError } from './runtime-error.js';
+/** 创建认证绑定的 Web 用户设置 facade。 */
+export { createWebIMUserSettings } from './web-im-user-settings.js';
 /** 导出认证会话与 sessionStorage 端口类型。 */
 export type {
   WebIMAuthSession,
@@ -44,10 +48,19 @@ export type {
 } from './runtime-lifecycle.js';
 /** 导出 runtime 稳定错误码。 */
 export type { WebIMRuntimeErrorCode } from './runtime-error.js';
+/** 导出用户设置 facade 的稳定公开 contract。 */
+export type {
+  WebIMUpdateNotificationSettingRequest,
+  WebIMUserSettings,
+  WebIMUserSettingsDependencies,
+} from './web-im-user-settings.js';
 /** 导出 Web IM runtime 命令、配置和快照类型。 */
 export type {
   WebIMLoginRequest,
+  WebIMRegisterRequest,
+  WebIMResetPasswordRequest,
   WebIMRuntime,
   WebIMRuntimeOptions,
   WebIMRuntimeSnapshot,
+  WebIMSetAccountPasswordRequest,
 } from './web-im-runtime-types.js';

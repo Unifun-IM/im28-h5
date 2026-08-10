@@ -19,6 +19,7 @@ sessionStorage
 
 SQLite/IndexedDB
 -> message/conversation cache only
+-> contacts remain remote-only until a shared Web Repository export is accepted
 -> never stores access_token or refresh_token
 ```
 
@@ -39,11 +40,11 @@ OpenIM documents Web as platform ID `5`: <https://docs.openim.io/sdks/enum/platf
 
 | concern | owner | contract |
 | :--- | :--- | :--- |
-| login/refresh/logout HTTP calls | `WebIMRuntimeImpl` | call the shared `GatewayHTTPClient`; do not duplicate endpoints |
+| login/register/refresh/logout HTTP calls | `WebIMRuntimeImpl` | call the shared `GatewayHTTPClient`; do not duplicate endpoints |
 | access token | `WebIMAuthSessionStore` | JS-readable because the shared client sends `Authorization: Bearer`; stored in `sessionStorage`, never SQLite/localStorage |
 | refresh token | `WebIMAuthSessionStore` | same tab-scoped session as access token; cleared on invalid/corrupt state |
 | user ID | auth session | normalized non-empty string; scopes SQLite database after authentication |
-| device ID | `WebIMDeviceIdentityStore` | non-secret stable browser identity; passed to login, refresh and WebSocket auth |
+| device ID | `WebIMDeviceIdentityStore` | non-secret stable browser identity; passed to login, register, refresh and WebSocket auth |
 | logout | `WebIMRuntimeImpl` | best-effort remote logout, mandatory realtime close, local session clear and account database close |
 | account database | `WebIMAccountDatabaseLifecycle` | open/migrate before authenticated state; switch by normalized userID; close on sign-out, kicked or token-expired |
 
@@ -53,7 +54,7 @@ OpenIM documents Web as platform ID `5`: <https://docs.openim.io/sdks/enum/platf
 
 | channel | shared behavior reused from `@im28/im-sdk/web` |
 | :--- | :--- |
-| HTTP | base URL normalization, JSON envelope unwrap, Bearer header, request ID, language, typed login/refresh/logout/check-token calls |
+| HTTP | base URL normalization, JSON envelope unwrap, Bearer header, request ID, language, typed login/register/refresh/logout/check-token/friend-list calls |
 | WebSocket | `user_id` and `device_id` query values, auth frame with token/platform/device, heartbeat, pong timeout, exponential reconnect and token-expired event |
 
 The H5 package may adapt browser `fetch`, `WebSocket`, storage and configuration. It must not copy generated endpoints, DTOs, realtime payload normalization or reconnect algorithms.
@@ -81,7 +82,8 @@ Invalid transitions must throw a structured runtime error. They must not silentl
 | :--- | :--- |
 | missing/invalid runtime environment | reject before creating Gateway clients |
 | malformed persisted auth session | remove corrupt record and reject restore visibly |
-| login/refresh failure | do not save partial session |
+| login/register/refresh failure | do not save partial session |
+| verification-code-send unavailable | preserve a visible capability gap; never start a countdown or report that a code was sent |
 | account database open/migration failure | reject authentication before saving session or creating realtime client |
 | account database close failure during sign-out | credentials and realtime are still cleared; sign-out rejects visibly |
 | account database close failure after realtime invalidation | report through the injected background error channel; never swallow |
@@ -94,6 +96,7 @@ Invalid transitions must throw a structured runtime error. They must not silentl
 - `W3.a1`: config parser, auth session store, lifecycle state machine and this contract.
 - `W3.a2`: browser fetch/WebSocket adapters, device identity, login/restore/refresh/logout orchestration and real Gateway smoke.
 - `W4`: conversation sync, repository writes and user-facing auth/chat pages.
+- `W6.a5.2.1`: authenticated paged friend-list read through the shared client; no duplicate endpoint and no claimed contact cache.
 
 ## 8. Real Gateway Smoke
 
