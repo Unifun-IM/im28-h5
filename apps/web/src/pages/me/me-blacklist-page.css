@@ -1,0 +1,215 @@
+.rn-me-blacklist-page {
+  min-height: 100dvh;
+  color: var(--im-profile-text-primary);
+  background: var(--im-profile-page-background);
+}
+
+.rn-me-blacklist-surface {
+  width: min(100%, 480px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--im-profile-page-background);
+  box-shadow: 0 0 36px rgba(31, 38, 46, 0.07);
+}
+
+.rn-me-blacklist-search {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 8px;
+  padding: 0 12px;
+  border: var(--im-hairline-width) solid var(--im-border-input);
+  border-radius: 6px;
+  color: var(--im-icon-muted);
+  background: var(--im-bg-input);
+}
+
+.rn-me-blacklist-search:focus-within {
+  border-color: var(--im-brand-primary);
+}
+
+.rn-me-blacklist-search .rn-asset-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.rn-me-blacklist-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--im-profile-text-primary);
+  background: transparent;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.rn-me-blacklist-search input::placeholder {
+  color: var(--im-profile-text-muted);
+  opacity: 1;
+}
+
+.rn-me-blacklist-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.rn-me-blacklist-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  color: var(--im-status-danger);
+  font-size: 13px;
+}
+
+.rn-me-blacklist-error button {
+  flex: 0 0 auto;
+  border: 0;
+  color: var(--im-profile-primary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.rn-me-blacklist-list {
+  min-height: 160px;
+  padding: 8px 0 32px;
+}
+
+.rn-me-blacklist-row {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  padding-left: 16px;
+}
+
+.rn-me-blacklist-avatar {
+  position: relative;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 20px;
+  color: #fff;
+  background: var(--blacklist-avatar-gradient, var(--im-bg-input));
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.rn-me-blacklist-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rn-me-blacklist-row-main {
+  display: flex;
+  min-width: 0;
+  min-height: 72px;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
+  padding-right: 16px;
+  border-bottom: var(--im-hairline-width) solid var(--im-profile-divider);
+}
+
+.rn-me-blacklist-row-main strong {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-me-blacklist-row-main > span {
+  flex: 0 0 auto;
+  color: var(--im-profile-text-muted);
+  font-size: 12px;
+  line-height: 13px;
+}
+
+.rn-me-blacklist-row-main button {
+  flex: 0 0 auto;
+  padding: 8px 0;
+  border: 0;
+  color: var(--im-profile-primary);
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.rn-me-blacklist-row-main button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.rn-me-blacklist-empty {
+  margin: 0;
+  padding-top: 80px;
+  color: var(--im-profile-text-muted);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.rn-me-blacklist-sheet-backdrop {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.36);
+}
+
+.rn-me-blacklist-sheet {
+  display: grid;
+  width: min(100%, 480px);
+  padding-bottom: max(8px, var(--im-safe-bottom));
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: var(--im-profile-page-background);
+  gap: 0;
+}
+
+.rn-me-blacklist-sheet p,
+.rn-me-blacklist-sheet button {
+  min-height: 56px;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  border-bottom: var(--im-hairline-width) solid var(--im-profile-divider);
+  background: var(--im-profile-card-background);
+  text-align: center;
+}
+
+.rn-me-blacklist-sheet p {
+  color: var(--im-profile-text-secondary);
+  font-size: 14px;
+}
+
+.rn-me-blacklist-sheet button {
+  color: var(--im-profile-text-primary);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.rn-me-blacklist-sheet button.is-danger {
+  color: var(--im-status-danger);
+}
+
+.rn-me-blacklist-sheet button:last-child {
+  margin-top: 8px;
+  border-bottom: 0;
+}

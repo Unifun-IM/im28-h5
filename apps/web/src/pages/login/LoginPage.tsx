@@ -1,9 +1,4 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import {
-  isWebIMUnregisteredAccountError,
-  type WebIMLoginRequest,
-  type WebIMRegisterRequest,
-} from '@im28/im-sdk-web';
 import { Link, useNavigate } from 'react-router-dom';
 
 import countryChevronURL from '../../assets/rn/assets/icons/imm28/country-code-chevron.svg';
@@ -16,6 +11,7 @@ import { useWebIMRuntime } from '../../runtime/index.js';
 import { AuthAgreement } from './AuthAgreement.js';
 import { AuthCountryCodeDialog } from './AuthCountryCodeDialog.js';
 import { AuthLoginMethodSection } from './AuthLoginMethodSection.js';
+import { useAuthOnboarding } from './AuthOnboardingProvider.js';
 import {
   AUTH_COUNTRY_CODES,
   AUTH_LOGIN_COPY,
@@ -26,6 +22,11 @@ import {
   type AuthCountryCode,
   type AuthLoginMode,
 } from './auth-login-config.js';
+import {
+  createAuthLoginRequest,
+  createAuthRegisterRequest,
+  submitAuthLogin,
+} from './auth-login-submission.js';
 import { LoginAgreementDialog } from './LoginAgreementDialog.js';
 import { LoginTermsDialog } from './LoginTermsDialog.js';
 import './login-page.css';
@@ -44,6 +45,8 @@ export function LoginPage({ mode }: LoginPageProps) {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // navigate 只负责认证成功后的 SPA replace。
   const navigate = useNavigate();
+  // onboarding owner 区分普通登录与新注册后的下一 route。
+  const { marker, markProfileRequired, setPendingRegistration } = useAuthOnboarding();
   // copy 由当前稳定 route mode 决定。
   const copy = AUTH_LOGIN_COPY[mode];
   // account 保存手机号、邮箱或账号输入。
@@ -70,8 +73,10 @@ export function LoginPage({ mode }: LoginPageProps) {
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    if (snapshot.userID) navigate('/conversations', { replace: true });
-  }, [navigate, snapshot.userID]);
+    if (!submitting && snapshot.userID) {
+      navigate(marker?.userID === snapshot.userID ? '/auth/complete-profile' : '/conversations', { replace: true });
+    }
+  }, [marker?.userID, navigate, snapshot.userID, submitting]);
 
   useEffect(() => {
     setCredential('');
@@ -79,57 +84,45 @@ export function LoginPage({ mode }: LoginPageProps) {
     setNotice(null);
   }, [mode]);
 
-  /** 根据当前 mode 生成共享 Gateway login request。 */
-  function buildLoginRequest(): WebIMLoginRequest {
-    if (mode === 'account') {
-      return { type: 'account', account: account.trim(), password: credential };
-    }
-    if (mode === 'phone') {
-      return {
-        type: 'phone',
-        account,
-        phone_area_code: countryCode.dialCode,
-        verification_code: credential,
-      };
-    }
-    return { type: 'email', account: account.trim(), verification_code: credential };
-  }
-
-  /** 为手机号/邮箱未注册分支生成真实 Gateway register request。 */
-  function buildRegisterRequest(): WebIMRegisterRequest {
-    return mode === 'phone'
-      ? {
-          type: 'phone',
-          account,
-          phone_area_code: countryCode.dialCode,
-          verification_code: credential,
-        }
-      : { type: 'email', account: account.trim(), verification_code: credential };
-  }
-
   /** 执行登录；手机号/邮箱仅在 20002 时进入真实自动注册。 */
   async function submitAuthentication(): Promise<void> {
     if (!runtime || submitting) return;
     setSubmitting(true);
     setError(null);
-    try {
-      await runtime.login(buildLoginRequest());
-    } catch (cause) {
-      if (mode === 'account' || !isWebIMUnregisteredAccountError(cause)) {
-        setError(readAuthError(cause, '登录失败'));
-        setSubmitting(false);
-        return;
-      }
-      try {
-        await runtime.register(buildRegisterRequest());
-      } catch (registerCause) {
-        setError(readAuthError(registerCause, '注册失败'));
-        setSubmitting(false);
-        return;
-      }
+    // result 将 login/register/invite 分支收敛为页面可处理状态。
+    // requestInput 保持 login/register 字段来自同一表单快照。
+    const requestInput = {
+      mode,
+      account,
+      credential,
+      phoneAreaCode: countryCode.dialCode,
+    };
+    // result 执行共享 Gateway login/register 分支。
+    const result = await submitAuthLogin({
+      runtime,
+      mode,
+      loginRequest: createAuthLoginRequest(requestInput),
+      registerRequest: createAuthRegisterRequest(requestInput),
+    });
+    if (result.type === 'authenticated') {
+      setSubmitting(false);
+      navigate('/conversations', { replace: true });
+      return;
     }
+    if (result.type === 'registered') {
+      markProfileRequired(result.userID, mode);
+      setSubmitting(false);
+      navigate('/auth/complete-profile', { replace: true });
+      return;
+    }
+    if (result.type === 'invite-required') {
+      setPendingRegistration({ sourceMode: result.sourceMode, request: result.request });
+      setSubmitting(false);
+      navigate(`/auth/invite?from=${result.sourceMode}`, { replace: false });
+      return;
+    }
+    setError(readAuthError(result.cause, '登录失败'));
     setSubmitting(false);
-    navigate('/conversations', { replace: true });
   }
 
   /** 校验协议状态后提交当前 route 对应认证请求。 */

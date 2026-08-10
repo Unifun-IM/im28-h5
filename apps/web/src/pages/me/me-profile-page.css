@@ -91,15 +91,23 @@
   content: '';
 }
 
-.rn-me-profile-row > span {
+.rn-me-profile-row > .rn-me-profile-label {
   min-width: 72px;
   font-size: 16px;
   line-height: 24px;
 }
 
-.rn-me-profile-row > strong {
+.rn-me-profile-trailing {
+  display: flex;
   min-width: 0;
   flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.rn-me-profile-trailing > strong {
+  min-width: 0;
   overflow: hidden;
   color: var(--im-profile-text-muted);
   font-size: 14px;
@@ -112,6 +120,9 @@
 }
 
 .rn-me-profile-row .rn-asset-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
   color: var(--im-profile-text-muted);
 }
 

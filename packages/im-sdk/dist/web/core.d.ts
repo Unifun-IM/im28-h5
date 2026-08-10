@@ -1,0 +1,7 @@
+export { ConversationRepository, GroupRepository, IM_SDK_PACKAGE, MessageRepository, assertMessageStatusTransition, canTransitionMessageStatus, createIMClient, createGatewayHTTPClient, createGatewayRealtimeClient, mapGatewayConversationToCore, mapGatewayMessageToCore, normalizeGatewayRealtimeEvents, parseGatewayRealtimePayload, runMigrations, imSdkPackageInfo, IMError, isTerminalMessageStatus, } from './index.js';
+export type * from './transport/gateway-http/index.js';
+export type * from './transport/gateway-ws/index.js';
+export type { IMRuntimeTarget, IMSdkPackageInfo } from './index.js';
+export type { Attachment, ConnectionState, Conversation, ConversationType, ConversationListOptions, DatabaseAdapter, DatabaseExecuteResult, DatabaseExecutor, DatabaseMigration, DatabaseParams, DatabaseRow, DatabaseStatement, DatabaseTransaction, DatabaseValue, GatewayHTTPClient, GatewayHTTPClientOptions, GatewayRealtimeClient, GatewayRealtimeClientOptions, GatewayRealtimeEvent, GatewayRealtimeEventHandler, GatewayFetch, GatewayForgotPasswordData, GatewayForgotPasswordRequest, GatewayUser, GatewayMessage, GatewayConversation, GatewayResetPasswordRequest, Group, IMClient, IMClientConfig, IMEventBus, IMEventHandler, IMEventMap, IMEventName, LoginParams, Message, MessageDirection, MessageHistoryOptions, MessageStatus, SessionState, Unsubscribe, User, } from './index.js';
+export declare const IM_SDK_CORE_ENTRY: "@im28/im-sdk/core";
+//# sourceMappingURL=core.d.ts.map

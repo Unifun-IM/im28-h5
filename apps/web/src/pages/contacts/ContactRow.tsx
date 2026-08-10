@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { WebIMContact } from '@im28/im-sdk-web';
+import type { WebIMContact } from '@im28/im-sdk/web';
 
 import {
   getRNAvatarGradient,

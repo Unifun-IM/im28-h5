@@ -1,4 +1,4 @@
-import type { WebIMPlatformTerm } from '@im28/im-sdk-web';
+import type { WebIMPlatformTerm } from '@im28/im-sdk/web';
 
 /** 转义条款标题，正文由 sandbox iframe 隔离。 */
 function escapePlatformTermTitle(text: string): string {

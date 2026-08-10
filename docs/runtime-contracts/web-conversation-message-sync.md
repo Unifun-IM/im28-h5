@@ -7,8 +7,8 @@
 | rule | constraint |
 | :--- | :--- |
 | remote truth | Gateway 是会话与消息真相源；SQLite 仅是可重建 cache |
-| browser owner | 页面只能调用 `@im28/im-sdk-web` runtime/sync API，不直接调用 Gateway 或 Repository |
-| shared semantics | Gateway DTO、HTTP client、Repository、database contract 复用 `@im28/im-sdk/web` |
+| browser owner | 页面只能调用 `@im28/im-sdk/web` runtime/sync API，不直接调用 Gateway 或 Repository |
+| shared semantics | Gateway DTO、HTTP client、Repository、database contract 复用 `@im28/im-sdk/core` |
 | failure | remote failure 必须 reject；禁止返回 fake empty、fake sent 或静默成功 |
 | auth binding | sync 只能使用当前已认证 user 与已打开 account SQLite |
 | operation budget | HTTP 首批冻结 `list conversations`、`pull history`、`send text`；实时片只接收新消息与会话变更 |
@@ -17,9 +17,9 @@
 
 | layer | owner | responsibility |
 | :--- | :--- | :--- |
-| transport/core | `@im28/im-sdk/web` | Gateway client、DTO -> core mapping、Repository、schema |
-| browser orchestration | `packages/im-sdk-web/src/sync/**` | cache-first read、remote sync、optimistic send、failure convergence |
-| lifecycle | `packages/im-sdk-web/src/runtime/**` | auth session、Gateway clients、account DB、realtime lifecycle |
+| transport/core | `@im28/im-sdk/core` | Gateway client、DTO -> core mapping、Repository、schema |
+| browser orchestration | `../im28-sdk/src/sync/**` | cache-first read、remote sync、optimistic send、failure convergence |
+| lifecycle | `../im28-sdk/src/platforms/web/runtime/**` | auth session、Gateway clients、account DB、realtime lifecycle |
 | UI | `apps/web/src/pages/**` | React Router pages、loading/error/empty state、user commands |
 
 ## Operations
@@ -106,12 +106,12 @@
 | text send | `sendText(conversationID, text)` | preserve `sending -> sent/failed` row；page does not synthesize sent state |
 | realtime refresh | runtime snapshot `dataVersion` -> `getCachedHistory` | event persistence remains sync owner；page only rereads cache |
 
-W6.a4 renders read-only snapshots for supported media/card payloads. Presence、group-member enrichment、voice/emoji/attachment upload、retry、playback and download remain absent until a named `@im28/im-sdk-web` facade owns their operation and failure semantics.
+W6.a4 renders read-only snapshots for supported media/card payloads. Presence、group-member enrichment、voice/emoji/attachment upload、retry、playback and download remain absent until a named `@im28/im-sdk/web` facade owns their operation and failure semantics.
 
 ## Production Anchors
 
-- `../im28-phone/packages/im-sdk/src/transport/gateway-http/**`
-- `../im28-phone/packages/im-sdk/src/modules/conversation/repository.ts`
-- `../im28-phone/packages/im-sdk/src/modules/message/repository.ts`
+- `../im28-sdk/src/transport/gateway-http/**`
+- `../im28-sdk/src/modules/conversation/repository.ts`
+- `../im28-sdk/src/modules/message/repository.ts`
 - `../im28-phone/src/services/openim/conversation-list-sync-service.ts`
 - `../im28-phone/src/services/openim/openIMService.ts`

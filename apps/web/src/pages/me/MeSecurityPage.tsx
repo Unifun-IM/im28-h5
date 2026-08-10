@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { GatewayUser } from '@im28/im-sdk-web';
+import type { GatewayUser } from '@im28/im-sdk/web';
 import { Link, Navigate } from 'react-router-dom';
 
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';

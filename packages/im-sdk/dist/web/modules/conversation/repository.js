@@ -1,0 +1,159 @@
+import { statement } from '../../db/database.js';
+import { Repository } from '../../db/repository.js';
+import { parseJsonColumn, readOptionalString, readRequiredNumber, readRequiredString } from '../../db/row.js';
+export class ConversationRepository extends Repository {
+    constructor(database) {
+        super(database);
+    }
+    async upsert(conversation) {
+        await this.execute(statement(`INSERT OR REPLACE INTO conversations (
+          conversation_id,
+          type,
+          target_id,
+          name,
+          face_url,
+          latest_message_id,
+          unread_count,
+          updated_at,
+          is_archived,
+          is_pinned,
+          pinned_at,
+          is_muted,
+          draft,
+          raw_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT is_pinned FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT pinned_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT is_muted FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT draft FROM conversations WHERE conversation_id = ?), NULL), ?)`, [
+            conversation.conversationID,
+            conversation.type,
+            conversation.targetID,
+            conversation.name ?? null,
+            conversation.faceURL ?? null,
+            conversation.latestMessageID ?? null,
+            conversation.unreadCount,
+            conversation.updatedAt,
+            readConversationArchivedFlag(conversation),
+            conversation.isPinned === undefined ? null : Number(conversation.isPinned),
+            conversation.conversationID,
+            conversation.pinnedAt ?? null,
+            conversation.conversationID,
+            conversation.isMuted === undefined ? null : Number(conversation.isMuted),
+            conversation.conversationID,
+            conversation.draft ?? null,
+            conversation.conversationID,
+            JSON.stringify(conversation),
+        ]));
+    }
+    async getByID(conversationID) {
+        const rows = await this.query(statement('SELECT * FROM conversations WHERE conversation_id = ?', [conversationID]));
+        return rows[0] ? mapConversationRow(rows[0]) : null;
+    }
+    async list(options = {}) {
+        const limit = options.limit ?? 50;
+        const offset = options.offset ?? 0;
+        if (options.archived !== undefined) {
+            const rows = await this.query(statement('SELECT * FROM conversations WHERE is_archived = ? ORDER BY is_pinned DESC, pinned_at DESC, updated_at DESC LIMIT ? OFFSET ?', [
+                Number(options.archived),
+                limit,
+                offset,
+            ]));
+            return rows.map(mapConversationRow);
+        }
+        const rows = await this.query(statement('SELECT * FROM conversations ORDER BY is_pinned DESC, pinned_at DESC, updated_at DESC LIMIT ? OFFSET ?', [limit, offset]));
+        return rows.map(mapConversationRow);
+    }
+    async replaceAll(conversations) {
+        await this.transaction(async (tx) => {
+            await tx.execute(statement('DELETE FROM conversations'));
+            await Promise.all(conversations.map(conversation => tx.execute(statement(`INSERT OR REPLACE INTO conversations (
+                conversation_id,
+                type,
+                target_id,
+                name,
+                face_url,
+                latest_message_id,
+                unread_count,
+                updated_at,
+                is_archived,
+                is_pinned,
+                pinned_at,
+                is_muted,
+                draft,
+                raw_json
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+                conversation.conversationID,
+                conversation.type,
+                conversation.targetID,
+                conversation.name ?? null,
+                conversation.faceURL ?? null,
+                conversation.latestMessageID ?? null,
+                conversation.unreadCount,
+                conversation.updatedAt,
+                readConversationArchivedFlag(conversation),
+                Number(conversation.isPinned ?? false),
+                conversation.pinnedAt ?? 0,
+                Number(conversation.isMuted ?? false),
+                conversation.draft || null,
+                JSON.stringify(conversation),
+            ]))));
+        });
+    }
+    async updateLatestMessage(conversationID, latestMessageID, updatedAt) {
+        await this.execute(statement('UPDATE conversations SET latest_message_id = ?, updated_at = ? WHERE conversation_id = ?', [
+            latestMessageID,
+            updatedAt,
+            conversationID,
+        ]));
+    }
+    async incrementUnread(conversationID, count = 1) {
+        await this.execute(statement('UPDATE conversations SET unread_count = unread_count + ? WHERE conversation_id = ?', [count, conversationID]));
+    }
+    async updatePinned(conversationID, isPinned, pinnedAt = Date.now()) {
+        await this.execute(statement('UPDATE conversations SET is_pinned = ?, pinned_at = ? WHERE conversation_id = ?', [
+            Number(isPinned),
+            isPinned ? pinnedAt : 0,
+            conversationID,
+        ]));
+    }
+    async updateMuted(conversationID, isMuted) {
+        await this.execute(statement('UPDATE conversations SET is_muted = ? WHERE conversation_id = ?', [Number(isMuted), conversationID]));
+    }
+    async updateDraft(conversationID, draft) {
+        await this.execute(statement('UPDATE conversations SET draft = ? WHERE conversation_id = ?', [draft || null, conversationID]));
+    }
+    async deleteByID(conversationID) {
+        await this.execute(statement('DELETE FROM conversations WHERE conversation_id = ?', [conversationID]));
+    }
+}
+function mapConversationRow(row) {
+    const name = readOptionalString(row, 'name');
+    const faceURL = readOptionalString(row, 'face_url');
+    const latestMessageID = readOptionalString(row, 'latest_message_id');
+    const draft = readOptionalString(row, 'draft');
+    const raw = parseJsonColumn(row, 'raw_json', {});
+    return {
+        ...raw,
+        conversationID: readRequiredString(row, 'conversation_id'),
+        type: readRequiredString(row, 'type'),
+        targetID: readRequiredString(row, 'target_id'),
+        ...(name !== undefined ? { name } : {}),
+        ...(faceURL !== undefined ? { faceURL } : {}),
+        ...(latestMessageID !== undefined ? { latestMessageID } : {}),
+        unreadCount: readRequiredNumber(row, 'unread_count'),
+        isArchived: readRequiredNumber(row, 'is_archived') === 1,
+        isPinned: readRequiredNumber(row, 'is_pinned') === 1,
+        pinnedAt: readRequiredNumber(row, 'pinned_at'),
+        isMuted: readRequiredNumber(row, 'is_muted') === 1,
+        draft: draft ?? '',
+        updatedAt: readRequiredNumber(row, 'updated_at'),
+    };
+}
+function readConversationArchivedFlag(conversation) {
+    // 原始 payload 保留 Gateway/app 两套归档字段，写库时统一为索引列。
+    const payload = conversation.payload && typeof conversation.payload === 'object'
+        ? conversation.payload
+        : {};
+    return Number(Boolean(conversation.isArchived ??
+        payload.archived ??
+        payload.list_hidden ??
+        payload.listHidden));
+}
+//# sourceMappingURL=repository.js.map

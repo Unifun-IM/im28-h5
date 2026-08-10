@@ -1,4 +1,4 @@
-import type { Message } from '@im28/im-sdk-web';
+import type { Message } from '@im28/im-sdk/web';
 
 /** Chat 消息正文在浏览器中的受控呈现类型。 */
 export type ChatMessageViewKind =

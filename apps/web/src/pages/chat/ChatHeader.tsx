@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { Conversation } from '@im28/im-sdk-web';
+import type { Conversation } from '@im28/im-sdk/web';
 import { Link } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/components/navbar/nav-arrow-left.svg';

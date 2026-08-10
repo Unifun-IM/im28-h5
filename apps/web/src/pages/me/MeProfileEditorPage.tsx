@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { GatewayUser, WebIMProfileUpdate } from '@im28/im-sdk-web';
+import type { GatewayUser, WebIMProfileUpdate } from '@im28/im-sdk/web';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';

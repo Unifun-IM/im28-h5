@@ -1,4 +1,4 @@
-import type { WebIMContact } from '@im28/im-sdk-web';
+import type { WebIMContact } from '@im28/im-sdk/web';
 
 /** 通讯录页面分组后的稳定渲染项。 */
 export type ContactListEntry =

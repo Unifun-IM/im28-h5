@@ -1,4 +1,4 @@
-import type { Message } from '@im28/im-sdk-web';
+import type { Message } from '@im28/im-sdk/web';
 
 import {
   getChatMessageView,

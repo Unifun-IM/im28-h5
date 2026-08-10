@@ -11,7 +11,7 @@ import {
 import type {
   WebIMRuntime,
   WebIMRuntimeSnapshot,
-} from '@im28/im-sdk-web';
+} from '@im28/im-sdk/web';
 
 import { createConfiguredWebIMRuntime } from './create-configured-web-im-runtime.js';
 

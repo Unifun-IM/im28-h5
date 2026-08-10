@@ -7,6 +7,7 @@ import {
   type WebThemePreference,
 } from '../../runtime/theme-preference.js';
 import { MeProfileHeader } from './MeProfileHeader.js';
+import { MeSettingsSwitchRow } from './MeSettingsSwitchRow.js';
 import './me-page.css';
 import './me-profile-page.css';
 import './me-settings-page.css';
@@ -35,7 +36,7 @@ export function MeDisplaySettingsPage() {
         <MeProfileHeader title="显示" backHref="/me/settings" />
         <div className="rn-me-settings-content">
           <div className="rn-me-settings-card">
-            <SettingsSwitchRow
+            <MeSettingsSwitchRow
               label="跟随系统"
               checked={themeSnapshot.preference === 'system'}
               onChange={toggleFollowSystem}
@@ -82,32 +83,6 @@ function ThemeChoiceRow({ label, preference, selected, last = false }: ThemeChoi
       <span>{label}</span>
       {selected ? <strong aria-hidden="true">✓</strong> : null}
     </button>
-  );
-}
-
-/** 设置开关行参数。 */
-interface SettingsSwitchRowProps {
-  readonly label: string;
-  readonly checked: boolean;
-  readonly disabled?: boolean;
-  readonly onChange: () => void;
-}
-
-/** 渲染稳定尺寸的 RN 设置开关。 */
-export function SettingsSwitchRow({ label, checked, disabled = false, onChange }: SettingsSwitchRowProps) {
-  return (
-    <div className="rn-me-settings-switch-row">
-      <span>{label}</span>
-      <button
-        className="rn-me-settings-switch"
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        disabled={disabled}
-        onClick={onChange}
-      ><span /></button>
-    </div>
   );
 }
 

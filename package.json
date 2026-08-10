@@ -4,17 +4,17 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "packages/*",
     "apps/*"
   ],
   "scripts": {
     "assets:sync": "node scripts/sync-rn-assets.mjs",
     "assets:check": "node scripts/sync-rn-assets.mjs --check",
-    "build": "npm run build -w @im28/im-sdk-web && npm run build -w @im28/h5-web",
+    "sdk:build:web": "npm --prefix ../im28-sdk run build:web",
+    "build": "npm run sdk:build:web && npm run build -w @im28/h5-web",
     "dev": "npm run dev -w @im28/h5-web",
-    "smoke:gateway": "npm run build -w @im28/im-sdk-web && node scripts/gateway-runtime-smoke.mjs",
-    "test": "npm run test -w @im28/im-sdk-web",
-    "typecheck": "npm run typecheck -w @im28/im-sdk-web && npm run typecheck -w @im28/h5-web",
+    "smoke:gateway": "npm run sdk:build:web && node scripts/gateway-runtime-smoke.mjs",
+    "test": "npm --prefix ../im28-sdk run test:web",
+    "typecheck": "npm run sdk:build:web && npm --prefix ../im28-sdk run typecheck:web && npm run typecheck -w @im28/h5-web",
     "verify": "npm run assets:check && npm run typecheck && npm test && npm run build"
   },
   "engines": {

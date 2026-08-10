@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { GatewayCall } from '@im28/im-sdk-web';
+import type { GatewayCall } from '@im28/im-sdk/web';
 
 import directionIconURL from '../../assets/rn/assets/icons/imm28/arrow-up-right.regular.svg';
 import checkedIconURL from '../../assets/rn/assets/icons/imm28/check-circle.solid.svg';

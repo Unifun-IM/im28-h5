@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { WebIMConversationListItem } from '@im28/im-sdk-web';
+import type { WebIMConversationListItem } from '@im28/im-sdk/web';
 import { Link } from 'react-router-dom';
 
 import bellOffIconURL from '../../assets/rn/assets/icons/imm28/bell-off.solid.svg';

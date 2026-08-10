@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import type { GatewayUser } from '@im28/im-sdk-web';
+import type { GatewayUser } from '@im28/im-sdk/web';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 import { useWebIMRuntime } from '../../runtime/index.js';

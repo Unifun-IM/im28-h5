@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { WebIMSync } from '@im28/im-sdk-web';
+import type { WebIMSync } from '@im28/im-sdk/web';
 import { Outlet, useLocation } from 'react-router-dom';
 
 import {

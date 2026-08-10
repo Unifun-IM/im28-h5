@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { WebIMContact } from '@im28/im-sdk-web';
-import { Navigate } from 'react-router-dom';
+import type { WebIMContact } from '@im28/im-sdk/web';
+import { Link, Navigate } from 'react-router-dom';
 
+import bellIconURL from '../../assets/rn/assets/icons/imm28/bell.solid.svg';
+import groupsIconURL from '../../assets/rn/assets/icons/imm28/contact-groups.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import starIconURL from '../../assets/rn/assets/icons/imm28/star.solid.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
@@ -97,6 +99,18 @@ export function ContactsPage() {
         ) : null}
 
         <section className="rn-contacts-list" aria-label="联系人列表">
+          {!keyword.trim() ? <Link className="rn-contact-shortcut" to="/contacts/friend-applications">
+            <span><RNAssetIcon assetURL={bellIconURL} /></span>
+            <strong>好友验证</strong>
+          </Link> : null}
+          {!keyword.trim() ? <Link className="rn-contact-shortcut is-group" to="/contacts/group-applications">
+            <span><RNAssetIcon assetURL={groupsIconURL} /></span>
+            <strong>群聊验证</strong>
+          </Link> : null}
+          {!keyword.trim() ? <Link className="rn-contact-shortcut is-group-list" to="/contacts/groups">
+            <span><RNAssetIcon assetURL={groupsIconURL} /></span>
+            <strong>我的群聊</strong>
+          </Link> : null}
           {loading && contacts.length === 0 ? (
             <div className="rn-contacts-loading" aria-label="正在加载通讯录"><span /></div>
           ) : error && contacts.length === 0 ? null : entries.length ? (

@@ -1,0 +1,120 @@
+.auth-profile-editor-page {
+  min-height: 100dvh;
+  color: var(--im-profile-text-primary);
+  background: var(--im-profile-page-background);
+}
+
+.auth-profile-editor-surface {
+  width: min(100%, 480px);
+  min-height: 100dvh;
+  margin: 0 auto;
+}
+
+.auth-profile-editor-surface > header {
+  display: grid;
+  min-height: calc(48px + var(--im-safe-top));
+  align-items: end;
+  padding: var(--im-safe-top) 16px 0;
+  grid-template-columns: 64px 1fr 64px;
+}
+
+.auth-profile-editor-surface > header h1 {
+  align-self: center;
+  margin: 0;
+  font-size: 18px;
+  line-height: 48px;
+  text-align: center;
+}
+
+.auth-profile-editor-surface > header button {
+  height: 48px;
+  padding: 0;
+  border: 0;
+  color: var(--im-profile-primary);
+  background: transparent;
+  font-size: 16px;
+}
+
+.auth-profile-editor-surface > header button:first-child {
+  color: var(--im-profile-text-primary);
+  font-size: 32px;
+  text-align: left;
+}
+
+.auth-profile-editor-surface > header button:last-child {
+  text-align: right;
+}
+
+.auth-profile-gender-card {
+  overflow: hidden;
+  margin: 16px;
+  border-radius: 12px;
+  background: var(--im-profile-card-background);
+}
+
+.auth-profile-gender-card button {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  align-items: center;
+  padding: 0 16px;
+  border: 0;
+  color: var(--im-profile-text-primary);
+  background: transparent;
+  font-size: 16px;
+  text-align: left;
+}
+
+.auth-profile-gender-card button:not(:last-child)::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 16px;
+  height: var(--im-hairline-width);
+  background: var(--im-profile-divider);
+  content: '';
+}
+
+.auth-profile-gender-card button span {
+  flex: 1;
+}
+
+.auth-profile-gender-card button strong {
+  color: var(--im-profile-primary);
+  font-size: 18px;
+}
+
+.auth-profile-bio-editor {
+  padding: 16px;
+}
+
+.auth-profile-bio-editor textarea {
+  display: block;
+  width: 100%;
+  min-height: 160px;
+  resize: none;
+  padding: 16px;
+  border: 0;
+  border-radius: 12px;
+  outline: 0;
+  color: var(--im-profile-text-primary);
+  background: var(--im-profile-card-background);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.auth-profile-bio-editor span {
+  display: block;
+  margin-top: 8px;
+  color: var(--im-profile-text-muted);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: right;
+}
+
+@media (min-width: 481px) {
+  .auth-profile-editor-surface {
+    box-shadow: 0 0 0 1px var(--im-profile-divider);
+  }
+}

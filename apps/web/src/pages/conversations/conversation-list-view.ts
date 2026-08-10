@@ -2,7 +2,7 @@ import type {
   Conversation,
   Message,
   WebIMConversationListItem,
-} from '@im28/im-sdk-web';
+} from '@im28/im-sdk/web';
 
 /** 会话列表摘要同时标记草稿语义，供行组件使用 RN 对应颜色。 */
 export interface ConversationListPreview {

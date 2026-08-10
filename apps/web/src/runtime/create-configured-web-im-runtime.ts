@@ -10,7 +10,7 @@ import {
   parseWebIMRuntimeConfig,
   type GatewayWebSocketConstructor,
   type WebIMRuntime,
-} from '@im28/im-sdk-web';
+} from '@im28/im-sdk/web';
 import sqlWasmURL from 'sql.js/dist/sql-wasm.wasm?url';
 
 /** 从当前 Vite 环境和浏览器原生能力创建唯一 Web IM runtime。 */

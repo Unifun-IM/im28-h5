@@ -1,0 +1,70 @@
+{
+  "name": "@im28/im-sdk",
+  "version": "0.1.0",
+  "description": "Shared IM28 business SDK with isolated React Native, Web, and Desktop runtimes. Generated web distribution.",
+  "private": true,
+  "type": "module",
+  "main": "./dist/core/index.js",
+  "types": "./dist/core/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js",
+      "default": "./dist/core/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/core.d.ts",
+      "import": "./dist/core/core.js",
+      "default": "./dist/core/core.js"
+    },
+    "./sync": {
+      "types": "./dist/core/sync/index.d.ts",
+      "import": "./dist/core/sync/index.js",
+      "default": "./dist/core/sync/index.js"
+    },
+    "./web": {
+      "types": "./dist/web/platforms/web/index.d.ts",
+      "import": "./dist/web/platforms/web/index.js",
+      "default": "./dist/web/platforms/web/index.js"
+    },
+    "./openapi": {
+      "types": "./dist/core/openapi/index.d.ts",
+      "import": "./dist/core/openapi/index.js",
+      "default": "./dist/core/openapi/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-native": ">=0.75.0",
+    "react-native-nitro-modules": ">=0.35.0",
+    "react-native-nitro-sqlite": "^9.6.0",
+    "sql.js": "^1.14.1",
+    "zod": "^4.4.3"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    },
+    "react-native-nitro-modules": {
+      "optional": true
+    },
+    "react-native-nitro-sqlite": {
+      "optional": true
+    },
+    "sql.js": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.11.0"
+  }
+}

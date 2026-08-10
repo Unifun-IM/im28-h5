@@ -2,14 +2,14 @@
 
 > TYPE: RUNTIME_CONTRACT / AUTH_TRANSPORT
 > STATUS: W3_A2_IMPLEMENTED / REAL_SMOKE_PENDING
-> OWNER: `packages/im-sdk-web/src/runtime/**`
+> OWNER: `../im28-sdk/src/platforms/web/runtime/**`
 > AXIOM: Gateway owns remote truth; the Web runtime owns browser transport lifecycle and never invents a second Gateway protocol.
 
 ## 1. Runtime Topology
 
 ```text
 apps/web config + pages
--> @im28/im-sdk-web runtime facade
+-> @im28/im-sdk/web runtime facade
 -> @im28/im-sdk/web Gateway HTTP/WebSocket clients
 -> Gateway
 
@@ -52,7 +52,7 @@ OpenIM documents Web as platform ID `5`: <https://docs.openim.io/sdks/enum/platf
 
 ## 4. Shared Gateway Contract
 
-| channel | shared behavior reused from `@im28/im-sdk/web` |
+| channel | shared behavior reused from `@im28/im-sdk/core` |
 | :--- | :--- |
 | HTTP | base URL normalization, JSON envelope unwrap, Bearer header, request ID, language, typed login/register/refresh/logout/check-token/friend-list calls |
 | WebSocket | `user_id` and `device_id` query values, auth frame with token/platform/device, heartbeat, pong timeout, exponential reconnect and token-expired event |

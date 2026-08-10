@@ -11,7 +11,7 @@
 ## Goal
 
 - 建立可独立安装、构建和持续演进的 `im28-h5` npm workspace。
-- 建立浏览器 SDK owner，复用 `@im28/im-sdk/web` 并承接 SQLite/IndexedDB、Gateway 和同步运行时适配。
+- 在独立 `im28-sdk` Git 仓库建立浏览器平台 owner，以 `@im28/im-sdk/core` 复用公共逻辑，并通过 `@im28/im-sdk/web` 交付 SQLite/IndexedDB、Gateway 和同步运行时适配。
 - 以纵向切片逐步交付认证、会话和消息能力，每个切片都有明确验证和残留项。
 - 以 `im28-phone` 为视觉、资产、页面行为和能力源，按 React Router SPA 路由逐页完成可追踪 parity 迁移。
 
@@ -20,14 +20,14 @@
 - `apps/web/**`：Vite + React H5 应用壳及后续页面能力。
 - 页面切换统一由 React Router 管理，页面组件不自行操作 History API。
 - RN 样式、静态资产、页面状态与 API 能力只做浏览器适配，不另行设计。
-- `packages/im-sdk-web/**`：浏览器 SDK、存储适配和后续 Gateway runtime。
+- `../im28-sdk/src/platforms/web/**`：浏览器 SDK、存储适配和后续 Gateway runtime。
 - `docs/active/h5-foundation/**`：当前阶段的 plan/status/workset 真相源。
 - `architecture.md`、`README.md`、`docs/web-im-storage.md`：稳定边界和已实现事实。
 
 ## Non-goals
 
 - 不把当前可运行 H5 页面骨架视为 RN 视觉/交互迁移完成。
-- 不复制 `im28-phone/packages/im-sdk` 已有的 DTO、Repository、Gateway client 和数据库 contract。
+- 不复制 `im28-sdk` 已有的 DTO、Repository、Gateway client 和数据库 contract。
 - 不直接复用 React Native runtime/`StyleSheet`，不在页面中调用 Gateway/OpenAPI，也不以第三方近似图标替换已有 RN 资产。
 - 不在 Worker 与多标签页 writer 实现及浏览器并发证据完成前声明浏览器存储达到生产级并发能力。
 - 不改变 `im28-phone` React Native 应用或原生工程。
@@ -37,11 +37,11 @@
 | area | current truth | source |
 | :--- | :--- | :--- |
 | Web application | Vite + React Router 根壳、404 与 authenticated `PrimaryTabsLayout` 已实现 | `apps/web`; `architecture.md` |
-| RN parity foundation | 迁移合同已冻结；466 个资产按字节同步；light/dark CSS token 已建立；auth entry、conversation、chat、contacts、calls、me/profile/security、global tab shell core 均为 done-local/acceptance-gated；general-settings/remaining auth decomposition active | `docs/rn-h5-migration-contract.md`; `apps/web/src/assets/rn`; `apps/web/src/styles/rn-theme.css` |
-| shared SDK | `@im28/im-sdk/web` 已提供平台中立 contract、Repository 和 Gateway client | `../im28-phone/packages/im-sdk/src/web.ts` |
-| Web SDK/runtime | `sql.js + IndexedDB`、login/register/account-credential auth-bound lifecycle、共享 mutation queue、HTTP/realtime sync、remote contact list、call-record cache/sync/delete、current-profile read/update 与 public platform-term adapter 已实现；当前 workspace 共 70 个聚焦测试 | `packages/im-sdk-web/src/runtime/**`; `packages/im-sdk-web/src/storage/**`; `packages/im-sdk-web/src/sync/**` |
+| RN parity foundation | 迁移合同已冻结；466 个资产按字节同步；auth entry、conversation、chat、contacts、friend/group applications、calls、me/profile/security、settings、global tab shell 与 onboarding core 均为 local/acceptance-gated；valid authenticated data/mutations、onboarding context、cache/network blocked or gated | `docs/rn-h5-migration-contract.md`; `apps/web/src/assets/rn`; `apps/web/src/styles/rn-theme.css` |
+| shared SDK | `@im28/im-sdk/core` 提供平台中立 contract、Repository 和 Gateway client | `../im28-sdk/src/core.ts` |
+| Web SDK/runtime | `sql.js + IndexedDB`、login/register/account-credential auth-bound lifecycle、notification/permission settings facade、public platform-term/client-version adapters、共享 mutation queue、HTTP/realtime sync、remote contact list、call-record cache/sync/delete、current-profile read/update 已实现；当前 workspace 共 81 个聚焦测试 | `../im28-sdk/src/platforms/web/runtime/**`; `../im28-sdk/src/platforms/web/storage/**`; `../im28-sdk/src/sync/**` |
 | Gateway runtime | 本地 auth/realtime/account DB 实现与验证已通过；真实环境 smoke 保留为 deployment gate | `docs/runtime-contracts/web-gateway-runtime.md` |
-| package shape | npm workspace 已分为 `apps/web` 与 `packages/im-sdk-web` | `package.json` |
+| package shape | H5 workspace 仅保留 `apps/web`；浏览器 SDK 已迁入独立兄弟 Git 仓库 | `package.json`; `../im28-sdk/package.json` |
 
 ## Workstreams
 
@@ -55,7 +55,7 @@
 ### `W2` Workspace 与浏览器 SDK 基础
 
 - focus:
-  - 建立 npm workspace、Vite React App、React Router 路由 owner、独立 Web SDK package。
+  - 建立 npm workspace、Vite React App、React Router 路由 owner，并把 Web runtime 收敛进统一 `@im28/im-sdk` 多入口包。
   - 将现有 SQLite/IndexedDB 实现迁入 Web SDK owner，并由 App 完成最小编译接入。
 - exit:
   - 根级 `npm run verify` 覆盖 App 与 SDK，开发服务器可在浏览器打开。
@@ -95,20 +95,21 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；缺少部署 URL �
 
 - focus:
   - 以 RN screen/component/theme/assets/service 为源，按 auth entry、conversation、chat、contacts、global tab shell、remaining auth/tabs 的顺序迁移。
-  - 页面与全屏状态使用 React Router SPA；UI 只调用 `@im28/im-sdk-web` facade。
+  - 页面与全屏状态使用 React Router SPA；UI 只调用 `@im28/im-sdk/web` facade。
+  - onboarding 按 `route/state owner -> invite register retry -> complete-profile core` 推进；pending verification secret 只驻留内存，avatar/contact 缺口独立冻结。
 - exit:
   - 已迁移页面具有源映射、RN 资产、明暗主题、响应式、路由和真实 API 证据；不存在 generic placeholder 视觉或第二条 API 链。
 
 ## Entry Criteria
 
 - H5 迁移方向和 `sql.js + IndexedDB` 存储基础已确定。
-- 共享 `@im28/im-sdk/web` 可作为浏览器 package 的底层 contract。
+- 共享 `@im28/im-sdk/core` 是浏览器 runtime 的唯一底层 contract。
 - 用户已明确授权先创建项目骨架与 SDK。
 - 用户已明确要求所有样式、资产、SDK/API 调用和页面切换分别以 RN、Web SDK facade 和 React Router SPA 为唯一来源。
 
 ## Exit Criteria
 
-- `apps/web` 和 `packages/im-sdk-web` owner 边界稳定。
+- `apps/web` 和 `../im28-sdk/src/platforms/web` owner 边界稳定。
 - 登录、连接、会话和文本消息形成真实纵向链路。
 - 已迁移页面通过 `docs/rn-h5-migration-contract.md` 的视觉、资产、API 和路由 parity gates。
 - 根级验证、浏览器冒烟和关键持久化回归均有证据。
@@ -117,9 +118,9 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；缺少部署 URL �
 ## Verification Ladder
 
 1. package scoped:
-   - `npm run typecheck -w @im28/im-sdk-web`
-   - `npm run test -w @im28/im-sdk-web`
-   - `npm run build -w @im28/im-sdk-web`
+   - `npm --prefix ../im28-sdk run typecheck:web`
+   - `npm --prefix ../im28-sdk run test:web`
+   - `npm --prefix ../im28-sdk run build:web`
 2. Web App:
    - `npm run typecheck -w @im28/h5-web`
    - `npm run build -w @im28/h5-web`

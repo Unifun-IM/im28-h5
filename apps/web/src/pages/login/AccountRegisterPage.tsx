@@ -8,6 +8,7 @@ import eyeIconURL from '../../assets/rn/screens/auth/assets/eye-icon.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { AuthAgreement } from './AuthAgreement.js';
+import { useAuthOnboarding } from './AuthOnboardingProvider.js';
 import {
   ACCOUNT_CREDENTIAL_ERROR,
   CONFIRM_PASSWORD_MISMATCH_ERROR,
@@ -25,6 +26,8 @@ export function AccountRegisterPage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // navigate 管理返回账号登录与注册成功 replace。
   const navigate = useNavigate();
+  // onboarding owner 记录账号注册后的资料完善意图。
+  const { marker, markProfileRequired } = useAuthOnboarding();
   // account 保存待注册账号。
   const [account, setAccount] = useState('');
   // password 保存首个密码输入。
@@ -53,17 +56,22 @@ export function AccountRegisterPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (snapshot.userID) navigate('/conversations', { replace: true });
-  }, [navigate, snapshot.userID]);
+    if (!submitting && snapshot.userID) {
+      navigate(marker?.userID === snapshot.userID ? '/auth/complete-profile' : '/conversations', { replace: true });
+    }
+  }, [marker?.userID, navigate, snapshot.userID, submitting]);
 
-  /** 执行真实账号注册并进入会话列表。 */
+  /** 执行真实账号注册并进入资料完善 route。 */
   async function submitRegistration(): Promise<void> {
     if (!runtime || submitting) return;
     setSubmitting(true);
     setError(null);
     try {
-      await runtime.register({ type: 'account', account, password });
-      navigate('/conversations', { replace: true });
+      // registeredSnapshot 已完成 session、account DB 与 realtime 建立。
+      const registeredSnapshot = await runtime.register({ type: 'account', account, password });
+      if (!registeredSnapshot.userID) throw new Error('注册成功但未返回用户 ID。');
+      markProfileRequired(registeredSnapshot.userID, 'account');
+      navigate('/auth/complete-profile', { replace: true });
     } catch (cause) {
       setError(readAuthError(cause, '注册失败'));
     } finally {

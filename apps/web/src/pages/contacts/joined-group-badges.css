@@ -1,0 +1,64 @@
+.rn-joined-group-badges {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.rn-joined-group-badges em {
+  height: 16px;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 16px;
+}
+
+.rn-joined-group-badges .is-creator {
+  color: #18376a;
+  background: rgba(24, 55, 106, 0.05);
+}
+
+.rn-joined-group-badges .is-owner {
+  color: #fd5e5b;
+  background: rgba(253, 94, 91, 0.05);
+}
+
+.rn-joined-group-badges .is-admin {
+  color: #985d13;
+  background: rgba(152, 93, 19, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .rn-joined-group-badges .is-creator {
+    color: #91adf2;
+    background: rgba(145, 173, 242, 0.12);
+  }
+
+  :root:not([data-theme='light']) .rn-joined-group-badges .is-owner {
+    color: #ff8b89;
+    background: rgba(255, 139, 137, 0.12);
+  }
+
+  :root:not([data-theme='light']) .rn-joined-group-badges .is-admin {
+    color: #e8b56f;
+    background: rgba(232, 181, 111, 0.12);
+  }
+}
+
+:root[data-theme='dark'] .rn-joined-group-badges .is-creator {
+  color: #91adf2;
+  background: rgba(145, 173, 242, 0.12);
+}
+
+:root[data-theme='dark'] .rn-joined-group-badges .is-owner {
+  color: #ff8b89;
+  background: rgba(255, 139, 137, 0.12);
+}
+
+:root[data-theme='dark'] .rn-joined-group-badges .is-admin {
+  color: #e8b56f;
+  background: rgba(232, 181, 111, 0.12);
+}

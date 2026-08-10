@@ -124,6 +124,54 @@
   padding-bottom: 12px;
 }
 
+.rn-contact-shortcut {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 16px;
+  padding-left: 16px;
+  color: var(--im-text-primary);
+  background: var(--im-bg-app);
+  text-decoration: none;
+}
+
+.rn-contact-shortcut > span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border-radius: 20px;
+  color: var(--im-text-inverse);
+  background: var(--im-status-danger);
+}
+
+.rn-contact-shortcut.is-group > span {
+  background: var(--im-brand-primary);
+}
+
+.rn-contact-shortcut.is-group-list > span {
+  background: var(--im-status-info);
+}
+
+.rn-contact-shortcut .rn-asset-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.rn-contact-shortcut > strong {
+  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  flex: 1;
+  align-items: center;
+  padding-right: 32px;
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
 .rn-contact-section {
   display: flex;
   min-height: 28px;

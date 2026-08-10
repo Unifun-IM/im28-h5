@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { GatewayUser } from '@im28/im-sdk-web';
+import type { GatewayUser } from '@im28/im-sdk/web';
 import { Link, Navigate } from 'react-router-dom';
 
 import backgroundImageURL from '../../assets/rn/assets/my/bg.jpg';

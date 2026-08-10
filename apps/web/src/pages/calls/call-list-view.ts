@@ -1,4 +1,4 @@
-import type { GatewayCall } from '@im28/im-sdk-web';
+import type { GatewayCall } from '@im28/im-sdk/web';
 
 /** 获取通话记录稳定 ID。 */
 export function getCallID(call: GatewayCall): string {

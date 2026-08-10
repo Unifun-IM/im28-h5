@@ -1,0 +1,71 @@
+.rn-friend-application-dialog-backdrop {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background: rgba(0, 0, 0, 0.36);
+}
+
+.rn-friend-application-dialog {
+  width: min(311px, 100%);
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--im-bg-page);
+}
+
+.rn-friend-application-dialog-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  flex-direction: column;
+}
+
+.rn-friend-application-dialog-content strong {
+  width: 100%;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-friend-application-dialog-content p,
+.rn-friend-application-dialog-content small {
+  width: 100%;
+  margin: 0;
+  color: var(--im-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.rn-friend-application-dialog-content small {
+  color: var(--im-text-muted);
+  line-height: 12px;
+}
+
+.rn-friend-application-dialog-actions {
+  display: grid;
+  min-height: 56px;
+  grid-template-columns: 1fr 1fr;
+  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+}
+
+.rn-friend-application-dialog-actions button {
+  border: 0;
+  color: var(--im-text-secondary);
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.rn-friend-application-dialog-actions button + button {
+  border-left: var(--im-hairline-width) solid var(--im-border-subtle);
+}
+
+.rn-friend-application-dialog-actions button.is-primary {
+  color: var(--im-brand-primary);
+}

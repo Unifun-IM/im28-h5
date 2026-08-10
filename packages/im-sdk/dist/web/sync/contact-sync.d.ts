@@ -1,0 +1,27 @@
+import { type GatewayHTTPClient } from '@im28/im-sdk/core';
+/** 页面可消费的标准化好友记录。 */
+export interface WebIMContact {
+    readonly userID: string;
+    readonly displayName: string;
+    readonly nickname: string;
+    readonly remark: string;
+    readonly avatarURL: string;
+    readonly isStarred: boolean;
+    readonly addedAt: string;
+}
+/** 通讯录远端分页参数。 */
+export interface WebIMContactListOptions {
+    readonly pageSize?: number;
+}
+/** 页面可消费的认证通讯录能力。 */
+export interface WebIMContactSync {
+    list(options?: WebIMContactListOptions): Promise<readonly WebIMContact[]>;
+}
+/** 通讯录能力只依赖 runtime 已持有的 Gateway 与认证 owner。 */
+export interface WebIMContactSyncDependencies {
+    readonly gatewayClient: GatewayHTTPClient;
+    readonly getCurrentUserID: () => string | null;
+}
+/** 创建只通过共享 Gateway client 读取好友列表的 Web facade。 */
+export declare function createWebIMContactSync(dependencies: WebIMContactSyncDependencies): WebIMContactSync;
+//# sourceMappingURL=contact-sync.d.ts.map

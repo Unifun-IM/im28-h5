@@ -1,5 +1,5 @@
 import { useMemo, type RefObject } from 'react';
-import type { Message } from '@im28/im-sdk-web';
+import type { Message } from '@im28/im-sdk/web';
 
 import { ChatMessageBubble } from './ChatMessageBubble.js';
 import { buildChatMessageListEntries } from './chat-message-list-view.js';

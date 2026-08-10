@@ -4,7 +4,7 @@ import {
   createWebIMDeviceIdentityStore,
   createWebIMRuntime,
   parseWebIMRuntimeConfig,
-} from '../packages/im-sdk-web/dist/index.js';
+} from '@im28/im-sdk/web';
 
 /** Smoke 进程内 storage 不跨运行持久化任何凭据。 */
 class MemoryStorage {

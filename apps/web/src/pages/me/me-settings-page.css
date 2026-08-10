@@ -1,0 +1,218 @@
+.rn-me-settings-card {
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--im-profile-card-background);
+}
+
+.rn-me-settings-card.is-gap {
+  margin-top: 16px;
+}
+
+.rn-me-settings-content.is-permission {
+  display: grid;
+  gap: 16px;
+}
+
+.rn-me-settings-content.is-permission .rn-me-settings-error {
+  margin-bottom: 0;
+}
+
+.rn-me-settings-row,
+.rn-me-settings-choice,
+.rn-me-settings-switch-row {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 0 16px;
+  border: 0;
+  color: var(--im-profile-text-primary);
+  background: var(--im-profile-card-background);
+  font-size: 16px;
+  letter-spacing: 0;
+  line-height: 24px;
+  text-decoration: none;
+}
+
+.rn-me-settings-row:active,
+.rn-me-settings-choice:active {
+  background: var(--im-profile-row-pressed);
+}
+
+.rn-me-settings-row > .rn-me-settings-label,
+.rn-me-settings-choice > span,
+.rn-me-settings-switch-row > span {
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.rn-me-settings-trailing {
+  display: flex;
+  min-width: 0;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.rn-me-settings-trailing > strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--im-profile-text-muted);
+  font-size: 14px;
+  font-weight: 300;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-me-settings-row .rn-asset-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  color: var(--im-profile-text-muted);
+}
+
+.rn-me-settings-action-row {
+  cursor: pointer;
+}
+
+.rn-me-settings-action-row:disabled {
+  cursor: default;
+}
+
+.rn-me-settings-notice {
+  margin: 0 0 12px;
+  color: var(--im-profile-text-secondary);
+  font-size: 13px;
+  text-align: center;
+}
+
+.rn-me-version-dialog p {
+  white-space: pre-line;
+}
+
+.rn-me-version-dialog > div.is-single {
+  grid-template-columns: 1fr;
+}
+
+.rn-me-version-dialog a {
+  display: grid;
+  height: 48px;
+  place-items: center;
+  color: var(--im-profile-primary);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.rn-me-settings-choice {
+  cursor: pointer;
+}
+
+.rn-me-settings-row:not(:last-child)::after,
+.rn-me-settings-choice:not(.is-last)::after,
+.rn-me-settings-switch-row:not(:last-child)::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 16px;
+  height: var(--im-hairline-width);
+  background: var(--im-profile-divider);
+  content: '';
+}
+
+.rn-me-settings-choice > strong {
+  width: 24px;
+  color: var(--im-profile-primary);
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.rn-me-settings-switch {
+  position: relative;
+  width: 50px;
+  height: 30px;
+  flex: 0 0 50px;
+  padding: 0;
+  border: 0;
+  border-radius: 15px;
+  background: #d1d1d6;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.rn-me-settings-switch > span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+  transition: transform 160ms ease;
+}
+
+.rn-me-settings-switch[aria-checked='true'] {
+  background: var(--im-profile-primary);
+}
+
+.rn-me-settings-switch[aria-checked='true'] > span {
+  transform: translateX(20px);
+}
+
+.rn-me-settings-switch:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.rn-me-settings-error.is-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rn-me-settings-error.is-action button,
+.rn-me-terms-state button {
+  border: 0;
+  color: var(--im-profile-primary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.rn-me-settings-surface.is-terms {
+  display: flex;
+  height: 100dvh;
+  flex-direction: column;
+}
+
+.rn-me-terms-frame {
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  border: 0;
+  background: var(--im-profile-page-background);
+}
+
+.rn-me-terms-state {
+  display: grid;
+  min-height: 240px;
+  place-content: center;
+  gap: 12px;
+  color: var(--im-profile-text-secondary);
+  font-size: 14px;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rn-me-settings-switch,
+  .rn-me-settings-switch > span {
+    transition: none;
+  }
+}

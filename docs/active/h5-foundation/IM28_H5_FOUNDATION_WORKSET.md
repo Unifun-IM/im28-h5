@@ -3,7 +3,7 @@
 | field | value |
 | :--- | :--- |
 | status | `active` |
-| active_slice | `W6.a5.2.7-general-settings-decomposition` |
+| active_slice | `W6.a5.2.12-joined-groups-core` |
 | verification_floor | `npm run verify` plus local browser smoke |
 
 ## Workstream Ledger
@@ -21,7 +21,8 @@
 
 | item | type | owner | target output | verification | status | next activation rule |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `W2.a1` | code/docs | workspace + sdk + app | npm workspace、`@im28/im-sdk-web`、Vite React Router App | `npm run verify`; browser smoke | `done` | closed 2026-08-09 |
+| `W2.a1` | code/docs | workspace + sdk + app | npm workspace、`@im28/im-sdk/web`、Vite React Router App | `npm run verify`; browser smoke | `done` | closed 2026-08-09 |
+| `W2.a2-unified-multi-runtime-sdk` | architecture/refactor | `im28-sdk` + RN/H5 consumers | single npm package、shared `src/sync`、isolated RN/Web/Desktop entries、app-local SDK removal | SDK typecheck/29 files 89 tests/build:all/pack dry-run + RN tsc + H5 verify | `done` | closed 2026-08-10；Desktop concrete driver remains Electron-app choice |
 | `W2.closeout` | verification/docs | docs + workspace | 状态、架构、cleanup 和证据回写 | trio consistency + root gate | `done` | closed 2026-08-09 |
 | `W3.a1` | contract/design | sdk runtime | Gateway runtime contract、auth/token owner 与配置边界 | 4 test files / 11 tests + workspace verify | `done` | closed 2026-08-09 |
 | `W3.a2-local` | code/verification | sdk runtime + storage | browser auth/realtime、account SQLite lifecycle、privacy gate | shared SDK test + H5 25 tests + Chromium SQLite smoke | `done` | closed 2026-08-09 |
@@ -55,21 +56,36 @@
 | `W6.a5.2.6-account-security` | design | web me security + sdk/runtime facade | RN security screen/operation/route matrix with bounded real mutations only | source/API/export/session-side-effect trace | `decomposed` | account credential child done-local/acceptance-gated；contact verification remains blocked-contract |
 | `W6.a5.2.6.1-account-credential` | code/verification | web me security + sdk runtime | security root、set account/password、old-password reset with revoked-session cleanup | 3 focused tests + 25/70 verify + authenticated responsive/history/guest browser matrix | `done-local/acceptance-gated` | approved real set/reset Network/result + dark proof |
 | `W6.a5.2.6.2-contact-security` | contract/code | web me security + sdk/runtime facade | phone/email bind or change with verified-code lifecycle | send-code + mutation contract and real verification flow | `blocked-contract` | Gateway exposes a real send-code operation or product explicitly changes scope |
-| `W6.a5.2.7-general-settings` | design | web me settings + sdk/runtime facade | display、notification、permission、network、terms、version/cache route/capability matrix | RN source/API/route owner trace | `active-decomposition` | freeze ready/missing operations and activate at most three bounded real capabilities |
+| `W6.a5.2.7-general-settings` | design | web me settings + sdk/runtime facade | display、notification、permission、network、terms、version/cache route/capability matrix | RN source/API/route owner trace | `decomposed/active-children` | continue bounded children without mixing browser-blocked contracts |
+| `W6.a5.2.7.1-display-notification-terms` | code/verification | web me settings + sdk runtime | RN display preference、real notification detail/update facade、real terms routes | 2 focused tests + 26/72 verify + authenticated responsive/theme/history/guest browser matrix | `done-local/acceptance-gated` | approved notification update + Safari/Firefox route/theme proof |
+| `W6.a5.2.7.2-permission-settings` | code/verification | web me settings + sdk runtime | five RN permission switches through authenticated detail/update operations | 3 focused settings tests + 26/73 verify + real-read responsive/history/reload/guest browser matrix | `done-local/acceptance-gated` | approved real update Network/result + Safari/Firefox proof；blacklist remains separate |
+| `W6.a5.2.7.3-network-settings` | contract | deployment + web settings | Web-equivalent proxy/network semantics | deployment proxy contract | `blocked-browser-semantics` | browser-safe proxy/config owner is defined |
+| `W6.a5.2.7.4-cache-version` | contract | storage/deployment + web settings | browser cache scope/clear and Web update semantics | RN/shared SDK/storage/deployment trace + destructive/anti-fake review | `contract-frozen/decomposed` | version child done-local/acceptance-gated；cache child blocked-storage-semantics |
+| `W6.a5.2.7.4-cache-contract` | contract/code | storage/runtime | disposable storage registry + lifecycle-safe current-account inspect/clear | preserve local-only data + isolated destructive tests + Worker/Web Lock recovery | `blocked-storage-semantics` | disposable data is separable from drafts/failed/sending/pending state |
+| `W6.a5.2.7.5-web-version-check` | code/verification | web runtime config + settings | required build identity、public check adapter、RN version row/update modal | 11 focused tests + 27/81 verify + authenticated no-update + responsive/reload/guest proof | `done-local/acceptance-gated` | real `need_update=true` optional/forced response and update target proof |
+| `W6.a5.2.8-invite-complete-profile-contract-freeze` | contract/design | auth onboarding + sdk/runtime | RN invite/profile route、operation and post-register state matrix | source/API/caller trace + anti-placeholder/anti-fake review | `done` | closed 2026-08-10；decomposed into route-state/invite/profile children plus explicit avatar/contact blockers |
+| `W6.a5.2.8.1-onboarding-route-state` | code/verification | web auth routing + onboarding state | register/login split、memory-only pending registration、account-scoped marker and route guards | 4 state tests + caller tests + full verify + missing-marker browser guards | `done-local/acceptance-gated` | valid register context proof joins `.8.3` acceptance；no credential persistence |
+| `W6.a5.2.8.2-invite-page` | code/verification | web auth invite + runtime register | RN invite UI and retry through existing register optional `invite_code` | register body/error tests + responsive/history proof | `done-local/acceptance-gated` | approved invite-required response + valid-context visuals；no standalone invite validation |
+| `W6.a5.2.8.3-complete-profile-core` | code/verification | web auth profile + existing profile facade | RN profile core、memory draft、gender/bio SPA subroutes and real current-detail/update | 10 focused app tests + full 27/81 verify + base/gender/bio anonymous guards passed；valid-context matrix pending | `implemented-local/acceptance-gated` | active until approved register/profile Network/result + responsive/light/dark/history proof；avatar/contact actions omitted |
+| `W6.a5.2.8.4-onboarding-real-acceptance` | deployment verification | web auth + deployment owner | approved register/optional invite/profile mutation and valid-context visual/history evidence | Network/result + 390x844/760x900 light/dark/back/forward/reload | `blocked-external` | approved disposable new account and mutation authorization available；never fabricate marker/session |
+| `W6.a5.2.9-blacklist-core` | code/verification | web me + sdk sync | RN blacklist list/search/remove/confirm route through shared Gateway operations | 4 facade + 4 filter tests + 28/85 verify + guest guard/cleanup | `done-local/acceptance-gated` | approved authenticated list/remove + responsive/light/dark/history proof；no unsupported add flow |
+| `W6.a5.2.10-friend-applications-core` | code/verification | web contacts + sdk sync | RN standalone friend application list/search/group/status/accept through shared Gateway operations | 4 facade + 5 view tests + 29/89 SDK verify + build:web package sync + guest guard | `implemented-local/acceptance-gated` | approved authenticated list/accept + responsive/light/dark/history proof；no fake session or unsupported unread/group/profile/reject path |
+| `W6.a5.2.11-group-applications-core` | code/verification | web contacts + sdk sync | RN group verification index、per-group application list/search/section/status and accept/reject through one audit facade | 4 facade + 5 view tests + 30/93 SDK verify + build:web package sync + index/detail guest guards | `implemented-local/acceptance-gated` | approved group-admin audit/accept/reject + responsive/light/dark/history proof；no fake session or unsupported unread/profile/manage/member-join path |
+| `W6.a5.2.12-joined-groups-core` | code/verification | web contacts + sdk sync | RN 我的群聊 cache-first list/search/status/role and conversation opening through shared group/conversation facades | 4 cache/auth/pagination/dedupe/mapping/failure tests + 5 pure view tests + 31/97 verify + guest guard | `implemented-local/acceptance-gated` | local implementation and gates passed 2026-08-10；real account data/open-conversation and responsive theme/history proof remain acceptance gates |
 | `W6.closeout` | verification/docs | web app + sdk + docs | migrated route parity evidence and residual ledger | `npm run verify` + browser matrix + real Gateway flow | `planned` | W6.a2-a5 accepted |
 
 ## Active Slice Card
 
 | field | value |
 | :--- | :--- |
-| slice_id | `W6.a5.2.7-general-settings-decomposition` |
-| goal | 冻结 RN 通用设置分支的 route、API、浏览器能力边界，再选择下一组真实能力 |
-| source_anchor | RN `ProfileScreen` general settings rows and their hooks/services/Gateway exports |
-| target_owner | future me/settings pages；Web runtime/sync facade；`App.tsx` route ledger |
-| expected_deliverable | display/notification/permission/network/terms/version/cache ready/missing matrix and bounded next child slice |
-| verification_shape | source/API/route trace + primary-path/delete-or-register review；不创建占位 route |
-| stop_condition | native-only behavior or missing backend contract must remain explicit debt；不得以 local fake setting 替代 |
-| residual_seed | `W6.closeout` and remaining ordered W6.a5 slices |
+| slice_id | `W6.a5.2.12-joined-groups-core` |
+| goal | 建立 contacts shortcut -> `/contacts/groups` -> cache-first list/remote sync -> conversation route 的唯一主链 |
+| source_anchor | RN 72px group row/search/status/role badges；shared Gateway `myGroupList`、`GroupRepository` and conversation facade |
+| target_owner | Web sync joined-group facade + contacts groups page + App route；shared client remains endpoint/envelope owner |
+| expected_deliverable | authenticated cached list、token pagination、dedupe/normalization/server order、remote-success replace、search/status/role/empty/error/loading states and contacts entry |
+| verification_shape | cache/auth/pagination/dedupe/mapping/failure unit tests + view tests + typecheck/build/verify + mobile/desktop light/dark/history/guest smoke |
+| stop_condition | no create-group、long-press actions、group profile/manage/member mutation、page fetch、mock list、failure-as-success or second storage owner |
+| residual_seed | authenticated data/open-conversation and exact visual proof require an approved account；create/manage/member capabilities remain later slices |
 
 ### Completed W6.a5.2.3 Migration Card
 
@@ -95,10 +111,15 @@
 | authenticated chat UI smoke | RN core 与 route 已本地实现，缺真实 Gateway 账号 | `apps/web/src/pages/chat` | history/send/realtime/list-back real browser flow smoke |
 | Worker SQL runtime | `done-local`: production App Worker、RPC/fatal parity 与 Vite build passed | storage worker | real-browser DB open evidence joins W5.a3 |
 | multi-tab writer | `done-local/gated-browser`: lifecycle owner 已接入，缺真实浏览器矩阵 | storage runtime | three-browser two-tab concurrency test |
-| Remaining RN route surfaces | phone/email/account/register、conversation、chat、contacts、calls、me/profile/security、shared tab shell core 均已移除 generic 视觉；general settings、invite、network 等尚未迁移 | `apps/web/src/app` + future feature owners | W6.a5.2 route/capability decomposition and per-slice evidence |
-| Contact cache/Pinyin parity | shared Web entry 未导出 `FriendshipRepository`；当前中文索引回退 `#` | `packages/im-sdk-web/src/sync/contact-sync.ts` + shared SDK contract owner | real account remote proof, then cache-first export/regression and Pinyin-equivalent grouping |
+| Remaining RN route surfaces | prior cores/settings/onboarding core 已移除 generic 视觉；valid onboarding context、network/cache remain gated | `apps/web/src/app` + feature owners | approved onboarding real flow；then continue explicit blocked/acceptance ledger |
+| Onboarding valid context | current authenticated session has no matching onboarding marker；不得伪造 marker 或创建/修改账号数据 | `apps/web/src/pages/login` + deployment owner | approved new account validates register/invite/profile Network/result and responsive light/dark/history |
+| Settings final acceptance | display/notification/terms local chain passed；notification real write and cross-browser evidence absent | `apps/web/src/pages/me/settings` + Web runtime | approved update Network/result + Safari/Firefox route/theme matrix |
+| Settings permission/network/cache/version | permission/version local chains passed；network browser-blocked；cache storage-blocked | settings/runtime/storage/deployment owners | real update response/write/cross-browser acceptance；cache awaits disposable-data separation |
+| Contact cache/Pinyin parity | shared Web entry 未导出 `FriendshipRepository`；当前中文索引回退 `#` | `../im28-sdk/src/sync/contact-sync.ts` + shared SDK contract owner | real account remote proof, then cache-first export/regression and Pinyin-equivalent grouping |
+| Joined groups final acceptance | local cache/sync/route 已完成，当前会话无真实账号群数据 | `apps/web/src/pages/contacts` + Web SDK groups facade | approved account proves cache-first list/full sync/search/status/role、conversation open and mobile/desktop light/dark/history；no injected session/data |
 | Me final acceptance | `/me` 已启用真实 route/capability；dark 与 real logout 证据尚缺 | `apps/web/src/pages/me` + Web sync/runtime | authenticated dark screenshot + real logout Network/session/DB cleanup proof |
 | Calls real-account proof | local session expired during closeout；不得以 fake session/mock list 替代 | `apps/web/src/pages/calls` + Web SDK calls facade | approved account validates Network/cache/filter/page/delete and 390x844/760x900 light/dark/history |
+| Blacklist real-account proof | local session is anonymous；不得以 mock list、injected session or unapproved destructive mutation替代 | `apps/web/src/pages/me` + Web SDK blacklist facade | approved account validates list/enrichment/search/theme/history and explicitly approved remove Network/result |
 | Verification-code send | shared Gateway OpenAPI 无 operation；不得用 countdown/fake success 替代 | shared SDK/Gateway contract owner | backend contract available or product explicitly accepts fixed-code environment |
 | Account-security final acceptance | account set/reset 本地链路已闭合，但真实 mutation 与 dark 证据未执行；contact mutation 缺 send-code contract | `apps/web/src/pages/me/security` + Web runtime | approved real set/reset Network/result/session cleanup + dark matrix；contact waits for real code-send contract |
-| upstream raw WS log | `resolved 2026-08-09`: canonical owner 已清除原始 payload 日志 | `im28-phone/packages/im-sdk` | shared SDK test + H5 `npm run verify` passed |
+| upstream raw WS log | `resolved 2026-08-09`: canonical owner 已清除原始 payload 日志 | `im28-sdk` | shared SDK test + H5 `npm run verify` passed |

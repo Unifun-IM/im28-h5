@@ -101,3 +101,10 @@ export function isValidRegistrationPassword(value: string): boolean {
 export function readAuthError(cause: unknown, fallback = '请稍后重试'): string {
   return cause instanceof Error && cause.message ? cause.message : fallback;
 }
+
+/** 对齐 RN，仅在 Gateway 错误明确包含 invite 语义时进入邀请码分支。 */
+export function isInviteCodeRequiredAuthError(cause: unknown): boolean {
+  // message 只用于识别服务端能力分支，不代表本地校验邀请码有效。
+  const message = readAuthError(cause, '').toLowerCase();
+  return message.includes('invite') || message.includes('邀请码');
+}

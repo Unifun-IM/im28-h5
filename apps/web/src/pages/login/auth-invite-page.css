@@ -1,0 +1,100 @@
+.auth-onboarding-overlay {
+  display: grid;
+  min-height: 100dvh;
+  padding: 32px;
+  color: var(--im-profile-text-primary);
+  background: var(--im-profile-sheet-backdrop);
+  place-items: center;
+}
+
+.auth-invite-card {
+  width: min(100%, 311px);
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--im-profile-card-background);
+}
+
+.auth-invite-content {
+  padding: 24px;
+}
+
+.auth-invite-content header {
+  text-align: center;
+}
+
+.auth-invite-content h1 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0;
+  line-height: 27px;
+}
+
+.auth-invite-content header p {
+  margin: 8px 0 0;
+  color: var(--im-profile-text-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.auth-invite-code {
+  position: relative;
+  display: block;
+  margin-top: 16px;
+}
+
+.auth-invite-code input {
+  position: absolute;
+  width: 100%;
+  height: 60px;
+  opacity: 0;
+}
+
+.auth-invite-code > span:last-child {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.auth-invite-code b {
+  display: grid;
+  height: 60px;
+  border-radius: 12px;
+  background: var(--im-profile-input-background);
+  font-size: 20px;
+  font-weight: 500;
+  place-items: center;
+}
+
+.auth-invite-card footer {
+  display: grid;
+  min-height: 56px;
+  border-top: var(--im-hairline-width) solid var(--im-profile-divider);
+  grid-template-columns: 1fr 1fr;
+}
+
+.auth-invite-card footer button {
+  border: 0;
+  color: var(--im-profile-text-secondary);
+  background: transparent;
+  font-size: 16px;
+}
+
+.auth-invite-card footer button + button {
+  border-left: var(--im-hairline-width) solid var(--im-profile-divider);
+}
+
+.auth-invite-card footer button.is-primary {
+  color: var(--im-profile-primary);
+}
+
+.auth-invite-card footer button:disabled {
+  opacity: 0.35;
+}
+
+.auth-onboarding-error {
+  margin: 12px 0 0;
+  color: var(--im-profile-danger);
+  font-size: 12px;
+  line-height: 16px;
+  overflow-wrap: anywhere;
+}

@@ -1,6 +1,10 @@
 dist/
+!packages/im-sdk/dist/
+!packages/im-sdk/dist/**
 node_modules/
 coverage/
 *.tsbuildinfo
 .env.local
 .env.*.local
+
+packages/im-sdk/dist/**/*.map

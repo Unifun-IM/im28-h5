@@ -3,7 +3,7 @@ import type {
   GatewayCall,
   WebIMCallAnswerStatus,
   WebIMCallSync,
-} from '@im28/im-sdk-web';
+} from '@im28/im-sdk/web';
 import { Navigate } from 'react-router-dom';
 
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';

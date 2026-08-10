@@ -1,0 +1,30 @@
+import * as apIpingtai from "./apIpingtai.js";
+import * as apIrenzheng from "./apIrenzheng.js";
+import * as apIyonghu from "./apIyonghu.js";
+import * as apItongyong from "./apItongyong.js";
+import * as apIzaixianzhuangtai from "./apIzaixianzhuangtai.js";
+import * as apIshezhi from "./apIshezhi.js";
+import * as apItongxunlu from "./apItongxunlu.js";
+import * as apIhuihua from "./apIhuihua.js";
+import * as apIxiaoxi from "./apIxiaoxi.js";
+import * as apIzidingyibiaoqing from "./apIzidingyibiaoqing.js";
+import * as apItonghua from "./apItonghua.js";
+import * as apIqunliao from "./apIqunliao.js";
+import * as systemjiankangjiancha from "./systemjiankangjiancha.js";
+declare const _default: {
+    apIpingtai: typeof apIpingtai;
+    apIrenzheng: typeof apIrenzheng;
+    apIyonghu: typeof apIyonghu;
+    apItongyong: typeof apItongyong;
+    apIzaixianzhuangtai: typeof apIzaixianzhuangtai;
+    apIshezhi: typeof apIshezhi;
+    apItongxunlu: typeof apItongxunlu;
+    apIhuihua: typeof apIhuihua;
+    apIxiaoxi: typeof apIxiaoxi;
+    apIzidingyibiaoqing: typeof apIzidingyibiaoqing;
+    apItonghua: typeof apItonghua;
+    apIqunliao: typeof apIqunliao;
+    systemjiankangjiancha: typeof systemjiankangjiancha;
+};
+export default _default;
+//# sourceMappingURL=index.d.ts.map

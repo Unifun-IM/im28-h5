@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { GatewayUser } from '@im28/im-sdk-web';
+import type { GatewayUser } from '@im28/im-sdk/web';
 import { Link, Navigate } from 'react-router-dom';
 
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
@@ -60,7 +60,10 @@ export function MeProfilePage() {
           <div className="rn-me-profile-card">
             <ProfileLinkRow label="昵称" value={nickname} href="/me/profile/nickname" />
             <ProfileLinkRow label="性别" value={getProfileGenderLabel(profile?.gender)} href="/me/profile/gender" />
-            <div className="rn-me-profile-row is-static"><span>ID</span><strong>{userID}</strong></div>
+            <div className="rn-me-profile-row is-static">
+              <span className="rn-me-profile-label">ID</span>
+              <span className="rn-me-profile-trailing"><strong>{userID}</strong></span>
+            </div>
             <ProfileLinkRow label="个性签名" value={bio || '未设置'} href="/me/profile/bio" last />
           </div>
         </div>
@@ -81,7 +84,11 @@ interface ProfileLinkRowProps {
 function ProfileLinkRow({ label, value, href, last = false }: ProfileLinkRowProps) {
   return (
     <Link className={`rn-me-profile-row${last ? ' is-last' : ''}`} to={href}>
-      <span>{label}</span><strong>{value}</strong><RNAssetIcon assetURL={arrowIconURL} />
+      <span className="rn-me-profile-label">{label}</span>
+      <span className="rn-me-profile-trailing">
+        <strong>{value}</strong>
+        <RNAssetIcon assetURL={arrowIconURL} />
+      </span>
     </Link>
   );
 }

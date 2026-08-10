@@ -1,7 +1,7 @@
 import {
   WEB_IM_PLATFORM_TERM_KEYS,
   type WebIMPlatformTerm,
-} from '@im28/im-sdk-web';
+} from '@im28/im-sdk/web';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 

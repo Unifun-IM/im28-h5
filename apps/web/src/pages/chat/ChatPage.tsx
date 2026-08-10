@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Conversation, Message } from '@im28/im-sdk-web';
+import type { Conversation, Message } from '@im28/im-sdk/web';
 import { Navigate, useParams } from 'react-router-dom';
 
 import { useWebIMRuntime } from '../../runtime/index.js';

@@ -1,0 +1,3 @@
+export { ConversationRepository, GroupRepository, IM_SDK_PACKAGE, MessageRepository, assertMessageStatusTransition, canTransitionMessageStatus, createIMClient, createGatewayHTTPClient, createGatewayRealtimeClient, mapGatewayConversationToCore, mapGatewayMessageToCore, normalizeGatewayRealtimeEvents, parseGatewayRealtimePayload, runMigrations, imSdkPackageInfo, IMError, isTerminalMessageStatus, } from './index.js';
+export const IM_SDK_CORE_ENTRY = '@im28/im-sdk/core';
+//# sourceMappingURL=core.js.map

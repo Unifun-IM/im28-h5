@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { WebIMConversationListItem } from '@im28/im-sdk-web';
+import type { WebIMConversationListItem } from '@im28/im-sdk/web';
 import { Navigate } from 'react-router-dom';
 
 import emptyChatIconURL from '../../assets/rn/assets/icons/empty-chat.svg';

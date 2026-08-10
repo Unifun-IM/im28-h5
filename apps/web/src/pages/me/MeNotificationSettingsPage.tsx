@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import type {
   GatewayNotificationType,
   GatewayUserNotificationSetting,
-} from '@im28/im-sdk-web';
+} from '@im28/im-sdk/web';
 import { Navigate } from 'react-router-dom';
 
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { MeProfileHeader } from './MeProfileHeader.js';
-import { SettingsSwitchRow } from './MeDisplaySettingsPage.js';
+import { MeSettingsSwitchRow } from './MeSettingsSwitchRow.js';
 import './me-page.css';
 import './me-profile-page.css';
 import './me-settings-page.css';
@@ -102,7 +102,7 @@ export function MeNotificationSettingsPage() {
         <div className="rn-me-settings-content">
           {error ? <div className="rn-me-settings-error is-action" role="status"><span>{error}</span><button type="button" onClick={() => void loadSettings()}>重试</button></div> : null}
           <div className="rn-me-settings-card">
-            <SettingsSwitchRow
+            <MeSettingsSwitchRow
               label="全局消息免打扰"
               checked={notificationEnabled}
               disabled={controlsDisabled}
@@ -112,7 +112,7 @@ export function MeNotificationSettingsPage() {
           {notificationEnabled ? (
             <div className="rn-me-settings-card is-gap">
               {NOTIFICATION_ROWS.map(row => (
-                <SettingsSwitchRow
+                <MeSettingsSwitchRow
                   key={row.key}
                   label={row.label}
                   checked={settings?.[row.key] !== false}

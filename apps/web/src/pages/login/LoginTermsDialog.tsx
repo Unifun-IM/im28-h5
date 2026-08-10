@@ -2,7 +2,7 @@ import {
   WEB_IM_PLATFORM_TERM_KEYS,
   type WebIMPlatformTerm,
   type WebIMRuntime,
-} from '@im28/im-sdk-web';
+} from '@im28/im-sdk/web';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import backIconURL from '../../assets/rn/components/navbar/nav-arrow-left.svg';
