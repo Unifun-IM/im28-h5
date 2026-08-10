@@ -3,6 +3,9 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ChatPage } from '../pages/chat/ChatPage.js';
 import { ConversationsPage } from '../pages/conversations/ConversationsPage.js';
 import { ContactsPage } from '../pages/contacts/ContactsPage.js';
+import { ContactFriendApplicationPage } from '../pages/contacts/ContactFriendApplicationPage.js';
+import { ContactProfilePage } from '../pages/contacts/ContactProfilePage.js';
+import { ContactSearchPage } from '../pages/contacts/ContactSearchPage.js';
 import { FriendApplicationsPage } from '../pages/contacts/FriendApplicationsPage.js';
 import { GroupApplicationsPage } from '../pages/contacts/GroupApplicationsPage.js';
 import { GroupVerificationPage } from '../pages/contacts/GroupVerificationPage.js';
@@ -57,6 +60,9 @@ export function App() {
           <Route path="/contacts/group-applications" element={<GroupVerificationPage />} />
           <Route path="/contacts/group-applications/:groupID" element={<GroupApplicationsPage />} />
           <Route path="/contacts/groups" element={<JoinedGroupsPage />} />
+          <Route path="/contacts/search" element={<ContactSearchPage />} />
+          <Route path="/contacts/users/:userID" element={<ContactProfilePage />} />
+          <Route path="/contacts/users/:userID/add" element={<ContactFriendApplicationPage />} />
           <Route path="/me/settings/display" element={<MeDisplaySettingsPage />} />
           <Route path="/me/settings/notifications" element={<MeNotificationSettingsPage />} />
           <Route path="/me/settings/permissions" element={<MePermissionSettingsPage />} />

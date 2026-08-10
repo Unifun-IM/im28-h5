@@ -6,6 +6,7 @@ import { WebIMRuntimeError } from './runtime-error.js';
 import { transitionWebIMRuntimeState } from './runtime-lifecycle.js';
 import { createWebIMUserSettings } from './web-im-user-settings.js';
 import { createWebIMClientVersion } from './web-im-client-version.js';
+import { createBrowserOSSUploadPort } from '../media/index.js';
 /** 创建复用共享 Gateway HTTP/WebSocket clients 的浏览器 runtime。 */
 export function createWebIMRuntime(options) { return new WebIMRuntimeImpl(options); }
 /** Web runtime 实例显式持有 auth/realtime 状态和浏览器端口。 */
@@ -44,6 +45,7 @@ class WebIMRuntimeImpl {
         });
         this.sync = createWebIMSync({
             gatewayClient: this.gatewayClient,
+            mediaUploadPort: createBrowserOSSUploadPort({ gatewayClient: this.gatewayClient }),
             accountDatabase: this.options.accountDatabase,
             getCurrentUserID: () => this.currentSession?.userID ?? null,
         });

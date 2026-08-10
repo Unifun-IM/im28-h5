@@ -1,0 +1,79 @@
+.rn-contact-profile-header {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  align-items: center;
+  min-height: calc(56px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  background: var(--im-profile-page-background, var(--im-bg-page));
+}
+
+.rn-contact-profile-back {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  color: var(--im-text-primary);
+  border: 0;
+  background: transparent;
+}
+
+.rn-contact-profile-back:active {
+  opacity: 0.55;
+}
+
+.rn-contact-profile-back .rn-asset-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.rn-contact-profile-header h1 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--im-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 26px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-contact-profile-avatar {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  color: var(--im-text-inverse);
+  background: var(--contact-profile-avatar-gradient, var(--im-bg-input));
+  font-weight: 600;
+}
+
+.rn-contact-profile-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rn-contact-profile-avatar--large {
+  width: 120px;
+  height: 120px;
+  border-radius: 60px;
+  font-size: 42px;
+}
+
+.rn-contact-profile-avatar--small {
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  font-size: 24px;
+}
+
+.rn-contact-profile-avatar--row {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  font-size: 17px;
+}

@@ -86,11 +86,12 @@ export function getChatMessageView(
     };
   }
   if (message.contentType === 103) {
-    // audio 使用协议中的秒数形成静态语音气泡。
+    // audio 使用协议中的真实 URL 和秒数形成可播放语音气泡。
     const audio = asRecord(body.audio ?? body.sound);
     return {
       kind: 'audio',
       text: '[语音]',
+      mediaURL: readString(audio.url),
       detail: formatDuration(readNumber(audio.duration_seconds ?? audio.duration)),
     };
   }

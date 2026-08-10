@@ -8,7 +8,7 @@ export type ContactListEntry =
 /** 星标好友在 RN 字母索引中的固定标识。 */
 export const STARRED_CONTACT_INDEX = '★';
 
-/** 按 RN remark、nickname、ID 字段执行本地搜索。 */
+/** 按 RN remark、nickname、账号、ID、手机号和邮箱字段执行本地搜索。 */
 export function filterWebIMContacts(
   contacts: readonly WebIMContact[],
   keyword: string,
@@ -17,7 +17,15 @@ export function filterWebIMContacts(
   const query = keyword.trim().toLocaleLowerCase();
   if (!query) return contacts;
   return contacts.filter(contact =>
-    [contact.displayName, contact.nickname, contact.remark, contact.userID]
+    [
+      contact.displayName,
+      contact.nickname,
+      contact.remark,
+      contact.account,
+      contact.userID,
+      contact.phone,
+      contact.email,
+    ]
       .join('\n')
       .toLocaleLowerCase()
       .includes(query),

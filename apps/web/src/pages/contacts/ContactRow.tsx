@@ -1,10 +1,12 @@
 import type { CSSProperties } from 'react';
 import type { WebIMContact } from '@im28/im-sdk/web';
+import { Link } from 'react-router-dom';
 
 import {
   getRNAvatarGradient,
   getRNAvatarInitial,
 } from '../../components/rn-avatar-view.js';
+import { buildContactProfileRoute } from './contact-profile-view.js';
 
 /** RN 联系人行参数。 */
 interface ContactRowProps {
@@ -18,7 +20,7 @@ export function ContactRow({ contact }: ContactRowProps) {
     '--contact-avatar-gradient': getRNAvatarGradient(contact.userID),
   } as CSSProperties;
   return (
-    <div className="rn-contact-row">
+    <Link className="rn-contact-row" to={buildContactProfileRoute(contact.userID)}>
       <span className="rn-contact-avatar" style={avatarStyle}>
         <span>{getRNAvatarInitial(contact.displayName)}</span>
         {contact.avatarURL ? (
@@ -35,6 +37,6 @@ export function ContactRow({ contact }: ContactRowProps) {
       <span className="rn-contact-row-content">
         <strong>{contact.displayName}</strong>
       </span>
-    </div>
+    </Link>
   );
 }

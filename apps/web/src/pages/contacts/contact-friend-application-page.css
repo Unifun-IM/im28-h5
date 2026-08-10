@@ -1,0 +1,87 @@
+.rn-contact-application-content {
+  padding: 0 0 calc(32px + env(safe-area-inset-bottom));
+}
+
+.rn-contact-application-user {
+  display: flex;
+  align-items: center;
+  min-height: 72px;
+  padding: 8px 16px;
+  background: var(--im-bg-app);
+  gap: 16px;
+}
+
+.rn-contact-application-user-info {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rn-contact-application-user-info strong,
+.rn-contact-application-user-info span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-contact-application-user-info strong {
+  color: var(--im-text-primary);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 28px;
+}
+
+.rn-contact-application-user-info span {
+  color: var(--im-text-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.rn-contact-application-field {
+  display: block;
+  margin: 24px 16px 0;
+}
+
+.rn-contact-application-field > span {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--im-text-secondary);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.rn-contact-application-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 160px;
+  padding: 14px 16px;
+  resize: vertical;
+  color: var(--im-text-primary);
+  border: 0;
+  border-radius: 12px;
+  outline: none;
+  background: var(--im-bg-input);
+  font: inherit;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.rn-contact-application-field textarea:focus {
+  box-shadow: 0 0 0 2px var(--im-brand-primary-disabled);
+}
+
+.rn-contact-application-error {
+  padding: 8px 16px;
+  color: var(--im-status-danger);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.rn-contact-application-content .rn-contact-profile-primary {
+  width: calc(100% - 32px);
+  min-height: 56px;
+  margin: 24px 16px 0;
+}

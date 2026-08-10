@@ -13,7 +13,7 @@
 | RN migration contract | `frozen` | `docs/rn-h5-migration-contract.md` |
 | RN static asset mirror | `implemented/hash-verified` | 466 files under `apps/web/src/assets/rn/**` |
 | RN light/dark theme tokens | `foundation-copied` | `apps/web/src/styles/rn-theme.css` |
-| RN page visual parity | `active/not-accepted` | auth entry、conversation、chat、contacts/joined-groups、calls、me/profile/security、settings、global primary tab shell and onboarding core/subroutes are local/acceptance-gated；valid onboarding context and external data/browser proof remain open |
+| RN page visual parity | `active/not-accepted` | auth entry、conversation、chat、contacts/joined-groups/contact-profile/contact-search、calls、me/profile/security、settings、global primary tab shell and onboarding core/subroutes are local/acceptance-gated；valid onboarding context and external data/browser proof remain open |
 | Browser SDK facade | `MVP` | `../im28-sdk/src/platforms/web` |
 | Web SDK distribution | `generated/committed` | `packages/im-sdk/package.json + dist/{core,web}` generated from sibling `im28-sdk` |
 | Shared SDK contracts | `local-package` | `@im28/im-sdk/core` resolved through `apps/web -> file:../../packages/im-sdk` |
@@ -27,8 +27,11 @@
 | Durable browser storage | `decided` | IndexedDB database binary store |
 | Web transport orchestration | `implemented/local-verified` | shared Gateway clients assembled under `../im28-sdk/src/platforms/web/runtime/**` |
 | HTTP conversation/message sync | `implemented/local-verified` | `../im28-sdk/src/sync/**` |
+| Media outgoing sync | `implemented-local/acceptance-gated` | shared optimistic state and image/file/video/audio body owners under `../im28-sdk/src/sync/message-{send-state,media-send,video-send,audio-send}.ts`; Web OSS adapter under `../im28-sdk/src/platforms/web/media/**` |
 | HTTP contact list | `implemented-local/acceptance-gated` | remote paged `GatewayHTTPClient.listFriends` facade under `../im28-sdk/src/sync/contact-sync.ts`; cache-first/Pinyin parity pending |
+| HTTP contact user search | `implemented-local/acceptance-gated` | `WebIMSync.contacts.searchUsers` owns authenticated Gateway search、public-field normalization、self-filter and stable dedupe；`/contacts/search` owns RN presentation only |
 | HTTP joined-group cache/sync | `implemented-local/acceptance-gated` | `WebIMSync.groups` reads account SQLite through shared `GroupRepository`, then replaces cache only after all `GatewayHTTPClient.myGroupList` pages succeed |
+| HTTP peer profile/actions | `implemented-local/acceptance-gated` | `WebIMSync.peerProfile` normalizes real user/friend detail, persists a real opened direct conversation through shared repositories and submits success-only friend applications |
 | HTTP call-record cache/sync/delete | `implemented-local/acceptance-gated` | `WebIMSync.calls` uses shared Gateway v2 list/delete operations and account-scoped app-owned `call_records` SQLite cache |
 | HTTP current-user profile | `implemented-local/acceptance-gated` | `WebIMSync.profile.getCurrent/update` uses shared current-detail/update-profile operations for nickname、gender、bio; avatar/QR/security remain separate |
 | HTTP account credentials | `implemented-local/acceptance-gated` | `WebIMRuntime.setAccountPassword/resetPassword` uses shared Gateway operations; reset success clears realtime/session/account DB before account-login routing |
@@ -51,11 +54,13 @@ apps/web React Router pages
 -> AuthOnboardingProvider for memory-only pending registration + account-scoped onboarding intent
 -> RN-sourced HTML/CSS composition + byte-identical assets
 -> @im28/im-sdk/web browser facade
--> authenticated WebIMSync facade (conversations + messages + contacts + groups + calls + blacklist + shared mutation queue)
--> contacts branch: paged shared Gateway friend-list client -> normalized remote-only page model
+-> authenticated WebIMSync facade (conversations + messages + contacts + peer profile + groups + calls + blacklist + shared mutation queue)
+-> contacts branch: paged shared Gateway friend-list client + authenticated user search -> normalized remote-only page models
+-> peer-profile branch: user/friend detail -> relationship model -> real direct-conversation persistence or friend-application mutation
 -> blacklist branch: paged shared Gateway blacklist client + contact enrichment -> remote-only page model
 -> calls branch: Gateway v2 full list/delete -> Web app-owned call_records cache -> paged page model
 -> conversation/message branch: Gateway HTTP full sync/history/send + shared DTO-to-core mapper
+-> voice branch: feature-local getUserMedia/MediaRecorder -> real File -> shared audio send -> OSS/Gateway/SQLite
 -> normalized message/conversation events -> serialized persistence + paged HTTP gap recovery
 -> successful realtime writes publish dataVersion -> routed pages reread SQLite cache
 -> typed deployment config + sessionStorage auth + localStorage device identity
@@ -89,12 +94,14 @@ account lifecycle
 | `apps/web/src/components/**` | 跨页面 RN SVG mask 与 avatar fallback 浏览器适配 | 业务状态、页面布局、Gateway/SDK 调用 |
 | `apps/web/src/components/primary-tabs/**` | RN HomeTabBar 的全局展示、资产、角标上报 contract | feature route 实现、Gateway/Repository 调用、me placeholder 页面 |
 | `apps/web/src/pages/**` | 由 RN 源映射驱动的页面组合、可见交互与 feature hook 调用 | 共享 DTO、直接 SQL、React Native 能力、直接 Gateway/API 调用 |
+| `apps/web/src/pages/chat/chat-voice-recorder.ts` | browser microphone、MediaRecorder MIME negotiation、short-lived Blob/File and track cleanup | Gateway body、upload credential、OSS FormData、message identity/state、persistent recording cache |
 | `apps/web/src/pages/login/AuthOnboardingProvider.tsx` | memory-only pending registration、secret-free account marker、current-detail initialized profile draft and guarded invite/profile/subroute intent | auth token/session truth、remote profile truth、Gateway validation、verification secret persistence |
 | `apps/web/src/styles/rn-theme.css` | RN light/dark/profile/chat token 的浏览器 CSS 映射 | 页面专属几何、独立设计系统 |
 | `apps/web/src/assets/rn/**` | RN 业务资产的字节级镜像和哈希清单 | 手工重绘、近似替代、远程热链 |
 | `../im28-sdk/src/platforms/web/index.ts` | 浏览器 SDK facade 和共享 Web SDK 具名重导出 | 页面 UI、重复核心 SDK 语义 |
 | `../im28-sdk/src/platforms/web/runtime/**` | browser config、auth session、Gateway lifecycle 与 generated-operation-backed public term adapter | 页面 UI、生成接口复制、SQLite token persistence |
-| `../im28-sdk/src/sync/**` | auth/account-bound conversation/message/group/call cache read/write、HTTP/realtime sync，以及 remote-only contact/blacklist/friend/group-application paging/normalization | token storage、页面 UI、重复 Gateway endpoint/DTO contract |
+| `../im28-sdk/src/platforms/web/media/**` | browser `Blob/File` validation、credential-backed OSS multipart `FormData` I/O | message state、Gateway body、page picker、cache/repository semantics |
+| `../im28-sdk/src/sync/**` | auth/account-bound conversation/message/group/call cache read/write、HTTP/realtime sync，以及 remote-only contact list/search/blacklist/friend/group-application paging/normalization | token storage、页面 UI、重复 Gateway endpoint/DTO contract |
 | `../im28-sdk/src/sync/blacklist-sync.ts` | blacklist auth guard、分页去重、资料归一化、联系人关系补全与 success-only remove port | 页面 UI、endpoint/envelope 复制、加入黑名单的用户资料 flow |
 | `../im28-sdk/src/sync/friend-application-sync.ts` | friend-application auth guard、分页去重、incoming/outgoing 归一化与 success-only accept port | 页面 UI、endpoint/envelope 复制、unread/read、reject、group verification 或 profile navigation |
 | `../im28-sdk/src/sync/group-application-sync.ts` | group-application audit auth guard、分页去重、group/applicant 归一化与 success-only accept/reject ports | 页面 UI、第二条 per-group transport、unread/read、group profile/manage 或 member join flow |
@@ -148,6 +155,8 @@ The W5.a2 adapter reports success only after IndexedDB commit. Any post-mutation
 - `/contacts/friend-applications` 通过联系人 shortcut 接入独立 React Router 页面，且只消费 `runtime.getSync().friendApplications` 的真实分页与 success-only accept；unread/read、组合群验证、资料跳转和 reject 未进入当前切片。SDK/H5 本地测试、build:web package sync、生产构建与匿名 guard 已通过，真实账号列表、明暗响应式/history 与授权 accept 仍未验收。
 - `/contacts/group-applications` 与 `/:groupID` 通过联系人 shortcut 接入群验证索引和单群申请页，且共同消费 `runtime.getSync().groupApplications` 的同一 audit/accept/reject facade；详情直接刷新仍通过 audit 数据恢复，不新增 per-group transport。组合 tabs、unread/read、群资料/管理和普通成员申请入群未进入当前切片。SDK/H5 本地测试、build:web package sync、生产构建与两个匿名 guard 已通过，真实群管理员数据、明暗响应式/history 与授权 accept/reject 仍未验收。
 - `/contacts/groups` 通过联系人 shortcut 接入 RN“我的群聊”列表，只消费 `runtime.getSync().groups` 和既有 conversation facade；页面先读 account SQLite，再执行全分页远端同步，任一页失败保留原 cache。创建群、长按操作、群管理/成员 mutation 均未进入当前切片。SDK/H5 本地测试、build:web package sync、生产构建与匿名 guard 已通过，真实群数据、会话打开和明暗响应式/history 仍未验收。
+- `/contacts/users/:userID` 与 `/contacts/users/:userID/add` 由联系人默认行进入，只消费 `runtime.getSync().peerProfile`；资料读取合并真实 user/friend，发消息先创建并写入 account SQLite，再进入 chat route，好友申请只在 Gateway mutation 成功后显示完成态。RTC、presence、remark/star mutation、delete、blacklist、common groups、share 与 group-member context 未进入当前切片；真实账号数据/动作和响应式明暗/history 仍未验收，本地浏览器自动化受 local-URL policy 阻断。
+- `/contacts/search` 由通讯录搜索 surface 进入，只消费 `runtime.getSync().contacts.list/searchUsers`；本地好友匹配和远端用户结果统一进入既有资料 route，页面不读取 profile 或执行好友 mutation。SDK/H5 本地测试、build:web package sync、生产构建和匿名 deep-link 已通过；真实账号本地/远端结果、Network、资料导航及响应式明暗/history 仍未验收，群搜索/加群独立延期。
 - `/calls` 只消费 `runtime.getSync().calls`，提供账号 SQLite cache 分页/筛选/搜索、Gateway 全量同步和服务端优先批量删除；通话详情、实时 call-history event 与 RTC 操作未迁移，不渲染假入口。
 - `/me` 只消费 `runtime.getSync().profile` 并启用全局第四个主标签；`/me/profile` 与 nickname/gender/bio 子路由在底栏外复用 `getCurrent/update`。`/me/security` 读取 current-detail，账号设置/密码重置只调用 runtime；手机号/邮箱修改因缺验证码发送 operation 保持只读。
 - `/me/settings/display` 使用 RN 同键 `@im28/theme/preference` 的唯一 Web theme store；`/me/settings/notifications|permissions` 只消费 `runtime.getSettings()`；`/me/settings/terms` 与登录页复用同一 CSP/sandbox document builder 和 platform-term runtime operation。
@@ -162,4 +171,4 @@ The W5.a2 adapter reports success only after IndexedDB commit. Any post-mutation
 - 消息编辑与删除/全员撤回已使用独立 `update_seq` cursor 落库，不改变 `msg_seq/unread`；cursorless 旧编辑按服务端时间拒绝。
 - 全量会话同步、history、send 与 realtime delta 已共享同 tab FIFO 业务队列；该保证不扩展到多标签页 writer。
 - 共享 `@im28/im-sdk` 的原始 Gateway WebSocket message data 日志已在 canonical owner 清除，并通过共享 SDK 与 H5 回归验证。
-- 图片、音频、视频、文件和卡片可只读投影已有真实 payload；上传、播放、下载、failed-message retry、RTC、native push delivery 和 service worker behavior 不在当前 MVP slice，必须由后续 Web facade 提供操作语义。
+- 图片、音频、视频、文件和卡片可只读投影已有真实 payload；图片全屏预览、单实例语音播放/停止和原生视频全屏播放由 chat route-scoped media owner 本地实现，并对缺失/非 HTTP(S) URL fail-closed。mixed 相册图片/视频、按住录制的语音与普通文件发送通过 `WebIMSync.messages` 完成 upload credential -> OSS multipart -> Gateway send -> SQLite 状态收敛；页面只持有隐藏 file input、标准 `HTMLVideoElement` metadata I/O、短期 `MediaRecorder` session、RN composer gesture 和 `onSending` 已落库实体投影。Unicode 系统表情只编辑现有文本草稿：chat composer 持有唯一面板状态，纯 Web helper 持有 UTF-16 selection/grapheme 规则，browser preference adapter 持有 21 项 MRU；它不新增 SDK message body 或发送路径。500 MB 视频上限、1–60 秒语音上限、Gateway media body 与 OSS snapshot 规则属于 shared SDK。图片保存、文件预览/下载、插画/自定义表情实体、camera/audio file picker、played/read/auto-next、upload progress/cancel、failed-message retry、RTC、native push delivery 和 service worker behavior 仍需后续独立契约。

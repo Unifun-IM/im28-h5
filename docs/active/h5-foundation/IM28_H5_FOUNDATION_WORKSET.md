@@ -3,7 +3,7 @@
 | field | value |
 | :--- | :--- |
 | status | `active` |
-| active_slice | `W6.a5.2.12-joined-groups-core` |
+| active_slice | `W6.a6.6.1-shared-preset-emoji-core` |
 | verification_floor | `npm run verify` plus local browser smoke |
 
 ## Workstream Ledger
@@ -72,20 +72,130 @@
 | `W6.a5.2.10-friend-applications-core` | code/verification | web contacts + sdk sync | RN standalone friend application list/search/group/status/accept through shared Gateway operations | 4 facade + 5 view tests + 29/89 SDK verify + build:web package sync + guest guard | `implemented-local/acceptance-gated` | approved authenticated list/accept + responsive/light/dark/history proof；no fake session or unsupported unread/group/profile/reject path |
 | `W6.a5.2.11-group-applications-core` | code/verification | web contacts + sdk sync | RN group verification index、per-group application list/search/section/status and accept/reject through one audit facade | 4 facade + 5 view tests + 30/93 SDK verify + build:web package sync + index/detail guest guards | `implemented-local/acceptance-gated` | approved group-admin audit/accept/reject + responsive/light/dark/history proof；no fake session or unsupported unread/profile/manage/member-join path |
 | `W6.a5.2.12-joined-groups-core` | code/verification | web contacts + sdk sync | RN 我的群聊 cache-first list/search/status/role and conversation opening through shared group/conversation facades | 4 cache/auth/pagination/dedupe/mapping/failure tests + 5 pure view tests + 31/97 verify + guest guard | `implemented-local/acceptance-gated` | local implementation and gates passed 2026-08-10；real account data/open-conversation and responsive theme/history proof remain acceptance gates |
+| `W6.a5.2.13-contact-profile-core` | code/verification | web contacts + sdk sync | RN 联系人点击 -> 资料 -> 发消息/加好友 through shared user/friend/conversation facades | 4 auth/normalize/open-persist/apply/failure tests + 4 pure view tests + 32/101 SDK verify + build:web/full verify/HTTP deep-link smoke | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10；approved account data/actions and responsive light/dark/history proof remain acceptance gates |
+| `W6.a5.2.14-contact-user-search-core` | code/verification | web contacts + sdk sync | RN 通讯录搜索入口、本地好友匹配、真实 Gateway 用户搜索和资料页跳转 | 4 facade + 4 view tests + 32/103 SDK verify + build:web/full verify/deep-link smoke | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10；approved account local/remote search and responsive light/dark/history proof remain acceptance gates |
+| `W6.a6.1-chat-media-read-core` | code/verification | web chat | RN 图片全屏预览、单实例语音播放/停止、视频全屏播放，消费既有 cache payload | H5 11/42 + SDK 32/103 + 466 assets + typecheck/build/full verify + guest guard | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10；approved authenticated media playback and responsive light/dark proof remain acceptance gates |
+| `W6.a6.2-chat-image-file-send-core` | code/verification | shared sdk + web adapter + web chat | RN 相册图片/普通文件选择 -> 上传凭证 -> OSS 直传 -> Gateway send -> SQLite 状态收敛 | H5 12/46 + SDK 33/107 + 466 assets + all-runtime typecheck + full verify/build + release/pack + responsive browser proof | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10；real upload/send requires explicit authorization and remains an acceptance gate |
+| `W6.a6.3-chat-album-video-send-core` | code/verification | shared sdk + web adapter + web chat | RN mixed 相册视频 -> browser metadata -> shared upload/Gateway video body -> SQLite 状态收敛 | H5 13/50 + SDK 35/109 + 466 assets + all-runtime typecheck/build:web/full verify + responsive browser proof | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10；real upload/send requires explicit authorization and remains an acceptance gate |
+| `W6.a6.4-chat-voice-send-core` | code/verification | shared sdk + web media adapter + web chat | RN hold/cancel recording -> browser Blob -> shared upload/Gateway audio body -> SQLite 状态收敛 | H5 15/56 + SDK 36/111 + injected recorder lifecycle/error tests + all-runtime typecheck/build:web/full verify + responsive voice-mode proof | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10 without opening a microphone or transmitting media；real recording/upload/send requires explicit authorization |
+| `W6.a6.5-chat-system-emoji-core` | code/verification | web chat composer + browser preference adapter | RN Unicode emoji panel -> selection-aware draft editing -> existing text send path | 9 focused + H5 17/65 + SDK 36/111 + 466 assets + full verify/build + authenticated 390x844/1280x800 browser proof | `done-local/acceptance-gated` | no message transmitted；real text send remains an explicit acceptance gate |
+| `W6.a6.6-chat-illustrated-emoji-contract-freeze` | contract/design | RN preset registry/document/send/read + shared SDK boundary | source trace -> entity/body/cache/display contract -> bounded implementation slices | RN source/API/caller trace + 135/133 identity audit + ownership/failure/anti-placeholder review | `done` | Gateway schema partial、SDK mapper/send/cache gaps and shared owner decision frozen in migration contract §30 |
+| `W6.a6.6.1-shared-preset-emoji-core` | code/convergence | im28-sdk core/transport/sync/repository + RN thin adapters | shared DTO/descriptor/document/entity -> Web send/map/SQLite；remove RN live algorithm duplication | shared core/document/mapper/SQLite tests + build:rn/build:web + RN/H5 typecheck | `active/contract-frozen` | no H5 illustrated UI、draft persistence、edit/forward/retry、custom emoji、rich clipboard or real send |
+| `W6.a6.6.2-h5-illustrated-emoji-ui` | code/verification | H5 chat composer/message/conversation + browser preference/assets | shared descriptors/entities -> illustrated tab/grid/preview/bubble/conversation projection | H5 behavior + SDK regression + 466 assets + responsive light/dark browser proof | `planned` | activates only after `.1` removes shared semantic double-track；no real send/custom emoji/draft persistence |
+| `W6.a6.6.3-illustrated-emoji-acceptance` | deployment verification | H5 + SDK + approved disposable conversation | one authorized preset text send -> Gateway -> SQLite -> list-back | Network/result/cache proof | `blocked-external` | explicit send authorization and disposable account/conversation required |
 | `W6.closeout` | verification/docs | web app + sdk + docs | migrated route parity evidence and residual ledger | `npm run verify` + browser matrix + real Gateway flow | `planned` | W6.a2-a5 accepted |
 
 ## Active Slice Card
 
+| field | frozen value |
+| :--- | :--- |
+| slice_id | `W6.a6.6.1-shared-preset-emoji-core` |
+| production_flow | shared preset descriptor/document -> Web `sendText` -> Gateway top-level entities -> core Message/SQLite -> cached history |
+| canonical_owner | `im28-sdk` core owns DTO/descriptors/algorithms；transport/sync/repository own wire and persistence；RN keeps only asset/MessageItem adapters |
+| expected_deliverable | typed entity/document API、135 identity/fallback descriptors、Gateway encode/decode/map、Web optimistic/missing-echo persistence、RN duplicate algorithm convergence |
+| verification_shape | deterministic UTF-16/duplicate-fallback/invalid-range/document tests + mapper and real SQLite send-state tests + all-runtime build/typecheck |
+| stop_condition | no H5 illustrated presentation、draft persistence、edit/forward/retry、custom emoji type `115`、rich clipboard or real send |
+
+## Latest Closed Contract Card
+
+| field | frozen value |
+| :--- | :--- |
+| slice_id | `W6.a6.6-chat-illustrated-emoji-contract-freeze` |
+| evidence | RN production source、Gateway generated/hand types、SDK mapper/sync/repository and H5 asset/UI gap traced backward；135 unique IDs、133 fallback values、135 mirrored PNGs verified |
+| verdict | contract `done`；Gateway schema `runtime-chain-partial`；SDK/H5 implementation `🟡`；real send `🟡 acceptance-gated` |
+| anti_shortcut | omitted H5 tab is honest missing capability；no mock entity、fake success、Unicode identity inference or second page transport exists |
+
+## Latest Closed Slice Card
+
+| field | frozen value |
+| :--- | :--- |
+| slice_id | `W6.a6.5-chat-system-emoji-core` |
+| production_flow | RN composer emoji toggle -> system panel -> insert/replace/delete draft -> existing text submit |
+| primary_path | `ChatComposer` panel owner -> pure draft editing helper -> current text draft -> existing `sendText`; browser preference adapter owns recent MRU only |
+| closeout | exact 52-entry list、7-column panel、selection replacement、full grapheme delete and 21-item MRU passed H5 17/65、SDK 36/111、466 assets、full verify/build and authenticated dual-viewport browser proof；no transmission occurred |
+| residual_gate | real text send remains authorization-gated；illustrated/custom entity transport is not part of this slice |
+
+## Previous Closed Slice Card
+
+| field | frozen value |
+| :--- | :--- |
+| slice_id | `W6.a6.4-chat-voice-send-core` |
+| production_flow | RN voice mode -> hold recorder -> short/cancel/send decision -> upload credential -> OSS multipart -> Gateway audio message -> local repositories |
+| public_caller | H5 only calls `WebIMSync.messages.sendAudio`; no page transport、repository、OSS body or recorder format mapping |
+| recorder_contract | browser adapter chooses a supported audio MIME、owns stream/track/recorder cleanup and returns one `File`；permission/unsupported/error paths reject visibly |
+| interaction_contract | pointer hold starts；upward delta `>=56px` cancels；release below `2s` rejects；`60s` auto-stops and sends；route exit cancels |
+| state_contract | reuse shared `sending -> sent/failed` state machine and stable client ID across upload/Gateway stages |
+| body_contract | `audio.media_id/url/duration_seconds/size_bytes`；content type `103`；duration is integer `1..60` |
+| stop_condition | no real permission prompt/recording/upload/send、audio picker、persistent waveform、played/read/auto-next、upload progress/cancel、retry、download or RTC |
+| closeout | one browser recorder owner and one shared audio send/state owner are live；H5 15/56、SDK 36/111 and local gates passed；voice mode was layout-tested without requesting microphone access or transmitting media |
+
+## Earlier Closed Slice Card
+
+| field | frozen value |
+| :--- | :--- |
+| slice_id | `W6.a6.3-chat-album-video-send-core` |
+| production_flow | RN mixed album -> media validation -> video send -> upload credential -> OSS multipart -> Gateway video message -> local repositories |
+| public_caller | H5 only calls `WebIMSync.messages.sendVideo`; no page transport、repository or OSS body construction |
+| metadata_contract | browser reads duration/videoWidth/videoHeight before send；metadata failure is visible and prevents upload |
+| state_contract | reuse existing shared `sending -> sent/failed` state machine and stable client ID across upload/Gateway stages |
+| body_contract | `media_id/url/thumbnail_url/duration_seconds/width/height/size_bytes`；snapshot query matches RN `t_7000,f_jpg,...,m_fast,ar_auto` |
+| selection_contract | image/video total max 12；image 10 MB；video 500 MB；sequential order；unsupported MIME rejects the full selection before I/O |
+| stop_condition | no draft caption/pending attachment、camera、audio/voice、progress/cancel、retry、local snapshot generation、real unauthorized send or RTC |
+| closeout | shared video limit/body/snapshot/state owner and default H5 mixed-album caller are live；H5 13/50、SDK 35/109 and full local gates passed；no real upload/send was executed without authorization |
+
+## Earlier Closed Slice Card
+
+| field | frozen value |
+| :--- | :--- |
+| slice_id | `W6.a6.2-chat-image-file-send-core` |
+| production_flow | RN attachment action -> platform picker -> upload credential -> OSS multipart upload -> Gateway message -> local message/conversation repositories |
+| public_caller | H5 only calls `WebIMSync.messages.sendImage/sendFile`; no page transport or repository import |
+| platform_port | opaque upload source + metadata enters shared sync；Web adapter alone validates `Blob/File` and constructs `FormData` |
+| state_contract | persist local `sending` before upload；map matching client ID to `sent`；credential/upload/send failure updates the same row to `failed` and rethrows |
+| selection_contract | image input accepts browser-decodable image kinds、max 12、10 MB each；file input sends one ordinary file、100 MB max；sequential ordering |
+| stop_condition | no draft caption/pending attachment、camera、video/audio/voice、progress/cancel、retry、download/preview expansion or RTC |
+| acceptance_gate | approved authenticated account must prove credential、OSS 200、Gateway send、SQLite/cache projection and responsive light/dark behavior |
+
+| closeout | shared state/upload owners and default H5 callers are live；no real message was transmitted during proof without explicit authorization |
+
+## Closed Slice W6.a6.1
+
 | field | value |
 | :--- | :--- |
-| slice_id | `W6.a5.2.12-joined-groups-core` |
-| goal | 建立 contacts shortcut -> `/contacts/groups` -> cache-first list/remote sync -> conversation route 的唯一主链 |
-| source_anchor | RN 72px group row/search/status/role badges；shared Gateway `myGroupList`、`GroupRepository` and conversation facade |
-| target_owner | Web sync joined-group facade + contacts groups page + App route；shared client remains endpoint/envelope owner |
-| expected_deliverable | authenticated cached list、token pagination、dedupe/normalization/server order、remote-success replace、search/status/role/empty/error/loading states and contacts entry |
-| verification_shape | cache/auth/pagination/dedupe/mapping/failure unit tests + view tests + typecheck/build/verify + mobile/desktop light/dark/history/guest smoke |
-| stop_condition | no create-group、long-press actions、group profile/manage/member mutation、page fetch、mock list、failure-as-success or second storage owner |
-| residual_seed | authenticated data/open-conversation and exact visual proof require an approved account；create/manage/member capabilities remain later slices |
+| slice_id | `W6.a6.1-chat-media-read-core` |
+| goal | 将 cache 中真实图片、语音、视频消息接入 RN 对应的浏览器只读媒体交互 |
+| source_anchor | RN media branches/previews/sound hook；Gateway generated media schemas |
+| target_owner | H5 chat message projection + one feature-local media controller + image/video overlays |
+| expected_deliverable | safe real URL actions、one-active-audio lifecycle、full-screen image/video surfaces、keyboard/route cleanup |
+| verification_shape | message/media contract tests + full H5 app tests + SDK regression + typecheck/build/verify + guest guard |
+| stop_condition | no direct API/cache/mock URL、download/save/upload/send/record/read-sync/auto-next/retry/RTC |
+| residual_seed | approved account must prove real image/audio/video playback and responsive theme behavior；all deferred operations require separate contracts |
+
+## Closed Slice W6.a5.2.14
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a5.2.14-contact-user-search-core` |
+| goal | 建立 `/contacts` 搜索入口 -> `/contacts/search` -> 本地好友匹配/真实 Gateway 用户搜索 -> 既有联系人资料页的唯一主链 |
+| source_anchor | RN `ContactListScreen -> ContactSearchScreen`；48px search header、local hint、server-search row、72px result row and highlighted fields |
+| target_owner | existing Web `contacts` sync facade + contact search page/App route；`peerProfile` remains the sole profile/action owner |
+| expected_deliverable | authenticated `searchUsers` normalization/self-filter/dedupe、local friend projection、RN core presentation、stable SPA navigation |
+| verification_shape | facade auth/normalization/dedupe/failure tests + pure view tests + typecheck/build/verify + mobile/desktop light/dark/history/guest smoke |
+| stop_condition | no group search/join、search-page friend mutation、page transport、mock result、fake success、duplicate peer profile or new search cache |
+| residual_seed | approved account must prove local/remote result and profile navigation；group search/join remains separately bounded |
+
+## Closed Slice W6.a5.2.13
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a5.2.13-contact-profile-core` |
+| goal | 建立 contact row -> `/contacts/users/:userID` -> profile read -> real direct conversation/add-friend action 的唯一主链 |
+| source_anchor | RN 120px avatar、centered profile header、ID pill、bio/action card and primary CTA；shared user/friend/conversation operations |
+| target_owner | Web sync peer-profile facade + contact profile page + ContactRow/App route；shared clients/repositories remain endpoint/cache owners |
+| expected_deliverable | friend/stranger/self normalization、RN core presentation、authenticated route、real conversation persistence/navigation and success-only friend application |
+| verification_shape | auth/normalization/open-persist/apply/failure unit tests + view tests + typecheck/build/verify + mobile/desktop light/dark/history/guest smoke |
+| stop_condition | no RTC/presence/remark/star/delete/blacklist/common groups/share/group-member context、page transport、mock data、fake success or duplicate persistence |
+| residual_seed | authenticated friend/stranger/self profile、conversation/apply Network result and exact visual/history proof require an approved account；browser automation is blocked by local-URL policy；deferred actions remain separately bounded |
 
 ### Completed W6.a5.2.3 Migration Card
 
@@ -117,6 +227,8 @@
 | Settings permission/network/cache/version | permission/version local chains passed；network browser-blocked；cache storage-blocked | settings/runtime/storage/deployment owners | real update response/write/cross-browser acceptance；cache awaits disposable-data separation |
 | Contact cache/Pinyin parity | shared Web entry 未导出 `FriendshipRepository`；当前中文索引回退 `#` | `../im28-sdk/src/sync/contact-sync.ts` + shared SDK contract owner | real account remote proof, then cache-first export/regression and Pinyin-equivalent grouping |
 | Joined groups final acceptance | local cache/sync/route 已完成，当前会话无真实账号群数据 | `apps/web/src/pages/contacts` + Web SDK groups facade | approved account proves cache-first list/full sync/search/status/role、conversation open and mobile/desktop light/dark/history；no injected session/data |
+| Contact profile final acceptance | shared facade/routes/styles are local complete；no approved authenticated peer data or local-browser visual automation | `apps/web/src/pages/contacts` + Web SDK `peerProfile` facade | approved account proves friend/stranger/self read、conversation open/persistence、authorized friend apply and 390x844/760x900 light/dark/history；no injected session/data |
+| Contact search final acceptance | shared facade/route/styles are local complete；no approved authenticated friend/search data or local-browser visual automation | `apps/web/src/pages/contacts` + Web SDK `contacts` facade | approved account proves local/remote results、search Network/result、profile navigation and 390x844/760x900 light/dark/history；no injected session/data |
 | Me final acceptance | `/me` 已启用真实 route/capability；dark 与 real logout 证据尚缺 | `apps/web/src/pages/me` + Web sync/runtime | authenticated dark screenshot + real logout Network/session/DB cleanup proof |
 | Calls real-account proof | local session expired during closeout；不得以 fake session/mock list 替代 | `apps/web/src/pages/calls` + Web SDK calls facade | approved account validates Network/cache/filter/page/delete and 390x844/760x900 light/dark/history |
 | Blacklist real-account proof | local session is anonymous；不得以 mock list、injected session or unapproved destructive mutation替代 | `apps/web/src/pages/me` + Web SDK blacklist facade | approved account validates list/enrichment/search/theme/history and explicitly approved remove Network/result |

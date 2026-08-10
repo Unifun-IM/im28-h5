@@ -1,0 +1,95 @@
+import { ConversationRepository, MessageRepository, mapGatewayMessageToCore, } from '@im28/im-sdk/core';
+import { createWebIMSyncError } from './sync-context.js';
+/** 校验会话并将 outgoing message 以 sending 状态写入账号 SQLite。 */
+export async function prepareWebIMMessageSend(context, definition, dependencies) {
+    // conversationID 是本地与远端发送的共同分区键。
+    const conversationID = definition.conversationID.trim();
+    if (!conversationID) {
+        throw createWebIMSyncError('INVALID_MESSAGE_TARGET', 'Message sending requires a conversation ID.');
+    }
+    // conversationRepository 阻止向不存在的本地目标构造 fake session。
+    const conversationRepository = new ConversationRepository(context.database);
+    // conversation 必须来自当前账号 cache。
+    const conversation = await conversationRepository.getByID(conversationID);
+    if (!conversation) {
+        throw createWebIMSyncError('CONVERSATION_NOT_FOUND', 'Message sending requires an existing cached conversation.');
+    }
+    // clientMsgID 在 upload、Gateway send 与状态更新中保持不变。
+    const clientMsgID = createClientMessageID(dependencies);
+    // localMessage 在任何远端 I/O 前持久化。
+    const localMessage = {
+        clientMsgID,
+        conversationID,
+        senderID: context.userID,
+        direction: 'outgoing',
+        contentType: definition.contentType,
+        status: 'sending',
+        sendTime: dependencies.now?.() ?? Date.now(),
+        payload: definition.payload,
+    };
+    // messageRepository 管理同一 client ID 的状态收敛。
+    const messageRepository = new MessageRepository(context.database);
+    await messageRepository.upsert(localMessage);
+    await conversationRepository.updateLatestMessage(conversationID, clientMsgID, localMessage.sendTime);
+    return {
+        context,
+        conversationID,
+        clientMsgID,
+        localMessage,
+        conversationRepository,
+        messageRepository,
+    };
+}
+/** 调用 Gateway 并将同一 optimistic row 收敛为 sent。 */
+export async function completeWebIMMessageSend(prepared, body, dependencies) {
+    // remoteMessage 必须回显相同幂等 ID，避免产生双消息。
+    const remoteMessage = await dependencies.gatewayClient.sendMessage({
+        conversation_id: prepared.conversationID,
+        client_msg_id: prepared.clientMsgID,
+        body,
+    });
+    // sentMessage 使用共享 Gateway mapper，禁止业务层复制 DTO 解析。
+    const sentMessage = mapGatewayMessageToCore(remoteMessage, {
+        currentUserID: prepared.context.userID,
+        conversationID: prepared.conversationID,
+    });
+    if (sentMessage.clientMsgID !== prepared.clientMsgID) {
+        throw createWebIMSyncError('CLIENT_MESSAGE_ID_MISMATCH', 'Gateway returned a different client message ID.');
+    }
+    // persistedMessage 显式覆盖异常远端状态为成功终态。
+    const persistedMessage = { ...sentMessage, status: 'sent' };
+    await prepared.messageRepository.upsert(persistedMessage);
+    await prepared.conversationRepository.updateLatestMessage(prepared.conversationID, prepared.clientMsgID, sentMessage.sendTime);
+    return persistedMessage;
+}
+/** 将远端任一步失败持久化到同一 optimistic row。 */
+export async function failWebIMMessageSend(prepared, cause) {
+    try {
+        await prepared.messageRepository.updateStatus(prepared.clientMsgID, 'failed');
+    }
+    catch (statusCause) {
+        throw new AggregateError([cause, statusCause], 'Message send and failed-state persistence both failed.');
+    }
+    throw cause;
+}
+/** 为无需平台上传的 body 执行完整 optimistic send 状态机。 */
+export async function executeWebIMMessageSend(context, definition, body, dependencies) {
+    // prepared 保证 Gateway 调用前已有可见 sending row。
+    const prepared = await prepareWebIMMessageSend(context, definition, dependencies);
+    try {
+        return await completeWebIMMessageSend(prepared, body, dependencies);
+    }
+    catch (cause) {
+        return failWebIMMessageSend(prepared, cause);
+    }
+}
+/** 创建并校验本地消息幂等 ID。 */
+function createClientMessageID(dependencies) {
+    // id 优先使用测试/宿主注入生成器，否则使用 runtime randomUUID。
+    const id = (dependencies.createClientMessageID?.() ?? globalThis.crypto?.randomUUID?.())?.trim();
+    if (!id) {
+        throw createWebIMSyncError('CLIENT_MESSAGE_ID_UNAVAILABLE', 'A stable client message ID generator is required.');
+    }
+    return id;
+}
+//# sourceMappingURL=message-send-state.js.map

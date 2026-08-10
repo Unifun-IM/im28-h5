@@ -1,0 +1,110 @@
+.rn-chat-emoji-panel {
+  position: relative;
+  height: clamp(240px, 40dvh, 300px);
+  border-top: 1px solid var(--im-border-subtle);
+  background: var(--im-chat-content-background);
+}
+
+.rn-chat-emoji-tab-bar {
+  display: flex;
+  height: 56px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--im-chat-composer-background);
+}
+
+.rn-chat-emoji-tab {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--im-text-muted);
+  background: transparent;
+}
+
+.rn-chat-emoji-tab.is-active {
+  color: var(--im-text-primary);
+  background: var(--im-chat-action-pressed);
+}
+
+.rn-chat-emoji-tab .rn-asset-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.rn-chat-emoji-scroll {
+  height: calc(100% - 56px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 8px 0 calc(72px + var(--im-safe-bottom));
+  scrollbar-width: thin;
+}
+
+.rn-chat-emoji-section + .rn-chat-emoji-section {
+  margin-top: 16px;
+}
+
+.rn-chat-emoji-section h2 {
+  margin: 0 0 12px;
+  padding: 0 16px;
+  color: var(--im-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 18px;
+}
+
+.rn-chat-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  row-gap: 20px;
+  padding: 0 16px;
+}
+
+.rn-chat-emoji-grid button {
+  display: grid;
+  width: 100%;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--im-text-primary);
+  background: transparent;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  font-size: 28px;
+  letter-spacing: 0;
+  line-height: 32px;
+}
+
+.rn-chat-emoji-grid button:active {
+  border-radius: 6px;
+  background: var(--im-chat-action-pressed);
+}
+
+.rn-chat-emoji-delete {
+  position: absolute;
+  z-index: 2;
+  right: 16px;
+  bottom: calc(16px + var(--im-safe-bottom));
+  display: grid;
+  width: 56px;
+  height: 40px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  color: var(--im-text-primary);
+  background: var(--im-bg-card);
+  box-shadow: 0 6px 25px rgb(29 50 77 / 10%);
+  cursor: pointer;
+}
+
+.rn-chat-emoji-delete .rn-asset-icon {
+  width: 24px;
+  height: 24px;
+}

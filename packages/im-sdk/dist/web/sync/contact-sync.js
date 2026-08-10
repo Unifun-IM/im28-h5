@@ -46,12 +46,66 @@ class WebIMContactSyncImpl {
         }
         throw createWebIMSyncError('CONTACT_PAGE_LIMIT_EXCEEDED', 'Gateway friend pagination exceeded the safety limit.');
     }
+    /** 通过共享 Gateway operation 搜索公开用户并过滤本人和重复记录。 */
+    async searchUsers(keyword) {
+        // currentUserID 同时证明认证状态并用于排除本人。
+        const currentUserID = this.requireAuthenticatedUser();
+        // query 对齐 RN 搜索页的首尾空白语义。
+        const query = keyword.trim();
+        if (!query)
+            return [];
+        // users 保留 Gateway 搜索结果顺序。
+        const users = await this.dependencies.gatewayClient.searchUsers({ keyword: query });
+        // results 只收集可导航且不重复的页面模型。
+        const results = [];
+        // seenUserIDs 防止服务端重复结果生成不稳定 React key。
+        const seenUserIDs = new Set();
+        for (const user of users) {
+            // result 丢弃没有稳定用户 ID 的无效记录。
+            const result = normalizeWebIMContactSearchUser(user);
+            if (!result || result.userID === currentUserID || seenUserIDs.has(result.userID)) {
+                continue;
+            }
+            seenUserIDs.add(result.userID);
+            results.push(result);
+        }
+        return results;
+    }
     /** 在网络请求前拒绝匿名通讯录读取。 */
     requireAuthenticatedUser() {
-        if (!this.dependencies.getCurrentUserID()?.trim()) {
+        // currentUserID 每次读取动态认证 owner，避免缓存失效会话。
+        const currentUserID = this.dependencies.getCurrentUserID()?.trim() ?? '';
+        if (!currentUserID) {
             throw createWebIMSyncError('CONTACT_AUTH_REQUIRED', 'Contact list requires an authenticated Web IM session.');
         }
+        return currentUserID;
     }
+}
+/** 将共享 Gateway user 映射为联系人搜索页面模型。 */
+function normalizeWebIMContactSearchUser(user) {
+    // userID 是搜索结果进入联系人资料页的稳定主键。
+    const userID = user.user_id?.trim() ?? '';
+    if (!userID)
+        return null;
+    // nickname 保留远端原始昵称供匹配摘要使用。
+    const nickname = user.nickname?.trim() ?? '';
+    // account 是账号搜索命中的可见候选字段。
+    const account = user.account?.trim() ?? '';
+    // phone 保留服务端已允许公开的手机号字段。
+    const phone = user.phone?.trim() ?? '';
+    // email 保留服务端已允许公开的邮箱字段。
+    const email = user.email?.trim() ?? '';
+    return {
+        userID,
+        displayName: nickname || account || phone || email || userID,
+        nickname,
+        account,
+        phone,
+        email,
+        avatarURL: user.avatar_url?.trim() ?? '',
+        gender: user.gender ?? 0,
+        bio: user.bio?.trim() ?? '',
+    };
 }
 /** 将共享 Gateway friend 映射为最小 Web 页面模型。 */
 function normalizeWebIMContact(friend) {
@@ -73,6 +127,9 @@ function normalizeWebIMContact(friend) {
         displayName,
         nickname,
         remark,
+        account: user?.account?.trim() ?? '',
+        phone: user?.phone?.trim() ?? '',
+        email: user?.email?.trim() ?? '',
         avatarURL: user?.avatar_url?.trim() ?? '',
         isStarred: friend.is_starred ?? false,
         addedAt: friend.created_at?.trim() ?? '',

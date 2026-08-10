@@ -16,6 +16,8 @@ import {
   formatChatMessageTime,
   type ChatMessageView,
 } from './chat-message-view.js';
+import { normalizeChatMediaURL } from './chat-media-view.js';
+import { useChatMediaInteraction } from './ChatMediaInteractionProvider.js';
 
 /** Chat 气泡只接收已完成日期与连续分组计算的消息条目。 */
 interface ChatMessageBubbleProps {
@@ -61,7 +63,11 @@ export function ChatMessageBubble({
         <span className="rn-chat-message-line">
           {mine ? <OutgoingMessageStatus status={message.status} /> : null}
           <span className="rn-chat-bubble">
-            <ChatMessageContent view={view} mine={mine} />
+            <ChatMessageContent
+              view={view}
+              messageID={message.clientMsgID}
+              mine={mine}
+            />
             <time>{formatChatMessageTime(message.sendTime)}</time>
             {entry.groupPosition === 'single' ||
             entry.groupPosition === 'last' ? (
@@ -106,27 +112,47 @@ function OutgoingMessageStatus({
 /** 根据已收窄 view 呈现文本与只读媒体快照。 */
 function ChatMessageContent({
   view,
+  messageID,
   mine,
 }: {
   readonly view: ChatMessageView;
+  readonly messageID: string;
   readonly mine: boolean;
 }) {
+  // media 提供当前聊天页唯一的预览和音频 owner。
+  const media = useChatMediaInteraction();
   if (view.kind === 'image') {
-    return view.thumbnailURL || view.mediaURL ? (
-      <img
-        className="rn-chat-media-image"
-        src={view.thumbnailURL || view.mediaURL}
-        alt="图片消息"
-      />
+    // imageURL 保持缩略图展示，同时拒绝不安全协议。
+    const imageURL = normalizeChatMediaURL(view.thumbnailURL || view.mediaURL);
+    return imageURL ? (
+      <button
+        className="rn-chat-media-action"
+        type="button"
+        aria-label="预览图片"
+        disabled={!normalizeChatMediaURL(view.mediaURL || view.thumbnailURL)}
+        onClick={() => media.openPreview(view)}
+      >
+        <img className="rn-chat-media-image" src={imageURL} alt="图片消息" />
+      </button>
     ) : (
       <span className="rn-chat-message-text">{view.text}</span>
     );
   }
   if (view.kind === 'video') {
+    // playable 标记真实视频 URL 是否满足浏览器安全协议。
+    const playable = Boolean(normalizeChatMediaURL(view.mediaURL));
+    // thumbnailURL 使用相同协议白名单，失败时呈现稳定占位背景。
+    const thumbnailURL = normalizeChatMediaURL(view.thumbnailURL);
     return (
-      <span className="rn-chat-video-content" aria-label="视频消息">
-        {view.thumbnailURL ? (
-          <img src={view.thumbnailURL} alt="" />
+      <button
+        className="rn-chat-media-action rn-chat-video-content"
+        type="button"
+        aria-label={playable ? '播放视频' : '视频不可播放'}
+        disabled={!playable}
+        onClick={() => media.openPreview(view)}
+      >
+        {thumbnailURL ? (
+          <img src={thumbnailURL} alt="" />
         ) : (
           <span className="rn-chat-video-placeholder" />
         )}
@@ -134,15 +160,43 @@ function ChatMessageContent({
           <RNAssetIcon assetURL={playIconURL} />
         </span>
         {view.detail ? <span>{view.detail}</span> : null}
-      </span>
+      </button>
     );
   }
   if (view.kind === 'audio') {
+    // playable 标记当前语音是否具有真实安全地址。
+    const playable = Boolean(normalizeChatMediaURL(view.mediaURL));
+    // active 标记唯一正在处理本条消息的音频实例。
+    const active = media.activeAudioMessageID === messageID;
+    // audioLabel 向辅助技术同步真实加载、播放和失败状态。
+    const audioLabel = !playable
+      ? '语音不可播放'
+      : active && media.audioState === 'playing'
+        ? '停止语音'
+        : active && media.audioState === 'loading'
+          ? '正在加载语音'
+          : active && media.audioState === 'error'
+            ? '重新播放语音'
+            : '播放语音';
     return (
-      <span className="rn-chat-audio-content">
-        <RNAssetIcon assetURL={speakIconURL} />
-        <span>{view.detail || '0:00'}</span>
-      </span>
+      <button
+        className={`rn-chat-media-action rn-chat-audio-action${
+          active && media.audioState === 'playing' ? ' is-playing' : ''
+        }${active && media.audioState === 'error' ? ' is-error' : ''}`}
+        type="button"
+        aria-label={audioLabel}
+        aria-pressed={active && media.audioState === 'playing'}
+        disabled={!playable}
+        onClick={() => media.toggleAudio(messageID, view)}
+      >
+        <span className="rn-chat-audio-content">
+          <RNAssetIcon assetURL={speakIconURL} />
+          <span className="rn-chat-audio-duration">{view.detail || '0:00'}</span>
+          {active && media.audioState === 'error' ? (
+            <span className="rn-chat-audio-error">播放失败</span>
+          ) : null}
+        </span>
+      </button>
     );
   }
   if (view.kind === 'file') {

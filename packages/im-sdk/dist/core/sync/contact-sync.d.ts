@@ -5,6 +5,9 @@ export interface WebIMContact {
     readonly displayName: string;
     readonly nickname: string;
     readonly remark: string;
+    readonly account: string;
+    readonly phone: string;
+    readonly email: string;
     readonly avatarURL: string;
     readonly isStarred: boolean;
     readonly addedAt: string;
@@ -13,9 +16,22 @@ export interface WebIMContact {
 export interface WebIMContactListOptions {
     readonly pageSize?: number;
 }
+/** 页面可消费的标准化联系人搜索用户。 */
+export interface WebIMContactSearchUser {
+    readonly userID: string;
+    readonly displayName: string;
+    readonly nickname: string;
+    readonly account: string;
+    readonly phone: string;
+    readonly email: string;
+    readonly avatarURL: string;
+    readonly gender: 0 | 1 | 2;
+    readonly bio: string;
+}
 /** 页面可消费的认证通讯录能力。 */
 export interface WebIMContactSync {
     list(options?: WebIMContactListOptions): Promise<readonly WebIMContact[]>;
+    searchUsers(keyword: string): Promise<readonly WebIMContactSearchUser[]>;
 }
 /** 通讯录能力只依赖 runtime 已持有的 Gateway 与认证 owner。 */
 export interface WebIMContactSyncDependencies {

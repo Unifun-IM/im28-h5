@@ -1,11 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Conversation, Message } from '@im28/im-sdk/web';
+import type { Conversation, Message, WebIMSync } from '@im28/im-sdk/web';
 import { Navigate, useParams } from 'react-router-dom';
 
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { ChatComposer } from './ChatComposer.js';
 import { ChatHeader } from './ChatHeader.js';
+import { ChatMediaInteractionProvider } from './ChatMediaInteractionProvider.js';
 import { ChatMessageList } from './ChatMessageList.js';
+import {
+  ChatPageState,
+  readChatPageError,
+  upsertVisibleMessage,
+} from './chat-page-helpers.js';
+import type { ChatAlbumSelectionItem } from './chat-attachment-selection.js';
+import { readChatVideoMetadata } from './chat-video-metadata.js';
+import { useChatVoiceRecorder } from './useChatVoiceRecorder.js';
 import './chat-page.css';
 
 /** RN chat detail 页面只编排 Web SDK cache/pull/send/realtime facade。 */
@@ -28,6 +37,12 @@ export function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   // messageListRef 持有唯一消息滚动容器。
   const messageListRef = useRef<HTMLElement>(null);
+  // voiceRecorder 管理浏览器麦克风会话，页面只接收最终 File。
+  const voiceRecorder = useChatVoiceRecorder({
+    disabled: sending || !sync,
+    onSend: handleSendAudio,
+    onError: setError,
+  });
 
   useEffect(() => {
     if (!sync || !snapshot.userID || !conversationID) return;
@@ -63,7 +78,7 @@ export function ChatPage() {
         });
         if (active) setMessages(remoteMessages);
       } catch (cause) {
-        if (active) setError(readErrorMessage(cause));
+        if (active) setError(readChatPageError(cause));
       } finally {
         if (active) setLoading(false);
       }
@@ -98,7 +113,7 @@ export function ChatPage() {
         setMessages(cachedMessages);
       })
       .catch(cause => {
-        if (active) setError(readErrorMessage(cause));
+        if (active) setError(readChatPageError(cause));
       });
     return () => {
       active = false;
@@ -116,14 +131,89 @@ export function ChatPage() {
   }, [messages.length]);
 
   /** 发送真实文本并从账号 SQLite 重读 sent/failed 最终状态。 */
-  async function handleSend(text: string) {
+  async function handleSendText(text: string) {
+    await runMessageOperation(async activeSync => {
+      await activeSync.messages.sendText({ conversationID, text });
+    });
+  }
+
+  /** 按浏览器选择顺序逐张执行真实图片上传和 Gateway send。 */
+  async function handleSendAlbum(items: readonly ChatAlbumSelectionItem[]) {
+    await runMessageOperation(async activeSync => {
+      for (const item of items) {
+        // file 保留浏览器选择顺序和原始 Blob 身份。
+        const { file } = item;
+        if (item.kind === 'image') {
+          await activeSync.messages.sendImage({
+            conversationID,
+            source: file,
+            name: file.name,
+            mimeType: file.type,
+            size: file.size,
+            onSending: handleLocalSendingMessage,
+          });
+          continue;
+        }
+        // metadata 在 SDK I/O 前由浏览器标准 video decoder 读取。
+        const metadata = await readChatVideoMetadata(file);
+        await activeSync.messages.sendVideo({
+          conversationID,
+          source: file,
+          name: file.name,
+          mimeType: file.type,
+          size: file.size,
+          ...metadata,
+          onSending: handleLocalSendingMessage,
+        });
+      }
+    });
+  }
+
+  /** 发送一个普通文件并保留浏览器报告的 MIME 与精确字节数。 */
+  async function handleSendFile(file: File) {
+    await runMessageOperation(async activeSync => {
+      await activeSync.messages.sendFile({
+        conversationID,
+        source: file,
+        name: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        size: file.size,
+        onSending: handleLocalSendingMessage,
+      });
+    });
+  }
+
+  /** 发送浏览器录音文件并复用 shared audio 上传和状态 owner。 */
+  async function handleSendAudio(file: File, durationSeconds: number) {
+    await runMessageOperation(async activeSync => {
+      await activeSync.messages.sendAudio({
+        conversationID,
+        source: file,
+        name: file.name,
+        mimeType: file.type,
+        size: file.size,
+        durationSeconds,
+        onSending: handleLocalSendingMessage,
+      });
+    });
+  }
+
+  /** 接收 SDK 已落库的 sending 实体，不在页面生成消息身份。 */
+  function handleLocalSendingMessage(message: Message) {
+    setMessages(current => upsertVisibleMessage(current, message));
+  }
+
+  /** 统一管理 text/image/video/file operation 的 busy、error 与 cache 重读。 */
+  async function runMessageOperation(
+    operation: (activeSync: WebIMSync) => Promise<void>,
+  ) {
     if (!sync || sending) return;
     setSending(true);
     setError(null);
     try {
-      await sync.messages.sendText({ conversationID, text });
+      await operation(sync);
     } catch (cause) {
-      setError(readErrorMessage(cause));
+      setError(readChatPageError(cause));
     } finally {
       try {
         // cached 包含 facade 持久化的 sent 或 failed 消息状态。
@@ -133,7 +223,7 @@ export function ChatPage() {
         });
         setMessages(cached);
       } catch (cause) {
-        setError(readErrorMessage(cause));
+        setError(readChatPageError(cause));
       } finally {
         setSending(false);
       }
@@ -161,37 +251,27 @@ export function ChatPage() {
             {error}
           </p>
         ) : null}
-        <ChatMessageList
-          messages={messages}
-          isGroup={isGroup}
-          loading={loading}
-          listRef={messageListRef}
+        <ChatMediaInteractionProvider>
+          <ChatMessageList
+            messages={messages}
+            isGroup={isGroup}
+            loading={loading}
+            listRef={messageListRef}
+          />
+        </ChatMediaInteractionProvider>
+        <ChatComposer
+          sending={sending}
+          voiceRecordingStatus={voiceRecorder.status}
+          voiceRecordingSeconds={voiceRecorder.seconds}
+          onSendText={handleSendText}
+          onSendAlbum={handleSendAlbum}
+          onSendFile={handleSendFile}
+          onVoiceRecordStart={voiceRecorder.start}
+          onVoiceRecordSend={voiceRecorder.send}
+          onVoiceRecordCancel={voiceRecorder.cancel}
+          onError={setError}
         />
-        <ChatComposer sending={sending} onSend={handleSend} />
       </section>
     </main>
   );
-}
-
-/** 统一承载启动和配置错误的全屏状态。 */
-function ChatPageState({
-  label,
-  detail,
-}: {
-  readonly label: string;
-  readonly detail?: string | null;
-}) {
-  return (
-    <main className="rn-chat-page-state">
-      <strong>{label}</strong>
-      {detail ? <span>{detail}</span> : null}
-    </main>
-  );
-}
-
-/** 将消息异常转换为不包含敏感数据的文本。 */
-function readErrorMessage(cause: unknown): string {
-  return cause instanceof Error && cause.message
-    ? cause.message
-    : '消息操作失败';
 }

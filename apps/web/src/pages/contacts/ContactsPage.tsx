@@ -6,7 +6,6 @@ import bellIconURL from '../../assets/rn/assets/icons/imm28/bell.solid.svg';
 import groupsIconURL from '../../assets/rn/assets/icons/imm28/contact-groups.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import starIconURL from '../../assets/rn/assets/icons/imm28/star.solid.svg';
-import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { ContactRow } from './ContactRow.js';
@@ -26,8 +25,6 @@ export function ContactsPage() {
   const contactsFacade = useMemo(() => runtime?.getSync().contacts ?? null, [runtime]);
   // contacts 保存已完成分页和归一化的好友记录。
   const [contacts, setContacts] = useState<readonly WebIMContact[]>([]);
-  // keyword 对齐 RN 搜索好友/账号 ID 的本地过滤。
-  const [keyword, setKeyword] = useState('');
   // loading 控制首次加载和刷新状态。
   const [loading, setLoading] = useState(false);
   // error 显示真实 SDK/Gateway 失败，不降级为空列表成功。
@@ -51,10 +48,10 @@ export function ContactsPage() {
     void loadContacts();
   }, [loadContacts]);
 
-  // entries 聚合搜索、星标和普通联系人分组。
+  // entries 聚合星标和普通联系人分组，搜索由独立 RN 全屏路由负责。
   const entries = useMemo(
-    () => buildContactListEntries(contacts, keyword),
-    [contacts, keyword],
+    () => buildContactListEntries(contacts, ''),
+    [contacts],
   );
   // indexes 只展示当前结果实际存在的分组。
   const indexes = useMemo(() => getContactIndexes(entries), [entries]);
@@ -74,21 +71,10 @@ export function ContactsPage() {
             <h1>通讯录({contacts.length})</h1>
             <span aria-hidden="true" />
           </div>
-          <label className="rn-contacts-search">
-            <span className="sr-only">搜索好友或账号ID</span>
+          <Link className="rn-contacts-search" to="/contacts/search" aria-label="搜索好友或账号ID">
             <RNAssetIcon assetURL={searchIconURL} />
-            <input
-              type="search"
-              value={keyword}
-              placeholder="搜索好友/账号ID"
-              onChange={event => setKeyword(event.target.value)}
-            />
-            {keyword ? (
-              <button type="button" aria-label="清除" onClick={() => setKeyword('')}>
-                <RNAssetIcon assetURL={clearIconURL} />
-              </button>
-            ) : null}
-          </label>
+            <span className="rn-contacts-search-placeholder">搜索好友/账号ID</span>
+          </Link>
         </header>
 
         {error ? (
@@ -99,18 +85,18 @@ export function ContactsPage() {
         ) : null}
 
         <section className="rn-contacts-list" aria-label="联系人列表">
-          {!keyword.trim() ? <Link className="rn-contact-shortcut" to="/contacts/friend-applications">
+          <Link className="rn-contact-shortcut" to="/contacts/friend-applications">
             <span><RNAssetIcon assetURL={bellIconURL} /></span>
             <strong>好友验证</strong>
-          </Link> : null}
-          {!keyword.trim() ? <Link className="rn-contact-shortcut is-group" to="/contacts/group-applications">
+          </Link>
+          <Link className="rn-contact-shortcut is-group" to="/contacts/group-applications">
             <span><RNAssetIcon assetURL={groupsIconURL} /></span>
             <strong>群聊验证</strong>
-          </Link> : null}
-          {!keyword.trim() ? <Link className="rn-contact-shortcut is-group-list" to="/contacts/groups">
+          </Link>
+          <Link className="rn-contact-shortcut is-group-list" to="/contacts/groups">
             <span><RNAssetIcon assetURL={groupsIconURL} /></span>
             <strong>我的群聊</strong>
-          </Link> : null}
+          </Link>
           {loading && contacts.length === 0 ? (
             <div className="rn-contacts-loading" aria-label="正在加载通讯录"><span /></div>
           ) : error && contacts.length === 0 ? null : entries.length ? (
@@ -127,9 +113,7 @@ export function ContactsPage() {
               </div>
             ) : <ContactRow key={entry.key} contact={entry.contact} />)
           ) : (
-            <p className="rn-contacts-empty">
-              {keyword.trim() ? '没有找到相关联系人' : '当前暂无好友'}
-            </p>
+            <p className="rn-contacts-empty">当前暂无好友</p>
           )}
         </section>
 

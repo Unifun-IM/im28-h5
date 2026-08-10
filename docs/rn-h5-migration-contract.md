@@ -30,6 +30,7 @@
 | contact list | `../im28-phone/src/screens/chat/contactList/ContactListScreen.tsx`; `contactIndexHelpers.ts`; `../im28-phone/src/screens/chat/home/HomeTabBar.tsx` | `apps/web/src/pages/contacts/**` | `core-done-local/acceptance-gated` |
 | friend/group applications | `../im28-phone/src/screens/chat/friendApplications/FriendApplicationsScreen.tsx`; `group/GroupVerificationListScreen.tsx`; `group/GroupApplicationsScreen.tsx`; `group/GroupApplicationListView.tsx` | `apps/web/src/pages/contacts/**`; `../im28-sdk/src/sync/*-application-sync.ts` | `implemented-local/acceptance-gated` |
 | joined groups | `../im28-phone/src/screens/chat/group/ContactGroupListScreen.tsx`; `contactGroupHelpers.ts` | `/contacts/groups`; `../im28-sdk/src/sync/joined-group-sync.ts` | `implemented-local/acceptance-gated` |
+| peer contact profile | `../im28-phone/src/screens/chat/profile/UserProfileScreen.tsx`; `UserProfilePersonalInfo.tsx`; `addFriend/AddFriendScreen.tsx` | `/contacts/users/:userID`; `/contacts/users/:userID/add`; `../im28-sdk/src/sync/peer-profile-sync.ts` | `implemented-local/acceptance-gated` |
 | shell/tab hierarchy | `../im28-phone/src/screens/chat/home/ChatHomeScreen.tsx`; `HomeTabBar.tsx` | `PrimaryTabsLayout` + global `components/primary-tabs/**` | `core-done-local/acceptance-gated` |
 | static assets | RN asset roots listed below | `apps/web/src/assets/rn/**` | `466 files/hash-verified` |
 | platform-neutral SDK | `../im28-sdk/src/core.ts` | internal dependency of `@im28/im-sdk/web` | `linked` |
@@ -54,6 +55,7 @@ React Router page/feature
 -> browser runtime/sync/capability owner
 -> contacts: @im28/im-sdk/core Gateway client -> Gateway HTTP (remote-only in W6.a5.2.1)
 -> joined groups: shared GroupRepository cache -> Gateway myGroupList full pagination -> success-only cache replace
+-> peer profile: Gateway user/friend detail -> shared relationship mapping -> real conversation Repository write or friend-application mutation
 -> conversations/messages: shared DTO + Repository -> Gateway HTTP/WebSocket + account SQLite
 ```
 
@@ -83,6 +85,8 @@ Current canonical routes:
 | `/contacts/group-applications` | `GroupVerificationListScreen` | authenticated pending-group aggregation/search/role/count through audit facade | `implemented-local/acceptance-gated` |
 | `/contacts/group-applications/:groupID` | `GroupApplicationsScreen` + `GroupApplicationListView` | authenticated per-group filter/search/section/status and real accept/reject through same audit facade | `implemented-local/acceptance-gated` |
 | `/contacts/groups` | `ContactGroupListScreen` + `contactGroupHelpers` | authenticated cache-first joined-group list/search/status/role and real conversation lookup/open | `implemented-local/acceptance-gated` |
+| `/contacts/users/:userID` | `ContactListScreen` -> `UserProfileScreen` | authenticated real user/friend profile, RN 120px hero and success-only direct-conversation creation/persistence | `implemented-local/acceptance-gated` |
+| `/contacts/users/:userID/add` | `UserProfileScreen` -> `AddFriendScreen` request state | authenticated RN 64px result row、80-character message and real success-only `applyFriend` | `implemented-local/acceptance-gated` |
 | `/calls` | `ChatHomeScreen` calls tab + `CallListScreen` | authenticated route; real cache/sync/delete; no RTC placeholder | `core-done-local/acceptance-gated` |
 | `/me` | `ChatHomeScreen` me tab + `ProfileScreen` home | authenticated current profile hero and real general-settings route | `core-done-local/acceptance-gated` |
 | `/me/settings` | `ProfileScreen` general settings | full-screen route outside primary tab shell; real logout confirmation | `core-done-local/acceptance-gated` |
@@ -477,3 +481,166 @@ Local closeout: `WebIMSync.blacklist` now owns authenticated pagination、dedupe
 | conversation open | RN group row resolves or creates the corresponding group conversation | H5 reuses existing conversation cache/sync and navigates only after an actual group conversation match；no fabricated conversation or fake-success route |
 | deferred | create group、long-press dissolve/quit、group profile/manage、member mutations | omitted and acceptance-gated；no disabled placeholder or duplicate API/cache path |
 | local evidence | RN source/API trace、4 real sql.js/IndexedDB facade tests、5 pure view tests、466 asset check、31 SDK files/97 tests、H5 typecheck/build、anonymous deep-link guard | `implemented-local/acceptance-gated`；authenticated group data、conversation open and responsive light/dark/history remain open |
+
+## 23. W6.a5.2.13 Contact Profile Core Contract
+
+> AXIOM: 联系人资料关系判断、单聊持久化和好友申请语义只存在于共享 `peerProfile` facade；React Router 页面只负责 RN 视觉、表单状态和成功后的导航。
+
+| dimension | RN truth | Web owner/verdict |
+| :--- | :--- | :--- |
+| entry/routes | `ContactListScreen` contact press -> `UserProfileScreen`; stranger add state -> `AddFriendScreen` | `ContactRow` -> `/contacts/users/:userID` -> optional `/add` React Router routes；both full-screen outside primary tab shell |
+| profile read | `fetchFriendProfileSnapshot` combines public user、friend and relationship | `WebIMSync.peerProfile.get` -> authenticated `getUserDetail` and friend-only `getFriend`; normalizes self/friend/stranger、remark/name/avatar/gender/bio/star/added time |
+| RN presentation | 120px avatar、centered 18/27 name、24px gender badge、24px ID pill with copy asset、48px primary CTA and 56px flex rows | semantic HTML/CSS uses RN theme tokens、byte-mirrored copy/back SVG and shared RN avatar gradient；no generic UI kit |
+| direct conversation | `fetchSingleConversation` -> chat owner | `peerProfile.openConversation` -> real `openDirectConversation` -> shared mapper -> latest-message/conversation repositories -> encoded chat route；self is rejected |
+| friend application | 64px result row、80-character greeting、real add operation、success toast only after mutation | `/add` -> `peerProfile.applyFriend` with RN default message/length guard/source type；success state appears only after Gateway resolves |
+| deferred | RTC、presence、pending accept、remark/star mutations、delete、blacklist、common groups、share、group-member permissions | omitted and acceptance-gated；no placeholder controls、page fetch、mock profile、fake conversation or fake apply success |
+| local evidence | four sql.js/IndexedDB facade behavior tests、four pure contract/view tests、466 asset check、SDK 32 files/101 tests、all-runtime typecheck、build:web sync、release status/pack dry-run、H5 full verify/build and HTTP deep-link 200 | `implemented-local/acceptance-gated`；approved authenticated friend/stranger/self data、conversation/apply Network result and responsive light/dark/history remain open；in-app visual automation blocked by local-URL policy |
+
+## 24. W6.a5.2.14 Contact User Search Core Contract
+
+> AXIOM: 联系人用户搜索只通过共享 `contacts` facade 访问 Gateway；本地好友匹配与远端用户结果都只能进入既有 `peerProfile` 资料页，页面不得复制资料读取、关系判断或好友申请逻辑。
+
+| dimension | RN truth | Web owner/verdict |
+| :--- | :--- | :--- |
+| entry/route | `ContactListScreen` search surface -> `ContactSearchScreen` | `/contacts` search link -> `/contacts/search` full-screen React Router route outside primary tab shell |
+| local mode | authenticated friend list；trimmed keyword matches remark/nickname/ID/phone/email；empty keyword shows capability hint | existing `WebIMSync.contacts.list` + pure page projection；no second cache or transport owner |
+| remote mode | explicit `去服务器搜索` -> `searchUsersByKeyword`；self is excluded | `WebIMSync.contacts.searchUsers(keyword)` -> shared `GatewayHTTPClient.searchUsers`；authenticated trim、invalid-record filtering、self-filter and stable dedupe |
+| RN presentation | safe-top + 16、48px search header/cancel、48px server-search row、72px result row、40px avatar、matched field highlight、loading/error/empty | semantic HTML/CSS uses RN theme tokens and byte-mirrored search/clear assets；no generic UI kit |
+| result action | local friend and remote user both open user profile | encoded `/contacts/users/:userID` route reuses `.13` `peerProfile` owner；no search-page profile fetch or mutation |
+| deferred | server group tab/search、joined-group open、group join application、search-page friend application | omitted and separately bounded；no disabled placeholder、mock group/user result or fake success |
+| acceptance | local/remote/error/retry/guest/back-forward-reload/theme/responsive | focused SDK/view gates + full verify + approved real account search Network/result and browser visual/history proof |
+
+Local closeout: `WebIMSync.contacts` now owns authenticated `searchUsers` trim、invalid-record filtering、self-filter、stable dedupe and public-field normalization. `/contacts` uses a React Router search entry；`/contacts/search` restores the RN 48px header、capability hint、explicit server-search transition、72px/40px result geometry、safe text highlight and profile navigation. Four facade tests、four pure view tests、32 SDK files/103 tests、466 asset verification、H5 typecheck/build/full verify and HTTP deep-link 200 passed. No page transport、mock result、fake success、parallel profile/apply owner or search cache was introduced. Approved authenticated local/remote data、Network result and responsive light/dark/history proof remain acceptance gates；group search/join stays deferred.
+
+## 25. W6.a6.1 Chat Media Read Core Contract
+
+> AXIOM: 媒体真相只来自 shared message cache 中的 Gateway payload；H5 聊天页只投影和播放既有 URL，不得为可见交互引入页面 API、第二份缓存、mock URL 或 fake-success。
+
+| dimension | RN truth | Web owner/verdict |
+| :--- | :--- | :--- |
+| message payload | image `list[0].url/thumbnail_url`、audio `url/duration_seconds`、video `url/thumbnail_url/duration_seconds` | existing `Message.payload` projection；补齐遗漏的 `audio.url`，不修改 SDK transport/schema |
+| image | image bubble opens black full-screen preview；close action and contained image | feature-local overlay；real full URL only、Escape/close/route cleanup；save-to-album remains deferred |
+| audio | one global active voice；same message toggles stop/play；switching stops previous；missing URL is disabled | one chat-page `<audio>` owner；playing/error state is real element state，unmount stops and clears source |
+| video | bubble opens black full-screen preview with back header and actual controls/autoplay | feature-local overlay with native `<video controls autoPlay playsInline>`；missing/unsafe URL cannot open |
+| routing | preview is short-lived screen state inside current chat detail | no new React Router route；chat detail remains the URL owner and browser back keeps route semantics unchanged |
+| deferred | image save、file preview/download、media compose/upload、voice record/read/auto-next、failed retry、RTC | omitted and separately bounded；no disabled fake entry、mock media or direct Gateway call |
+| acceptance | mapping/action/error/cleanup、guest guard、mobile/desktop/theme/no-overflow、real media playback | pure/local gates first；approved authenticated image/audio/video messages are required for final playback acceptance |
+
+Local closeout: `chat-message-view.ts` now projects Gateway `audio.url` without changing shared SDK schemas. `ChatMediaInteractionProvider` is the single route-scoped owner for one `<audio>` element、real loading/playing/error state、switch/stop/unmount cleanup and image/video overlays. Media actions accept only absolute HTTP(S) URLs；missing or unsafe URLs remain disabled/fail-closed. Two focused files/five tests、all H5 11 files/42 tests、SDK 32 files/103 tests、466 asset verification、typecheck/build/full verify and the eventual `/auth/phone` anonymous deep-link guard passed. The existing account expired and Gateway restore returned `Failed to fetch`, so no real media playback、responsive visual or theme acceptance is claimed.
+
+## 26. W6.a6.2 Chat Image/File Send Core Contract
+
+> AXIOM: 页面只能提交浏览器选择结果给 shared `messages` facade；上传凭证、OSS 直传、Gateway body、client message ID 与 SQLite `sending -> sent/failed` 必须由 SDK 单链编排，任一步失败不得显示成功。
+
+| dimension | RN truth | Web owner/verdict |
+| :--- | :--- | :--- |
+| composer | empty draft exposes plus action；action panel uses 4-column 72px icon boxes | H5 reuses mirrored plus/album/file assets and RN geometry；this slice exposes only album/file real actions |
+| picker/limits | album max 12 and preserves selection order；image 10 MB；ordinary file 100 MB | hidden native file inputs；supported browser image MIME、per-item validation and sequential send；no synthetic path or base64 copy |
+| upload | shared Gateway credential then OSS `FormData(key/policy/OSSAccessKeyId/Signature/success_action_status/file)` | `src/platforms/web` adapter is the only `Blob/FormData` owner；credential stays in memory and is never persisted/logged |
+| send/cache | local outgoing row first；Gateway image/file body reuses object key and URL；same client ID converges to sent or failed | shared sync owns conversation existence check、stable ID、repository writes、Gateway mapping and exact body metadata |
+| page boundary | picker errors and send failures remain visible in chat page | H5 calls only `sendImage/sendFile`, then rereads account SQLite；no `fetch`、Gateway client or repository import |
+| deferred | draft caption/pending file、camera、video/audio/voice、upload progress/cancel/retry、file download | omitted and separately bounded；no fake controls or fake-success fallback |
+| acceptance | selecting、limits、ordering、optimistic/failure state、real upload/send、theme/responsive/guest | local contract gates first；approved authenticated account required for OSS/Gateway final acceptance |
+
+## 27. W6.a6.3 Chat Album Video Send Contract
+
+| dimension | RN production truth | H5 migration decision |
+| :--- | :--- | :--- |
+| entry | `useChatMediaPicker` opens one `mediaType: mixed` album with selection limit 12 | keep the existing single album action and hidden multiple input；do not add a duplicate video action |
+| validation | image/video share album order；video max 500 MB | validate the full FileList MIME/count/size before SDK I/O；unsupported media rejects visibly |
+| metadata | picker Asset supplies duration/width/height | a short-lived object URL + hidden standard video element reads metadata；failure prevents upload and always revokes the URL |
+| send/cache | `type=104` video body uses uploaded object、duration、dimensions and OSS 7-second snapshot；local state converges sending -> sent/failed | `WebIMSync.messages.sendVideo` and shared `message-video-send` are the only body/state owners；page passes File + metadata only |
+| snapshot | `x-oss-process=video/snapshot,t_7000,f_jpg[,w,h],m_fast,ar_auto` | shared SDK reproduces the exact RN query and preserves an existing URL query with `&` |
+| deferred | draft caption/pending media、camera、progress/cancel/retry、audio/voice、RTC | omitted；no fake thumbnail、fake sent result or unauthorized real transmission |
+| acceptance | real metadata、credential、OSS、Gateway、SQLite、bubble/theme/responsive | local deterministic gates first；approved authenticated account and explicit send authorization remain required |
+
+## 28. W6.a6.4 Chat Voice Send Core Contract
+
+> AXIOM: 语音业务状态、Gateway body 和 SQLite 收敛属于 shared SDK；浏览器仅通过标准录音 API 产出真实 `File`，页面不得持有 OSS、消息体或第二套 outgoing state。
+
+| dimension | RN production truth | H5 migration decision |
+| :--- | :--- | :--- |
+| entry | composer 左侧 voice/keyboard mode；按住说话 | reuse mirrored `voice.svg`/`keyboard.svg` and RN input pill；pointer hold is the only recording entry |
+| recording | microphone permission、AAC/M4A recorder、metering、route cleanup | Web media adapter uses `getUserMedia + MediaRecorder`、chooses supported `audio/mp4|webm|ogg`、stops all tracks on every terminal path |
+| gesture/time | upward delta `>=56px` cancels；`<2s` reports too short；`60s` auto-stop | preserve thresholds and visible status；cancel/short paths discard Blob and never call SDK upload |
+| send/cache | `sendSoundMessage` uploads then sends `type=103` audio body；same client ID converges sending -> sent/failed | `WebIMSync.messages.sendAudio` reuses shared uploaded-message state owner；page passes only File、MIME、size、duration |
+| body | `audio.media_id/url/duration_seconds` and optional `size_bytes` | shared SDK emits exact body with integer duration `1..60` and exact Blob bytes |
+| deferred | audio file picker、persistent waveform、played/read/auto-next、upload progress/cancel、failed retry、RTC | omitted and separately bounded；no fake recorder、mock Blob、fake success or unauthorized microphone/transmission |
+| acceptance | permission/unsupported/start/stop/cancel/short/auto-stop、OSS/Gateway/SQLite、responsive/theme | injected deterministic gates first；real microphone and message transmission require explicit authorization |
+
+Local closeout: H5 now has one RN-mirrored voice composer path and one browser recorder adapter. Injected tests prove typed `File` creation、cancel discard、permission failure、early recorder failure notification and track cleanup；shared SDK tests prove exact `type=103` body、SQLite `sent` convergence and pre-I/O duration rejection. H5 15/56、SDK 36/111、all-runtime typecheck、build:web/full verify and 390x844/760x900 voice-mode layout proof passed. The browser capability sandbox did not expose microphone APIs, and no real permission prompt、recording、upload or transmission was attempted；those remain explicit acceptance gates.
+
+## 29. W6.a6.5 Chat System Emoji Core Contract
+
+> AXIOM: 第一套系统表情只是当前文本草稿的 Unicode 编辑能力；它不得创建第二种消息 body、富文本 entity 或绕过既有 `sendText` 主链。
+
+| dimension | RN production truth | H5 migration decision |
+| :--- | :--- | :--- |
+| entry | composer 尾部 emoji/keyboard toggle；打开面板回到 text mode and closes actions | mirrored icons；one `activePanel` owner keeps voice/actions/emoji mutually exclusive |
+| list/layout | 52-entry `SYSTEM_UNICODE_EMOJIS`、recent/all sections、7 columns、28/32 emoji text、300px panel | copy exact ordered list and RN geometry；system tab only，unsupported tabs are omitted rather than disabled placeholders |
+| edit | insert at current UTF-16 selection、replace selected range、delete selection or one complete grapheme | pure Web helper mirrors selection normalization and `Intl.Segmenter` with ZWJ/variation/skin-tone/flag fallback |
+| recent | `im28.chat.systemEmoji.recent` MRU、dedupe、max 21 | browser preference adapter keeps the same key/limit；invalid or unavailable storage fails closed to an empty recent section |
+| send | edited Unicode remains ordinary text and follows existing send action | no SDK change；panel never invokes send and browser proof must not transmit a message |
+| deferred | illustrated preset entities、rich clipboard、custom emoji sync/manager/type `115` | omitted and separately bounded；no fake tab、mock entity or alternate message type |
+
+Local closeout: H5 now mirrors the RN 52-entry Unicode pack、7-column bounded panel、system/recent sections and emoji/keyboard toggle. Pure behavior tests prove UTF-16 selection replacement、full grapheme deletion and 21-item MRU semantics；authenticated 390x844 and 1280x800 browser proof confirmed insert/delete、panel retention and no new reload errors. H5 17/65、SDK 36/111、466 assets and full verify passed. No message was transmitted；illustrated/custom emoji entities remain outside this contract.
+
+## 30. W6.a6.6 Chat Illustrated Preset Emoji Contract
+
+> AXIOM: 插画预设表情仍是 `type=101` 文本消息；Unicode fallback 是跨端可读正文，`preset_emoji` entity 只提供 IM28 bundled-PNG identity。业务算法必须在 `im28-sdk` 单点实现，RN/H5/Desktop 只提供资源映射和 UI。
+
+### Production Truth
+
+| dimension | frozen contract |
+| :--- | :--- |
+| pack | `im28-preset-v1`；135 个有序且唯一的 `presetID`，133 个 Unicode fallback；`🖼️`、`⛸️` 各有两个 preset identity，禁止按 Unicode 反推 identity |
+| app entity | `{ type: 'preset_emoji', offset, length, packID, presetID }`；`offset/length` 使用 JavaScript UTF-16 unit |
+| wire entity | `{ type: 'preset_emoji', offset, length, preset_id: 'packID/presetID' }`；entity 位于 Gateway message/request 顶层，不进入 `body.text` |
+| text | `body.text.text` 永远保留 Unicode fallback；外部客户端、未知 pack/preset、资源缺失或 fallback 不匹配时仍可读 |
+| recent | key `im28.chat.systemEmoji.illustrated.recent`；只存 `presetID` MRU，去空、去重、上限 21；与 Unicode recent 分离 |
+| presentation | panel 7 columns、32px PNG、300px bounded surface；混排消息 18px、单 entity 文本消息 60px、会话预览 14px |
+
+### Shared Semantic Rules
+
+| operation | rule |
+| :--- | :--- |
+| normalize | drop non-array、invalid type、non-integer/negative offset、non-positive length、out-of-range and overlapping entities；sort by offset |
+| identity | encode/decode `packID/presetID` exactly once in shared SDK；empty side or missing separator is invalid |
+| insert | resolve registered `presetID` -> Unicode fallback；replace current normalized selection；drop intersecting entities、shift later entities by UTF-16 delta、append new entity、sort、collapse cursor after fallback |
+| ordinary edit | compute changed UTF-16 interval；preserve entities before it、shift entities after it、drop intersecting entities；plain paste/typing never creates an entity |
+| trim/send | trim final text and shift/filter entities against that exact text before optimistic persistence and Gateway send |
+| receive/cache | decode Gateway entities before Repository write；SQLite must persist entities with the message, and send success must retain validated local entities if a gradual Gateway response omits them |
+| render | replace covered fallback only when `(packID,presetID)` resolves and registered fallback exactly equals covered text；otherwise render original Unicode |
+| preview | any sender/draft/unread prefix offset must use shared projection semantics；never mutate source entity identity |
+
+### Owner Map
+
+| owner | must own | must not own |
+| :--- | :--- | :--- |
+| `im28-sdk/core` | `PresetEmojiEntity/Document` DTO、135 identity/fallback descriptors、normalize/encode/decode、insert/reconcile/trim/project algorithms | React/React Native types、PNG imports、localStorage/AsyncStorage |
+| `im28-sdk/transport + sync + repository` | Gateway mapping、`sendText({ text, entities })` validation/serialization、optimistic/sent/failed entity persistence、missing-echo preservation | panel state、asset lookup、DOM selection |
+| RN app | static `presetID -> require(PNG)` adapter、existing composer/message presentation；consume shared algorithms through `/rn` | second normalization/document/serialization implementation |
+| H5 app | mirrored `presetID -> URL` adapter、illustrated tab/panel、DOM selection bridge、recent preference、inline/large/conversation rendering | Gateway DTO construction、SQLite entity schema/state transition、Unicode identity inference |
+
+### Runtime And Failure Matrix
+
+| case | required result |
+| :--- | :--- |
+| invalid/overlap/out-of-range entity | drop entity；keep Unicode text；never blank or fail whole history page |
+| unknown pack/preset or missing PNG | keep Unicode fallback；no broken image placeholder |
+| known identity but fallback mismatch | keep Unicode fallback；do not substitute a different PNG |
+| direct Unicode typing/paste | ordinary text only；no entity synthesis even when glyph matches a preset |
+| editing across an entity | remove identity for the intersected range；remaining text stays valid |
+| Gateway send failure | same `clientMsgID` row becomes `failed` with text/entity snapshot retained；no fake success |
+| Gateway success omits entities | preserve the validated optimistic entities locally until authoritative data includes or explicitly replaces them |
+| browser preference unavailable | recent section becomes empty；all 135 items remain usable |
+
+### Implementation Decomposition
+
+| slice | deliverable | gate | excluded |
+| :--- | :--- | :--- | :--- |
+| `W6.a6.6.1-shared-preset-emoji-core` | SDK canonical DTO/descriptor/algorithms、Gateway mapper/send/cache persistence；RN local algorithm files become thin platform adapters over `/rn` | core/document/mapper/real-SQLite send tests + `build:rn`/`build:web` + RN/H5 typecheck | H5 panel/render、draft persistence、edit/forward/retry UI、real send |
+| `W6.a6.6.2-h5-illustrated-emoji-ui` | H5 asset registry、illustrated tab/recent/grid、atomic draft preview、inline/60px bubble and conversation preview rendering | H5 behavior tests + SDK regression + 466 assets + mobile/desktop light/dark browser proof | custom emoji type `115`、rich clipboard、draft persistence、real send |
+| `W6.a6.6.3-illustrated-emoji-acceptance` | explicitly authorized disposable text send proves Network/Gateway/SQLite/list-back | real request/result/cache evidence | no unapproved message、account mutation or custom emoji operation |
+
+Reviewer verdict: SDK Gateway schemas are `runtime-chain-partial` because request/response types already expose `entities`, while shared `Message` mapping、Repository persistence and Web `sendText` currently drop that semantic. RN is production-ready but owns duplicate App-local algorithms；H5 has all 135 mirrored PNG assets but no preset entity chain. No mock shortcut or fake-success path exists because the unsupported illustrated tab is currently omitted. Contract status is `done`；implementation remains `🟡` until `.1/.2` pass, and real transmission remains `🟡 acceptance-gated`.
