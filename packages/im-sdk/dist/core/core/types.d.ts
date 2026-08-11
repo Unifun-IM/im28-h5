@@ -54,6 +54,12 @@ export interface ForwardOrigin {
     readonly name?: string;
     readonly avatarURL?: string;
 }
+/** 消息提及目标保存平台中立身份，供 Gateway、SQLite 与各端展示复用。 */
+export interface MessageMention {
+    readonly type: 'user' | 'all';
+    readonly userID?: string;
+    readonly nickname?: string;
+}
 export interface Message {
     readonly clientMsgID: string;
     readonly serverMsgID?: string;
@@ -69,6 +75,7 @@ export interface Message {
     readonly forwardBatchID?: string;
     readonly localEx?: string;
     readonly entities?: readonly PresetEmojiEntity[];
+    readonly mentions?: readonly MessageMention[];
     readonly payload: unknown;
 }
 export type { PresetEmojiEntity } from '../modules/message/preset-emoji-types.js';

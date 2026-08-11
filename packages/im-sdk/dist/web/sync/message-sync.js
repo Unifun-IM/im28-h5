@@ -4,6 +4,7 @@ import { sendWebIMFileMessage, sendWebIMImageMessage, } from './message-media-se
 import { sendWebIMCustomEmojiMessage, } from './message-custom-emoji-send.js';
 import { sendWebIMQuoteMessage, } from './message-quote-send.js';
 import { sendWebIMTextMessage, } from './message-text-send.js';
+import { sendWebIMMentionMessage, } from './message-mention-send.js';
 import { sendWebIMVideoMessage, } from './message-video-send.js';
 import { retryWebIMMessage, } from './message-retry.js';
 import { forwardWebIMMessages, } from './message-forward.js';
@@ -89,6 +90,12 @@ class WebIMMessageSyncImpl {
         // context 保证发送账号与消息 direction 一致。
         const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
         return this.mutationQueue.enqueue(() => sendWebIMTextMessage(context, options, this.dependencies));
+    }
+    /** 发送 type106 群聊提及并保存完整目标身份。 */
+    async sendMention(options) {
+        // context 保证提及消息与当前账号 SQLite 一致。
+        const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
+        return this.mutationQueue.enqueue(() => sendWebIMMentionMessage(context, options, this.dependencies));
     }
     /** 发送 type114 引用消息并保留来源身份和文本快照。 */
     async sendQuote(options) {

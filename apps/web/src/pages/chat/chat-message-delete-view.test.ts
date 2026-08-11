@@ -51,6 +51,7 @@ function createJoinedGroup(
     memberCount: 3,
     ownerUserID: 'owner',
     currentUserRole,
+    canMentionAll: currentUserRole !== 'member',
     isCreatedByCurrentUser: currentUserRole === 'owner',
     status: 'active',
   };

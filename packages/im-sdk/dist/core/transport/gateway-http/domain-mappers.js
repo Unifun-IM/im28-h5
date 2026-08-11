@@ -1,5 +1,6 @@
 import { IMError } from '../../core/errors.js';
 import { normalizePresetEmojiEntities } from '../../modules/message/preset-emoji.js';
+import { normalizeMessageMentions } from '../../modules/message/mention.js';
 /** 将 Gateway message 映射为跨平台 core message。 */
 export function mapGatewayMessageToCore(message, options) {
     // serverMsgID 只接受非空服务端标识。
@@ -25,6 +26,8 @@ export function mapGatewayMessageToCore(message, options) {
     const seq = readSafeInteger(message.msg_seq);
     // entity 区间只对文本正文有意义，未知或错误输入保守降级为 Unicode。
     const entities = normalizePresetEmojiEntities(message.entities, readGatewayMessageText(message.body));
+    // mentions 使用顶层服务端身份，正文 targets 只作 payload 快照。
+    const mentions = normalizeMessageMentions(message.mentions);
     // forwardOrigin 只接受 Gateway 顶层来源快照，不从正文或当前用户补造。
     const forwardOrigin = normalizeGatewayForwardOrigin(message.forward_origin);
     return {
@@ -39,6 +42,7 @@ export function mapGatewayMessageToCore(message, options) {
         ...(seq === undefined ? {} : { seq }),
         ...(forwardOrigin ? { forwardOrigin } : {}),
         ...(entities.length ? { entities } : {}),
+        ...(mentions.length ? { mentions } : {}),
         payload: message.body ?? null,
     };
 }
@@ -225,6 +229,7 @@ function mapContentType(type) {
         audio: 103,
         video: 104,
         file: 105,
+        mention: 106,
         custom: 110,
         quote: 114,
     };

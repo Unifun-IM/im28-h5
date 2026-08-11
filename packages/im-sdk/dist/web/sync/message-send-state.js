@@ -26,6 +26,7 @@ export async function prepareWebIMMessageSend(context, definition, dependencies)
         status: 'sending',
         sendTime: dependencies.now?.() ?? Date.now(),
         ...(definition.entities?.length ? { entities: definition.entities } : {}),
+        ...(definition.mentions?.length ? { mentions: definition.mentions } : {}),
         payload: definition.payload,
     };
     // messageRepository 管理同一 client ID 的状态收敛。
@@ -49,13 +50,14 @@ export async function checkpointWebIMMessageSendBody(prepared, body) {
     return { ...prepared, localMessage };
 }
 /** 调用 Gateway 并将同一 optimistic row 收敛为 sent。 */
-export async function completeWebIMMessageSend(prepared, body, dependencies, entities) {
+export async function completeWebIMMessageSend(prepared, body, dependencies, entities, mentions) {
     // remoteMessage 必须回显相同幂等 ID，避免产生双消息。
     const remoteMessage = await dependencies.gatewayClient.sendMessage({
         conversation_id: prepared.conversationID,
         client_msg_id: prepared.clientMsgID,
         body,
         ...(entities?.length ? { entities } : {}),
+        ...(mentions?.length ? { mentions } : {}),
     });
     // sentMessage 使用共享 Gateway mapper，禁止业务层复制 DTO 解析。
     const sentMessage = mapGatewayMessageToCore(remoteMessage, {
@@ -74,6 +76,11 @@ export async function completeWebIMMessageSend(prepared, body, dependencies, ent
             : prepared.localMessage.entities?.length
                 ? { entities: prepared.localMessage.entities }
                 : {}),
+        ...(sentMessage.mentions?.length
+            ? { mentions: sentMessage.mentions }
+            : prepared.localMessage.mentions?.length
+                ? { mentions: prepared.localMessage.mentions }
+                : {}),
     };
     await prepared.messageRepository.upsert(persistedMessage);
     await prepared.conversationRepository.updateLatestMessage(prepared.conversationID, prepared.clientMsgID, sentMessage.sendTime);
@@ -90,11 +97,11 @@ export async function failWebIMMessageSend(prepared, cause) {
     throw cause;
 }
 /** 为无需平台上传的 body 执行完整 optimistic send 状态机。 */
-export async function executeWebIMMessageSend(context, definition, body, dependencies, entities) {
+export async function executeWebIMMessageSend(context, definition, body, dependencies, entities, mentions) {
     // prepared 保证 Gateway 调用前已有可见 sending row。
     const prepared = await prepareWebIMMessageSend(context, definition, dependencies);
     try {
-        return await completeWebIMMessageSend(prepared, body, dependencies, entities);
+        return await completeWebIMMessageSend(prepared, body, dependencies, entities, mentions);
     }
     catch (cause) {
         return failWebIMMessageSend(prepared, cause);

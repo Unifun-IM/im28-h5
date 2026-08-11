@@ -22,6 +22,7 @@ function createGroup(
     memberCount: 12,
     ownerUserID: 'owner',
     currentUserRole: 'member',
+    canMentionAll: false,
     isCreatedByCurrentUser: false,
     status: 'active',
     ...overrides,

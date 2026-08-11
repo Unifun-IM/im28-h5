@@ -4,6 +4,7 @@ import { createWebIMBlacklistSync } from '../../../sync/blacklist-sync.js';
 import { createWebIMFriendApplicationSync, } from '../../../sync/friend-application-sync.js';
 import { createWebIMGroupApplicationSync, } from '../../../sync/group-application-sync.js';
 import { createWebIMJoinedGroupSync, } from '../../../sync/joined-group-sync.js';
+import { createWebIMGroupMemberSync, } from '../../../sync/group-member-sync.js';
 import { createWebIMPeerProfileSync, } from '../../../sync/peer-profile-sync.js';
 import { createWebIMConversationSync, } from '../../../sync/conversation-sync.js';
 import { createWebIMMessageSync, } from '../../../sync/message-sync.js';
@@ -32,6 +33,7 @@ export function createWebIMSync(dependencies) {
         friendApplications: createWebIMFriendApplicationSync(dependencies),
         groupApplications: createWebIMGroupApplicationSync(dependencies),
         groups: createWebIMJoinedGroupSync(sharedDependencies),
+        groupMembers: createWebIMGroupMemberSync(sharedDependencies),
         messages: createWebIMMessageSync(sharedDependencies),
         peerProfile: createWebIMPeerProfileSync(sharedDependencies),
         profile: createWebIMProfileSync(dependencies),

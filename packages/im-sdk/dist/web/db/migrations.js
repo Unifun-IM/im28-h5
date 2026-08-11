@@ -91,6 +91,13 @@ export const SDK_MIGRATIONS = [
             `ALTER TABLE messages ADD COLUMN forward_batch_id TEXT`,
         ],
     },
+    {
+        version: 10,
+        name: 'add_message_mentions',
+        statements: [
+            `ALTER TABLE messages ADD COLUMN mentions_json TEXT`,
+        ],
+    },
 ];
 export async function runMigrations(database, migrations = SDK_MIGRATIONS) {
     await database.open();

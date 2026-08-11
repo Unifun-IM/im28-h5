@@ -116,6 +116,7 @@ function mapCoreGroupToWeb(group, currentUserID) {
         memberCount: normalizeMemberCount(group.memberCount),
         ownerUserID,
         currentUserRole: normalizeJoinedGroupRole(payload),
+        canMentionAll: Boolean(payload.can_mention_all),
         isCreatedByCurrentUser: Boolean(currentUserID.trim() && ownerUserID === currentUserID.trim()),
         status: normalizeJoinedGroupStatus(payload.status),
     };

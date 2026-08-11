@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import type {
   Message,
+  MessageMention,
   PresetEmojiDocument,
   WebIMSync,
 } from '@im28/im-sdk/web';
@@ -20,6 +21,10 @@ interface UseChatOutgoingMessageActionsOptions {
 /** ChatPage 消费的真实文本、媒体与失败重试 actions。 */
 interface ChatOutgoingMessageActions {
   readonly sendText: (document: PresetEmojiDocument) => Promise<void>;
+  readonly sendMention: (
+    document: PresetEmojiDocument,
+    mentions: readonly MessageMention[],
+  ) => Promise<void>;
   readonly sendQuote: (sourceMessage: Message, text: string) => Promise<void>;
   readonly sendAlbum: (items: readonly ChatAlbumSelectionItem[]) => Promise<void>;
   readonly sendFile: (file: File) => Promise<void>;
@@ -41,6 +46,20 @@ export function useChatOutgoingMessageActions({
           conversationID,
           text: document.text,
           entities: document.entities,
+        });
+      }),
+    [conversationID, runMessageOperation],
+  );
+
+  /** 发送 RN type106 群聊提及并让 SDK 持有 body/cache 语义。 */
+  const sendMention = useCallback(
+    (document: PresetEmojiDocument, mentions: readonly MessageMention[]) =>
+      runMessageOperation(async activeSync => {
+        await activeSync.messages.sendMention({
+          conversationID,
+          text: document.text,
+          entities: document.entities,
+          mentions,
         });
       }),
     [conversationID, runMessageOperation],
@@ -136,5 +155,5 @@ export function useChatOutgoingMessageActions({
     [onSending, runMessageOperation],
   );
 
-  return { sendText, sendQuote, sendAlbum, sendFile, sendAudio, retry };
+  return { sendText, sendMention, sendQuote, sendAlbum, sendFile, sendAudio, retry };
 }

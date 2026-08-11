@@ -1,8 +1,6 @@
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
 import {
   trimPresetEmojiDocument,
-  type CustomEmoji,
-  type Message,
   type PresetEmojiDocument,
 } from '@im28/im-sdk/web';
 
@@ -19,45 +17,16 @@ import { PresetEmojiTextContent } from './PresetEmojiTextContent.js';
 import { ChatVoiceInput } from './ChatVoiceInput.js';
 import {
   CHAT_ALBUM_ACCEPT,
-  type ChatAlbumSelectionItem,
 } from './chat-attachment-selection.js';
-import type { ChatVoiceRecordingStatus } from './useChatVoiceRecorder.js';
 import { useChatComposerDraftEditing } from './useChatComposerDraftEditing.js';
 import { getChatMessageEditDocument } from './chat-message-edit-view.js';
 import { useChatComposerAttachments } from './useChatComposerAttachments.js';
+import { ChatMentionPickerPanel } from './ChatMentionPickerPanel.js';
+import { useChatComposerMentions } from './useChatComposerMentions.js';
+import type { ChatComposerProps } from './chat-composer-types.js';
 
 /** Composer 的两个内嵌面板互斥且不承载发送状态。 */
 type ChatComposerPanel = 'actions' | 'emoji' | null;
-
-/** RN composer 暴露文本和已验证浏览器附件选择结果。 */
-interface ChatComposerProps {
-  readonly sending: boolean;
-  readonly voiceRecordingStatus: ChatVoiceRecordingStatus;
-  readonly voiceRecordingSeconds: number;
-  readonly onSendText: (document: PresetEmojiDocument) => Promise<void>;
-  readonly editingMessage: Message | null;
-  readonly onCancelEdit: () => void;
-  readonly onEditText: (
-    message: Message,
-    document: PresetEmojiDocument,
-  ) => Promise<boolean>;
-  readonly quoteMessage: Message | null;
-  readonly isGroup: boolean;
-  readonly onCancelQuote: () => void;
-  readonly onSendQuote: (sourceMessage: Message, text: string) => Promise<void>;
-  readonly onSendAlbum: (
-    items: readonly ChatAlbumSelectionItem[],
-  ) => Promise<void>;
-  readonly onSendFile: (file: File) => Promise<void>;
-  readonly loadCachedCustomEmojis: () => Promise<readonly CustomEmoji[]>;
-  readonly syncCustomEmojis: () => Promise<readonly CustomEmoji[]>;
-  readonly onSendCustomEmoji: (emoji: CustomEmoji) => Promise<boolean>;
-  readonly onManageCustomEmojis: () => void;
-  readonly onVoiceRecordStart: () => void | Promise<void>;
-  readonly onVoiceRecordSend: () => void | Promise<void>;
-  readonly onVoiceRecordCancel: () => void | Promise<void>;
-  readonly onError: (message: string) => void;
-}
 
 /** 呈现 RN input pill、发送按钮和真实附件功能面板。 */
 export function ChatComposer({
@@ -65,6 +34,10 @@ export function ChatComposer({
   voiceRecordingStatus,
   voiceRecordingSeconds,
   onSendText,
+  onSendMention,
+  mentionMembers,
+  canMentionAll,
+  currentUserID,
   editingMessage,
   onCancelEdit,
   onEditText,
@@ -104,6 +77,16 @@ export function ChatComposer({
     document: draftDocument,
     onChangeDocument: setDraftDocument,
   });
+  // mentions 管理群聊 @ 查询、候选身份与光标恢复。
+  const mentions = useChatComposerMentions({
+    enabled: isGroup && !editingMessage && !quoteMessage,
+    document: draftDocument,
+    onChangeDocument: setDraftDocument,
+    textareaRef: draftEditing.textareaRef,
+    members: mentionMembers,
+    selfID: currentUserID,
+    canMentionAll,
+  });
   // canSend 统一控制键盘提交与可见发送按钮。
   const canSend = Boolean(draftDocument.text.trim()) && !sending && !voiceMode;
 
@@ -136,6 +119,13 @@ export function ChatComposer({
     if (selectedQuote) {
       onCancelQuote();
       await onSendQuote(selectedQuote, document.text);
+      return;
+    }
+    // visibleMentions 只包含仍存在于提交正文中的用户选择。
+    const visibleMentions = mentions.collect(document.text);
+    mentions.clear();
+    if (visibleMentions.length) {
+      await onSendMention(document, visibleMentions);
       return;
     }
     await onSendText(document);
@@ -174,6 +164,7 @@ export function ChatComposer({
           }}
         />
       ) : null}
+      <ChatMentionPickerPanel items={mentions.items} onSelect={mentions.select} />
       <form className="rn-chat-composer" onSubmit={handleSubmit}>
         <ChatVoiceInput
           voiceMode={voiceMode}

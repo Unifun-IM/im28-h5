@@ -18,6 +18,7 @@ import { useChatOutgoingMessageActions } from './useChatOutgoingMessageActions.j
 import { useChatForwardFlow } from './useChatForwardFlow.js';
 import { useChatMessageDeleteFlow } from './useChatMessageDeleteFlow.js';
 import { useChatMessageEditFlow } from './useChatMessageEditFlow.js';
+import { useChatMentionMembers } from './useChatMentionMembers.js';
 import './chat-page.css';
 /** RN chat detail 页面只编排 Web SDK cache/pull/send/realtime facade。 */
 export function ChatPage() {
@@ -85,6 +86,8 @@ export function ChatPage() {
   const editFlow = useChatMessageEditFlow({
     conversationID, sync, runMessageOperation, onError: setError,
   });
+  // mentionMembers 只消费 shared 群成员 cache/sync facade。
+  const mentionMembers = useChatMentionMembers(conversation, sync, setError);
   useEffect(() => {
     if (!sync || !snapshot.userID || !conversationID) return;
     // active 阻止路由切换后的旧请求回写。
@@ -265,6 +268,10 @@ export function ChatPage() {
             voiceRecordingStatus={voiceRecorder.status}
             voiceRecordingSeconds={voiceRecorder.seconds}
             onSendText={outgoingActions.sendText}
+            onSendMention={outgoingActions.sendMention}
+            mentionMembers={mentionMembers.members}
+            canMentionAll={mentionMembers.canMentionAll}
+            currentUserID={snapshot.userID}
             editingMessage={editFlow.editingMessage}
             onCancelEdit={editFlow.cancelEdit}
             onEditText={editFlow.submitEdit}

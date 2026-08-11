@@ -5,6 +5,7 @@ import { type IMMediaUploadPort, type WebIMSendFileMessageOptions, type WebIMSen
 import { type WebIMSendCustomEmojiMessageOptions } from './message-custom-emoji-send.js';
 import { type WebIMSendQuoteMessageOptions } from './message-quote-send.js';
 import { type WebIMSendTextMessageOptions } from './message-text-send.js';
+import { type WebIMSendMentionMessageOptions } from './message-mention-send.js';
 import { type WebIMSendVideoMessageOptions } from './message-video-send.js';
 import { type WebIMRetryMessageOptions } from './message-retry.js';
 import { type WebIMForwardMessagesOptions, type WebIMForwardMessagesResult } from './message-forward.js';
@@ -25,6 +26,7 @@ export interface WebIMMessageSync {
     getCachedByClientMsgIDs(clientMsgIDs: readonly string[]): Promise<readonly Message[]>;
     pullHistory(options: WebIMPullMessageHistoryOptions): Promise<readonly Message[]>;
     sendText(options: WebIMSendTextMessageOptions): Promise<Message>;
+    sendMention(options: WebIMSendMentionMessageOptions): Promise<Message>;
     sendQuote(options: WebIMSendQuoteMessageOptions): Promise<Message>;
     sendCustomEmoji(options: WebIMSendCustomEmojiMessageOptions): Promise<Message>;
     sendAudio(options: WebIMSendAudioMessageOptions): Promise<Message>;

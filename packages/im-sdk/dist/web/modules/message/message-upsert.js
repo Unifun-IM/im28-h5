@@ -13,6 +13,7 @@ export function createMessageUpsertStatement(message) {
       seq,
       payload_json,
       entities_json,
+      mentions_json,
       forward_origin_json,
       forward_source_msg_id,
       forward_batch_id,
@@ -20,7 +21,7 @@ export function createMessageUpsertStatement(message) {
       deleted,
       revoked,
       updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT local_extra_json FROM messages WHERE client_msg_id = ?), NULL), COALESCE((SELECT deleted FROM messages WHERE client_msg_id = ?), 0), COALESCE((SELECT revoked FROM messages WHERE client_msg_id = ?), 0), ?)`, [
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT local_extra_json FROM messages WHERE client_msg_id = ?), NULL), COALESCE((SELECT deleted FROM messages WHERE client_msg_id = ?), 0), COALESCE((SELECT revoked FROM messages WHERE client_msg_id = ?), 0), ?)`, [
         message.clientMsgID,
         message.serverMsgID ?? null,
         message.conversationID,
@@ -32,6 +33,7 @@ export function createMessageUpsertStatement(message) {
         message.seq ?? null,
         JSON.stringify(message.payload),
         message.entities?.length ? JSON.stringify(message.entities) : null,
+        message.mentions?.length ? JSON.stringify(message.mentions) : null,
         message.forwardOrigin ? JSON.stringify(message.forwardOrigin) : null,
         message.forwardSourceMsgID ?? null,
         message.forwardBatchID ?? null,

@@ -4,6 +4,7 @@ import { parseJsonColumn, readOptionalNumber, readOptionalString, readRequiredNu
 import { createMessageUpsertStatement } from './message-upsert.js';
 import { assertMessageStatusTransition } from './status.js';
 import { normalizePresetEmojiEntities } from './preset-emoji.js';
+import { normalizeMessageMentions } from './mention.js';
 export class MessageRepository extends Repository {
     constructor(database) {
         super(database);
@@ -149,6 +150,8 @@ function mapMessageRow(row) {
     const payload = parseJsonColumn(row, 'payload_json', null);
     // entities 独立于 payload 保存，读取时仍需按 Unicode 正文验证区间。
     const entities = normalizePresetEmojiEntities(parseJsonColumn(row, 'entities_json', []), readPayloadText(payload));
+    // mentions 分列保存，避免服务端正文未回显 targets 时丢失提醒身份。
+    const mentions = normalizeMessageMentions(parseJsonColumn(row, 'mentions_json', []));
     // forwardOrigin 与正文分列读取，避免 body 兼容字段成为第二真相。
     const forwardOrigin = parseForwardOrigin(row);
     return {
@@ -166,6 +169,7 @@ function mapMessageRow(row) {
         ...(forwardBatchID ? { forwardBatchID } : {}),
         ...(localEx !== undefined ? { localEx } : {}),
         ...(entities.length ? { entities } : {}),
+        ...(mentions.length ? { mentions } : {}),
         payload,
     };
 }

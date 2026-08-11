@@ -15,6 +15,7 @@ export interface WebIMJoinedGroup {
     readonly memberCount: number;
     readonly ownerUserID: string;
     readonly currentUserRole: WebIMJoinedGroupRole;
+    readonly canMentionAll: boolean;
     readonly isCreatedByCurrentUser: boolean;
     readonly status: WebIMJoinedGroupStatus;
 }

@@ -10,6 +10,8 @@ export { createWebIMFriendApplicationSync } from './friend-application-sync.js';
 export { createWebIMGroupApplicationSync } from './group-application-sync.js';
 /** 创建认证账号绑定的 cache-first 我的群聊 service。 */
 export { createWebIMJoinedGroupSync } from './joined-group-sync.js';
+/** 创建群成员 cache-first 同步服务。 */
+export { createWebIMGroupMemberSync } from './group-member-sync.js';
 /** 创建认证账号绑定的联系人资料与关系 action service。 */
 export { createWebIMPeerProfileSync } from './peer-profile-sync.js';
 /** 创建受认证账号约束的会话 cache/sync 服务。 */
@@ -18,6 +20,8 @@ export { createWebIMConversationSync } from './conversation-sync.js';
 export { createWebIMCustomEmojiSync } from './custom-emoji-sync.js';
 /** 创建消息 cache/history/send 服务。 */
 export { createWebIMMessageSync } from './message-sync.js';
+/** 导出共享群聊提及发送函数。 */
+export { sendWebIMMentionMessage } from './message-mention-send.js';
 /** 导出共享批量转发执行函数。 */
 export { forwardWebIMMessages } from './message-forward.js';
 /** 导出共享转发来源与隐藏发送人能力判断。 */
@@ -44,6 +48,8 @@ export type { WebIMFriendApplication, WebIMFriendApplicationDirection, WebIMFrie
 export type { WebIMGroupApplication, WebIMGroupApplicationListOptions, WebIMGroupApplicationSync, WebIMGroupApplicationSyncDependencies, WebIMGroupApplicationType, } from './group-application-sync.js';
 /** 导出我的群聊 facade contract。 */
 export type { WebIMJoinedGroup, WebIMJoinedGroupRole, WebIMJoinedGroupStatus, WebIMJoinedGroupSync, WebIMJoinedGroupSyncDependencies, WebIMJoinedGroupSyncOptions, } from './joined-group-sync.js';
+/** 导出群成员 facade contract。 */
+export type { WebIMGroupMember, WebIMGroupMemberRole, WebIMGroupMemberSync, WebIMGroupMemberSyncDependencies, WebIMGroupMemberSyncOptions, } from './group-member-sync.js';
 /** 导出联系人资料 facade contract。 */
 export type { WebIMPeerProfile, WebIMPeerProfileRelationship, WebIMPeerProfileSync, WebIMPeerProfileSyncDependencies, } from './peer-profile-sync.js';
 /** 导出页面与 runtime 共享的会话同步 contract。 */
@@ -54,6 +60,8 @@ export type { WebIMCustomEmojiSync, WebIMCustomEmojiSyncDependencies, } from './
 export type { WebIMMessageSync, WebIMMessageSyncDependencies, WebIMPullMessageHistoryOptions, } from './message-sync.js';
 /** 导出文本发送 contract。 */
 export type { WebIMSendTextMessageOptions } from './message-text-send.js';
+/** 导出群聊提及发送 contract。 */
+export type { WebIMSendMentionMessageOptions } from './message-mention-send.js';
 /** 导出批量转发 facade 与逐项结果 contract。 */
 export type { WebIMForwardCommentResult, WebIMForwardItemResult, WebIMForwardMessagesDependencies, WebIMForwardMessagesOptions, WebIMForwardMessagesResult, } from './message-forward.js';
 /** 导出主动消息删除 facade 与逐项结果 contract。 */
