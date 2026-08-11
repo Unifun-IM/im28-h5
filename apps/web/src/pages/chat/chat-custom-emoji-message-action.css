@@ -1,0 +1,100 @@
+.rn-chat-message-action {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  outline: 0;
+  touch-action: manipulation;
+}
+
+.rn-chat-message-action:focus-visible {
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px var(--im-brand-primary);
+}
+
+.rn-chat-message-action-menu {
+  position: absolute;
+  z-index: 12;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  min-width: 122px;
+  transform: translateX(-50%);
+  padding: 5px;
+  border: 1px solid var(--im-border-subtle);
+  border-radius: 6px;
+  background: var(--im-bg-card);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+}
+
+.rn-chat-message-row.is-incoming .rn-chat-message-action-menu {
+  left: 0;
+  transform: none;
+}
+
+.rn-chat-message-row.is-outgoing .rn-chat-message-action-menu {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+.rn-chat-message-action-menu::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -6px) rotate(45deg);
+  border-right: 1px solid var(--im-border-subtle);
+  border-bottom: 1px solid var(--im-border-subtle);
+  background: var(--im-bg-card);
+  content: '';
+}
+
+.rn-chat-message-row.is-incoming .rn-chat-message-action-menu::after {
+  left: 18px;
+}
+
+.rn-chat-message-row.is-outgoing .rn-chat-message-action-menu::after {
+  right: 18px;
+  left: auto;
+}
+
+.rn-chat-message-action-menu button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--im-text-primary);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.rn-chat-message-action-menu button:hover,
+.rn-chat-message-action-menu button:focus-visible {
+  background: var(--im-bg-pressed);
+}
+
+.rn-chat-message-action-menu button:disabled {
+  color: var(--im-text-muted);
+}
+
+.rn-chat-message-action-menu svg {
+  width: 17px;
+  height: 17px;
+}
+
+.rn-chat-notice {
+  margin: 0;
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--im-status-success) 12%, var(--im-bg-page));
+  color: var(--im-status-success);
+  font-size: 13px;
+  text-align: center;
+}

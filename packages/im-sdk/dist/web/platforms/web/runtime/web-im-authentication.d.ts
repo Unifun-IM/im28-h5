@@ -6,6 +6,7 @@ interface EstablishWebIMAuthSessionOptions {
     readonly requestAuthData: () => Promise<GatewayAuthData>;
     readonly accountDatabase: WebIMAccountDatabaseLifecycle;
     readonly authSessionStore: WebIMAuthSessionStore;
+    readonly afterDatabaseOpen?: (session: WebIMAuthSession) => Promise<void>;
 }
 /** 将共享 Gateway 原始业务码收敛为页面可消费的认证判断。 */
 export declare function isWebIMUnregisteredAccountError(cause: unknown): boolean;

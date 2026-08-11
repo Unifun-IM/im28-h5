@@ -1,28 +1,30 @@
+import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
 import {
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-  type KeyboardEvent,
-} from 'react';
+  trimPresetEmojiDocument,
+  type CustomEmoji,
+  type Message,
+  type PresetEmojiDocument,
+} from '@im28/im-sdk/web';
 
-import albumIconURL from '../../assets/rn/assets/icons/chat/album.svg';
-import fileIconURL from '../../assets/rn/assets/icons/chat/file.svg';
 import emojiIconURL from '../../assets/rn/assets/icons/imm28/emoji.regular.svg';
 import keyboardIconURL from '../../assets/rn/assets/icons/imm28/keyboard.svg';
 import plusIconURL from '../../assets/rn/assets/icons/imm28/plus-circle.regular.svg';
 import sendIconURL from '../../assets/rn/assets/icons/imm28/send.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { ChatAttachmentActionPanel } from './ChatAttachmentActionPanel.js';
+import { ChatComposerQuotePreview } from './ChatComposerQuotePreview.js';
+import { ChatComposerEditPreview } from './ChatComposerEditPreview.js';
 import { ChatSystemEmojiPanel } from './ChatSystemEmojiPanel.js';
+import { PresetEmojiTextContent } from './PresetEmojiTextContent.js';
 import { ChatVoiceInput } from './ChatVoiceInput.js';
 import {
   CHAT_ALBUM_ACCEPT,
   type ChatAlbumSelectionItem,
-  validateChatFile,
-  validateChatAlbumSelection,
 } from './chat-attachment-selection.js';
 import type { ChatVoiceRecordingStatus } from './useChatVoiceRecorder.js';
 import { useChatComposerDraftEditing } from './useChatComposerDraftEditing.js';
+import { getChatMessageEditDocument } from './chat-message-edit-view.js';
+import { useChatComposerAttachments } from './useChatComposerAttachments.js';
 
 /** Composer 的两个内嵌面板互斥且不承载发送状态。 */
 type ChatComposerPanel = 'actions' | 'emoji' | null;
@@ -32,11 +34,25 @@ interface ChatComposerProps {
   readonly sending: boolean;
   readonly voiceRecordingStatus: ChatVoiceRecordingStatus;
   readonly voiceRecordingSeconds: number;
-  readonly onSendText: (text: string) => Promise<void>;
+  readonly onSendText: (document: PresetEmojiDocument) => Promise<void>;
+  readonly editingMessage: Message | null;
+  readonly onCancelEdit: () => void;
+  readonly onEditText: (
+    message: Message,
+    document: PresetEmojiDocument,
+  ) => Promise<boolean>;
+  readonly quoteMessage: Message | null;
+  readonly isGroup: boolean;
+  readonly onCancelQuote: () => void;
+  readonly onSendQuote: (sourceMessage: Message, text: string) => Promise<void>;
   readonly onSendAlbum: (
     items: readonly ChatAlbumSelectionItem[],
   ) => Promise<void>;
   readonly onSendFile: (file: File) => Promise<void>;
+  readonly loadCachedCustomEmojis: () => Promise<readonly CustomEmoji[]>;
+  readonly syncCustomEmojis: () => Promise<readonly CustomEmoji[]>;
+  readonly onSendCustomEmoji: (emoji: CustomEmoji) => Promise<boolean>;
+  readonly onManageCustomEmojis: () => void;
   readonly onVoiceRecordStart: () => void | Promise<void>;
   readonly onVoiceRecordSend: () => void | Promise<void>;
   readonly onVoiceRecordCancel: () => void | Promise<void>;
@@ -49,40 +65,80 @@ export function ChatComposer({
   voiceRecordingStatus,
   voiceRecordingSeconds,
   onSendText,
+  editingMessage,
+  onCancelEdit,
+  onEditText,
+  quoteMessage,
+  isGroup,
+  onCancelQuote,
+  onSendQuote,
   onSendAlbum,
   onSendFile,
+  loadCachedCustomEmojis,
+  syncCustomEmojis,
+  onSendCustomEmoji,
+  onManageCustomEmojis,
   onVoiceRecordStart,
   onVoiceRecordSend,
   onVoiceRecordCancel,
   onError,
 }: ChatComposerProps) {
-  // draft 仅属于当前页面生命周期，不写入 token/session storage。
-  const [draft, setDraft] = useState('');
+  // draftDocument 仅属于当前页面生命周期，不写入 token/session storage。
+  const [draftDocument, setDraftDocument] = useState<PresetEmojiDocument>({
+    text: '',
+    entities: [],
+  });
   // activePanel 保证功能面板和表情面板互斥。
   const [activePanel, setActivePanel] = useState<ChatComposerPanel>(null);
   // voiceMode 在文本和 RN 按住说话输入之间切换。
   const [voiceMode, setVoiceMode] = useState(false);
-  // imageInputRef 触发浏览器多图选择器。
-  const albumInputRef = useRef<HTMLInputElement>(null);
-  // fileInputRef 触发浏览器单文件选择器。
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // attachments 隔离浏览器 input、校验和选择异常。
+  const attachments = useChatComposerAttachments({
+    onSendAlbum,
+    onSendFile,
+    onClosePanel: () => setActivePanel(null),
+    onError,
+  });
   // draftEditing 持有 textarea selection 的唯一编辑入口。
   const draftEditing = useChatComposerDraftEditing({
-    draft,
-    onChangeDraft: setDraft,
+    document: draftDocument,
+    onChangeDocument: setDraftDocument,
   });
   // canSend 统一控制键盘提交与可见发送按钮。
-  const canSend = Boolean(draft.trim()) && !sending && !voiceMode;
+  const canSend = Boolean(draftDocument.text.trim()) && !sending && !voiceMode;
+
+  useEffect(() => {
+    if (!editingMessage) return;
+    // document 使用气泡同源投影恢复正文和 preset entity。
+    const document = getChatMessageEditDocument(editingMessage);
+    setDraftDocument(document);
+    setVoiceMode(false);
+    setActivePanel(null);
+  }, [editingMessage]);
 
   /** 提交前固定当前文本并清空 RN composer 草稿。 */
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSend) return;
-    // text 保留本轮提交值，防止异步期间受后续输入影响。
-    const text = draft.trim();
-    setDraft('');
+    // document 同步裁剪正文和实体偏移，防止异步期间受后续输入影响。
+    const document = trimPresetEmojiDocument(draftDocument);
+    // selectedEdit 固定提交瞬间的原消息，失败时保留当前草稿。
+    const selectedEdit = editingMessage;
+    if (selectedEdit) {
+      const completed = await onEditText(selectedEdit, document);
+      if (completed) setDraftDocument({ text: '', entities: [] });
+      return;
+    }
+    // selectedQuote 固定提交瞬间的来源，避免异步期间被新动作替换。
+    const selectedQuote = quoteMessage;
+    setDraftDocument({ text: '', entities: [] });
     setActivePanel(null);
-    await onSendText(text);
+    if (selectedQuote) {
+      onCancelQuote();
+      await onSendQuote(selectedQuote, document.text);
+      return;
+    }
+    await onSendText(document);
   }
 
   /** Enter 发送、Shift+Enter 换行，并尊重中文输入法合成态。 */
@@ -98,38 +154,26 @@ export function ChatComposer({
     event.currentTarget.form?.requestSubmit();
   }
 
-  /** 校验浏览器相册结果后按原顺序交给页面 facade caller。 */
-  async function handleAlbumSelection(event: ChangeEvent<HTMLInputElement>) {
-    // files 立即复制，随后清空 input 允许重复选择同一文件。
-    const files = Array.from(event.currentTarget.files ?? []);
-    event.currentTarget.value = '';
-    setActivePanel(null);
-    if (!files.length) return;
-    try {
-      await onSendAlbum(validateChatAlbumSelection(files));
-    } catch (cause) {
-      onError(readSelectionError(cause));
-    }
-  }
-
-  /** 校验普通文件后交给唯一 SDK sendFile caller。 */
-  async function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
-    // file 固定本轮第一个选择结果。
-    const file = event.currentTarget.files?.[0];
-    event.currentTarget.value = '';
-    setActivePanel(null);
-    if (!file) return;
-    try {
-      await onSendFile(validateChatFile(file));
-    } catch (cause) {
-      onError(readSelectionError(cause));
-    }
-  }
-
   return (
     <section
       className={`rn-chat-composer-shell${activePanel ? ' is-panel-open' : ''}`}
     >
+      {quoteMessage ? (
+        <ChatComposerQuotePreview
+          message={quoteMessage}
+          isGroup={isGroup}
+          onCancel={onCancelQuote}
+        />
+      ) : null}
+      {editingMessage ? (
+        <ChatComposerEditPreview
+          message={editingMessage}
+          onCancel={() => {
+            setDraftDocument({ text: '', entities: [] });
+            onCancelEdit();
+          }}
+        />
+      ) : null}
       <form className="rn-chat-composer" onSubmit={handleSubmit}>
         <ChatVoiceInput
           voiceMode={voiceMode}
@@ -146,14 +190,28 @@ export function ChatComposer({
         >
           <label className="rn-chat-composer-pill">
             <span className="sr-only">消息内容</span>
+            {draftDocument.entities.length ? (
+              <span
+                className="rn-chat-composer-rich-preview"
+                aria-hidden="true"
+              >
+                <PresetEmojiTextContent
+                  text={draftDocument.text}
+                  entities={draftDocument.entities}
+                />
+              </span>
+            ) : null}
             <textarea
               ref={draftEditing.textareaRef}
               rows={1}
               maxLength={1000}
-              value={draft}
+              value={draftDocument.text}
               placeholder="发消息..."
               disabled={sending}
-              onChange={event => setDraft(event.target.value)}
+              className={
+                draftDocument.entities.length ? 'has-rich-preview' : undefined
+              }
+              onChange={event => draftEditing.changeText(event.target.value)}
               onKeyDown={handleKeyDown}
               onFocus={() => setActivePanel(null)}
             />
@@ -177,7 +235,7 @@ export function ChatComposer({
             assetURL={activePanel === 'emoji' ? keyboardIconURL : emojiIconURL}
           />
         </button>
-        {!voiceMode && draft.trim() ? (
+        {!voiceMode && (editingMessage || draftDocument.text.trim()) ? (
           <button
             className="rn-chat-send-button"
             type="submit"
@@ -204,69 +262,38 @@ export function ChatComposer({
       {activePanel === 'emoji' ? (
         <ChatSystemEmojiPanel
           onInsert={draftEditing.insertTextAtSelection}
+          onInsertPresetEmoji={draftEditing.insertPresetEmojiAtSelection}
           onDeleteBackward={draftEditing.deleteBackward}
+          disabled={sending}
+          loadCachedCustomEmojis={loadCachedCustomEmojis}
+          syncCustomEmojis={syncCustomEmojis}
+          onSendCustomEmoji={onSendCustomEmoji}
+          onManageCustomEmojis={onManageCustomEmojis}
+          onError={onError}
         />
       ) : null}
       {activePanel === 'actions' ? (
-        <div className="rn-chat-action-panel" aria-label="聊天功能面板">
-          <AttachmentAction
-            label="相册"
-            assetURL={albumIconURL}
-            onClick={() => albumInputRef.current?.click()}
-          />
-          <AttachmentAction
-            label="文件"
-            assetURL={fileIconURL}
-            onClick={() => fileInputRef.current?.click()}
-          />
-        </div>
+        <ChatAttachmentActionPanel
+          albumInputRef={attachments.albumInputRef}
+          fileInputRef={attachments.fileInputRef}
+        />
       ) : null}
       <input
-        ref={albumInputRef}
+        ref={attachments.albumInputRef}
         hidden
         type="file"
         multiple
         accept={CHAT_ALBUM_ACCEPT}
         disabled={sending}
-        onChange={event => void handleAlbumSelection(event)}
+        onChange={event => void attachments.selectAlbum(event)}
       />
       <input
-        ref={fileInputRef}
+        ref={attachments.fileInputRef}
         hidden
         type="file"
         disabled={sending}
-        onChange={event => void handleFileSelection(event)}
+        onChange={event => void attachments.selectFile(event)}
       />
     </section>
   );
-}
-
-/** 复用 RN 72px icon box 呈现一个已接通的附件 action。 */
-function AttachmentAction({
-  label,
-  assetURL,
-  onClick,
-}: {
-  readonly label: string;
-  readonly assetURL: string;
-  readonly onClick: () => void;
-}) {
-  return (
-    <button
-      className="rn-chat-action-item"
-      type="button"
-      aria-label={label}
-      onClick={onClick}
-    >
-      <span className="rn-chat-action-icon-box">
-        <RNAssetIcon assetURL={assetURL} />
-      </span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-/** 将选择器异常转换为不包含本地路径的用户文案。 */
-function readSelectionError(cause: unknown): string {
-  return cause instanceof Error && cause.message ? cause.message : '附件选择失败';
 }

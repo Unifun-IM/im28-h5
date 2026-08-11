@@ -1,0 +1,49 @@
+.rn-chat-composer-edit {
+  min-height: 48px;
+  padding: 8px 12px 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rn-chat-composer-edit > .rn-asset-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--im-icon-primary);
+}
+
+.rn-chat-composer-edit-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.rn-chat-composer-edit-copy strong {
+  color: var(--im-brand-primary);
+  font-weight: 400;
+}
+
+.rn-chat-composer-edit-copy small {
+  overflow: hidden;
+  color: var(--im-text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rn-chat-composer-edit > button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--im-icon-primary);
+  display: grid;
+  place-items: center;
+}
+
+.rn-chat-composer-edit > button .rn-asset-icon {
+  width: 24px;
+  height: 24px;
+}

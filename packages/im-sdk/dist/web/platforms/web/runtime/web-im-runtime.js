@@ -1,5 +1,5 @@
 import { createGatewayHTTPClient, createGatewayRealtimeClient } from '@im28/im-sdk/core';
-import { createWebIMSync } from '../../../sync/index.js';
+import { createWebIMSync } from '../sync/web-im-sync.js';
 import { establishWebIMAuthSession, refreshWebIMAuthSession } from './web-im-authentication.js';
 import { createWebIMPlatformTermsClient } from './platform-terms-client.js';
 import { WebIMRuntimeError } from './runtime-error.js';
@@ -92,6 +92,7 @@ class WebIMRuntimeImpl {
                 requestAuthData,
                 accountDatabase: this.options.accountDatabase,
                 authSessionStore: this.options.authSessionStore,
+                afterDatabaseOpen: async (session) => { this.currentSession = session; await this.sync.messages.recoverInterruptedSends(); },
             });
             this.currentSession = session;
             this.applyLifecycleEvent('auth_succeeded');
@@ -129,9 +130,11 @@ class WebIMRuntimeImpl {
             }
             // 恢复 realtime 前先恢复当前账号的 SQLite owner。
             await this.options.accountDatabase.open(this.currentSession.userID);
+            await this.sync.messages.recoverInterruptedSends();
         }
         catch (cause) {
             this.currentSession = null;
+            await this.options.accountDatabase.close();
             throw cause;
         }
         this.applyLifecycleEvent('auth_restored');

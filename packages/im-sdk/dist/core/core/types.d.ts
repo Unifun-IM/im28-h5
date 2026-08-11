@@ -1,3 +1,4 @@
+import type { PresetEmojiEntity } from '../modules/message/preset-emoji-types.js';
 export type IMRuntimeTarget = 'rn' | 'web';
 export type ConnectionState = 'idle' | 'initializing' | 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'kicked' | 'token_expired';
 export interface IMClientConfig {
@@ -46,6 +47,13 @@ export interface Conversation {
 }
 export type MessageDirection = 'incoming' | 'outgoing';
 export type MessageStatus = 'pending' | 'sending' | 'sent' | 'failed' | 'received' | 'revoked' | 'deleted_local';
+/** 转发来源是服务端确认的用户快照，供各端一致展示。 */
+export interface ForwardOrigin {
+    readonly type?: 'user' | string;
+    readonly userID: string;
+    readonly name?: string;
+    readonly avatarURL?: string;
+}
 export interface Message {
     readonly clientMsgID: string;
     readonly serverMsgID?: string;
@@ -56,9 +64,14 @@ export interface Message {
     readonly status: MessageStatus;
     readonly sendTime: number;
     readonly seq?: number;
+    readonly forwardOrigin?: ForwardOrigin;
+    readonly forwardSourceMsgID?: string;
+    readonly forwardBatchID?: string;
     readonly localEx?: string;
+    readonly entities?: readonly PresetEmojiEntity[];
     readonly payload: unknown;
 }
+export type { PresetEmojiEntity } from '../modules/message/preset-emoji-types.js';
 export interface User {
     readonly userID: string;
     readonly nickname?: string;

@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { ChatPage } from '../pages/chat/ChatPage.js';
+import { CustomEmojiManagerPage } from '../pages/chat/CustomEmojiManagerPage.js';
+import { ChatForwardTargetPage } from '../pages/chat/ChatForwardTargetPage.js';
 import { ConversationsPage } from '../pages/conversations/ConversationsPage.js';
 import { ContactsPage } from '../pages/contacts/ContactsPage.js';
 import { ContactFriendApplicationPage } from '../pages/contacts/ContactFriendApplicationPage.js';
@@ -78,6 +80,14 @@ export function App() {
           <Route
             path="/conversations/:conversationID"
             element={<ChatPage />}
+          />
+          <Route
+            path="/conversations/:conversationID/emojis"
+            element={<CustomEmojiManagerPage />}
+          />
+          <Route
+            path="/conversations/:conversationID/forward"
+            element={<ChatForwardTargetPage />}
           />
           <Route path="*" element={<NotFoundPage />} />
           </Routes>

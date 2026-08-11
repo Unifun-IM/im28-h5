@@ -18,8 +18,17 @@ export async function establishWebIMAuthSession(options) {
     // session 必须通过完整 token/userID 校验。
     const session = normalizeGatewayAuthSession(authData);
     await options.accountDatabase.open(session.userID);
-    options.authSessionStore.save(session);
-    return session;
+    try {
+        // hook 在凭据落盘和 realtime 前完成账号库恢复任务。
+        await options.afterDatabaseOpen?.(session);
+        options.authSessionStore.save(session);
+        return session;
+    }
+    catch (cause) {
+        // 认证事务失败时释放已打开账号库，不保留半初始化 owner。
+        await options.accountDatabase.close();
+        throw cause;
+    }
 }
 /** 刷新服务端已判定失效的 access token 并保留原 userID。 */
 export async function refreshWebIMAuthSession(session, gatewayClient, deviceID, authSessionStore) {

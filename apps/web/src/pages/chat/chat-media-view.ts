@@ -1,13 +1,15 @@
 import type { ChatMessageView } from './chat-message-view.js';
 
-/** 聊天媒体预览只覆盖当前切片批准的图片和视频。 */
-export type ChatMediaPreviewKind = 'image' | 'video';
+/** 聊天媒体预览覆盖图片、视频和文件三类真实 payload。 */
+export type ChatMediaPreviewKind = 'image' | 'video' | 'file';
 
 /** 全屏媒体层消费的最小安全投影。 */
 export interface ChatMediaPreview {
   readonly kind: ChatMediaPreviewKind;
   readonly url: string;
   readonly title: string;
+  readonly fileName?: string;
+  readonly detail?: string;
 }
 
 /** 浏览器持久化消息允许重新访问的远端媒体协议。 */
@@ -40,6 +42,19 @@ export function getChatMediaPreview(
     // url 只接受真实视频地址，缩略图不能冒充可播放视频。
     const url = normalizeChatMediaURL(view.mediaURL);
     return url ? { kind: 'video', url, title: '视频预览' } : null;
+  }
+  if (view.kind === 'file') {
+    // url 是文件下载与浏览器预览共用的唯一真实源。
+    const url = normalizeChatMediaURL(view.mediaURL);
+    return url
+      ? {
+          kind: 'file',
+          url,
+          title: '文件预览',
+          fileName: view.text,
+          ...(view.detail ? { detail: view.detail } : {}),
+        }
+      : null;
   }
   return null;
 }

@@ -1,4 +1,19 @@
-import type { Message } from '@im28/im-sdk/web';
+import type { Message, WebIMSync } from '@im28/im-sdk/web';
+
+/** 首次聊天历史刷新只依赖 SDK 消息 facade 的两个读取操作。 */
+type ChatHistorySync = Pick<WebIMSync['messages'], 'getCachedHistory' | 'pullHistory'>;
+
+/** 拉取远端增量后重读 SQLite，避免旧远端窗口覆盖并发发送或实时写入。 */
+export async function pullAndReadChatHistory(
+  sync: ChatHistorySync,
+  options: { readonly conversationID: string; readonly fromSeq: string; readonly limit: number },
+): Promise<readonly Message[]> {
+  await sync.pullHistory(options);
+  return sync.getCachedHistory({
+    conversationID: options.conversationID,
+    limit: options.limit,
+  });
+}
 
 /** 统一承载启动和配置错误的全屏状态。 */
 export function ChatPageState({

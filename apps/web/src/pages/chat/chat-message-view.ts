@@ -1,5 +1,4 @@
-import type { Message } from '@im28/im-sdk/web';
-
+import type { Message, PresetEmojiEntity } from '@im28/im-sdk/web';
 /** Chat 消息正文在浏览器中的受控呈现类型。 */
 export type ChatMessageViewKind =
   | 'system'
@@ -10,6 +9,7 @@ export type ChatMessageViewKind =
   | 'file'
   | 'card'
   | 'emoji'
+  | 'quote'
   | 'unsupported';
 
 /** 从 Gateway message body 安全提取的只读展示模型。 */
@@ -19,6 +19,9 @@ export interface ChatMessageView {
   readonly detail?: string;
   readonly mediaURL?: string;
   readonly thumbnailURL?: string;
+  readonly emojiID?: string;
+  readonly quoteMessageID?: string;
+  readonly entities?: readonly PresetEmojiEntity[];
 }
 
 /** RN 居中呈现的群系统消息类型集合。 */
@@ -107,12 +110,13 @@ export function getChatMessageView(
     };
   }
   if (message.contentType === 105) {
-    // file 只呈现已持久化元数据，不绕过 SDK 发起下载。
+    // file 保留已持久化 URL 和元数据，浏览器平台层负责预览下载。
     const file = asRecord(body.file);
     return {
       kind: 'file',
       text: readString(file.name) || '文件',
       detail: formatFileSize(file.size_bytes),
+      mediaURL: readString(file.url),
     };
   }
   if (message.contentType === 108) {
@@ -124,28 +128,35 @@ export function getChatMessageView(
     return {
       kind: 'emoji',
       text: '[表情]',
+      emojiID: readString(emoji.emoji_id),
       mediaURL: readString(emoji.url),
+    };
+  }
+  if (message.contentType === 114) {
+    // quote 保留来源稳定 ID、发送时快照和回复正文三个独立字段。
+    const quote = asRecord(body.quote);
+    return {
+      kind: 'quote',
+      text: readString(quote.reply_text) || '引用消息',
+      detail: readString(quote.text),
+      quoteMessageID: readString(quote.msg_id),
     };
   }
   if (message.contentType === 113) {
     return { kind: 'system', text: '对方正在输入' };
   }
-  // text 覆盖文本、@、Markdown、引用和兼容 OpenIM textElem。
+  // text 覆盖文本、@、Markdown 和兼容 OpenIM textElem。
   const text =
-    readNestedString(body, 'text', 'text') ||
-    readNestedString(body, 'mention', 'text') ||
-    readNestedString(body, 'markdown', 'text') ||
-    readNestedString(body, 'quote', 'reply_text') ||
-    readNestedString(body, 'quote', 'text') ||
-    readNestedString(body, 'textElem', 'content') ||
-    readNestedString(body, 'textElem', 'text');
+    readNestedText(body, 'text', 'text') ||
+    readNestedText(body, 'mention', 'text') ||
+    readNestedText(body, 'markdown', 'text') ||
+    readNestedText(body, 'textElem', 'content') ||
+    readNestedText(body, 'textElem', 'text');
   if (text) {
-    // quoteDetail 在引用正文存在时作为气泡内弱化预览。
-    const quoteDetail = readNestedString(body, 'quote', 'text');
     return {
       kind: 'text',
       text,
-      ...(quoteDetail && quoteDetail !== text ? { detail: quoteDetail } : {}),
+      ...(message.entities?.length ? { entities: message.entities } : {}),
     };
   }
   // customText 仅提取协议可见文案，不解析为可交互通话能力。
@@ -261,6 +272,19 @@ function readNestedString(
   // owner 是指定 body 分支的安全对象。
   const owner = asRecord(source[ownerKey]);
   return readString(owner[valueKey]);
+}
+
+/** 从消息正文路径读取非空原文，避免破坏实体 UTF-16 偏移。 */
+function readNestedText(
+  source: Readonly<Record<string, unknown>>,
+  ownerKey: string,
+  valueKey: string,
+): string {
+  // owner 是指定正文分支的安全对象。
+  const owner = asRecord(source[ownerKey]);
+  // value 仅用空白判断有效性，返回时保留协议原文。
+  const value = owner[valueKey];
+  return typeof value === 'string' && value.trim() ? value : '';
 }
 
 /** 将未知值收窄为去空白字符串。 */

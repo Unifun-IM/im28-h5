@@ -1,4 +1,5 @@
 import { IMError } from '../../core/errors.js';
+import { normalizePresetEmojiEntities } from '../../modules/message/preset-emoji.js';
 /** 将 Gateway message 映射为跨平台 core message。 */
 export function mapGatewayMessageToCore(message, options) {
     // serverMsgID 只接受非空服务端标识。
@@ -22,6 +23,10 @@ export function mapGatewayMessageToCore(message, options) {
     const status = mapMessageStatus(message.status, direction);
     // seq 超出 JS 安全整数时不写入数值索引，原值仍保留在 payload。
     const seq = readSafeInteger(message.msg_seq);
+    // entity 区间只对文本正文有意义，未知或错误输入保守降级为 Unicode。
+    const entities = normalizePresetEmojiEntities(message.entities, readGatewayMessageText(message.body));
+    // forwardOrigin 只接受 Gateway 顶层来源快照，不从正文或当前用户补造。
+    const forwardOrigin = normalizeGatewayForwardOrigin(message.forward_origin);
     return {
         clientMsgID,
         ...(serverMsgID ? { serverMsgID } : {}),
@@ -32,8 +37,44 @@ export function mapGatewayMessageToCore(message, options) {
         status,
         sendTime: readTimestamp(message.sent_at ?? message.updated_at),
         ...(seq === undefined ? {} : { seq }),
+        ...(forwardOrigin ? { forwardOrigin } : {}),
+        ...(entities.length ? { entities } : {}),
         payload: message.body ?? null,
     };
+}
+/** 将 Gateway snake_case 来源快照收窄为平台中立模型。 */
+function normalizeGatewayForwardOrigin(value) {
+    if (!value)
+        return undefined;
+    // userID 是转发来源唯一可信身份，缺失时整份快照不可用。
+    const userID = readString(value.user_id);
+    if (!userID)
+        return undefined;
+    // type 保留服务端扩展值，当前规范值为 user。
+    const type = readString(value.type);
+    // name 与 avatarURL 是可选展示快照，不参与身份判断。
+    const name = readString(value.name);
+    const avatarURL = readString(value.avatar_url);
+    return {
+        userID,
+        ...(type ? { type } : {}),
+        ...(name ? { name } : {}),
+        ...(avatarURL ? { avatarURL } : {}),
+    };
+}
+/** 从 Gateway body 安全读取文本消息的 Unicode 正文。 */
+function readGatewayMessageText(body) {
+    if (!body || typeof body !== 'object' || Array.isArray(body))
+        return '';
+    /** bodyRecord 隔离生成类型中的多种消息联合。 */
+    const bodyRecord = body;
+    /** textRecord 只接受文本消息对象。 */
+    const textRecord = bodyRecord.text;
+    if (!textRecord || typeof textRecord !== 'object' || Array.isArray(textRecord))
+        return '';
+    /** value 是 Gateway text.text 的未知输入。 */
+    const value = textRecord.text;
+    return typeof value === 'string' ? value : '';
 }
 /** 将 Gateway conversation 与 latest message 映射为 core entities。 */
 export function mapGatewayConversationToCore(input, currentUserID) {

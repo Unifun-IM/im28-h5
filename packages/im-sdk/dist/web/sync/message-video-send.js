@@ -1,4 +1,5 @@
-import { executeWebIMUploadedMessageSend, isPositiveMediaDimension, normalizeWebIMMediaInput, } from './message-media-send.js';
+import { isPositiveMediaDimension, normalizeWebIMMediaInput, } from './message-media-send.js';
+import { executeWebIMUploadedMessageSend } from './message-upload-send-state.js';
 /** 视频消息允许的单文件最大字节数，与 RN 生产约束一致。 */
 export const WEB_IM_VIDEO_MAX_BYTES = 500 * 1024 * 1024;
 /** 发送视频并复用媒体上传和 optimistic SQLite 状态机。 */

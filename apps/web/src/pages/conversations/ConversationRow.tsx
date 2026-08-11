@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import bellOffIconURL from '../../assets/rn/assets/icons/imm28/bell-off.solid.svg';
 import pinIconURL from '../../assets/rn/assets/icons/imm28/pin.solid.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PresetEmojiTextContent } from '../chat/PresetEmojiTextContent.js';
 import {
   getRNAvatarGradient,
   getRNAvatarInitial,
@@ -80,7 +81,11 @@ export function ConversationRow({ item }: ConversationRowProps) {
             {preview.isDraft ? (
               <span className="rn-conversation-draft">[草稿]</span>
             ) : null}
-            {preview.text}
+            <PresetEmojiTextContent
+              text={preview.text}
+              entities={preview.entities}
+              singleLine
+            />
           </span>
           {conversation.isMuted ? (
             <RNAssetIcon

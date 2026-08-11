@@ -1,4 +1,4 @@
-export const SDK_SCHEMA_VERSION = 6;
+export const SDK_SCHEMA_VERSION = 9;
 export const SDK_SCHEMA_V1_STATEMENTS = [
     `CREATE TABLE IF NOT EXISTS sdk_meta (
     key TEXT PRIMARY KEY NOT NULL,

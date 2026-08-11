@@ -1,13 +1,16 @@
 import type {
   Conversation,
   Message,
+  PresetEmojiEntity,
   WebIMConversationListItem,
 } from '@im28/im-sdk/web';
+import { projectPresetEmojiEntitiesToDisplayText } from '@im28/im-sdk/web';
 
 /** 会话列表摘要同时标记草稿语义，供行组件使用 RN 对应颜色。 */
 export interface ConversationListPreview {
   readonly isDraft: boolean;
   readonly text: string;
+  readonly entities?: readonly PresetEmojiEntity[];
 }
 
 /** RN 会话预览中有固定文案的消息类型。 */
@@ -41,6 +44,9 @@ export function getConversationListPreview(
   return {
     isDraft: false,
     text: getMessagePreviewText(item.latestMessage),
+    ...(item.latestMessage?.entities?.length
+      ? { entities: item.latestMessage.entities }
+      : {}),
   };
 }
 
@@ -55,7 +61,17 @@ export function getConversationDisplayPreview(
   if (preview.isDraft || !item.conversation.isMuted || unread <= 0) {
     return preview;
   }
-  return { ...preview, text: `[${unread}条]${preview.text}` };
+  /** text 是用户最终看到的免打扰前缀与正文组合。 */
+  const text = `[${unread}条]${preview.text}`;
+  return {
+    ...preview,
+    text,
+    entities: projectPresetEmojiEntitiesToDisplayText({
+      sourceText: preview.text,
+      sourceEntities: preview.entities ?? [],
+      displayText: text,
+    }),
+  };
 }
 
 /** 按标题和当前摘要执行 RN 组件已有的本地搜索分支。 */
@@ -173,5 +189,5 @@ function readNestedString(
   const owner = asRecord(source[ownerKey]);
   // value 只接受可直接展示的字符串值。
   const value = owner[valueKey];
-  return typeof value === 'string' && value.trim() ? value.trim() : null;
+  return typeof value === 'string' && value.trim() ? value : null;
 }

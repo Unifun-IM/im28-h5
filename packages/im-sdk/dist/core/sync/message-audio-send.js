@@ -1,4 +1,5 @@
-import { executeWebIMUploadedMessageSend, normalizeWebIMMediaInput, } from './message-media-send.js';
+import { normalizeWebIMMediaInput, } from './message-media-send.js';
+import { executeWebIMUploadedMessageSend } from './message-upload-send-state.js';
 import { createWebIMSyncError } from './sync-context.js';
 /** 语音消息最长时长，与 RN 自动停止规则一致。 */
 export const WEB_IM_AUDIO_MAX_DURATION_SECONDS = 60;

@@ -1,3 +1,4 @@
+import type { SerializedPresetEmojiEntity } from '../../modules/message/preset-emoji-types.js';
 export type GatewayFetch = (input: string, init: {
     readonly method: 'POST';
     readonly headers: Readonly<Record<string, string>>;
@@ -34,6 +35,42 @@ export interface GatewayEnvelope<T> {
     readonly code?: number;
     readonly message?: string;
     readonly data?: T;
+}
+/** Gateway 自定义表情资源，ID 用于发送，URL 仅作为展示快照。 */
+export interface GatewayCustomEmoji {
+    readonly emoji_id?: string;
+    readonly url?: string;
+    readonly added_at?: string;
+}
+/** 自定义表情列表项保留 OpenAPI 的包装结构。 */
+export interface GatewayCustomEmojiListItem {
+    readonly emoji?: GatewayCustomEmoji | null;
+}
+/** 自定义表情全量列表响应，不包含分页游标。 */
+export interface GatewayListCustomEmojisData {
+    readonly list?: readonly GatewayCustomEmojiListItem[];
+    readonly total?: number;
+    readonly max_count?: number;
+}
+/** 创建自定义表情只提交已完成 OSS 上传的对象 Key。 */
+export interface GatewayCreateCustomEmojisRequest {
+    readonly object_keys: readonly string[];
+}
+/** 创建结果按请求顺序返回本批服务端表情实体。 */
+export interface GatewayCreateCustomEmojisData {
+    readonly list?: readonly GatewayCustomEmojiListItem[];
+}
+/** 收藏收到的 type115 表情只依赖稳定 ID。 */
+export interface GatewayAddCustomEmojiRequest {
+    readonly emoji_id: string;
+}
+/** 收藏成功返回当前用户列表中的正式表情实体。 */
+export interface GatewayAddCustomEmojiData {
+    readonly emoji?: GatewayCustomEmoji | null;
+}
+/** 批量删除只移除当前用户与稳定表情 ID 的关系。 */
+export interface GatewayBatchDeleteCustomEmojisRequest {
+    readonly emoji_ids: readonly string[];
 }
 export interface GatewayGroup {
     readonly group_id?: string;
@@ -533,12 +570,7 @@ export interface GatewayMentionTarget {
     readonly user_id?: string;
     readonly nickname?: string;
 }
-export interface GatewayPresetEmojiEntity {
-    readonly type: 'preset_emoji';
-    readonly offset: number;
-    readonly length: number;
-    readonly preset_id: string;
-}
+export type GatewayPresetEmojiEntity = SerializedPresetEmojiEntity;
 export type GatewayClientMessageBody = {
     readonly text: {
         readonly text: string;

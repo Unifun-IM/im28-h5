@@ -643,4 +643,332 @@ Local closeout: H5 now mirrors the RN 52-entry Unicode pack、7-column bounded p
 | `W6.a6.6.2-h5-illustrated-emoji-ui` | H5 asset registry、illustrated tab/recent/grid、atomic draft preview、inline/60px bubble and conversation preview rendering | H5 behavior tests + SDK regression + 466 assets + mobile/desktop light/dark browser proof | custom emoji type `115`、rich clipboard、draft persistence、real send |
 | `W6.a6.6.3-illustrated-emoji-acceptance` | explicitly authorized disposable text send proves Network/Gateway/SQLite/list-back | real request/result/cache evidence | no unapproved message、account mutation or custom emoji operation |
 
-Reviewer verdict: SDK Gateway schemas are `runtime-chain-partial` because request/response types already expose `entities`, while shared `Message` mapping、Repository persistence and Web `sendText` currently drop that semantic. RN is production-ready but owns duplicate App-local algorithms；H5 has all 135 mirrored PNG assets but no preset entity chain. No mock shortcut or fake-success path exists because the unsupported illustrated tab is currently omitted. Contract status is `done`；implementation remains `🟡` until `.1/.2` pass, and real transmission remains `🟡 acceptance-gated`.
+Reviewer verdict after `.1`: shared runtime chain is now `implemented-local`：SDK owns 135 descriptors、DTO/document algorithms、Gateway mapping、`sendText({text,entities})`、optimistic missing-echo preservation and SQLite v7 `entities_json`；RN DTO/helpers/document algorithms are thin `/rn` adapters and its asset table no longer owns Unicode fallback. SDK 37/116、RN targeted 3 suites/12 tests + `tsc`、H5 17/65 + typecheck/build + 466 assets passed. H5 still has no illustrated presentation/rendering, so overall implementation remains `🟡` until `.2` passes；no real message was transmitted and `.3` remains `🟡 acceptance-gated`.
+
+Reviewer verdict after `.2`: H5 now binds all 135 mirrored PNGs by stable descriptor order and keeps browser-only asset URL/MRU/DOM/render adapters outside shared semantics. The illustrated tab、21-item MRU、seven-column grid、atomic draft preview、inline/60px bubble and conversation projection consume SDK-validated entities；unknown/mismatched/missing assets retain Unicode fallback, and raw text whitespace is preserved for exact UTF-16 offsets. H5 21 files/75 tests、SDK 37/116、typecheck/build、466 assets and authenticated mobile/desktop light/dark browser proof passed. Overall implementation is `implemented-local/acceptance-gated`；no message was transmitted and `.3` remains `blocked-external`.
+
+## 31. Custom Emoji Type 115 Contract
+
+> AXIOM: 自定义表情是账号级远端资源，不是 preset entity。列表、消息身份、缓存和发送状态属于 `im28-sdk`；RN/H5/Desktop 只提供图片 I/O、recent preference 与 UI adapter。
+
+### Production Truth
+
+| concern | frozen contract |
+| :--- | :--- |
+| library read | `POST /v1/emoji/list`；无分页；按添加时间倒序；单账号最多 `100`；item=`emoji_id/url/added_at` |
+| create/add/delete | `/v1/emoji/create` 接受 `object_keys`（单批最多 `20`，仅 jpg/jpeg/png/gif/webp）、`/v1/emoji/add` 只接受消息 `emoji_id`、`/v1/emoji/batch-delete` 接受去空去重 `emoji_ids`；三者均幂等，且只能由 SDK facade 构造请求 |
+| upload | 平台只向共享 `IMMediaUploadPort` 提供 opaque source 与文件元数据；本地完整校验和本批全部 OSS 上传成功后才调用 create，任一上传失败时不得提交部分 create 或写入本地成员关系 |
+| mutation cache | create/add 成功后必须重新拉取完整 list 并原子替换 SQLite；delete 成功后才删除对应本地 rows；请求失败不得改变当前 cache 或显示成功 |
+| reorder | Gateway 无排序 operation；H5/RN 仅以稳定 `emoji_id` 保存账号本地展示顺序，sync 时只关联仍在远端列表中的 ID，不得表示服务端顺序已修改 |
+| message | `type=115`；request body 只提交 `{ emoji: { emoji_id } }`；Gateway response/realtime/history 回填 URL snapshot |
+| optimistic snapshot | local `sending` row 保存 `{emoji_id,url}`；Gateway 未回填 URL 时保留已验证的 library URL；失败更新同一 row 为 `failed`，不得降级为 custom/text 或假成功 |
+| cache | 当前账号 SQLite 保存完整远端 snapshot 和服务端顺序；完整 list 成功后原子替换；失败保留旧 cache 并向调用方抛错 |
+| recent | browser/RN preference key `im28.chat.customEmoji.recent`；只保存稳定 `emoji_id` MRU；去空、去重、上限 `100`；展示时与 library 关联 |
+| composer | 第三个 heart tab；`常用表情` 区先显示 add tile，再显示 recent；`所有表情` 独立保持 library 顺序；五列自适应正方形 |
+| display | chat bubble 使用 URL snapshot、最大 `180`，可进入纯图片预览；conversation preview 固定 `[自定义表情]`；URL 缺失/非法时显示不支持状态，不生成 broken image |
+
+### Owner Map
+
+| owner | owns | must not own |
+| :--- | :--- | :--- |
+| `im28-sdk` core/transport/sync | DTO、Gateway list mapper/client、SQLite repository、listCached/sync、type 115 send/state/cache | DOM/React Native image component、file picker、localStorage/AsyncStorage API |
+| RN app | existing remote image/upload adapter、composer/manager/message presentation；逐片收敛到 `/rn` shared semantics | second DTO/normalizer/send-state implementation |
+| H5 app | third tab、five-column layout、browser recent preference、safe remote image/preview presentation | Gateway request construction、SQLite schema、message status transition |
+
+### Failure Contract
+
+| failure | behavior |
+| :--- | :--- |
+| anonymous/no account DB | reject before cache or network access |
+| malformed list item | reject the complete snapshot before any cache write；dedupe valid duplicate IDs by the first remote item |
+| list request failure | keep previous SQLite snapshot；surface error；no empty-list overwrite |
+| create upload failure | do not call `/v1/emoji/create`；keep membership cache unchanged；surface the real upload error |
+| create/add response or follow-up list failure | reject；do not synthesize a local member；a retry is safe because Gateway operations are idempotent |
+| batch-delete failure | keep all selected rows and selection state；surface error；no success Toast |
+| click unknown/uploading item | do not send；surface unavailable/uploading state |
+| send rejection | same optimistic row becomes `failed` and error propagates |
+| response URL omitted | retain validated local URL snapshot on the same sent row |
+| message URL missing/non HTTP(S) | do not render an image or navigate preview |
+
+### Implementation Decomposition
+
+| slice | deliverable | gate | excluded |
+| :--- | :--- | :--- | :--- |
+| `W6.a6.7.1-shared-custom-emoji-core` | SDK DTO/mapper/client、SQLite v8 repository、`customEmojis.listCached/sync`、`messages.sendCustomEmoji` optimistic state | Gateway contract + real sql.js cache/send tests + all-runtime build + generated package sync | H5 tab/UI、manager CRUD、upload、real request |
+| `W6.a6.7.2-h5-custom-emoji-panel` | third tab、five-column recent/all grid、safe image、click caller and type 115 bubble/preview convergence | H5 behavior + SDK regression + responsive light/dark browser proof without send | manager、upload/add/delete/reorder、message-action save、real send |
+| `W6.a6.7.3.1-shared-custom-emoji-mutations` | SDK create upload pipeline、add received ID、batch delete、cache convergence | generated Gateway contract + injected upload + real sql.js tests + all-runtime build | H5 manager UI、message action、local reorder、real mutation |
+| `W6.a6.7.3.2-h5-custom-emoji-manager` | add tile、React Router manager、image picker、five-column preview/select/confirm-delete | H5 behavior + responsive browser proof without selecting files or deleting | message-action add、drag reorder、real mutation |
+| `W6.a6.7.3.3-custom-emoji-add-reorder` | type115 message action add + stable-ID local reorder UI | focused interaction tests + no-fake/owner review | real mutation unless explicitly authorized |
+| `W6.a6.7.4-custom-emoji-acceptance` | approved account proves list/cache and one authorized disposable send | Network/Gateway/SQLite/realtime/list-back evidence | unapproved transmission or account mutation |
+
+Reviewer verdict after `.1/.2`: SDK now owns strict DTO/list mapping、schema v8 account cache、atomic failure preservation and type 115 optimistic URL snapshot semantics. H5 consumes those facades through a third heart tab with independent stable-ID MRU and a five-column grid；an authenticated read-only smoke rendered one real item at 458x786 and 1280x800 without overflow or console errors. SDK Web 40 files/121 tests、core Gateway contracts、all-runtime typecheck/build:web package sync、H5 22 files/77 tests、typecheck/build and 466 assets passed. No emoji was clicked and no message was transmitted；light-theme proof、manager mutations and `.4` send/list-back acceptance remain gated.
+
+Reviewer verdict after `.3.1/.3.2`: SDK now owns strict create/add/delete mutation semantics through `IMMediaUploadPort` and account SQLite convergence：create validates the complete 1–20 image batch and only submits after every upload succeeds，create/add refresh the complete list before atomic replacement，and delete removes local membership only after Gateway success. H5 binds those facades to a conversation-scoped React Router manager with an add tile、file picker、preview、organize selection and confirmed batch delete；it contains no Gateway endpoint、repository or upload state machine. SDK Web 40 files/126 tests、core Gateway contracts、all-runtime typecheck/build:all/package sync、H5 23 files/80 tests、typecheck/build and 466 assets passed. Authenticated 458x786 read-only proof showed equal five-column cells and no overflow；no file was selected，no mutation or message was transmitted. Overall verdict is `implemented-local/acceptance-gated`；`.3.3` message collection/local reorder is active，desktop/light visual proof and real mutation/send remain gated.
+
+Reviewer verdict after `.3.3`: H5 type115 projection now retains the stable `emoji_id` and exposes the RN action only through long-press/right-click/keyboard menu；clicking that explicit action delegates to shared `customEmojis.add` and displays success only after the real mutation resolves. Manager ordering stores only deduped IDs under `im28.chat.customEmoji.order`，applies them over the current SDK member snapshot，drops missing IDs，appends new remote members，and uses a touch/mouse Pointer selected-stack tray without claiming a Gateway reorder. H5 24 files/85 tests、typecheck/build and 466 assets passed；authenticated 458x786 proof selected one real cached item，opened the move tray and cancelled without committing order. The current real conversation contains no type115 history，so action-menu visual proof remains gated；no fake message was injected，no add/order write、file selection、mutation or message transmission occurred. Overall verdict remains `implemented-local/acceptance-gated`，and `.4` requires explicit authorization plus real type115 data.
+
+## 32. W6.a6.8 Chat Media Export Contract
+
+> AXIOM: 下载源只能来自 shared message cache 的真实 Gateway HTTP(S) URL；H5 可适配浏览器文件 I/O，但不得复制媒体 DTO、访问 Gateway、伪造下载完成或把打开新窗口描述为已保存。
+
+| dimension | RN production truth | H5 migration decision |
+| :--- | :--- | :--- |
+| image save | `ImagePreviewModal` 右上角保存；远端图先下载缓存，再写系统相册；失败可见 | 黑色图片预览保留关闭与下载按钮；浏览器 adapter 必须先取得成功 Blob，再触发带文件名的 object URL 下载；成功文案仅表示已交给浏览器下载 |
+| file projection | type 105 reads URL/name/size and opens `FilePreviewModal` | existing `Message.payload.file` remains truth；view only adds safe URL projection，no SDK/schema change |
+| file preview | full-screen header、file icon/name/size、可打开或下载 | route-scoped full-screen overlay；explicit open uses a new isolated tab，blocked popup is an error；download shares the verified Blob adapter |
+| safety/failure | missing source cannot download；download/open errors remain visible | only absolute HTTP(S) is actionable；HTTP/CORS/blob/DOM/open failures reject and never show success；overlay stays open for retry |
+| lifecycle | preview is transient chat-detail state | Escape/back button closes overlay；object URL is revoked after the synchronous browser download trigger；no local cache or preference write |
+| ownership | RN native filesystem/camera roll are app platform concerns | H5 browser adapter owns `fetch/Blob/URL/document/window.open`；page and SDK own none of them |
+| excluded | media send/upload and file-system location are separate operations | no upload/send、progress/cancel、offline file cache、read/played state、failed-send retry、RTC or service worker |
+| acceptance | real message、save/download/open、failure、responsive/theme | deterministic injected adapter tests + full H5 gates；approved real image/file history required for final browser evidence |
+
+Reviewer verdict: `chat-message-view` only exposes the persisted file URL；`ChatMessageContent -> ChatMediaInteractionProvider -> ChatMediaPreviewOverlay -> chat-media-download` is the single H5 path，and browser fetch/Blob/object URL/window I/O exists only in the final adapter. HTTP/CORS/popup failures cannot produce success，unsafe URLs fail closed，and there is no Gateway、Repository、SQLite、compat or alternate download path. H5 25 files/92 tests、typecheck/build、466 assets and full workspace verify passed. Real cached mobile image/PDF plus 1280x800 file layout、Escape and zero-console proof passed without clicking download/open；actual browser download/open and light-theme evidence remain acceptance-gated.
+
+## 33. W6.a6.9 Chat Failed Retry Contract
+
+> AXIOM: 重试必须消费当前账号 SQLite 中的原失败行，并继续使用原 `clientMsgID`；H5 不得反解 payload、重新选择发送 API、生成第二条 optimistic message 或把不可恢复媒体伪装成可重试。
+
+| dimension | RN production truth | H5 migration decision |
+| :--- | :--- | :--- |
+| entry/state | failed outgoing 状态图标可点击；点击后原消息立即 `failed -> sending`，完成后收敛为 `sent/failed` | failed 图标仅在 shared SDK 判定可恢复时成为按钮；`messages.retry({clientMsgID,onSending})` 是唯一 action owner |
+| identity | retry dispatch 复用原 `clientMsgID`，避免列表出现重复消息 | SDK 从 Repository 读取原行并向 Gateway 提交相同 `client_msg_id`；禁止调用会创建新 ID 的普通 send API |
+| account guard | RN state 只来自当前 chat detail 的 outgoing message | SDK 必须校验当前账号、`direction=outgoing`、`senderID=currentUserID`、`status=failed` 和仍存在的缓存会话，任一不符时在网络前拒绝 |
+| text `101` | payload 保留正文与 preset entities，可完整重建请求 | 首批支持；复用 shared entity 校验/序列化，正文、entity 和同一 SQLite 行必须保持一致 |
+| custom emoji `115` | payload 保留稳定 emoji ID 与展示 URL | 首批支持；Gateway 仍只接收 `emoji_id`，成功回包缺 URL 时继续保留原安全 URL snapshot |
+| media `102..105` | RN 消息行持有可再次读取的本地 path | 首批不支持；Web failed row 只有元数据且没有可持久化 `File/Blob`，静态失败图标不得触发网络或提示可重试 |
+| concurrency/failure | sending 状态阻止同一条消息重复 dispatch；异常回到 failed | shared mutation queue 串行化；只有 failed row 可进入 retry；Gateway rejection 必须把同一行恢复为 failed 并原样抛错，无 fake success |
+| page ownership | screen 编排动作，service 执行发送 | H5 只传 client ID、呈现 onSending snapshot、从 SQLite 重读最终状态；不访问 Repository/Gateway/消息 DTO body |
+
+### Retry Capability Matrix
+
+| content type | persisted source complete | local retry | required later work |
+| :--- | :---: | :---: | :--- |
+| `101` text + preset entities | yes | supported | real authorized failure/retry acceptance |
+| `115` custom emoji | yes | supported | real authorized failure/retry acceptance |
+| `102` image | no | blocked | persist post-upload remote body；pre-upload failure requires explicit source reselection/new send |
+| `103` audio | no | blocked | same as image；recording Blob must never be serialized into SQLite |
+| `104` video | no | blocked | same as image；metadata alone is not a retryable source |
+| `105` file | no | blocked | same as image；name/MIME/size cannot reconstruct file bytes |
+| other message types | not frozen | blocked | trace RN payload + Gateway contract before registration |
+
+### Failure Contract
+
+| failure | required behavior |
+| :--- | :--- |
+| empty/unknown client ID | reject before any status write or Gateway I/O |
+| incoming、different sender、non-failed、deleted conversation | reject before Gateway I/O；do not change the row |
+| unsupported or malformed persisted payload | reject visibly；keep row failed；do not guess a body |
+| Gateway rejection or mismatched returned client ID | restore the same row to failed；propagate the real error；row count remains one |
+| successful retry | same client ID row becomes sent and preserves text entities or custom emoji URL fallback |
+| rapid repeat click | UI busy state plus SDK status validation prevents a second network send for the same completed row |
+
+Media retry may be registered only after the shared SDK persists a validated post-upload Gateway body before send and defines the pre-upload source-recovery UX. A same-session in-memory `File/Blob` registry is not authoritative recovery and must not be presented as reload-safe retry.
+
+## 34. W6.a6.10 Chat Media Retry Stage Contract
+
+> AXIOM: 媒体重试能力来自同一消息行中已持久化且重新验证通过的 Gateway body，不来自 content type、本次页面内存或无法跨刷新恢复的 `File/Blob`。上传前失败与上传后发送失败必须是两种明确行为。
+
+### Stage Model
+
+| stage | durable row payload | failure/restart result | retry behavior |
+| :--- | :--- | :--- | :--- |
+| `source-required` | only safe display metadata；no `media_id/url` | same row becomes `failed` | no retry button；UI states that media must be selected/recorded again；a new selection is a new send with a new client ID |
+| `uploaded` | exact validated image/audio/video/file Gateway body with `media_id` and HTTP(S) URL | same row becomes `failed` | existing retry button calls `messages.retry` with the original client ID；no upload or source access occurs |
+| `sending-to-gateway` | same durable uploaded body，status=`sending` | session recovery changes interrupted sending rows to `failed` before realtime/UI starts | capability is recalculated from persisted body，then explicit retry is available |
+| `sent` | authoritative Gateway response mapped to core | terminal success | not retryable |
+
+The stage is derived from validated persisted payload plus message status. No parallel boolean/enum column is added because it could drift from the body that is actually sent.
+
+### Media Body Contract
+
+| type | required durable fields | preserved optional fields | invalid checkpoint result |
+| :--- | :--- | :--- | :--- |
+| `102` image | exactly one `image.list` item；non-empty `media_id`；HTTP(S) `url/thumbnail_url`；uint64-string `size_bytes` | positive finite `width/height` | reject before Gateway；same row becomes failed and remains source-required/non-retryable |
+| `103` audio | non-empty `media_id`；HTTP(S) `url`；integer duration `1..60`；uint64-string `size_bytes` | none | same |
+| `104` video | non-empty `media_id`；HTTP(S) `url/thumbnail_url`；non-negative integer duration；uint64-string `size_bytes` | positive finite `width/height` | same |
+| `105` file | non-empty `media_id/name/mime_type`；HTTP(S) `url`；uint64-string `size_bytes` | none | same |
+
+### Ordering And Ownership
+
+```text
+platform source -> IMMediaUploadPort.upload
+-> shared normalize uploaded body
+-> MessageRepository checkpoint same sending row
+-> Gateway send with same client ID/body
+-> same row sent or failed
+```
+
+| owner | responsibility | forbidden |
+| :--- | :--- | :--- |
+| shared `message-upload-send-state` | upload orchestration、body checkpoint before Gateway、same-row failure convergence | platform Blob/File APIs、new client ID after upload |
+| shared `message-media-retry` | strict body validation/reconstruction and conditional retry capability for 102–105 | source registry、UI text、Gateway I/O |
+| shared `messages.recoverInterruptedSends` | at authenticated account establishment, mark current-user outgoing `sending` rows failed before realtime/UI | guessing remote success、deleting rows、auto-resending |
+| Web runtime | call shared recovery after account DB opens and before realtime connects | SQL/status/body logic |
+| H5 chat | render shared capability and cache state；pre-upload failed media stays non-actionable | payload parsing、upload retry、File/Blob persistence、fake same-ID source resend |
+
+### Failure And Idempotency Contract
+
+| case | required result |
+| :--- | :--- |
+| upload rejects | metadata row becomes failed；no Gateway call；no retry capability |
+| uploaded body validation/checkpoint rejects | row becomes failed；no Gateway call；no claim that upload can be resumed |
+| checkpoint succeeds and Gateway rejects | same row retains uploaded body and becomes failed；retry skips upload and reuses original client ID |
+| page/process stops after checkpoint | next authenticated session changes interrupted sending row to failed before realtime/UI；explicit retry uses the checkpoint |
+| Gateway actually succeeded before interruption | retry still uses the same idempotency ID；SDK never creates a second optimistic row or guesses success locally |
+| malformed/tampered checkpoint | capability fails closed；status remains failed；no Gateway call |
+| pre-upload user wants to retry | user must explicitly reselect/re-record source；this is a new send, not a retry of unrecoverable bytes |
+
+Implementation is complete only when real sql.js tests prove upload count remains one across Gateway failure + retry, body survives failed persistence, interrupted sending recovery occurs before runtime realtime connection, malformed/pre-upload rows cause zero Gateway calls, and H5 obtains all actionability from the SDK capability.
+
+## 35. W6.a6.11 Chat Quote/Reply Contract
+
+> AXIOM: 引用消息是 `type=114` 的独立消息，不是普通文本的 UI 装饰。被引用消息的稳定 ID、发送时文本快照和回复正文必须由 shared SDK 构造并作为同一 Gateway body 持久化；H5 不得自行拼协议或在重试时重新读取 composer 状态。
+
+| dimension | RN production truth | shared SDK / H5 decision |
+| :--- | :--- | :--- |
+| action eligibility | 普通消息长按菜单提供“引用”；系统、撤回和本地删除提示不进入普通气泡动作链 | H5 通用消息动作 owner 对非 system view 开放引用；右键、500ms 长按和键盘动作只选择消息，不发送 |
+| source identity | `serverMsgID || clientMsgID`，两者均空时发送前拒绝 | `sendQuote` 优先使用非空 `serverMsgID`，回退 `clientMsgID`；保存到 `quote.msg_id`，禁止生成替代 source ID |
+| wire/body | `/v1/message/send`，`type=114`，body=`quote.{msg_id,text,reply_text}` | SDK 是唯一 body owner；`reply_text` trim 后必须非空，`text` 是发送时来源快照且允许空字符串 |
+| source snapshot | RN 依次读取 text、quote reply、mention、user/group card 可见文本；媒体可为空 | SDK 按同一语义从 shared payload 读取，不访问 UI projection；快照只用于 source 不在当前窗口时的降级展示，不替代 source ID |
+| optimistic/cache | 本地先写 type114 sending，成功/失败在同一 client message 上收敛 | SDK 在 Gateway I/O 前持久化完整 quote body；`onSending` 只收到已落库实体；失败保留 body 和同一 client ID |
+| composer | 选择后显示“回复 {sender}”和来源摘要；取消只清引用；成功提交清空引用和草稿 | H5 页面持有选中 `Message`，composer 只展示/取消；非空文本提交调用 `sendQuote`，普通文本仍调用 `sendText` |
+| list projection | 引用气泡显示来源预览；已解析来源可跳转；来源删除显示删除态 | H5 用 `msg_id` 在当前缓存窗口匹配 `serverMsgID/clientMsgID` 并滚动；窗口外显示发送时快照，不猜 sender；删除/撤回来源显示“引用的内容已删除” |
+| retry | failed quote 复用原消息身份和原引用 payload | type114 注册到 shared retry matrix；只接受完整 `msg_id + reply_text` body，重试沿用原 client ID，畸形 payload 在 Gateway 前失败 |
+| realtime | Gateway type114 body 经 mapper 原样进入 SQLite | 现有 realtime/cache reread 路径不新增页面协议分支；投影只消费 shared `Message.payload` |
+
+### Failure And Ownership Contract
+
+| case | required result |
+| :--- | :--- |
+| source has no stable ID | reject before optimistic row and Gateway I/O |
+| reply is empty after trim | reject before optimistic row and Gateway I/O |
+| Gateway rejects or returns mismatched client ID | same quote row becomes failed，完整 body remains retryable |
+| retry payload is malformed | keep failed，zero Gateway calls，never rebuild from currently selected quote/draft |
+| source is outside current 50-message window | render stored snapshot without fabricated sender；no fake source navigation |
+| source is revoked/deleted in current window | render explicit deleted copy and disable source jump |
+
+Canonical owner is `im28-sdk/src/sync/message-quote-send.ts` plus the existing message send/retry state machine. H5 owns only action selection、composer state、React rendering and in-list scrolling. This slice does not authorize a real Gateway send；acceptance requires an explicitly approved disposable conversation.
+
+## 36. SDK Sync Runtime Placement Contract
+
+> AXIOM: 客户端差异必须进入明确的平台目录，业务规则必须保留一份 shared 实现。目录可区分 RN/Web/Desktop，但不得以目录清晰为理由复制消息状态、重试、引用、DTO 或 cache convergence。
+
+| class | canonical path | build/runtime rule |
+| :--- | :--- | :--- |
+| shared sync | `im28-sdk/src/sync/**` | no platform imports；由 core/RN/Web/Desktop typecheck；当前 RN 未 import/call 时不改变 RN 运行链 |
+| Web composition | `im28-sdk/src/platforms/web/sync/web-im-sync.ts` | only Web entry/runtime may import；excluded from RN/Desktop output |
+| Web adapters | `src/platforms/web/runtime|storage|media/**` | DOM/IndexedDB/Worker/Blob/WebSocket lifecycle only |
+| RN adapters | `src/adapters/rn/**`、`src/transport/openim-rn/**` | Nitro SQLite/OpenIM/native ports only；excluded from Web/Desktop |
+| Desktop adapters | `src/platforms/desktop/**` | Electron main-process driver/renderer IPC only；excluded from RN/Web |
+
+The former `src/sync/web-im-sync.ts` composition and its sql.js integration test moved under `platforms/web/sync`. Shared `message-*` files remain under `src/sync` because their only environment differences are injected `DatabaseAdapter`、Gateway client、ID/time and media upload ports. `build:rn` must prove the Web composition file is absent from `dist/rn`; all builds must run the AST import-boundary guard before compilation.
+
+### 36.1 Historical naming and RN adoption
+
+- `WebIM*` under shared `src/sync` is a compatibility name, not permission to import DOM、IndexedDB、Worker、Blob or Web composition.
+- No neutral alias is added until a real RN/Desktop consumer needs it；an unused alias would be a hidden compatibility layer with no exit signal.
+- A future rename must follow `neutral named export -> consumer migration -> RN/Web/Desktop package verification -> breaking removal` and keep one implementation body.
+- RN adoption is opt-in only：create an RN composition root under `src/platforms/rn/sync`, inject RN database/transport ports, then switch only through `im28-phone/src/services/openim/**` behind a separately approved regression slice.
+- Merely compiling or copying shared sync files into the RN package cannot register listeners、open SQLite、start WebSocket or replace the current RN service path.
+
+## 37. Chat Message Copy Contract
+
+> AXIOM: 复制是当前消息只读 projection 的浏览器平台副作用，不是消息 mutation，也不得通过复制动作触发 SDK、Gateway 或 SQLite。
+
+| surface | contract |
+| :--- | :--- |
+| eligibility | system/revoked/deleted rows have no action wrapper；normal cached bubbles expose copy even when quote is unavailable |
+| presentation | reuse RN `copy.regular.svg` inside the existing long-press/right-click menu；incoming menu anchors left and outgoing menu anchors right to avoid viewport overflow |
+| text | text/quote uses visible reply text；image/audio/video/file uses `[图片]/[语音]/[视频]/[文件]`；card uses `[名片] {name}` |
+| platform owner | `chat-message-copy.ts` owns the injectable clipboard port；production writes through `navigator.clipboard.writeText` |
+| feedback | only a resolved clipboard Promise may show `复制成功`；rejection remains visible error and leaves no success state |
+| stop boundary | no rich clipboard entity payload、HTML clipboard、SDK/cache mutation、send、forward、delete、edit or mock clipboard production path |
+
+Local evidence: injected success/failure tests、H5 27 files/99 tests、SDK 44 files/140 tests、full verify/build and authenticated 458x786 right-click proof passed. The first mobile menu layout exceeded the right viewport edge by 21px；direction-aware anchoring reduced its right edge to 442px with `scrollWidth=458px`. No console warning/error or message/network mutation occurred.
+
+## 38. Chat Message Forward Contract
+
+> AXIOM: 转发必须从当前账号 SQLite 的真实源消息出发，由 shared SDK 构造目标消息、幂等 ID 和逐条状态；H5 只编排选择、预览和反选，不得复制 Gateway body、伪造来源或把部分失败描述为整批成功。
+
+### RN Source And Runtime Decisions
+
+| dimension | RN production truth | shared SDK / H5 decision |
+| :--- | :--- | :--- |
+| entry | 单条 action 或多选 action 进入同一 target selector | H5 只对非 system/revoked/deleted 真实消息展示转发；单条与多选生成同一 pending payload |
+| target | 最近会话、好友、已加入群聊；选择后先打开目标会话 | 目标必须由既有 conversation/peer-profile/joined-group facade 解析并落库；page 不拼 `conversation_id` |
+| preview | 进入目标 chat 后可更换目标、反选部分消息、附加一条评论 | React Router 只携带内存 pending state；刷新/直达时安全丢弃未发送预览，禁止 localStorage 持久化整批消息 |
+| exclusion | RN `excludedMessageKeys` 在最终发送前过滤，保留原顺序 | H5 使用 stable server/client message ID；反选到空批次时只取消 pending，不请求网络 |
+| normal forward | RN 对有服务端源 ID 的消息调 `/v1/message/batch-forward` | shared SDK 一批只允许一个目标会话、`1..100` 条；request 只发 `source_msg_id/client_msg_id`，不信任客户端伪造的来源信息 |
+| hidden sender / local source | RN 不走 batch-forward，而是剥离 `forward_origin` 后逐条通过 `/v1/message/send` 发送已注册 body | shared SDK 必须显式注册可重建 body 的 content type 并逐条收敛；未注册/畸形 payload 在 I/O 前拒绝，H5 不自行 strip/序列化 |
+| comment | RN 在所有转发项后附带一条可选文本 | batch API 使用同一 request comment；逐条 fallback 仅在至少一条转发成功后发送 comment；comment 有独立 client ID 和成败状态 |
+
+### Identity, Cache And Realtime Contract
+
+| invariant | required behavior |
+| :--- | :--- |
+| source truth | 发送前按当前账号从 Repository 重读源消息；缺失、跨账号、已删除/撤回或不可见源行拒绝 |
+| idempotency | 一次提交生成一个 stable `batch_id`，每个转发项和 comment 各有 stable `client_msg_id`；transport retry 原样复用，禁止二次 optimistic 行 |
+| optimistic rows | 发网络前在目标会话按原顺序写入 `sending` 转发行，comment 最后；每行在同一 client ID 上独立转为 `sent/failed` |
+| partial response | 顶层 HTTP 成功不等于整批成功；必须检查 `data.list[].code` 和 `data.comment.code`，缺失/无法匹配的结果行按失败收敛 |
+| forward origin | Gateway top-level `forward_origin` 规范化为 core `Message.forwardOrigin`，并以新 schema 列与 body 分开持久；full sync/history/send/realtime `message.batch` 都必须无损重读 |
+| origin display | 普通转发显示服务端返回的来源用户快照；隐藏发送者分支不携带 origin；页面不从当前用户资料补造 |
+
+### Failure And Ownership Contract
+
+| case | required behavior |
+| :--- | :--- |
+| no eligible source / more than 100 | reject before optimistic write and Gateway I/O |
+| target cannot resolve | keep source selection/pending preview and surface the real error；do not open a fabricated conversation |
+| top-level request failure | every same-batch optimistic row becomes failed；preserve IDs/payload for an explicit future retry contract |
+| partial item failure | successful rows stay sent and failed rows stay failed；comment follows its own result；never show one batch-level success that hides failures |
+| all forward items fail | comment remains failed/not sent，matching Gateway semantics |
+| hidden-sender unsupported body | reject that item before I/O；do not silently fall back to normal forward and expose sender identity |
+| refresh/back before commit | pending UI state may be discarded；no optimistic row or network call has occurred |
+
+Canonical owners are shared `message-forward-*` modules、`GatewayHTTPClient.batchForwardMessage`、core mapper and `MessageRepository`. H5 owns the RN-derived target selector、pending preview、excluded-ID state、optional comment draft and route transitions only.
+
+Reviewer verdict after `.14.1`: shared core now maps Gateway `forward_origin` into `Message.forwardOrigin` and schema v9 persists origin/source/batch separately. `messages.forward` rereads every source and target from the current account database, creates one stable batch plus item/comment identities, atomically writes optimistic rows, then converges normal batch partial results or registered hidden-sender individual sends per row. Hidden body-copy reuses the strict persisted-body registry for types `101..105/114/115`; unsupported or malformed content rejects before ID allocation、SQLite write and Gateway I/O. The initial H5 core deliberately requires completed ordinary sources with `serverMsgID`; RN's local-source fallback remains a later parity extension rather than a silent body-copy shortcut. SDK 49 files/150 tests、Web 46/145、all-runtime typecheck/package compile、`build:web` generated-package sync and H5 full verify passed. No RN application/runtime path was changed and no real Gateway forward was executed. Verdict: shared core `implemented-local/acceptance-gated`; H5 target/preview UI is `.14.2`, real normal/hidden-sender evidence is `.14.3`.
+
+Reviewer verdict after `.14.2`: H5 single-message action and multi-select action now create the same stable-ID-only React Router state and enter one target selector. Recent conversations、friends and joined groups reuse the existing facades；group targets require a matching cached group conversation and never derive a conversation ID. The target chat rereads exact source rows through `messages.getCachedByClientMsgIDs`, keeps pending state in Router memory only, supports exclusion、hide-sender capability gating、optional comment、target replacement and explicit send through `messages.forward`. Refresh/deep-link rejects missing or body-shaped state without optimistic write or network I/O；an incomplete cache reread surfaces the real error and clears invalid pending state instead of leaving a zero-item composer；forwarded rows render only the persisted origin snapshot. H5 29 files/103 tests、SDK Web 46/147、typecheck、`build:web` generated-package sync、466 assets and production build passed；authenticated read-only browser proof covered all three target tabs、single/two-message pending preview and 390x844/458x786 light/dark no-overflow without sending. Verdict: H5 UI `implemented-local/acceptance-gated`；real normal/partial-result/list-back、hidden-sender mutation and desktop visual proof remain `.14.3` gates.
+
+Reviewer verdict during `.14.3`: with explicit authorization, source `😊` from the `donk二大爷` conversation was sent twice to cached group conversation `019fe220-4c15-7344-bcaf-abd424373aef`. The normal batch completed at `14:59`, moved the conversation to the top and reread as `转发自 donk / 😊` with no sending/failed row. The hidden-sender branch completed at `15:01`, moved the same conversation again and reread as plain `😊`; the last row had no `.rn-chat-forward-origin`, while the prior normal row retained origin. This real run exposed a page race where the target's initial old `pullHistory` window could overwrite a concurrently completed send；`pullAndReadChatHistory` now always rereads SQLite after pull, and a focused ordering regression plus H5 30 files/104 tests、typecheck、466 assets and production build pass. No third message was sent. Verdict: real normal and hidden-sender Gateway/cache/list-back are `accepted`; a controllable real partial-result case and desktop visual proof remain gated.
+
+## 39. Chat Message Delete Contract
+
+> AXIOM: 消息删除是受权限的服务端/本地状态迁移，不是页面过滤。H5 只提供 RN 对齐的选择、权限呈现和确认 UI；当前账号重读、Gateway mutation、partial result 与 SQLite 收敛只能在 `im28-sdk` 实现一次。
+
+| field | frozen decision |
+| :--- | :--- |
+| RN source | `ChatDetailScreen.tsx`、`chatDetailMessageActionRunners.ts`、`ConversationDeleteSheet.tsx`、`gateway-message-service.ts`、`openIMService.ts` |
+| H5 caller | `ChatMessageAction`、`ChatMultiSelectBar` -> `useChatMessageDeleteFlow` -> `ChatMessageDeleteSheet` -> `runtime.getSync().messages.delete` |
+| shared owner | `im28-sdk/src/sync/message-delete*.ts`、`MessageRepository.markLocalDeletedMany`、现有 Gateway generated operations |
+| input | `conversationID`、最多 100 个稳定 cached `clientMsgID`、`scope=self|all`；不接收页面构造的 body/server ID |
+| single remote | 有 server ID 时调 `updateMessage`，成功后才本地隐藏 |
+| batch remote | 两条及以上 server-backed 行调 `batchDeleteMessage`，按 operation/target/index 匹配每项结果 |
+| local-only | `self` 可直接隐藏；`all` 必须在任何 Gateway/SQLite mutation 前拒绝 |
+| all permission | 直聊允许显示；群聊自己发送的消息允许，群主/管理员可依已有 group cache 呈现其他人消息的入口；SDK 仍执行 server-ID fail-closed |
+| failure | 顶层请求失败不改本地；partial 只隐藏成功行并返回可见的成败计数；本地收敛是单事务 |
+| realtime | 服务端 deleted update 继续由现有 realtime mapper/repository 收敛；页面不注册第二条 WS 删除逻辑 |
+| excluded | revoke 不复用 delete；RN 已显式拒绝撤回，本切片不制造撤回成功路径 |
+
+Reviewer verdict after `.15.1/.15.2`: SDK now rereads authoritative rows from the active account database, uses single update versus batch delete exactly once, preserves every row on top-level failure and transactionally hides only confirmed successes on partial response. H5 single-message and multi-select actions share the RN-derived confirmation sheet and invoke only `messages.delete`; group all-member visibility is projected from the existing role cache and does not bypass SDK guards. SDK Web 47 files/152 tests、all-runtime typecheck、`build:web` generated-package sync、H5 31 files/107 tests、typecheck、466 assets and production build passed. Authenticated read-only browser proof covered single/two-message sheets at 458x786 and 390x844 with no overflow or console warnings/errors. No delete scope was confirmed and no production data changed. Verdict: `.15.1` shared core and `.15.2` H5 UI are `implemented-local`; `.15.3` real `self/all/partial/list-back` is `blocked-destructive-authorization`.
+
+## 40. Chat Message Edit Contract
+
+> AXIOM: 主动编辑是原消息的受限 same-row 状态迁移，不是新发消息或页面文本覆盖。H5 只持有 RN 对齐的 action/composer presentation；资格判断、Gateway body、SQLite 收敛和 realtime 合并只能在 `im28-sdk` 实现一次。
+
+| field | frozen decision |
+| :--- | :--- |
+| RN source | `ChatDetailScreen.tsx`、`chatEditHelpers.ts`、`EditMessageComposerPreview.tsx`、`gateway-message-service.ts`、`openIMService.ts` |
+| H5 caller | `ChatMessageAction` -> `useChatMessageEditFlow` -> `ChatComposerEditPreview` -> `runtime.getSync().messages.editText` |
+| shared owner | `im28-sdk/src/sync/message-edit.ts`、`WebIMMessageSync.editText`、现有 Gateway update/repository/realtime edited cursor |
+| input | `conversationID`、cached `clientMsgID`、trimmed nonempty text、可选 preset entities；不接受页面传入 server ID、sender、status 或 Gateway body |
+| eligibility | 当前用户本人发送、direction outgoing、type 101、status sent、存在 server ID、原正文非空且无 forward origin/source/batch |
+| Gateway | stable operation ID；target 是原 server ID；edit body 只含 text 与序列化 entities |
+| persistence | 成功后保持同 client/server ID、conversation、sender、direction、contentType、status、sendTime、seq；替换 text/entities 并合并 `localEx.editedAt` |
+| failure | 资格失败在 I/O 前拒绝；Gateway 失败/目标不匹配不改 cache；H5 保留编辑态和草稿，只有 facade resolve 后退出 |
+| realtime | 其他端 edited update 继续走既有独立 update cursor/repository upsert；H5 不注册第二条 WebSocket path |
+| presentation | 编辑 action 位于复制之后、多选之前；进入编辑清除引用并回填原文/entities；preview 可取消；时间显示 `已编辑 HH:mm` |
+| excluded | 非文本、未发送、本地-only、他人、转发消息和 revoke 不进入此切片 |
+
+Reviewer verdict after `.16.1/.16.2`: SDK rereads the current account row, applies the RN parity guard and performs one Gateway update under the existing shared mutation queue. It writes no optimistic edit and, only after a matching success response, replaces the same cached identity/order/status while preserving validated entities and recording `editedAt`; failure leaves the original row untouched. H5 exposes edit only through the shared guard, clears quote state, restores the original document into the RN-derived preview/composer and retains draft/editing state on failure. SDK Web 48 files/155 tests、all-runtime typecheck、runtime boundary gate、`build:web` generated-package sync、H5 32 files/109 tests、typecheck、466 assets and production build passed. Authenticated 458x786 read-only proof opened and cancelled the edit preview without horizontal overflow；no edit was submitted. Verdict: `.16.1/.16.2` are `implemented-local/acceptance-gated`；`.16.3` real Gateway、same-row SQLite/list-back and second-client realtime proof is `blocked-mutation-authorization`.

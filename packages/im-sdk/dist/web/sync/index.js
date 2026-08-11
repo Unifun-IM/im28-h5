@@ -14,10 +14,20 @@ export { createWebIMJoinedGroupSync } from './joined-group-sync.js';
 export { createWebIMPeerProfileSync } from './peer-profile-sync.js';
 /** 创建受认证账号约束的会话 cache/sync 服务。 */
 export { createWebIMConversationSync } from './conversation-sync.js';
-/** 创建 runtime 对页面公开的聚合同步入口。 */
-export { createWebIMSync } from './web-im-sync.js';
+/** 创建认证账号绑定的自定义表情 cache/sync 服务。 */
+export { createWebIMCustomEmojiSync } from './custom-emoji-sync.js';
 /** 创建消息 cache/history/send 服务。 */
 export { createWebIMMessageSync } from './message-sync.js';
+/** 导出共享批量转发执行函数。 */
+export { forwardWebIMMessages } from './message-forward.js';
+/** 导出共享转发来源与隐藏发送人能力判断。 */
+export { canForwardWebIMMessage } from './message-forward-state.js';
+/** 导出共享主动消息删除执行函数。 */
+export { deleteWebIMMessages } from './message-delete.js';
+/** 导出共享主动文本编辑执行函数与能力判断。 */
+export { canEditWebIMTextMessage, editWebIMTextMessage, } from './message-edit.js';
+/** 导出 shared 失败消息重试能力判断。 */
+export { WEB_IM_RETRYABLE_CONTENT_TYPES, canRetryWebIMMessage, } from './message-retry.js';
 /** 创建受认证账号约束的当前资料读取 service。 */
 export { createWebIMProfileSync } from './profile-sync.js';
 /** 创建 runtime 唯一 realtime 持久化队列。 */

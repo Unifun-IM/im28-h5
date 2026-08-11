@@ -1,4 +1,4 @@
-import type { GatewayClientMessageBody, Message } from '@im28/im-sdk/core';
+import type { Message } from '@im28/im-sdk/core';
 import { type WebIMMessageSendDependencies } from './message-send-state.js';
 import { type WebIMSyncContext } from './sync-context.js';
 import type { WebIMSyncMutationQueue } from './sync-mutation-queue.js';
@@ -44,23 +44,12 @@ export interface WebIMMediaSendDependencies extends WebIMMessageSendDependencies
     readonly mutationQueue: WebIMSyncMutationQueue;
     readonly mediaUploadPort?: IMMediaUploadPort;
 }
-/** 长上传状态机所需的本地定义和远端 body builder。 */
-export interface WebIMUploadedMessageSendDefinition {
-    readonly conversationID: string;
-    readonly contentType: number;
-    readonly localBody: GatewayClientMessageBody;
-    readonly input: IMMediaUploadInput;
-    readonly onSending?: (message: Message) => void;
-    readonly createRemoteBody: (result: IMMediaUploadResult) => GatewayClientMessageBody;
-}
 /** 共享媒体种类只用于 MIME 与错误语义校验。 */
 export type WebIMMediaKind = 'image' | 'audio' | 'video' | 'file';
 /** 发送一张图片并跨上传阶段收敛本地消息状态。 */
 export declare function sendWebIMImageMessage(context: WebIMSyncContext, options: WebIMSendImageMessageOptions, dependencies: WebIMMediaSendDependencies): Promise<Message>;
 /** 发送一个普通文件并保留可重读的本地元数据。 */
 export declare function sendWebIMFileMessage(context: WebIMSyncContext, options: WebIMSendFileMessageOptions, dependencies: WebIMMediaSendDependencies): Promise<Message>;
-/** 在短队列写入之间执行长耗时平台上传。 */
-export declare function executeWebIMUploadedMessageSend(context: WebIMSyncContext, definition: WebIMUploadedMessageSendDefinition, dependencies: WebIMMediaSendDependencies): Promise<Message>;
 /** 归一化文件元数据并执行种类对应的大小约束。 */
 export declare function normalizeWebIMMediaInput(options: WebIMMediaSourceOptions, maxBytes: number, kind: WebIMMediaKind): IMMediaUploadInput;
 /** 判断图片尺寸是否可安全写入 Gateway body。 */

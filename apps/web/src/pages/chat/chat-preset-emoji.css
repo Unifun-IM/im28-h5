@@ -1,0 +1,62 @@
+.rn-preset-emoji-text {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  flex-wrap: wrap;
+  white-space: pre-wrap;
+}
+
+.rn-preset-emoji-image {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.rn-preset-emoji-text.is-large-emoji .rn-preset-emoji-image {
+  width: 60px;
+  height: 60px;
+  flex-basis: 60px;
+}
+
+.rn-preset-emoji-text.is-single-line {
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-chat-composer-pill {
+  position: relative;
+}
+
+.rn-chat-composer-rich-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  min-width: 0;
+  min-height: 40px;
+  align-items: center;
+  overflow: hidden;
+  padding: 8px 16px;
+  color: var(--im-text-primary);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 20px;
+  pointer-events: none;
+}
+
+.rn-chat-composer textarea {
+  position: relative;
+  z-index: 1;
+}
+
+.rn-chat-composer textarea.has-rich-preview {
+  color: transparent;
+  caret-color: var(--im-text-primary);
+}

@@ -3,7 +3,7 @@
 | field | value |
 | :--- | :--- |
 | status | `active` |
-| active_slice | `W6.a6.6.1-shared-preset-emoji-core` |
+| active_slice | `W6.a6.16.3-message-edit-acceptance (blocked-mutation-authorization)` |
 | verification_floor | `npm run verify` plus local browser smoke |
 
 ## Workstream Ledger
@@ -80,21 +80,92 @@
 | `W6.a6.4-chat-voice-send-core` | code/verification | shared sdk + web media adapter + web chat | RN hold/cancel recording -> browser Blob -> shared upload/Gateway audio body -> SQLite 状态收敛 | H5 15/56 + SDK 36/111 + injected recorder lifecycle/error tests + all-runtime typecheck/build:web/full verify + responsive voice-mode proof | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10 without opening a microphone or transmitting media；real recording/upload/send requires explicit authorization |
 | `W6.a6.5-chat-system-emoji-core` | code/verification | web chat composer + browser preference adapter | RN Unicode emoji panel -> selection-aware draft editing -> existing text send path | 9 focused + H5 17/65 + SDK 36/111 + 466 assets + full verify/build + authenticated 390x844/1280x800 browser proof | `done-local/acceptance-gated` | no message transmitted；real text send remains an explicit acceptance gate |
 | `W6.a6.6-chat-illustrated-emoji-contract-freeze` | contract/design | RN preset registry/document/send/read + shared SDK boundary | source trace -> entity/body/cache/display contract -> bounded implementation slices | RN source/API/caller trace + 135/133 identity audit + ownership/failure/anti-placeholder review | `done` | Gateway schema partial、SDK mapper/send/cache gaps and shared owner decision frozen in migration contract §30 |
-| `W6.a6.6.1-shared-preset-emoji-core` | code/convergence | im28-sdk core/transport/sync/repository + RN thin adapters | shared DTO/descriptor/document/entity -> Web send/map/SQLite；remove RN live algorithm duplication | shared core/document/mapper/SQLite tests + build:rn/build:web + RN/H5 typecheck | `active/contract-frozen` | no H5 illustrated UI、draft persistence、edit/forward/retry、custom emoji、rich clipboard or real send |
-| `W6.a6.6.2-h5-illustrated-emoji-ui` | code/verification | H5 chat composer/message/conversation + browser preference/assets | shared descriptors/entities -> illustrated tab/grid/preview/bubble/conversation projection | H5 behavior + SDK regression + 466 assets + responsive light/dark browser proof | `planned` | activates only after `.1` removes shared semantic double-track；no real send/custom emoji/draft persistence |
+| `W6.a6.6.1-shared-preset-emoji-core` | code/convergence | im28-sdk core/transport/sync/repository + RN thin adapters | shared DTO/descriptor/document/entity -> Web send/map/SQLite；remove RN live algorithm duplication | SDK 37/116 + build:rn/build:web + RN 3 suites/12/tsc + H5 17/65/typecheck/build + 466 assets | `done-local` | closed 2026-08-10；no H5 UI or real send |
+| `W6.a6.6.2-h5-illustrated-emoji-ui` | code/verification | H5 chat composer/message/conversation + browser preference/assets | shared descriptors/entities -> illustrated tab/grid/preview/bubble/conversation projection | H5 21/75 + SDK 37/116 + 466 assets + 458x786/1280x900 light/dark proof | `done-local` | closed 2026-08-10；no real send/custom emoji/draft persistence |
 | `W6.a6.6.3-illustrated-emoji-acceptance` | deployment verification | H5 + SDK + approved disposable conversation | one authorized preset text send -> Gateway -> SQLite -> list-back | Network/result/cache proof | `blocked-external` | explicit send authorization and disposable account/conversation required |
+| `W6.a6.7-custom-emoji-contract-freeze` | contract/design | RN custom emoji library/send/manager + Gateway generated API + SDK/H5 gaps | freeze type 115 DTO/cache/send/UI/failure/owner map and bounded slices | RN/API/caller trace + anti-fake/owner review | `done` | closed 2026-08-11；overall runtime-chain-partial |
+| `W6.a6.7.1-shared-custom-emoji-core` | code/convergence | SDK core/transport/sync/repository | DTO + list mapper/client + SQLite cache + `listCached/sync/sendCustomEmoji` | Gateway contract + 5 focused real sql.js/HTTP tests + 40/121 Web suite + core/all-runtime build + package sync | `done-local` | closed 2026-08-11；no manager mutation or real send |
+| `W6.a6.7.2-h5-custom-emoji-panel` | code/verification | H5 chat panel/message + browser preference | third tab + five-column recent/all + safe type 115 send/read presentation | H5 22/77 + SDK 40/121 + typecheck/build/assets + authenticated real-list 458x786/1280x800 dark proof | `implemented-local/acceptance-gated` | no manager/real send；light-theme proof remains open |
+| `W6.a6.7.3-custom-emoji-manager` | contract/design | SDK media/custom emoji + H5 manager | create/add/delete/reorder decomposition with explicit mutation semantics | RN/Gateway/caller/owner/failure review | `done` | closed 2026-08-11；split into `.3.1/.3.2/.3.3` |
+| `W6.a6.7.3.1-shared-custom-emoji-mutations` | code/convergence | SDK transport/sync/repository + shared upload port | create uploaded images、add received ID、batch delete and cache convergence | HTTP contract + injected upload + real sql.js + 40/126 Web + all-runtime build | `done-local` | closed 2026-08-11；no real upload/mutation |
+| `W6.a6.7.3.2-h5-custom-emoji-manager` | code/verification | H5 chat/manager/router | add tile、image picker、five-column preview/select/confirm-delete | H5 23/80 + SDK regression + 458x786 read-only browser proof | `implemented-local/acceptance-gated` | closed 2026-08-11；real file selection/mutation and desktop/light proof remain gated |
+| `W6.a6.7.3.3-custom-emoji-add-reorder` | code/verification | H5 message actions + browser preference | type115 add action + stable-ID local reorder | H5 24/85 + focused projection/order tests + 458x786 move-tray/cancel proof | `implemented-local/acceptance-gated` | closed 2026-08-11；current history has no type115；no real add/order commit |
+| `W6.a6.7.4-custom-emoji-acceptance` | deployment verification | H5 + SDK + approved account | real list/cache + one authorized disposable type 115 send | Network/Gateway/SQLite/realtime/list-back | `blocked-external` | explicit account/conversation authorization required |
+| `W6.a6.8-chat-media-export` | code/verification | H5 chat + browser media adapter | RN image save and file preview/download over persisted real payload | H5 25/92 + full verify + real cached 458x786/1280x800 proof | `implemented-local/acceptance-gated` | actual download/open and light-theme proof remain gated |
+| `W6.a6.9-chat-failed-retry` | contract/code/verification | RN chat + shared SDK + H5 chat | same-row type101/type115 retry with shared owner and explicit media exclusion | SDK 41/130 + real sql.js identity/failure/no-I/O gates + build:all + H5 25/92/typecheck/build | `implemented-local/acceptance-gated` | closed 2026-08-11；real failure/retry requires explicit authorization |
+| `W6.a6.10-chat-media-retry-stage` | contract/code/verification | shared SDK media send + Web runtime + H5 capability | durable post-upload body checkpoint、conditional 102–105 same-row retry、pre-Realtime interrupted-send recovery and explicit pre-upload source reselection | SDK 43/138 + upload-once/body/range/order gates + all-runtime build:all + H5 25/92/verify + 458px read-only smoke | `implemented-local/acceptance-gated` | closed 2026-08-11；real Gateway failure/retry remains explicitly authorized acceptance only |
+| `W6.a6.11-chat-quote-reply` | contract/code/verification | RN chat actions + shared SDK message sync + H5 composer/list | type114 quote eligibility、Gateway body、durable source projection、composer cancel/send、failed-state semantics and source jump | SDK 44/140 + all-runtime build + H5 typecheck/build/verify + authenticated 458px read-only action/preview/cancel proof | `implemented-local/acceptance-gated` | closed 2026-08-11；real quote send remains explicitly authorized acceptance only |
+| `W6.a6.11.1-sdk-sync-runtime-boundary` | architecture/refactor/verification | shared SDK + RN/Web/Desktop entries | shared business sync、Web-only composition and three runtime adapter directories become structurally distinguishable | AST boundary gate + SDK 44/140 + build:all + RN tsc + H5 verify + per-target dist presence check | `done-local` | closed 2026-08-11；RN runtime path unchanged and Web composition absent from RN/Desktop dist |
+| `W6.a6.12-shared-sync-neutral-naming-and-rn-adoption-contract-freeze` | contract/design | shared SDK + RN service boundary | freeze neutral-name aliases/deprecation order and explicit RN adoption decision without dual-track business logic | public export inventory + RN caller trace + compatibility/build matrix | `done` | closed 2026-08-11；no unused alias、mass rename or RN runtime cutover；future adoption requires explicit RN composition/service slice |
+| `W6.a6.13-chat-copy-core` | code/verification | H5 chat action + browser clipboard adapter | RN copy action/icon、message projection text and success-only feedback | H5 27/99 + SDK 44/140 + full verify/build + authenticated 458x786 right-click/no-overflow/zero-console proof | `implemented-local/acceptance-gated` | closed 2026-08-11；Safari/Firefox clipboard permission and touch long-press remain acceptance gates；no rich clipboard or mutation |
+| `W6.a6.14-chat-forward-contract-freeze` | contract/design | RN forward actions + shared SDK send/cache + H5 router/modal | freeze single/multi forward eligibility、target selection、payload identity、preview editing and failure convergence | RN caller/payload/API/SQLite/UI owner trace + anti-fake review | `done` | closed 2026-08-11；Gateway batch exists but shared mapper/schema drop `forward_origin`；normal and hidden-sender paths remain distinct |
+| `W6.a6.14.1-shared-forward-core` | code/verification | shared SDK message sync + Gateway transport + SQLite | core forward-origin model/schema/repository、source reread、normal batch + registered hidden-sender send、stable IDs and per-row final state | SDK 49/150 + Web 46/145、real sql.js mapper/repository、partial/top-level/hidden guards、all-runtime typecheck/package、build:web + H5 verify | `done-local/acceptance-gated` | closed 2026-08-11；no RN runtime wiring or real Gateway mutation；server-backed sources only |
+| `W6.a6.14.2-h5-forward-target-preview` | code/verification | H5 chat + React Router + existing contact/group/conversation facades | RN action/multi-select、three target sources、target-chat pending preview、exclude/change-target/comment and shared submit caller | H5 29/103 + SDK Web 46/147 + typecheck/build + 466 assets + authenticated read-only 390x844/458x786 light/dark proof + zero page transport/cache logic | `implemented-local/acceptance-gated` | closed 2026-08-11；invalid zero-item pending state fixed；real mutation and desktop visual proof remain `.14.3` gates |
+| `W6.a6.14.3-forward-acceptance` | authorized verification | deployment + H5 + SDK | one disposable normal/partial-result/list-back proof and explicitly approved hidden-sender proof | 14:59 normal origin + 15:01 hidden no-origin + conversation cache/list-back + zero sending/failed + H5 30/104 | `partially-accepted/blocked-external` | normal/hidden closed 2026-08-11；controllable real partial-result and desktop viewport remain unavailable |
+| `W6.a6.15.1-shared-message-delete-core` | contract/code/verification | shared SDK message sync + Gateway transport + SQLite | current-account source reread、single update/batch-delete/local-only self、partial-result and transactional local convergence | SDK Web 47/152 + all-runtime typecheck + build:web generated-package sync | `done-local/acceptance-gated` | closed 2026-08-11；RN service/runtime import graph unchanged |
+| `W6.a6.15.2-h5-message-delete-ui` | code/verification | H5 chat action + multi-select + shared SDK facade | RN single/multi confirmation、self/all scope、group permission presentation and visible partial feedback | H5 31/107 + typecheck/build + 466 assets + authenticated read-only 458x786/390x844 no-overflow/zero-console proof | `done-local/acceptance-gated` | closed 2026-08-11；no delete option was confirmed |
+| `W6.a6.15.3-message-delete-acceptance` | destructive authorized verification | deployment + H5 + SDK | disposable `self/all/partial` Gateway、SQLite、realtime/list-back proof | Network/result + exact affected rows + conversation reread | `blocked-destructive-authorization` | explicit disposable messages and action-time authorization required；never delete production history by inference |
+| `W6.a6.16-chat-message-edit-contract-freeze` | contract/design | RN edit flow + shared SDK + H5 composer | freeze eligibility、Gateway update、same-row/entity/editedAt/failure/realtime ownership | RN caller/body/cache/UI trace + anti-fake/owner review | `done` | closed 2026-08-11；revoke and non-text/forwarded edit excluded |
+| `W6.a6.16.1-shared-message-edit-core` | code/verification | shared SDK message sync + Gateway transport + SQLite | current-account source reread、RN parity guard、success-only same-row text/entity replacement | SDK Web 48/155 + all-runtime typecheck + boundary gate + build:web generated-package sync | `done-local/acceptance-gated` | closed 2026-08-11；RN service/runtime import graph unchanged |
+| `W6.a6.16.2-h5-message-edit-ui` | code/verification | H5 chat action + composer/list projection | RN edit action/preview、original document refill、cancel/submit、edited timestamp | H5 32/109 + typecheck/build + 466 assets + authenticated read-only 458x786 no-overflow proof | `done-local/acceptance-gated` | closed 2026-08-11；no edit was submitted |
+| `W6.a6.16.3-message-edit-acceptance` | authorized verification | deployment + H5 + SDK | one disposable text edit -> Gateway -> same SQLite row/list-back -> second-client realtime | Network/result + stable IDs/order/status + editedAt/entities + realtime proof | `blocked-mutation-authorization` | explicit disposable message and action-time authorization required |
 | `W6.closeout` | verification/docs | web app + sdk + docs | migrated route parity evidence and residual ledger | `npm run verify` + browser matrix + real Gateway flow | `planned` | W6.a2-a5 accepted |
 
-## Active Slice Card
+## Latest Closed H5 Slice Card
 
 | field | frozen value |
 | :--- | :--- |
-| slice_id | `W6.a6.6.1-shared-preset-emoji-core` |
-| production_flow | shared preset descriptor/document -> Web `sendText` -> Gateway top-level entities -> core Message/SQLite -> cached history |
-| canonical_owner | `im28-sdk` core owns DTO/descriptors/algorithms；transport/sync/repository own wire and persistence；RN keeps only asset/MessageItem adapters |
-| expected_deliverable | typed entity/document API、135 identity/fallback descriptors、Gateway encode/decode/map、Web optimistic/missing-echo persistence、RN duplicate algorithm convergence |
-| verification_shape | deterministic UTF-16/duplicate-fallback/invalid-range/document tests + mapper and real SQLite send-state tests + all-runtime build/typecheck |
-| stop_condition | no H5 illustrated presentation、draft persistence、edit/forward/retry、custom emoji type `115`、rich clipboard or real send |
+| slice_id | `W6.a6.7.3.3-custom-emoji-add-reorder` |
+| production_flow | type115 stable ID -> long-press/right-click action -> shared `customEmojis.add`；manager selected group -> Pointer drag -> browser stable-ID order |
+| canonical_owner | SDK owns add/member/cache；H5 owns explicit action UI and `im28.chat.customEmoji.order` presentation preference only |
+| expected_deliverable | type115-only collection action、success/error feedback、touch/mouse selected-stack reorder、ordered panel/manager projection |
+| verification_shape | H5 24/85 + SDK 40/126 regression basis + typecheck/build/assets + authenticated 458x786 select/move-tray/cancel proof |
+| stop_condition | no injected type115 data、real add、order drop/commit、upload/delete/send |
+| closeout | manager selected one real cached item and opened the RN-style move tray before cancel；current conversation has no type115 message，so collection-menu visual remains acceptance-gated |
+
+## Previous Closed H5 Slice Card
+
+| field | frozen value |
+| :--- | :--- |
+| slice_id | `W6.a6.7.3.2-h5-custom-emoji-manager` |
+| production_flow | chat add tile -> conversation-scoped manager route -> cache-first list -> explicit file/create or select/confirm/delete -> shared SDK mutation facade |
+| canonical_owner | SDK owns validation/upload/Gateway/cache membership；H5 owns route/file input/preview/selection/five-column UI |
+| expected_deliverable | add tile、React Router manager、image picker、preview、organize selection and confirm-delete |
+| verification_shape | H5 23/80 + SDK 40/126 + typecheck/build:all/package sync + build/assets + authenticated 458x786 read-only proof |
+| stop_condition | no real file selection/mutation/send；no message collection or local reorder |
+| closeout | one real cached item and add tile rendered as equal five-column cells with no horizontal overflow；desktop/light and real mutation remain gated |
+
+## Latest Closed Shared Mutation Slice Card
+
+| field | frozen value |
+| :--- | :--- |
+| slice_id | `W6.a6.7.3.1-shared-custom-emoji-mutations` |
+| primary_path | `WebIMSync.customEmojis.create/add/delete -> GatewayHTTPClient -> CustomEmojiRepository` through shared upload port |
+| convergence | create/add refresh and atomically replace full membership only after Gateway success；delete removes local rows only after Gateway success；failure preserves membership |
+| closeout | SDK Web 40/126、core Gateway contracts、all-runtime typecheck/build:all and generated-package sync passed |
+| residual_gate | `.3.3` implemented-local/acceptance-gated；real mutations remain authorization-gated |
+
+## Earlier Closed H5 Slice Card
+
+| field | frozen value |
+| :--- | :--- |
+| slice_id | `W6.a6.7.2-h5-custom-emoji-panel` |
+| production_flow | shared account cache/sync -> third heart tab -> recent/all grid -> shared type115 send caller/read projection |
+| canonical_owner | SDK owns membership/cache/body/state；H5 owns RN UI、safe image and recent-ID preference only |
+| expected_deliverable | third tab、cache-first refresh、five-column recent/all、safe direct-send caller |
+| verification_shape | H5 22/77 + SDK 40/121 + typecheck/build/assets + real-list mobile/desktop dark proof |
+| stop_condition | no add tile/manager/upload/add/delete/reorder/message-action save or real send |
+| closeout | one real list item rendered in strict five-column responsive grid；no click/transmission；light proof remains acceptance-gated |
+
+## Latest Closed Shared Slice Card
+
+| field | frozen value |
+| :--- | :--- |
+| slice_id | `W6.a6.7.1-shared-custom-emoji-core` |
+| primary_path | Gateway list -> strict mapper -> schema v8 `custom_emojis` -> `customEmojis.listCached/sync`；`messages.sendCustomEmoji` -> shared optimistic state |
+| convergence | SDK is the only DTO/cache/send owner；H5 generated package contains dist only；RN manager metadata remains registered compatibility work |
+| closeout | SDK 5 focused + Web 40/121、core Gateway contracts、all-runtime typecheck、build:web package sync and H5 consumer gates passed |
+| residual_gate | manager mutations `.3` active；authorized Network/SQLite/realtime/list-back send proof `.4` blocked-external |
 
 ## Latest Closed Contract Card
 
@@ -105,7 +176,7 @@
 | verdict | contract `done`；Gateway schema `runtime-chain-partial`；SDK/H5 implementation `🟡`；real send `🟡 acceptance-gated` |
 | anti_shortcut | omitted H5 tab is honest missing capability；no mock entity、fake success、Unicode identity inference or second page transport exists |
 
-## Latest Closed Slice Card
+## Previous Closed Local Slice Card
 
 | field | frozen value |
 | :--- | :--- |

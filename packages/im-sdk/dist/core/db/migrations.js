@@ -61,6 +61,36 @@ export const SDK_MIGRATIONS = [
             `CREATE INDEX IF NOT EXISTS idx_conversations_archived_updated ON conversations(is_archived, is_pinned DESC, pinned_at DESC, updated_at DESC)`,
         ],
     },
+    {
+        version: 7,
+        name: 'add_message_entities',
+        statements: [
+            `ALTER TABLE messages ADD COLUMN entities_json TEXT`,
+        ],
+    },
+    {
+        version: 8,
+        name: 'create_custom_emoji_cache',
+        statements: [
+            `CREATE TABLE IF NOT EXISTS custom_emojis (
+        emoji_id TEXT PRIMARY KEY NOT NULL,
+        url TEXT NOT NULL,
+        added_at INTEGER NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        updated_at INTEGER NOT NULL
+      )`,
+            `CREATE INDEX IF NOT EXISTS idx_custom_emojis_added_at ON custom_emojis(added_at DESC, sort_order ASC)`,
+        ],
+    },
+    {
+        version: 9,
+        name: 'add_message_forward_metadata',
+        statements: [
+            `ALTER TABLE messages ADD COLUMN forward_origin_json TEXT`,
+            `ALTER TABLE messages ADD COLUMN forward_source_msg_id TEXT`,
+            `ALTER TABLE messages ADD COLUMN forward_batch_id TEXT`,
+        ],
+    },
 ];
 export async function runMigrations(database, migrations = SDK_MIGRATIONS) {
     await database.open();

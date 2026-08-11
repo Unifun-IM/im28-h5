@@ -76,4 +76,87 @@ describe('chat message view media mapping', () => {
       detail: '0:08',
     });
   });
+
+  it('保留文件真实 URL、名称和大小供浏览器预览下载', () => {
+    expect(
+      getChatMessageView(
+        createMessage(105, {
+          file: {
+            url: 'https://media.example.com/report.pdf',
+            name: 'report.pdf',
+            size_bytes: '1536',
+          },
+        }),
+        false,
+      ),
+    ).toEqual({
+      kind: 'file',
+      text: 'report.pdf',
+      detail: '1.5 KB',
+      mediaURL: 'https://media.example.com/report.pdf',
+    });
+  });
+
+  it('保留文本原文以维持插画表情实体偏移', () => {
+    /** emojiText 包含影响 UTF-16 offset 的前后空格。 */
+    const emojiText = ' A😎B ';
+    /** entities 模拟 Gateway 和 SQLite 共享的原始实体。 */
+    const entities: NonNullable<Message['entities']> = [
+      {
+        type: 'preset_emoji',
+        offset: 2,
+        length: '😎'.length,
+        packID: 'im28-preset-v1',
+        presetID: 'smiling-face-with-sunglasses',
+      },
+    ];
+    expect(
+      getChatMessageView(
+        {
+          ...createMessage(101, { text: { text: emojiText } }),
+          entities,
+        },
+        false,
+      ),
+    ).toEqual({ kind: 'text', text: emojiText, entities });
+  });
+
+  it('保留 type115 稳定 ID 供显式收藏动作使用', () => {
+    expect(
+      getChatMessageView(
+        createMessage(115, {
+          emoji: {
+            emoji_id: 'emoji-115',
+            url: 'https://media.example.com/emoji.webp',
+          },
+        }),
+        false,
+      ),
+    ).toEqual({
+      kind: 'emoji',
+      text: '[表情]',
+      emojiID: 'emoji-115',
+      mediaURL: 'https://media.example.com/emoji.webp',
+    });
+  });
+
+  it('将 type114 回复、来源快照和稳定 ID 投影为独立引用视图', () => {
+    expect(
+      getChatMessageView(
+        createMessage(114, {
+          quote: {
+            msg_id: 'source-server-1',
+            text: '来源正文',
+            reply_text: '回复正文',
+          },
+        }),
+        false,
+      ),
+    ).toEqual({
+      kind: 'quote',
+      text: '回复正文',
+      detail: '来源正文',
+      quoteMessageID: 'source-server-1',
+    });
+  });
 });

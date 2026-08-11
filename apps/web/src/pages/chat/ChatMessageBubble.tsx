@@ -1,34 +1,70 @@
 import type { CSSProperties } from 'react';
+import {
+  canEditWebIMTextMessage,
+  canForwardWebIMMessage,
+  canRetryWebIMMessage,
+  type Message,
+} from '@im28/im-sdk/web';
 
 import incomingTailDarkURL from '../../assets/rn/assets/icons/chat/bubbletail-left-dark.svg';
 import incomingTailLightURL from '../../assets/rn/assets/icons/chat/bubbletail-left-light.svg';
 import outgoingTailURL from '../../assets/rn/assets/icons/chat/bubbletail-right.svg';
-import fileIconURL from '../../assets/rn/assets/icons/imm28/doc.svg';
-import playIconURL from '../../assets/rn/assets/icons/imm28/play.solid.svg';
-import speakIconURL from '../../assets/rn/assets/icons/imm28/speak.svg';
+import checkIconURL from '../../assets/rn/assets/icons/imm28/check-circle.solid.svg';
+import circleIconURL from '../../assets/rn/assets/icons/imm28/circle.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import {
   getRNAvatarGradient,
   getRNAvatarInitial,
 } from '../../components/rn-avatar-view.js';
+import { ChatMessageContent } from './ChatMessageContent.js';
+import { ChatForwardOrigin } from './ChatForwardOrigin.js';
+import { ChatMessageAction } from './ChatMessageAction.js';
 import type { ChatMessageListEntry } from './chat-message-list-view.js';
-import {
-  formatChatMessageTime,
-  type ChatMessageView,
-} from './chat-message-view.js';
-import { normalizeChatMediaURL } from './chat-media-view.js';
-import { useChatMediaInteraction } from './ChatMediaInteractionProvider.js';
+import type { ChatMessageView } from './chat-message-view.js';
+import { formatChatMessageTimeText } from './chat-message-edit-view.js';
+import type { ChatQuoteSourceView } from './chat-quote-view.js';
+import { canQuoteChatMessage } from './chat-quote-view.js';
 
 /** Chat 气泡只接收已完成日期与连续分组计算的消息条目。 */
 interface ChatMessageBubbleProps {
   readonly entry: Extract<ChatMessageListEntry, { readonly kind: 'message' }>;
   readonly isGroup: boolean;
+  readonly customEmojiActionDisabled: boolean;
+  readonly onAddCustomEmoji: (emojiID: string) => Promise<boolean>;
+  readonly retryDisabled: boolean;
+  readonly onRetryMessage: (clientMsgID: string) => Promise<void>;
+  readonly quoteSource: ChatQuoteSourceView | null;
+  readonly onQuoteMessage: (message: Message) => void;
+  readonly onCopyMessage: (view: ChatMessageView) => Promise<boolean>;
+  readonly onOpenQuotedMessage: (message: Message) => void;
+  readonly multiSelecting: boolean;
+  readonly selected: boolean;
+  readonly onToggleSelection: (message: Message) => void;
+  readonly onForwardMessage: (message: Message) => void;
+  readonly onBeginMultiSelect: (message: Message) => void;
+  readonly onDeleteMessage: (message: Message) => void;
+  readonly onEditMessage: (message: Message) => void;
 }
 
 /** 按 RN direction/group/status 结构呈现单条消息。 */
 export function ChatMessageBubble({
   entry,
   isGroup,
+  customEmojiActionDisabled,
+  onAddCustomEmoji,
+  retryDisabled,
+  onRetryMessage,
+  quoteSource,
+  onQuoteMessage,
+  onCopyMessage,
+  onOpenQuotedMessage,
+  multiSelecting,
+  selected,
+  onToggleSelection,
+  onForwardMessage,
+  onBeginMultiSelect,
+  onDeleteMessage,
+  onEditMessage,
 }: ChatMessageBubbleProps) {
   // message 缩短模板内领域字段访问路径。
   const { message, view } = entry;
@@ -43,9 +79,45 @@ export function ChatMessageBubble({
   const avatarStyle = {
     '--chat-sender-avatar-gradient': getRNAvatarGradient(message.senderID),
   } as CSSProperties;
+  // forwardAllowed 复用 shared 来源 guard 控制动作和多选按钮。
+  const forwardAllowed = canForwardWebIMMessage(message);
+  // bubble 保持多选态与普通动作态共用同一消息内容 DOM。
+  const bubble = (
+    <span className="rn-chat-bubble">
+      {message.forwardOrigin ? (
+        <ChatForwardOrigin origin={message.forwardOrigin} mine={mine} />
+      ) : null}
+      <ChatMessageContent
+        view={view}
+        messageID={message.clientMsgID}
+        mine={mine}
+        quoteSource={quoteSource}
+        onOpenQuotedMessage={onOpenQuotedMessage}
+      />
+      <time>{formatChatMessageTimeText(message)}</time>
+      {entry.groupPosition === 'single' || entry.groupPosition === 'last' ? (
+        <ChatBubbleTail mine={mine} />
+      ) : null}
+    </span>
+  );
 
   return (
-    <article className={rowClassName}>
+    <article
+      className={`${rowClassName}${multiSelecting ? ' is-multi-selecting' : ''}`}
+      data-client-message-id={message.clientMsgID}
+      data-server-message-id={message.serverMsgID ?? ''}
+    >
+      {multiSelecting ? (
+        <button
+          type="button"
+          className="rn-chat-message-selector"
+          disabled={!forwardAllowed}
+          aria-label={selected ? '取消选择消息' : '选择消息'}
+          onClick={() => onToggleSelection(message)}
+        >
+          <RNAssetIcon assetURL={selected ? checkIconURL : circleIconURL} />
+        </button>
+      ) : null}
       {!mine && isGroup ? (
         entry.showSenderAvatar ? (
           <span className="rn-chat-sender-avatar" style={avatarStyle}>
@@ -61,31 +133,49 @@ export function ChatMessageBubble({
           <span className="rn-chat-sender-name">{message.senderID}</span>
         ) : null}
         <span className="rn-chat-message-line">
-          {mine ? <OutgoingMessageStatus status={message.status} /> : null}
-          <span className="rn-chat-bubble">
-            <ChatMessageContent
-              view={view}
-              messageID={message.clientMsgID}
-              mine={mine}
+          {mine ? (
+            <OutgoingMessageStatus
+              message={message}
+              disabled={retryDisabled}
+              onRetry={onRetryMessage}
             />
-            <time>{formatChatMessageTime(message.sendTime)}</time>
-            {entry.groupPosition === 'single' ||
-            entry.groupPosition === 'last' ? (
-              <ChatBubbleTail mine={mine} />
-            ) : null}
-          </span>
+          ) : null}
+          {multiSelecting ? bubble : (
+            <ChatMessageAction
+              quoteDisabled={!canQuoteChatMessage(message, view)}
+              addDisabled={customEmojiActionDisabled}
+              forwardDisabled={!forwardAllowed}
+              editAllowed={canEditWebIMTextMessage(message)}
+              {...(view.kind === 'emoji' ? { emojiID: view.emojiID ?? '' } : {})}
+              onQuote={() => onQuoteMessage(message)}
+              onCopy={() => onCopyMessage(view)}
+              onAddCustomEmoji={onAddCustomEmoji}
+              onForward={() => onForwardMessage(message)}
+              onEdit={() => onEditMessage(message)}
+              onBeginMultiSelect={() => onBeginMultiSelect(message)}
+              onDelete={() => onDeleteMessage(message)}
+            >
+              {bubble}
+            </ChatMessageAction>
+          )}
         </span>
       </span>
     </article>
   );
 }
 
-/** 以静态 RN 状态图形呈现 sending/failed，不伪造重试操作。 */
+/** 按 shared capability 将可恢复 failed 状态呈现为 RN 重试按钮。 */
 function OutgoingMessageStatus({
-  status,
+  message,
+  disabled,
+  onRetry,
 }: {
-  readonly status: ChatMessageBubbleProps['entry']['message']['status'];
+  readonly message: ChatMessageBubbleProps['entry']['message'];
+  readonly disabled: boolean;
+  readonly onRetry: (clientMsgID: string) => Promise<void>;
 }) {
+  // status 缩短状态分支并保持消息实体完整传给 capability owner。
+  const { status } = message;
   if (status === 'sending' || status === 'pending') {
     return (
       <span
@@ -96,161 +186,30 @@ function OutgoingMessageStatus({
     );
   }
   if (status === 'failed') {
+    if (canRetryWebIMMessage(message)) {
+      return (
+        <button
+          className="rn-chat-message-status is-failed is-action"
+          type="button"
+          disabled={disabled}
+          aria-label="重新发送消息"
+          onClick={() => void onRetry(message.clientMsgID)}
+        >
+          !
+        </button>
+      );
+    }
     return (
       <span
         className="rn-chat-message-status is-failed"
         role="status"
-        aria-label="发送失败"
+        aria-label="发送失败，无法直接重试"
       >
         !
       </span>
     );
   }
   return null;
-}
-
-/** 根据已收窄 view 呈现文本与只读媒体快照。 */
-function ChatMessageContent({
-  view,
-  messageID,
-  mine,
-}: {
-  readonly view: ChatMessageView;
-  readonly messageID: string;
-  readonly mine: boolean;
-}) {
-  // media 提供当前聊天页唯一的预览和音频 owner。
-  const media = useChatMediaInteraction();
-  if (view.kind === 'image') {
-    // imageURL 保持缩略图展示，同时拒绝不安全协议。
-    const imageURL = normalizeChatMediaURL(view.thumbnailURL || view.mediaURL);
-    return imageURL ? (
-      <button
-        className="rn-chat-media-action"
-        type="button"
-        aria-label="预览图片"
-        disabled={!normalizeChatMediaURL(view.mediaURL || view.thumbnailURL)}
-        onClick={() => media.openPreview(view)}
-      >
-        <img className="rn-chat-media-image" src={imageURL} alt="图片消息" />
-      </button>
-    ) : (
-      <span className="rn-chat-message-text">{view.text}</span>
-    );
-  }
-  if (view.kind === 'video') {
-    // playable 标记真实视频 URL 是否满足浏览器安全协议。
-    const playable = Boolean(normalizeChatMediaURL(view.mediaURL));
-    // thumbnailURL 使用相同协议白名单，失败时呈现稳定占位背景。
-    const thumbnailURL = normalizeChatMediaURL(view.thumbnailURL);
-    return (
-      <button
-        className="rn-chat-media-action rn-chat-video-content"
-        type="button"
-        aria-label={playable ? '播放视频' : '视频不可播放'}
-        disabled={!playable}
-        onClick={() => media.openPreview(view)}
-      >
-        {thumbnailURL ? (
-          <img src={thumbnailURL} alt="" />
-        ) : (
-          <span className="rn-chat-video-placeholder" />
-        )}
-        <span className="rn-chat-play-badge">
-          <RNAssetIcon assetURL={playIconURL} />
-        </span>
-        {view.detail ? <span>{view.detail}</span> : null}
-      </button>
-    );
-  }
-  if (view.kind === 'audio') {
-    // playable 标记当前语音是否具有真实安全地址。
-    const playable = Boolean(normalizeChatMediaURL(view.mediaURL));
-    // active 标记唯一正在处理本条消息的音频实例。
-    const active = media.activeAudioMessageID === messageID;
-    // audioLabel 向辅助技术同步真实加载、播放和失败状态。
-    const audioLabel = !playable
-      ? '语音不可播放'
-      : active && media.audioState === 'playing'
-        ? '停止语音'
-        : active && media.audioState === 'loading'
-          ? '正在加载语音'
-          : active && media.audioState === 'error'
-            ? '重新播放语音'
-            : '播放语音';
-    return (
-      <button
-        className={`rn-chat-media-action rn-chat-audio-action${
-          active && media.audioState === 'playing' ? ' is-playing' : ''
-        }${active && media.audioState === 'error' ? ' is-error' : ''}`}
-        type="button"
-        aria-label={audioLabel}
-        aria-pressed={active && media.audioState === 'playing'}
-        disabled={!playable}
-        onClick={() => media.toggleAudio(messageID, view)}
-      >
-        <span className="rn-chat-audio-content">
-          <RNAssetIcon assetURL={speakIconURL} />
-          <span className="rn-chat-audio-duration">{view.detail || '0:00'}</span>
-          {active && media.audioState === 'error' ? (
-            <span className="rn-chat-audio-error">播放失败</span>
-          ) : null}
-        </span>
-      </button>
-    );
-  }
-  if (view.kind === 'file') {
-    return (
-      <span className="rn-chat-file-content">
-        <span className="rn-chat-file-copy">
-          <strong>{view.text}</strong>
-          {view.detail ? <span>{view.detail}</span> : null}
-        </span>
-        <span className="rn-chat-file-icon">
-          <img src={fileIconURL} width="30" height="34" alt="" />
-        </span>
-      </span>
-    );
-  }
-  if (view.kind === 'card') {
-    // avatarStyle 以真实卡片身份生成无图片时的 RN fallback。
-    const avatarStyle = {
-      '--chat-card-avatar-gradient': getRNAvatarGradient(
-        view.detail || view.text,
-      ),
-    } as CSSProperties;
-    return (
-      <span className="rn-chat-card-content">
-        <span className="rn-chat-card-avatar" style={avatarStyle}>
-          {getRNAvatarInitial(view.text)}
-          {view.mediaURL ? <img src={view.mediaURL} alt="" /> : null}
-        </span>
-        <span>
-          <strong>{view.text}</strong>
-          {view.detail ? <small>{view.detail}</small> : null}
-        </span>
-      </span>
-    );
-  }
-  if (view.kind === 'emoji' && view.mediaURL) {
-    return <img className="rn-chat-emoji-content" src={view.mediaURL} alt="表情" />;
-  }
-  return (
-    <>
-      {view.detail ? (
-        <span className={`rn-chat-quote${mine ? ' is-mine' : ''}`}>
-          {view.detail}
-        </span>
-      ) : null}
-      <span
-        className={`rn-chat-message-text${
-          view.kind === 'unsupported' ? ' is-unsupported' : ''
-        }`}
-      >
-        {view.text}
-      </span>
-    </>
-  );
 }
 
 /** 使用 RN 原始 SVG 呈现气泡尾部并随明暗主题切换。 */

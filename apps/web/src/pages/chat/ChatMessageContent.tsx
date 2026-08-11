@@ -1,0 +1,192 @@
+import type { CSSProperties } from 'react';
+import type { Message } from '@im28/im-sdk/web';
+
+import fileIconURL from '../../assets/rn/assets/icons/imm28/doc.svg';
+import playIconURL from '../../assets/rn/assets/icons/imm28/play.solid.svg';
+import speakIconURL from '../../assets/rn/assets/icons/imm28/speak.svg';
+import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import {
+  getRNAvatarGradient,
+  getRNAvatarInitial,
+} from '../../components/rn-avatar-view.js';
+import { useChatMediaInteraction } from './ChatMediaInteractionProvider.js';
+import type { ChatMessageView } from './chat-message-view.js';
+import type { ChatQuoteSourceView } from './chat-quote-view.js';
+import { normalizeChatMediaURL } from './chat-media-view.js';
+import {
+  isSinglePresetEmojiText,
+  PresetEmojiTextContent,
+} from './PresetEmojiTextContent.js';
+
+/** 消息正文接收已收窄的展示模型和显式动作。 */
+interface ChatMessageContentProps {
+  readonly view: ChatMessageView;
+  readonly messageID: string;
+  readonly mine: boolean;
+  readonly quoteSource: ChatQuoteSourceView | null;
+  readonly onOpenQuotedMessage: (message: Message) => void;
+}
+
+/** 根据展示模型呈现文本、媒体、文件、名片和表情内容。 */
+export function ChatMessageContent({
+  view,
+  messageID,
+  mine,
+  quoteSource,
+  onOpenQuotedMessage,
+}: ChatMessageContentProps) {
+  // media 提供当前聊天页唯一的预览和音频 owner。
+  const media = useChatMediaInteraction();
+  if (view.kind === 'image') {
+    // imageURL 保持缩略图展示，同时拒绝不安全协议。
+    const imageURL = normalizeChatMediaURL(view.thumbnailURL || view.mediaURL);
+    return imageURL ? (
+      <button
+        className="rn-chat-media-action"
+        type="button"
+        aria-label="预览图片"
+        disabled={!normalizeChatMediaURL(view.mediaURL || view.thumbnailURL)}
+        onClick={() => media.openPreview(view)}
+      >
+        <img className="rn-chat-media-image" src={imageURL} alt="图片消息" />
+      </button>
+    ) : (
+      <span className="rn-chat-message-text">{view.text}</span>
+    );
+  }
+  if (view.kind === 'video') {
+    // playable 标记真实视频 URL 是否满足浏览器安全协议。
+    const playable = Boolean(normalizeChatMediaURL(view.mediaURL));
+    // thumbnailURL 使用相同协议白名单，失败时呈现稳定占位背景。
+    const thumbnailURL = normalizeChatMediaURL(view.thumbnailURL);
+    return (
+      <button
+        className="rn-chat-media-action rn-chat-video-content"
+        type="button"
+        aria-label={playable ? '播放视频' : '视频不可播放'}
+        disabled={!playable}
+        onClick={() => media.openPreview(view)}
+      >
+        {thumbnailURL ? <img src={thumbnailURL} alt="" /> : <span className="rn-chat-video-placeholder" />}
+        <span className="rn-chat-play-badge"><RNAssetIcon assetURL={playIconURL} /></span>
+        {view.detail ? <span>{view.detail}</span> : null}
+      </button>
+    );
+  }
+  if (view.kind === 'audio') {
+    // playable 标记当前语音是否具有真实安全地址。
+    const playable = Boolean(normalizeChatMediaURL(view.mediaURL));
+    // active 标记唯一正在处理本条消息的音频实例。
+    const active = media.activeAudioMessageID === messageID;
+    // audioLabel 向辅助技术同步真实加载、播放和失败状态。
+    const audioLabel = getAudioActionLabel(playable, active, media.audioState);
+    return (
+      <button
+        className={`rn-chat-media-action rn-chat-audio-action${active && media.audioState === 'playing' ? ' is-playing' : ''}${active && media.audioState === 'error' ? ' is-error' : ''}`}
+        type="button"
+        aria-label={audioLabel}
+        aria-pressed={active && media.audioState === 'playing'}
+        disabled={!playable}
+        onClick={() => media.toggleAudio(messageID, view)}
+      >
+        <span className="rn-chat-audio-content">
+          <RNAssetIcon assetURL={speakIconURL} />
+          <span className="rn-chat-audio-duration">{view.detail || '0:00'}</span>
+          {active && media.audioState === 'error' ? <span className="rn-chat-audio-error">播放失败</span> : null}
+        </span>
+      </button>
+    );
+  }
+  if (view.kind === 'file') {
+    // downloadable 只在 payload 提供安全 URL 时启用预览。
+    const downloadable = Boolean(normalizeChatMediaURL(view.mediaURL));
+    return (
+      <button
+        className="rn-chat-media-action rn-chat-file-content"
+        type="button"
+        aria-label={downloadable ? `预览文件 ${view.text}` : '文件不可下载'}
+        disabled={!downloadable}
+        onClick={() => media.openPreview(view)}
+      >
+        <span className="rn-chat-file-copy">
+          <strong>{view.text}</strong>
+          {view.detail ? <span>{view.detail}</span> : null}
+        </span>
+        <span className="rn-chat-file-icon"><img src={fileIconURL} width="30" height="34" alt="" /></span>
+      </button>
+    );
+  }
+  if (view.kind === 'card') return <ChatCardContent view={view} />;
+  if (view.kind === 'emoji' && view.mediaURL) {
+    return <img className="rn-chat-emoji-content" src={view.mediaURL} alt="表情" />;
+  }
+  if (view.kind === 'quote') {
+    // sourceText 优先显示当前缓存来源，窗口外回退发送时快照。
+    const sourceText = quoteSource?.text || view.detail || '引用消息';
+    // sourceLabel 仅在真实来源已解析时展示，禁止猜测发送者。
+    const sourceLabel = quoteSource?.label ? `${quoteSource.label}: ` : '';
+    return (
+      <>
+        <button
+          className={`rn-chat-quote${mine ? ' is-mine' : ''}`}
+          type="button"
+          disabled={!quoteSource || quoteSource.deleted}
+          onClick={() => {
+            if (quoteSource && !quoteSource.deleted) {
+              onOpenQuotedMessage(quoteSource.message);
+            }
+          }}
+        >
+          {sourceLabel}{sourceText}
+        </button>
+        <span className="rn-chat-message-text">{view.text}</span>
+      </>
+    );
+  }
+  if (view.kind === 'text') {
+    // largeEmoji 只在一个合法实体完整覆盖正文时生效。
+    const largeEmoji = isSinglePresetEmojiText(view.text, view.entities);
+    return (
+      <>
+        <PresetEmojiTextContent text={view.text} entities={view.entities} className="rn-chat-message-text" largeEmoji={largeEmoji} />
+      </>
+    );
+  }
+  return (
+    <>
+      {view.detail ? <span className={`rn-chat-quote${mine ? ' is-mine' : ''}`}>{view.detail}</span> : null}
+      <span className={`rn-chat-message-text${view.kind === 'unsupported' ? ' is-unsupported' : ''}`}>{view.text}</span>
+    </>
+  );
+}
+
+/** 根据真实音频状态生成辅助技术动作文案。 */
+function getAudioActionLabel(
+  playable: boolean,
+  active: boolean,
+  state: ReturnType<typeof useChatMediaInteraction>['audioState'],
+): string {
+  if (!playable) return '语音不可播放';
+  if (!active) return '播放语音';
+  if (state === 'playing') return '停止语音';
+  if (state === 'loading') return '正在加载语音';
+  if (state === 'error') return '重新播放语音';
+  return '播放语音';
+}
+
+/** 使用真实身份快照呈现用户或群名片。 */
+function ChatCardContent({ view }: { readonly view: ChatMessageView }) {
+  // avatarStyle 以真实卡片身份生成无图片时的 RN fallback。
+  const avatarStyle = {
+    '--chat-card-avatar-gradient': getRNAvatarGradient(view.detail || view.text),
+  } as CSSProperties;
+  return (
+    <span className="rn-chat-card-content">
+      <span className="rn-chat-card-avatar" style={avatarStyle}>
+        {getRNAvatarInitial(view.text)}
+        {view.mediaURL ? <img src={view.mediaURL} alt="" /> : null}
+      </span>
+      <span><strong>{view.text}</strong>{view.detail ? <small>{view.detail}</small> : null}</span>
+    </span>
+  );
+}

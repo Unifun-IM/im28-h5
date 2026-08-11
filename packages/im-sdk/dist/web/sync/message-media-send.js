@@ -1,4 +1,5 @@
-import { completeWebIMMessageSend, failWebIMMessageSend, prepareWebIMMessageSend, } from './message-send-state.js';
+import {} from './message-send-state.js';
+import { executeWebIMUploadedMessageSend } from './message-upload-send-state.js';
 import { createWebIMSyncError } from './sync-context.js';
 /** 图片消息允许的单文件最大字节数。 */
 export const WEB_IM_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
@@ -62,30 +63,6 @@ export async function sendWebIMFileMessage(context, options, dependencies) {
             },
         }),
     }, dependencies);
-}
-/** 在短队列写入之间执行长耗时平台上传。 */
-export async function executeWebIMUploadedMessageSend(context, definition, dependencies) {
-    // uploadPort 缺失必须显式失败，不能退化为本地假消息。
-    const uploadPort = dependencies.mediaUploadPort;
-    if (!uploadPort) {
-        throw createWebIMSyncError('MEDIA_UPLOAD_UNAVAILABLE', 'Media sending requires a platform upload adapter.');
-    }
-    // prepared 只在共享队列内占用 SQLite 写入时段。
-    const prepared = await dependencies.mutationQueue.enqueue(() => prepareWebIMMessageSend(context, {
-        conversationID: definition.conversationID,
-        contentType: definition.contentType,
-        payload: definition.localBody,
-    }, dependencies));
-    try {
-        // onSending 只收到已落库实体，页面不得自行生成临时消息身份。
-        definition.onSending?.(prepared.localMessage);
-        // uploaded 位于队列外，避免大文件上传阻塞 realtime cache 写入。
-        const uploaded = await uploadPort.upload(definition.input);
-        return await dependencies.mutationQueue.enqueue(() => completeWebIMMessageSend(prepared, definition.createRemoteBody(uploaded), dependencies));
-    }
-    catch (cause) {
-        return dependencies.mutationQueue.enqueue(() => failWebIMMessageSend(prepared, cause));
-    }
 }
 /** 归一化文件元数据并执行种类对应的大小约束。 */
 export function normalizeWebIMMediaInput(options, maxBytes, kind) {

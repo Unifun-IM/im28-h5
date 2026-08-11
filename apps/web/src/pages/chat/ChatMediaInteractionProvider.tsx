@@ -6,12 +6,10 @@ import {
   useMemo,
   useRef,
   useState,
-  type MouseEvent,
   type ReactNode,
 } from 'react';
 
-import backIconURL from '../../assets/rn/components/navbar/nav-arrow-left.svg';
-import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { ChatMediaPreviewOverlay } from './ChatMediaPreviewOverlay.js';
 import type { ChatMessageView } from './chat-message-view.js';
 import {
   getChatAudioURL,
@@ -172,60 +170,4 @@ export function useChatMediaInteraction(): ChatMediaInteractionValue {
     throw new Error('Chat media interaction provider is unavailable.');
   }
   return value;
-}
-
-/** 按 RN 黑色全屏层呈现图片或原生视频控件。 */
-function ChatMediaPreviewOverlay({
-  preview,
-  onClose,
-}: {
-  readonly preview: ChatMediaPreview;
-  readonly onClose: () => void;
-}) {
-  return (
-    <section
-      className={`rn-chat-media-preview is-${preview.kind}`}
-      role="dialog"
-      aria-modal="true"
-      aria-label={preview.title}
-    >
-      {preview.kind === 'video' ? (
-        <header className="rn-chat-media-preview-header">
-          <button type="button" aria-label="关闭视频预览" onClick={onClose}>
-            <RNAssetIcon assetURL={backIconURL} />
-          </button>
-          <strong>{preview.title}</strong>
-          <span aria-hidden="true" />
-        </header>
-      ) : (
-        <button
-          className="rn-chat-image-preview-close"
-          type="button"
-          aria-label="关闭图片预览"
-          onClick={onClose}
-        >
-          ×
-        </button>
-      )}
-      <div className="rn-chat-media-preview-body" onClick={onClose}>
-        {preview.kind === 'image' ? (
-          <img src={preview.url} alt="图片预览" onClick={stopClickPropagation} />
-        ) : (
-          <video
-            key={preview.url}
-            src={preview.url}
-            controls
-            autoPlay
-            playsInline
-            onClick={stopClickPropagation}
-          />
-        )}
-      </div>
-    </section>
-  );
-}
-
-/** 阻止媒体本体点击冒泡到关闭预览的背景层。 */
-function stopClickPropagation(event: MouseEvent) {
-  event.stopPropagation();
 }

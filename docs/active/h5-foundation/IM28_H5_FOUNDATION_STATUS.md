@@ -1,34 +1,197 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a6.6 illustrated preset emoji contract done；W6.a6.6.1 shared core active`
-- next_step: `move preset DTO/descriptor/document/entity semantics into im28-sdk；close Web send/cache gaps and make RN files thin adapters before H5 UI`
+- current_step: `W6.a6.16.1 shared message edit core + W6.a6.16.2 H5 edit UI done-local`
+- next_step: `W6.a6.16.3 authorized disposable Gateway/SQLite/list-back/realtime edit acceptance`
 - blockers: `W5.a3 browser matrix remains blocked-environment; W3.real-gateway and final data-backed acceptance require Gateway test credentials`
-- gate_state: `W6.a6.6 source/API/owner/anti-fake contract passed；shared implementation pending；real transmission remains authorization-gated`
-- latest_evidence: `2026-08-10 preset trace: RN 135 unique preset IDs/133 fallback values、Gateway entities request/response schema present、SDK Message mapper/send/cache gap proven、H5 135 mirrored PNG assets present`
+- gate_state: `edit shared core/H5 UI accepted locally；real edit blocked-mutation-authorization；real delete blocked-destructive-authorization；forward partial-result/desktop remain blocked-external`
+- latest_evidence: `2026-08-11 SDK Web 48 files/155 tests、all-runtime typecheck、boundary gate、build:web sync、H5 32 files/109 tests、typecheck、466 assets、production build and authenticated read-only edit-preview proof passed`
 
 ## Current Readout
 
 | dimension | state | note |
 | :--- | :--- | :--- |
-| pack | `active` | W3/W4/W5 保留外部门；W6.a6.6 contract closed and W6.a6.6.1 is the only active implementation slice |
+| pack | `active` | W3/W4/W5 保留外部门；forward normal/hidden accepted；message edit/delete shared core/H5 UI closed locally，real mutations and forward partial/desktop remain gated |
 | `W1` | `done` | H5 规则、架构和存储 SSOT 已落库 |
 | `W2` | `done` | H5 app、独立 multi-runtime SDK Git repository、Vite React Router App 与跨仓构建验证链已落地 |
 | `W3` | `gated` | browser orchestration、account SQLite 与 privacy gate 已通过，等待真实 smoke |
 | `W4` | `gated` | HTTP MVP、默认 routes、新消息/会话/update 与 same-tab ordering 已本地完成；真实 flow gated |
 | `W5` | `gated` | W5.a1/W5.a2 done-local；W5.a3 code done-local，真实三浏览器矩阵 pending |
-| `W6` | `active` | W6.a6.5 done-local；W6.a6.6 contract done；shared preset core active；custom emoji、real send and external/data gates remain open |
+| `W6` | `active` | preset/custom/media/retry/quote/copy/edit local chains、SDK boundary、forward normal+hidden real flow and message delete local chain done；real edit/delete and forward partial/desktop remain open |
 
-## Active Slice Definition
+## Latest Closed Message Edit Slice
 
 | field | value |
 | :--- | :--- |
-| slice_id | `W6.a6.6.1-shared-preset-emoji-core` |
-| goal | establish one cross-runtime preset entity/document owner in `im28-sdk` and close Web text send/map/SQLite persistence without adding H5 UI yet |
-| production_flow | shared descriptor/document -> `sendText({ text, entities })` -> Gateway top-level entities -> core Message/SQLite -> cached history |
-| target_owner | SDK core owns DTO/algorithms/descriptors；transport/sync/repository own wire/state；RN local files become thin asset/MessageItem adapters |
-| verification_shape | shared normalize/document/mapper tests + real SQLite optimistic/sent/missing-echo tests + `build:rn`/`build:web` + RN/H5 typecheck |
-| stop_condition | no H5 illustrated tab/render、draft persistence、edit/forward/retry、rich clipboard、custom emoji type `115` or real message transmission |
+| slice_id | `W6.a6.16.1-shared-message-edit-core + W6.a6.16.2-h5-message-edit-ui` |
+| production_flow | cached client ID -> shared current-account reread/eligibility -> Gateway update -> success-only same-row text/entity replacement -> existing cache reread/realtime convergence |
+| ownership | SDK owns eligibility、operation ID、Gateway body、same-row persistence and editedAt；H5 owns action、composer preview/draft and edited-time projection only |
+| failure contract | invalid/local-only/forwarded/non-text rows reject before I/O；Gateway failure or target mismatch preserves original cache；H5 keeps editing state and draft |
+| verification | SDK Web 48/155、all-runtime typecheck、boundary gate、build:web sync；H5 32/109、typecheck/build、466 assets；authenticated 458x786 preview/cancel/no-overflow proof |
+| RN impact | no RN app/service caller changed；shared code compiles for RN but cannot alter runtime without explicit composition/service cutover |
+| residual | real Gateway edit、same-row SQLite/list-back and second-client realtime remain `blocked-mutation-authorization`；revoke remains excluded |
+
+## Latest Closed Message Delete Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.15.1-shared-message-delete-core + W6.a6.15.2-h5-message-delete-ui` |
+| production_flow | cached client IDs -> shared current-account reread -> single update or batch-delete -> success-only transactional local hide -> existing cache reread/realtime convergence |
+| ownership | SDK owns eligibility、Gateway operations、partial matching and SQLite mutation；H5 owns action/multi-select、group-role presentation、confirmation sheet and visible result only |
+| failure contract | `all` rejects any local-only row before I/O；top-level failure changes no local row；partial result hides only confirmed successes；`self` may remove local-only rows |
+| verification | SDK Web 47/152、all-runtime typecheck、build:web sync；H5 31/107、typecheck/build、466 assets；authenticated 458x786/390x844 single+two-message read-only proof with no overflow or console errors |
+| RN impact | no RN app/service import or caller changed；shared code compiles for RN but cannot alter its runtime without an explicit composition/service cutover |
+| residual | real `self/all/partial/list-back` is destructive and remains `blocked-destructive-authorization`；revoke is explicitly excluded |
+
+## Latest Closed H5 Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.13-chat-copy-core` |
+| production_flow | cached message -> `ChatMessageView` -> existing message action -> injected clipboard port -> `navigator.clipboard.writeText` -> success-only notice |
+| parity | RN copy asset and text/media/card fallbacks are reused；system/deleted/revoked rows remain non-actionable |
+| verification | H5 27/99、SDK 44/140、466 assets、full verify/build、authenticated 458x786 right-click/no-overflow/zero-console proof |
+| residual | Safari/Firefox permission behavior and touch long-press remain acceptance gates；rich clipboard is explicitly outside scope |
+
+## Latest Closed Forward Core Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.14.1-shared-forward-core` |
+| production_flow | current-account SQLite source reread -> atomic optimistic rows -> normal batch or registered hidden-sender send -> per-row final transaction -> realtime/list-back mapper |
+| persistence | schema v9 stores `forward_origin_json/forward_source_msg_id/forward_batch_id` separately；history and realtime use the same core projection |
+| failure contract | one stable batch/item/comment identity；top-level failure fails every prepared row；partial response and comment converge independently；unsupported hidden body rejects before write/I/O |
+| verification | SDK 49 files/150 tests、Web 46/145、all-runtime typecheck/package compile、build:web sync and H5 full verify passed |
+| residual | initial core requires completed server-backed sources；registered hidden body types are 101–105/114/115；real Gateway/list-back and H5 UI remain open |
+| next | `W6.a6.14.2-h5-forward-target-preview` |
+
+## Latest Closed Forward H5 Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.14.2-h5-forward-target-preview` |
+| production_flow | cached action/multi-select stable IDs -> React Router target selector -> existing conversation/contact/group facades -> target chat source reread -> pending exclusion/comment/privacy preview -> explicit shared `messages.forward` caller |
+| ownership | Router state carries IDs only；H5 owns selection/presentation；SDK owns eligibility、source/target cache reread、Gateway body、optimistic rows and per-row convergence |
+| verification | H5 29/103、SDK Web 46/147、typecheck、build:web sync、466 assets、production build and authenticated read-only three-tab/single+two-message/390x844+458x786 light/dark proof |
+| residual | authorized normal and hidden-sender sends now pass Gateway/cache/list-back；real partial-result and desktop visual proof remain `.14.3` gates |
+| next | `W6.a6.14.3-forward-acceptance` partial-result/desktop remainder (`blocked-external`) |
+
+## Latest Closed Contract Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.12-shared-sync-neutral-naming-and-rn-adoption-contract-freeze` |
+| verdict | keep one shared implementation；treat `WebIM*` as historical public names；do not add unused aliases or move neutral business rules into Web |
+| RN adoption | future opt-in RN composition root plus explicit `src/services/openim/**` switch；compilation/package presence alone has no runtime side effect |
+| next | `W6.a6.13-chat-copy-core` |
+
+## Latest Closed SDK Boundary Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.11.1-sdk-sync-runtime-boundary` |
+| goal | make shared business sync and RN/Web/Desktop-specific composition/adapters structurally distinguishable without replacing the existing RN runtime |
+| production_flow | shared `src/sync` consumes injected database/Gateway/ports；Web runtime imports `platforms/web/sync/web-im-sync`；RN keeps its existing service adapter path |
+| isolation | Web aggregation exists only in Web dist；RN/Desktop exclude it；AST gate rejects shared-to-platform and cross-client imports before every package build/typecheck |
+| verification | SDK 44 files/140 tests、all-runtime build:all、RN consumer `tsc --noEmit`、H5 `npm run verify` and per-target dist inspection passed |
+
+Local closeout: no RN application source was changed. Shared DTO、schema、Repository and Gateway mapper remain intentionally cross-runtime and can affect RN only where RN already imports those contracts；the new Web composition itself cannot enter the RN package or runtime.
+
+## Latest Closed H5 Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.10-chat-media-retry-stage` |
+| goal | make media retry honest across upload/Gateway/process boundaries without persisting browser source bytes |
+| production_flow | platform upload -> strict 102–105 body validation -> same-row SQLite checkpoint -> Gateway send；failure/restart -> shared capability -> same client ID Gateway retry without upload |
+| target_owner | shared SDK owns stage derivation、checkpoint、payload reconstruction、account-scoped recovery and retry；Web runtime orders recovery before Realtime；H5 only renders capability |
+| verification_shape | four-body contract tests + real sql.js upload-once/retry/recovery range + runtime-before-WebSocket tests + all-runtime build + H5 full gates/read-only smoke |
+| stop_condition | no File/Blob persistence、memory source registry、automatic resend、new retry ID、page payload decode、fake success or unapproved Gateway operation |
+
+Local closeout: type102–105 rows become retryable only after a complete uploaded Gateway body is durably checkpointed. A Gateway failure retains that body and explicit retry reuses the original client ID without invoking upload again. A new authenticated session converts only the current user's outgoing `sending` rows to `failed` before WebSocket construction；pre-upload failures remain non-actionable and require an explicit new source selection/new send. No real message was sent or retried.
+
+## Previous Closed H5 Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.9-chat-failed-retry` |
+| goal | mirror RN failed action without creating a second message or pretending browser media bytes are recoverable |
+| production_flow | failed cached outgoing 101/115 -> shared capability -> `messages.retry` -> same client ID/SQLite row `sending -> sent/failed` -> page cache reread |
+| target_owner | shared SDK owns support matrix、payload reconstruction、account guard、Gateway body and state transition；H5 owns button and visible cache refresh only |
+| verification_shape | real sql.js same-row success/failure/no-media-I/O tests + all-runtime build + H5 full gates；real failed-message click remains authorization-gated |
+| stop_condition | no new client ID、page payload decode、media File/Blob persistence、unsupported retry button、fake success or unapproved Gateway send |
+
+Local closeout: text 101 and custom emoji 115 can retry only from the current account failed row；both preserve the original client ID，and type115 retains its validated URL when Gateway omits it. Media 102–105 remain static failed states because browser bytes cannot be recovered from persisted metadata. No real message was retried or transmitted.
+
+## Latest Closed H5 Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.8-chat-media-export` |
+| goal | migrate RN image save and file preview/download without changing shared message truth |
+| production_flow | cached image/file payload -> safe HTTP(S) projection -> route-scoped preview -> verified Blob download or explicit browser open |
+| target_owner | shared SDK owns message payload；H5 chat owns overlay；one browser adapter owns fetch/Blob/object-URL/download trigger |
+| verification_shape | pure URL/file projection + injected download behavior tests + H5 full gates + authenticated read-only image/file visual proof when real history exists |
+| stop_condition | no page Gateway/cache write、mock media、fake download success、upload/send、read receipt、retry or RTC |
+
+Local closeout: real cached image messages opened a 458x786 black preview with complete 400px source image and RN save action；a real 32.6 KB PDF opened the file preview with exact name/size and enabled browser open/download actions. Mobile and 1280x800 desktop widths had no horizontal overflow，Escape closed the overlay and console warning/error count stayed zero. No download、new tab、message、upload or mutation was triggered；light-theme and actual download/open evidence remain acceptance gates.
+
+## Latest Closed H5 Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.7.3.3-custom-emoji-add-reorder` |
+| goal | expose RN type115 collection action and selected-group local ordering without inventing server reorder |
+| production_flow | message stable ID -> explicit long-press/right-click action -> shared add；manager selection -> Pointer tray -> stable-ID browser preference |
+| target_owner | SDK owns add/member/cache；H5 owns action UI and local presentation order only |
+| verification_shape | H5 24/85 + typecheck/build/assets + authenticated 458x786 select/move-tray/cancel proof；type115 visual remains real-data gated |
+| stop_condition | no fake/injected message、real add、order commit、file selection、delete or send |
+
+Local closeout: type115 messages retain stable identity for an explicit RN-derived action menu，and successful feedback can only follow shared add resolution. Manager/panel apply a deduped stable-ID preference over the SDK member snapshot；touch/mouse selected-stack movement is local-only. One real cached item reached move mode and was cancelled without persistence；the current conversation has no type115 history，so its menu was not fabricated.
+
+## Previous Closed H5 Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.7.3.2-h5-custom-emoji-manager` |
+| goal | mirror the RN custom emoji manager through a conversation-scoped React Router route |
+| production_flow | chat add tile -> `/conversations/:conversationID/emojis` -> cache-first list -> user file selection/create or selection/confirm/delete -> shared SDK mutation facade |
+| target_owner | SDK owns upload validation、Gateway mutation and SQLite membership；H5 owns file input、route、preview/selection and five-column presentation only |
+| verification_shape | H5 23/80 + SDK 40/126 + all-runtime typecheck/build:all + production build/assets + authenticated 458x786 read-only equal-cell/no-overflow proof |
+| stop_condition | no message-action collection/local reorder、no real file selection/upload/delete/send |
+
+Local closeout: the chat custom-emoji tab now exposes a real manager route with RN-derived five-column cells、add picker、preview、organize selection and confirmed batch delete. Every mutation delegates to `WebIMSync.customEmojis`; read-only browser proof opened the real cached list without selecting a file or mutating data. Desktop/light visual proof and real mutation remain acceptance gates.
+
+## Latest Closed Shared Mutation Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.7.3.1-shared-custom-emoji-mutations` |
+| closeout | SDK owns strict create upload batch、add received ID、batch delete and post-success account-cache convergence |
+| verification | SDK Web 40/126 + core Gateway contracts + all-runtime typecheck/build:all + RN/Web/Desktop package sync；H5 consumer 23/80 + typecheck/build passed |
+| residual_gate | message collection/local reorder is `.3.3`；real upload/mutation/send remains explicitly authorization-gated |
+
+## Previous Closed H5 Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.7.2-h5-custom-emoji-panel` |
+| goal | bind shared custom emoji cache/send semantics to the RN third tab and five-column H5 presentation |
+| production_flow | `customEmojis.listCached/sync` -> H5 recent/all grid -> `messages.sendCustomEmoji` caller -> existing type115 cached rendering |
+| target_owner | SDK owns list membership、DTO、SQLite and send state；H5 owns heart tab、five-column CSS and recent-ID preference only |
+| verification_shape | H5 MRU behavior + SDK 121 regression + typecheck/build/assets + authenticated 458x786/1280x800 dark no-overflow proof；light proof remains acceptance gate |
+| stop_condition | no add tile/manager/upload/add/delete/reorder、message-action save or real send |
+
+Local closeout: the third heart tab loads the current account SQLite snapshot before remote sync, renders stable-ID recent/all sections in five square columns and delegates clicks to shared type 115 send. SDK Web 40/121、core/all-runtime gates、H5 22/77、typecheck/build、466 assets and authenticated real-list dark mobile/desktop proof passed. One real list item rendered；no emoji was clicked and no message was transmitted. Light-theme visual proof and real send remain acceptance-gated.
+
+## Latest Closed Shared Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.7.1-shared-custom-emoji-core` |
+| closeout | SDK owns custom emoji DTO/HTTP list mapper、schema v8 account cache、atomic replace and type115 optimistic/sent/failed URL snapshot semantics |
+| verification | SDK Web 40/121 + core Gateway contracts + all-runtime typecheck + build:web package sync；H5 package consumer typecheck/build passed |
+| residual_gate | manager create/add/delete/reorder is `.3`；real send remains explicitly authorization-gated in `.4` |
 
 ## Latest Local Slice Definition
 
@@ -152,6 +315,7 @@ Local closeout: shared `message-send-state` now owns conversation guard、stable
 | Chat image/file send core | migration/verification | shared optimistic state、Web OSS adapter、RN attachment panel and default facade callers are implemented-local；an explicitly authorized real upload/send and final Network/cache proof are absent | yes |
 | Chat album video send core | migration/verification | mixed selection、browser metadata、shared video body/snapshot and SQLite state are implemented-local；an explicitly authorized real upload/send and final Network/cache proof are absent | yes |
 | Chat voice send core | migration/verification | RN voice composer、browser recorder lifecycle、shared audio body and SQLite state are implemented-local；real microphone、recording/upload/send and authenticated Network/cache proof are absent | yes |
+| Chat forward UI/core | migration/verification | shared core and H5 flow are implemented；authorized normal origin/list-back and hidden-origin removal pass；real partial-result and desktop visual proof remain | yes |
 | General settings residual | migration/contract | version done-local；network blocked-browser；cache blocked-storage；real update response、notification/permission writes and cross-browser proof pending | yes |
 | Contacts cache/index parity | migration/API gap | `/contacts` 真实远端分页已完成；shared Web entry 未导出 `FriendshipRepository`，中文拼音索引未对齐 | yes |
 | Primary tab shell | migration | global owner 和四个 route 均已启用；friend/group application badge、me dark/real logout proof 缺失 | yes |
@@ -166,8 +330,8 @@ Local closeout: shared `message-send-state` now owns conversation guard、stable
 
 | field | value |
 | :--- | :--- |
-| closed_slice | `W6.a6.4-chat-voice-send-core local implementation` |
-| deliverable_verdict | `implemented-local/acceptance-gated` |
-| gate_verdict | `ChatVoiceInput -> useChatVoiceRecorder -> browser recorder adapter -> WebIMSync.messages.sendAudio -> shared audio/state owner -> Web OSS adapter -> Gateway is the only production path；H5 15/56、SDK 36/111、466 assets、all-runtime typecheck、full verify/build and responsive voice-mode proof passed` |
-| debt_or_drift | `no parallel recorder/message/cache/upload owner、page transport、mock Blob or fake success found；real microphone、OSS/Gateway send and authenticated cache projection were not executed without explicit authorization` |
-| next_activation_decision | `retain real authorized voice record/send as acceptance gate；freeze audio picker、waveform、played/read/auto-next、progress/cancel/retry/download/RTC and the next implementation slice separately` |
+| closed_slice | `W6.a6.15.1 shared delete core + W6.a6.15.2 H5 delete UI` |
+| deliverable_verdict | `implemented-local/destructive-acceptance-gated` |
+| gate_verdict | `SDK Web 47/152、all-runtime typecheck、build:web sync；H5 31/107、466 assets、typecheck/build and authenticated mobile read-only proof passed` |
+| debt_or_drift | `no duplicate H5 transport/cache owner、fake success、revoke shortcut or RN runtime wiring；real self/all/partial/list-back evidence is intentionally absent` |
+| next_activation_decision | `require explicit action-time authorization and disposable messages before W6.a6.15.3；retain W6.a6.14.3 partial/desktop as separate external gates` |

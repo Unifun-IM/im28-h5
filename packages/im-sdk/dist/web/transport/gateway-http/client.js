@@ -2,6 +2,7 @@ import { IMError } from '../../core/errors.js';
 import * as authOpenAPI from '../../openapi/generated/gateway/apIrenzheng.js';
 import * as callOpenAPI from '../../openapi/generated/gateway/apItonghua.js';
 import * as conversationOpenAPI from '../../openapi/generated/gateway/apIhuihua.js';
+import * as customEmojiOpenAPI from '../../openapi/generated/gateway/apIzidingyibiaoqing.js';
 import * as commonOpenAPI from '../../openapi/generated/gateway/apItongyong.js';
 import * as friendOpenAPI from '../../openapi/generated/gateway/apItongxunlu.js';
 import * as groupOpenAPI from '../../openapi/generated/gateway/apIqunliao.js';
@@ -11,6 +12,7 @@ import * as presenceOpenAPI from '../../openapi/generated/gateway/apIzaixianzhua
 import * as settingOpenAPI from '../../openapi/generated/gateway/apIshezhi.js';
 import * as userOpenAPI from '../../openapi/generated/gateway/apIyonghu.js';
 import request from '../../openapi/request.js';
+import { createOpenAPIRequestOptionsFactory, unwrapGatewayData as unwrapData, } from './request-support.js';
 export function createGatewayHTTPClient(options) {
     const requestOptions = createOpenAPIRequestOptionsFactory(options);
     return {
@@ -25,6 +27,12 @@ export function createGatewayHTTPClient(options) {
         },
         setAccountPassword: async (params) => {
             await unwrapData(await userOpenAPI.postV1UserAccountPasswordSet(params, requestOptions()));
+        },
+        listCustomEmojis: async () => unwrapData(customEmojiOpenAPI.postV1EmojiList({}, requestOptions())),
+        createCustomEmojis: async (params) => unwrapData(customEmojiOpenAPI.postV1EmojiCreate({ object_keys: [...params.object_keys] }, requestOptions())),
+        addCustomEmoji: async (params) => unwrapData(customEmojiOpenAPI.postV1EmojiAdd(params, requestOptions())),
+        deleteCustomEmojis: async (params) => {
+            await unwrapData(await customEmojiOpenAPI.postV1EmojiBatchDelete({ emoji_ids: [...params.emoji_ids] }, requestOptions()));
         },
         refreshToken: (params) => unwrapData(authOpenAPI.postV1AuthRefreshToken(params, requestOptions())),
         logout: async (params = {}) => {
@@ -199,46 +207,6 @@ export function createGatewayHTTPClient(options) {
         markGroupAnnouncementRead: async (params) => unwrapData(groupOpenAPI.postV1GroupAnnouncementRead(params, requestOptions())),
         getGroupAnnouncementReadStatus: async (params) => unwrapData(groupOpenAPI.postV1GroupAnnouncementReadStatus(params, requestOptions())),
     };
-}
-function createOpenAPIRequestOptionsFactory(options) {
-    return function requestOptions() {
-        const baseURL = (options.getBaseURL?.() ?? options.baseURL).replace(/\/+$/, '');
-        const headers = {
-            'content-type': 'application/json',
-        };
-        const language = options.language;
-        const requestID = options.createRequestID?.();
-        const token = options.getAccessToken?.();
-        const proxy = options.getProxyConfig?.();
-        if (language) {
-            headers['Accept-Language'] = language;
-        }
-        if (requestID) {
-            headers['X-Request-ID'] = requestID;
-        }
-        if (token) {
-            headers.Authorization = `Bearer ${token}`;
-        }
-        return {
-            baseURL,
-            fetch: options.fetch,
-            headers,
-            onGatewayAPIError: options.onGatewayAPIError,
-            proxy: proxy?.enabled ? proxy : null,
-        };
-    };
-}
-async function unwrapData(envelopeOrPromise) {
-    const envelope = (await envelopeOrPromise);
-    if (envelope.code !== undefined && envelope.code !== 0) {
-        throw new IMError({
-            code: 'GATEWAY_API_ERROR',
-            message: envelope.message ?? `Gateway API failed with code ${envelope.code}.`,
-            source: 'transport',
-            cause: envelope,
-        });
-    }
-    return (envelope.data ?? {});
 }
 function normalizeBatchGetUsersData(data) {
     const users = readGatewayUserArray(data, 'users') ?? readGatewayUserArray(data, 'list');

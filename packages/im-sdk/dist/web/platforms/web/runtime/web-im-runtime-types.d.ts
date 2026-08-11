@@ -1,6 +1,6 @@
 import type { GatewayFetch, GatewayRegisterUserRequest, GatewayUserLoginRequest, GatewayWebSocketConstructor } from '@im28/im-sdk/core';
 import type { WebIMAccountDatabaseLifecycle } from '../storage/index.js';
-import type { WebIMSync } from '../../../sync/index.js';
+import type { WebIMSync } from '../sync/web-im-sync.js';
 import type { WebIMAuthSessionStore } from './auth-session-store.js';
 import type { WebIMDeviceIdentityStore } from './device-identity-store.js';
 import type { WebIMClientVersion } from './web-im-client-version.js';

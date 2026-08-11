@@ -15,7 +15,7 @@ export async function prepareWebIMMessageSend(context, definition, dependencies)
         throw createWebIMSyncError('CONVERSATION_NOT_FOUND', 'Message sending requires an existing cached conversation.');
     }
     // clientMsgID 在 upload、Gateway send 与状态更新中保持不变。
-    const clientMsgID = createClientMessageID(dependencies);
+    const clientMsgID = createWebIMClientMessageID(dependencies);
     // localMessage 在任何远端 I/O 前持久化。
     const localMessage = {
         clientMsgID,
@@ -25,6 +25,7 @@ export async function prepareWebIMMessageSend(context, definition, dependencies)
         contentType: definition.contentType,
         status: 'sending',
         sendTime: dependencies.now?.() ?? Date.now(),
+        ...(definition.entities?.length ? { entities: definition.entities } : {}),
         payload: definition.payload,
     };
     // messageRepository 管理同一 client ID 的状态收敛。
@@ -40,13 +41,21 @@ export async function prepareWebIMMessageSend(context, definition, dependencies)
         messageRepository,
     };
 }
+/** 在 Gateway 调用前把可重放 body 持久化到同一 optimistic row。 */
+export async function checkpointWebIMMessageSendBody(prepared, body) {
+    // localMessage 只替换 payload，保留 client ID、状态和发送时间。
+    const localMessage = { ...prepared.localMessage, payload: body };
+    await prepared.messageRepository.upsert(localMessage);
+    return { ...prepared, localMessage };
+}
 /** 调用 Gateway 并将同一 optimistic row 收敛为 sent。 */
-export async function completeWebIMMessageSend(prepared, body, dependencies) {
+export async function completeWebIMMessageSend(prepared, body, dependencies, entities) {
     // remoteMessage 必须回显相同幂等 ID，避免产生双消息。
     const remoteMessage = await dependencies.gatewayClient.sendMessage({
         conversation_id: prepared.conversationID,
         client_msg_id: prepared.clientMsgID,
         body,
+        ...(entities?.length ? { entities } : {}),
     });
     // sentMessage 使用共享 Gateway mapper，禁止业务层复制 DTO 解析。
     const sentMessage = mapGatewayMessageToCore(remoteMessage, {
@@ -57,7 +66,15 @@ export async function completeWebIMMessageSend(prepared, body, dependencies) {
         throw createWebIMSyncError('CLIENT_MESSAGE_ID_MISMATCH', 'Gateway returned a different client message ID.');
     }
     // persistedMessage 显式覆盖异常远端状态为成功终态。
-    const persistedMessage = { ...sentMessage, status: 'sent' };
+    const persistedMessage = {
+        ...sentMessage,
+        status: 'sent',
+        ...(sentMessage.entities?.length
+            ? { entities: sentMessage.entities }
+            : prepared.localMessage.entities?.length
+                ? { entities: prepared.localMessage.entities }
+                : {}),
+    };
     await prepared.messageRepository.upsert(persistedMessage);
     await prepared.conversationRepository.updateLatestMessage(prepared.conversationID, prepared.clientMsgID, sentMessage.sendTime);
     return persistedMessage;
@@ -73,18 +90,18 @@ export async function failWebIMMessageSend(prepared, cause) {
     throw cause;
 }
 /** 为无需平台上传的 body 执行完整 optimistic send 状态机。 */
-export async function executeWebIMMessageSend(context, definition, body, dependencies) {
+export async function executeWebIMMessageSend(context, definition, body, dependencies, entities) {
     // prepared 保证 Gateway 调用前已有可见 sending row。
     const prepared = await prepareWebIMMessageSend(context, definition, dependencies);
     try {
-        return await completeWebIMMessageSend(prepared, body, dependencies);
+        return await completeWebIMMessageSend(prepared, body, dependencies, entities);
     }
     catch (cause) {
         return failWebIMMessageSend(prepared, cause);
     }
 }
 /** 创建并校验本地消息幂等 ID。 */
-function createClientMessageID(dependencies) {
+export function createWebIMClientMessageID(dependencies) {
     // id 优先使用测试/宿主注入生成器，否则使用 runtime randomUUID。
     const id = (dependencies.createClientMessageID?.() ?? globalThis.crypto?.randomUUID?.())?.trim();
     if (!id) {

@@ -31,6 +31,18 @@
       "types": "./dist/core/openapi/index.d.ts",
       "import": "./dist/core/openapi/index.js",
       "default": "./dist/core/openapi/index.js"
+    },
+    "./runtime": {
+      "web": {
+        "types": "./dist/web/platforms/web/index.d.ts",
+        "import": "./dist/web/platforms/web/index.js",
+        "default": "./dist/web/platforms/web/index.js"
+      },
+      "default": {
+        "types": "./dist/web/platforms/web/index.d.ts",
+        "import": "./dist/web/platforms/web/index.js",
+        "default": "./dist/web/platforms/web/index.js"
+      }
     }
   },
   "files": [

@@ -1,23 +1,25 @@
 import type { GatewayHTTPClient } from '@im28/im-sdk/core';
-import { type WebIMCallSync } from './call-sync.js';
-import { type WebIMBlacklistSync } from './blacklist-sync.js';
-import { type WebIMFriendApplicationSync } from './friend-application-sync.js';
-import { type WebIMGroupApplicationSync } from './group-application-sync.js';
-import { type WebIMJoinedGroupSync } from './joined-group-sync.js';
-import { type WebIMPeerProfileSync } from './peer-profile-sync.js';
-import { type WebIMConversationSync } from './conversation-sync.js';
-import { type WebIMMessageSync } from './message-sync.js';
-import { type WebIMRealtimeSync } from './realtime-sync.js';
-import type { WebIMSyncContextDependencies } from './sync-context.js';
-import type { IMMediaUploadPort } from './message-media-send.js';
-import { type WebIMContactSync } from './contact-sync.js';
-import { type WebIMProfileSync } from './profile-sync.js';
+import { type WebIMCallSync } from '../../../sync/call-sync.js';
+import { type WebIMCustomEmojiSync } from '../../../sync/custom-emoji-sync.js';
+import { type WebIMBlacklistSync } from '../../../sync/blacklist-sync.js';
+import { type WebIMFriendApplicationSync } from '../../../sync/friend-application-sync.js';
+import { type WebIMGroupApplicationSync } from '../../../sync/group-application-sync.js';
+import { type WebIMJoinedGroupSync } from '../../../sync/joined-group-sync.js';
+import { type WebIMPeerProfileSync } from '../../../sync/peer-profile-sync.js';
+import { type WebIMConversationSync } from '../../../sync/conversation-sync.js';
+import { type WebIMMessageSync } from '../../../sync/message-sync.js';
+import { type WebIMRealtimeSync } from '../../../sync/realtime-sync.js';
+import type { WebIMSyncContextDependencies } from '../../../sync/sync-context.js';
+import type { IMMediaUploadPort } from '../../../sync/message-media-send.js';
+import { type WebIMContactSync } from '../../../sync/contact-sync.js';
+import { type WebIMProfileSync } from '../../../sync/profile-sync.js';
 /** Runtime 对页面公开的聚合数据同步入口。 */
 export interface WebIMSync {
     readonly blacklist: WebIMBlacklistSync;
     readonly calls: WebIMCallSync;
     readonly contacts: WebIMContactSync;
     readonly conversations: WebIMConversationSync;
+    readonly customEmojis: WebIMCustomEmojiSync;
     readonly friendApplications: WebIMFriendApplicationSync;
     readonly groupApplications: WebIMGroupApplicationSync;
     readonly groups: WebIMJoinedGroupSync;

@@ -1,0 +1,55 @@
+.rn-chat-delete-backdrop {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--im-bg-overlay);
+}
+
+.rn-chat-delete-sheet {
+  display: flex;
+  width: min(100%, 480px);
+  padding-bottom: var(--im-safe-bottom);
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: var(--im-bg-page);
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rn-chat-delete-group { overflow: hidden; background: var(--im-bg-card); }
+
+.rn-chat-delete-group p {
+  display: grid;
+  min-height: 48px;
+  margin: 0;
+  place-items: center;
+  padding: 16px;
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: var(--im-text-muted);
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 16px;
+  text-align: center;
+}
+
+.rn-chat-delete-sheet button {
+  width: 100%;
+  min-height: 56px;
+  padding: 16px;
+  border: 0;
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: var(--im-text-primary);
+  background: var(--im-bg-card);
+  cursor: pointer;
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0;
+  line-height: 24px;
+}
+
+.rn-chat-delete-sheet button:active { background: var(--im-bg-pressed); }
+.rn-chat-delete-sheet button:disabled { cursor: default; opacity: 0.55; }
+.rn-chat-delete-sheet button.is-danger { color: var(--im-status-danger); }

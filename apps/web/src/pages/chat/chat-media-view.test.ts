@@ -68,4 +68,28 @@ describe('chat media view', () => {
       }),
     ).toBe('');
   });
+
+  it('只为具有真实 HTTP(S) URL 的文件构造预览', () => {
+    expect(
+      getChatMediaPreview({
+        kind: 'file',
+        text: 'report.pdf',
+        detail: '1.5 KB',
+        mediaURL: 'https://media.example.com/report.pdf',
+      }),
+    ).toEqual({
+      kind: 'file',
+      url: 'https://media.example.com/report.pdf',
+      title: '文件预览',
+      fileName: 'report.pdf',
+      detail: '1.5 KB',
+    });
+    expect(
+      getChatMediaPreview({
+        kind: 'file',
+        text: 'unsafe.txt',
+        mediaURL: 'data:text/plain,unsafe',
+      }),
+    ).toBeNull();
+  });
 });
