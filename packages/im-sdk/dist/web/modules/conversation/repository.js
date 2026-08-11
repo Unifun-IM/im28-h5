@@ -19,9 +19,12 @@ export class ConversationRepository extends Repository {
           is_pinned,
           pinned_at,
           is_muted,
+          auto_delete_seconds,
+          auto_delete_updated_by,
+          auto_delete_updated_at,
           draft,
           raw_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT is_pinned FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT pinned_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT is_muted FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT draft FROM conversations WHERE conversation_id = ?), NULL), ?)`, [
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT is_pinned FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT pinned_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT is_muted FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_seconds FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_updated_by FROM conversations WHERE conversation_id = ?), NULL), COALESCE(?, (SELECT auto_delete_updated_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT draft FROM conversations WHERE conversation_id = ?), NULL), ?)`, [
             conversation.conversationID,
             conversation.type,
             conversation.targetID,
@@ -36,6 +39,12 @@ export class ConversationRepository extends Repository {
             conversation.pinnedAt ?? null,
             conversation.conversationID,
             conversation.isMuted === undefined ? null : Number(conversation.isMuted),
+            conversation.conversationID,
+            conversation.autoDeleteSeconds ?? null,
+            conversation.conversationID,
+            conversation.autoDeleteUpdatedBy ?? null,
+            conversation.conversationID,
+            conversation.autoDeleteUpdatedAt ?? null,
             conversation.conversationID,
             conversation.draft ?? null,
             conversation.conversationID,
@@ -76,9 +85,12 @@ export class ConversationRepository extends Repository {
                 is_pinned,
                 pinned_at,
                 is_muted,
+                auto_delete_seconds,
+                auto_delete_updated_by,
+                auto_delete_updated_at,
                 draft,
                 raw_json
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
                 conversation.conversationID,
                 conversation.type,
                 conversation.targetID,
@@ -91,6 +103,9 @@ export class ConversationRepository extends Repository {
                 Number(conversation.isPinned ?? false),
                 conversation.pinnedAt ?? 0,
                 Number(conversation.isMuted ?? false),
+                conversation.autoDeleteSeconds ?? 0,
+                conversation.autoDeleteUpdatedBy ?? null,
+                conversation.autoDeleteUpdatedAt ?? 0,
                 conversation.draft || null,
                 JSON.stringify(conversation),
             ]))));
@@ -116,6 +131,10 @@ export class ConversationRepository extends Repository {
     async updateMuted(conversationID, isMuted) {
         await this.execute(statement('UPDATE conversations SET is_muted = ? WHERE conversation_id = ?', [Number(isMuted), conversationID]));
     }
+    /** 更新服务端确认的自动删除设置，不修改已有消息记录。 */
+    async updateAutoDelete(conversationID, autoDeleteSeconds, updatedBy, updatedAt = 0) {
+        await this.execute(statement('UPDATE conversations SET auto_delete_seconds = ?, auto_delete_updated_by = ?, auto_delete_updated_at = ? WHERE conversation_id = ?', [autoDeleteSeconds, updatedBy ?? null, updatedAt, conversationID]));
+    }
     async updateDraft(conversationID, draft) {
         await this.execute(statement('UPDATE conversations SET draft = ? WHERE conversation_id = ?', [draft || null, conversationID]));
     }
@@ -128,6 +147,8 @@ function mapConversationRow(row) {
     const faceURL = readOptionalString(row, 'face_url');
     const latestMessageID = readOptionalString(row, 'latest_message_id');
     const draft = readOptionalString(row, 'draft');
+    /** autoDeleteUpdatedBy 保留服务端最近操作者，可为空。 */
+    const autoDeleteUpdatedBy = readOptionalString(row, 'auto_delete_updated_by');
     const raw = parseJsonColumn(row, 'raw_json', {});
     return {
         ...raw,
@@ -142,6 +163,9 @@ function mapConversationRow(row) {
         isPinned: readRequiredNumber(row, 'is_pinned') === 1,
         pinnedAt: readRequiredNumber(row, 'pinned_at'),
         isMuted: readRequiredNumber(row, 'is_muted') === 1,
+        autoDeleteSeconds: readRequiredNumber(row, 'auto_delete_seconds'),
+        ...(autoDeleteUpdatedBy !== undefined ? { autoDeleteUpdatedBy } : {}),
+        autoDeleteUpdatedAt: readRequiredNumber(row, 'auto_delete_updated_at'),
         draft: draft ?? '',
         updatedAt: readRequiredNumber(row, 'updated_at'),
     };

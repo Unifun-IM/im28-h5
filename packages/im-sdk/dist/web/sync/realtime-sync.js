@@ -2,6 +2,7 @@ import { ConversationRepository, MessageRepository, mapGatewayConversationToCore
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { collectGatewayConversations, collectGatewayMessages, deduplicateGatewayMessages, groupGatewayMessages, hasDegradedMarker, hasSequenceGap, maxDecimalString, persistMappedMessages, readString, selectLatestMessage, } from './realtime-event-data.js';
 import { pullRealtimeMessageRecovery } from './realtime-message-recovery.js';
+import { applyLatestConversationAutoDeleteNotice } from './conversation-auto-delete-sync.js';
 import { createRealtimeMessageUpdateSync } from './realtime-message-update-sync.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
 /** 创建与 runtime 同生命周期的实时持久化队列。 */
@@ -90,9 +91,11 @@ class WebIMRealtimeSyncImpl {
         const persistedBatch = await persistMappedMessages(messages, mappedMessages);
         if (!existingConversation) {
             await this.restoreConversation(context, conversationID, conversations, messages);
-            return;
         }
-        await this.updateExistingConversation(existingConversation, conversations, mergedMessages, mappedMessages, persistedBatch.unreadDelta);
+        else {
+            await this.updateExistingConversation(existingConversation, conversations, mergedMessages, mappedMessages, persistedBatch.unreadDelta);
+        }
+        await applyLatestConversationAutoDeleteNotice(conversations, conversationID, mergedMessages);
     }
     /** 只推进已有会话的 latest、cursor、unread 与更新时间。 */
     async updateExistingConversation(existingConversation, conversations, gatewayMessages, mappedMessages, unreadDelta) {

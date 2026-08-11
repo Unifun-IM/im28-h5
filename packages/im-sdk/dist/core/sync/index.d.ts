@@ -12,14 +12,30 @@ export { createWebIMGroupApplicationSync } from './group-application-sync.js';
 export { createWebIMJoinedGroupSync } from './joined-group-sync.js';
 /** 创建群成员 cache-first 同步服务。 */
 export { createWebIMGroupMemberSync } from './group-member-sync.js';
+/** 创建 RN、Web、Desktop 共用的群成员与提及 facade。 */
+export { createIMGroupMentionSync } from './group-mention.js';
+/** 导出中性群提及 facade 的公共契约。 */
+export type { IMGroupMentionMember, IMGroupMentionSync, IMGroupMentionSyncDependencies, IMSendGroupMentionOptions, } from './group-mention.js';
 /** 创建认证账号绑定的联系人资料与关系 action service。 */
 export { createWebIMPeerProfileSync } from './peer-profile-sync.js';
 /** 创建受认证账号约束的会话 cache/sync 服务。 */
 export { createWebIMConversationSync } from './conversation-sync.js';
+/** 导出会话自动删除设置的权威同步 contract。 */
+export type { IMConversationAutoDeleteSetting, WebIMConversationAutoDeleteSetting, WebIMConversationAutoDeleteSync, WebIMConversationAutoDeleteSyncDependencies, } from './conversation-auto-delete-sync.js';
+/** 导出会话设置的共享只读/非破坏性 mutation contract。 */
+export type { IMConversationSetting, WebIMConversationSetting, WebIMConversationSettingSync, WebIMConversationSettingSyncDependencies, } from './conversation-setting-sync.js';
+/** 导出 RN/Web/Desktop 共用的中性会话设置 facade。 */
+export { createIMConversationSettingsSync } from './conversation-settings.js';
+/** 导出中性会话设置 facade 的公共契约。 */
+export type { IMConversationSettingsSync, IMConversationSettingsSyncDependencies, } from './conversation-settings.js';
 /** 创建认证账号绑定的自定义表情 cache/sync 服务。 */
 export { createWebIMCustomEmojiSync } from './custom-emoji-sync.js';
 /** 创建消息 cache/history/send 服务。 */
 export { createWebIMMessageSync } from './message-sync.js';
+/** 创建 RN、Web、Desktop 共用的当前账号消息搜索 facade。 */
+export { createIMMessageSearchSync } from './message-search.js';
+/** 导出中性消息搜索 facade 的公共契约。 */
+export type { IMMessageSearchSync, IMMessageSearchSyncDependencies, } from './message-search.js';
 /** 导出共享群聊提及发送函数。 */
 export { sendWebIMMentionMessage } from './message-mention-send.js';
 /** 导出共享批量转发执行函数。 */
@@ -30,6 +46,10 @@ export { canForwardWebIMMessage } from './message-forward-state.js';
 export { deleteWebIMMessages } from './message-delete.js';
 /** 导出共享主动文本编辑执行函数与能力判断。 */
 export { canEditWebIMTextMessage, editWebIMTextMessage, } from './message-edit.js';
+/** 创建 RN、Web 与 Desktop 共用的主动消息 mutation facade。 */
+export { createIMMessageMutationSync } from './message-mutations.js';
+/** 导出平台中立的主动消息 mutation contract。 */
+export type { IMDeleteMessagesOptions, IMDeleteMessagesResult, IMEditTextMessageOptions, IMForwardMessagesOptions, IMForwardMessagesResult, IMMessageDeleteScope, IMMessageMutationSync, IMMessageMutationSyncDependencies, } from './message-mutations.js';
 /** 导出 shared 失败消息重试能力判断。 */
 export { WEB_IM_RETRYABLE_CONTENT_TYPES, canRetryWebIMMessage, } from './message-retry.js';
 /** 创建受认证账号约束的当前资料读取 service。 */
@@ -54,6 +74,8 @@ export type { WebIMGroupMember, WebIMGroupMemberRole, WebIMGroupMemberSync, WebI
 export type { WebIMPeerProfile, WebIMPeerProfileRelationship, WebIMPeerProfileSync, WebIMPeerProfileSyncDependencies, } from './peer-profile-sync.js';
 /** 导出页面与 runtime 共享的会话同步 contract。 */
 export type { WebIMConversationSync, WebIMConversationSyncDependencies, WebIMConversationListItem, WebIMConversationSyncOptions, } from './conversation-sync.js';
+/** 导出会话列表使用的未读 mention 快照。 */
+export type { WebIMUnreadMentionSnapshot } from './conversation-unread-mention.js';
 /** 导出自定义表情同步 contract。 */
 export type { WebIMCustomEmojiSync, WebIMCustomEmojiSyncDependencies, } from './custom-emoji-sync.js';
 /** 导出消息同步 contract。 */

@@ -4,7 +4,7 @@ export function requireWebIMSyncContext(dependencies, capability) {
     // userID 只允许来自 runtime 私有认证会话。
     const userID = dependencies.getCurrentUserID()?.trim();
     if (!userID) {
-        throw createWebIMSyncError('SYNC_AUTH_REQUIRED', `${capability} requires an authenticated Web IM session.`);
+        throw createWebIMSyncError('SYNC_AUTH_REQUIRED', `${capability} requires an authenticated IM session.`);
     }
     // database 只有在账号 migrations 完成后才由 lifecycle 公开。
     const database = dependencies.accountDatabase.getDatabase();

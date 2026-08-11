@@ -12,6 +12,7 @@ import { readChatVideoMetadata } from './chat-video-metadata.js';
 /** 页面 outgoing action 只依赖 shared facade 与浏览器媒体 metadata adapter。 */
 interface UseChatOutgoingMessageActionsOptions {
   readonly conversationID: string;
+  readonly groupID: string;
   readonly onSending: (message: Message) => void;
   readonly runMessageOperation: (
     operation: (activeSync: WebIMSync) => Promise<void>,
@@ -35,6 +36,7 @@ interface ChatOutgoingMessageActions {
 /** 将页面 outgoing actions 收敛到唯一 WebIMSync message facade。 */
 export function useChatOutgoingMessageActions({
   conversationID,
+  groupID,
   onSending,
   runMessageOperation,
 }: UseChatOutgoingMessageActionsOptions): ChatOutgoingMessageActions {
@@ -55,14 +57,18 @@ export function useChatOutgoingMessageActions({
   const sendMention = useCallback(
     (document: PresetEmojiDocument, mentions: readonly MessageMention[]) =>
       runMessageOperation(async activeSync => {
-        await activeSync.messages.sendMention({
+        if (!groupID) {
+          throw new Error('群聊会话不存在或尚未同步');
+        }
+        await activeSync.groupMentions.send({
+          groupID,
           conversationID,
           text: document.text,
           entities: document.entities,
           mentions,
         });
       }),
-    [conversationID, runMessageOperation],
+    [conversationID, groupID, runMessageOperation],
   );
 
   /** 发送 RN type114 引用并让 shared SDK 构造来源 body。 */

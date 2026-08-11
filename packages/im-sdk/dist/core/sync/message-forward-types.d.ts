@@ -5,8 +5,12 @@ import type { WebIMSyncContext } from './sync-context.js';
 export interface WebIMForwardMessagesOptions {
     readonly conversationID: string;
     readonly sourceClientMsgIDs: readonly string[];
+    /** 平台已创建 optimistic 实体时，按来源顺序复用其稳定 client ID。 */
+    readonly forwardClientMsgIDs?: readonly string[];
     readonly hideSenderName?: boolean;
     readonly comment?: string;
+    /** 平台已创建附加评论实体时复用其稳定 client ID。 */
+    readonly commentClientMsgID?: string;
     readonly onSending?: (messages: readonly Message[]) => void;
 }
 /** 单条转发结果保留来源身份、最终本地行和可见错误。 */

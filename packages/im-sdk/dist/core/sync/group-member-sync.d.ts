@@ -7,6 +7,8 @@ export type WebIMGroupMemberRole = 'owner' | 'admin' | 'member';
 export interface WebIMGroupMember {
     readonly groupID: string;
     readonly userID: string;
+    readonly remark?: string;
+    readonly groupNickname?: string;
     readonly nickname: string;
     readonly avatarURL: string;
     readonly role: WebIMGroupMemberRole;

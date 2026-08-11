@@ -1,7 +1,15 @@
 import type { Message, WebIMSync } from '@im28/im-sdk/web';
 
+import { readFocusedChatMessageWindow } from './chat-message-focus.js';
+
 /** 首次聊天历史刷新只依赖 SDK 消息 facade 的两个读取操作。 */
 type ChatHistorySync = Pick<WebIMSync['messages'], 'getCachedHistory' | 'pullHistory'>;
+
+/** 聊天页首次消息窗口同时支持普通历史和搜索目标定位。 */
+type ChatPageMessageWindowSync = Pick<
+  WebIMSync['messages'],
+  'getCachedByClientMsgIDs' | 'getCachedHistory' | 'pullHistory'
+>;
 
 /** 拉取远端增量后重读 SQLite，避免旧远端窗口覆盖并发发送或实时写入。 */
 export async function pullAndReadChatHistory(
@@ -11,6 +19,38 @@ export async function pullAndReadChatHistory(
   await sync.pullHistory(options);
   return sync.getCachedHistory({
     conversationID: options.conversationID,
+    limit: options.limit,
+  });
+}
+
+/** 读取普通最新历史或搜索结果所在窗口，并允许页面先呈现本地 cache。 */
+export async function readInitialChatMessageWindow(
+  sync: ChatPageMessageWindowSync,
+  options: {
+    readonly conversationID: string;
+    readonly fromSeq: string;
+    readonly focusedMessageID: string;
+    readonly limit: number;
+  },
+  onCached: (messages: readonly Message[]) => void,
+): Promise<readonly Message[]> {
+  if (options.focusedMessageID) {
+    return readFocusedChatMessageWindow(
+      sync,
+      options.conversationID,
+      options.focusedMessageID,
+      options.limit,
+    );
+  }
+  /** cachedMessages 先让页面呈现当前账号 SQLite 最新窗口。 */
+  const cachedMessages = await sync.getCachedHistory({
+    conversationID: options.conversationID,
+    limit: options.limit,
+  });
+  onCached(cachedMessages);
+  return pullAndReadChatHistory(sync, {
+    conversationID: options.conversationID,
+    fromSeq: options.fromSeq,
     limit: options.limit,
   });
 }

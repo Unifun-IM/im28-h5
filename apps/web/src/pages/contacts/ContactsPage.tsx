@@ -151,3 +151,5 @@ function ContactsPageState({
     </main>
   );
 }
+
+export default ContactsPage;

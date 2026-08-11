@@ -27,6 +27,7 @@
 | conversation list | `../im28-phone/src/screens/chat/conversationList/ConversationListScreen.tsx` | `apps/web/src/pages/conversations/**` | `core-done-local/acceptance-gated` |
 | chat detail | `../im28-phone/src/screens/chat/chatDetail/ChatDetailScreen.tsx`; `../im28-phone/src/screens/chat/components/chatDetailStyles.ts` | `apps/web/src/pages/chat/**` | `core-done-local/acceptance-gated` |
 | chat header/composer/list | `../im28-phone/src/screens/chat/components/ChatDetailHeader.tsx`; `ChatComposer.tsx`; `ChatMessageList.tsx` | `apps/web/src/pages/chat/**` | `core-done-local/acceptance-gated` |
+| chat search | `../im28-phone/src/screens/chat/search/ChatSearchScreen.tsx`; `SearchComponents.tsx`; `chatSearchHelpers.ts`; `message-search-helpers.ts`; `indexedPages.tsx`; `utils.ts` | `/conversations/:conversationID/search`; shared `messages.searchCached` | `text-date-media-file-done-local/settings-entry-planned` |
 | contact list | `../im28-phone/src/screens/chat/contactList/ContactListScreen.tsx`; `contactIndexHelpers.ts`; `../im28-phone/src/screens/chat/home/HomeTabBar.tsx` | `apps/web/src/pages/contacts/**` | `core-done-local/acceptance-gated` |
 | friend/group applications | `../im28-phone/src/screens/chat/friendApplications/FriendApplicationsScreen.tsx`; `group/GroupVerificationListScreen.tsx`; `group/GroupApplicationsScreen.tsx`; `group/GroupApplicationListView.tsx` | `apps/web/src/pages/contacts/**`; `../im28-sdk/src/sync/*-application-sync.ts` | `implemented-local/acceptance-gated` |
 | joined groups | `../im28-phone/src/screens/chat/group/ContactGroupListScreen.tsx`; `contactGroupHelpers.ts` | `/contacts/groups`; `../im28-sdk/src/sync/joined-group-sync.ts` | `implemented-local/acceptance-gated` |
@@ -228,10 +229,14 @@ W6.a5.1 的 `20002` 未注册分支只对 phone/email 生效，并调用真实 `
 | local evidence | `npm run verify`: 466 assets、22 files / 60 tests、SDK/Web typecheck and production build passed; 390x844 + 760x900 light/dark proof, no horizontal overflow, rows 56px, desktop surface 480px; refresh/back/forward/guest guard and clean console passed |
 | API evidence | 2 behavior tests prove authenticated fail-fast, paging, dedupe, field normalization and sort; page has no fetch/shared SDK/Gateway/Repository import |
 | no-fake verdict | real Gateway list only; loading/error/empty are explicit; temporary visual proof HTML deleted; verification/group/action entries without bounded facades are omitted |
-| open gaps | approved-account Network/data screenshot; RN cache-first path is unavailable because `FriendshipRepository` is not exported by shared Web entry; Chinese Pinyin grouping currently falls back to `#`; profile/action/group/verification-message flows and shared four-tab shell are separate slices |
-| acceptance gate | real account proves auth -> paged friend list -> displayed groups/search/index; shared Web Repository export plus cache-first regression, or explicit product acceptance of remote-only contacts; Pinyin-equivalent index behavior before full parity |
+| open gaps | authenticated 7-row cache/Pinyin proof exists；broader responsive/light-dark/history、profile/action/group/verification-message flows remain separate gates |
+| acceptance gate | shared cache-first pagination/failure regression is closed by `.17.2.2`，RN-equivalent Pinyin index by `.a5.2.1.1`；broader visual/history matrix remains before full parity |
 
 W6.a5.2.1 只恢复联系人列表核心。`朋友验证消息`、`我的群组`、好友操作菜单和 profile navigation 均需要独立 operation/route card；当前页面不会渲染不可工作的入口。
+
+`.a5.2.1.1` reviewer verdict: H5 只在联系人展示 owner 增加 RN 同版本 `pinyin-pro@3.28.1`，参数逐项保持 `pattern:first / mode:surname / surname:head / nonZh:consecutive`；数字、符号和空名称与 RN 一样回退 `#`，分组内及分组首次出现顺序继续服从 SDK 的好友添加时间结果。纯函数和列表测试覆盖中文、多音、拉丁、fallback、搜索态星标去重；真实 7 行只读页面把“最后那一秒/海绵宝宝不吃香蕉”投影为 `Z/H`，458px 无溢出且控制台无 warning/error。没有 mock shortcut、fake success、第二 API/cache owner、SDK 或 RN runtime 改动。Verdict: `done-local/acceptance-gated`；完整联系人视觉矩阵仍独立 gated，新增词典对主 chunk 的成本进入性能债。
+
+`.a5.2.1.2` reviewer verdict: `/contacts` 由 React Router `React.lazy + Suspense` 延迟加载，联系人搜索只导入独立 `contact-filter`，因此不会通过搜索页静态导入拼音分组 owner。生产 main chunk 从 1,088.14 kB（366.35 kB gzip）降至 793.79 kB（222.24 kB gzip），联系人页面和 `pinyin-pro` 收敛为 294.92 kB（145.52 kB gzip）的 route chunk。H5 36 files/122 tests、SDK Web 52/163、typecheck、466 assets、boundary/build:web sync 和 production build 通过；真实账号从会话 Tab 进入通讯录后仍显示 7 行 `A/D/Z/H`，两个页面在 458px 均无横向溢出和 console error。没有 mock/fake success、第二数据 owner、SDK/RN runtime 或 `build:package:desktop:web` 改动。Verdict: `done-local/acceptance-gated`；应用全局 main chunk 的进一步拆分是独立性能债。
 
 ## 12. W6.a5.2.2 Migration Card
 
@@ -972,3 +977,153 @@ Reviewer verdict after `.15.1/.15.2`: SDK now rereads authoritative rows from th
 | excluded | 非文本、未发送、本地-only、他人、转发消息和 revoke 不进入此切片 |
 
 Reviewer verdict after `.16.1/.16.2`: SDK rereads the current account row, applies the RN parity guard and performs one Gateway update under the existing shared mutation queue. It writes no optimistic edit and, only after a matching success response, replaces the same cached identity/order/status while preserving validated entities and recording `editedAt`; failure leaves the original row untouched. H5 exposes edit only through the shared guard, clears quote state, restores the original document into the RN-derived preview/composer and retains draft/editing state on failure. SDK Web 48 files/155 tests、all-runtime typecheck、runtime boundary gate、`build:web` generated-package sync、H5 32 files/109 tests、typecheck、466 assets and production build passed. Authenticated 458x786 read-only proof opened and cancelled the edit preview without horizontal overflow；no edit was submitted. Verdict: `.16.1/.16.2` are `implemented-local/acceptance-gated`；`.16.3` real Gateway、same-row SQLite/list-back and second-client realtime proof is `blocked-mutation-authorization`.
+
+## 41. Chat Group Mention Contract
+
+> AXIOM: 群 mention 的权威是稳定成员 ID 与顶层 `mentions`，不是正文里看起来像 `@名称` 的字符串。成员 cache、type 106 body、发送状态和 SQLite 身份只允许在 shared SDK 实现一次；H5 只负责 RN 对齐的选择与展示。
+
+| field | frozen decision |
+| :--- | :--- |
+| RN source | `chatMentionHelpers.ts`、`MentionPickerPanel.tsx`、`chatMessageHelpers.ts`、`conversationPreviewHelpers.ts`、现有 Gateway message service |
+| member source | `WebIMSync.groupMembers` 先读当前账号 `GroupMemberRepository`，再全分页 `listGroupMembers`；任一页失败保留旧 cache，非 active 成员不进入候选 |
+| permission | `@所有人` 仅在 joined-group cache 明确 `canMentionAll=true` 时出现和发送；未知权限 fail-closed |
+| selection | 输入光标前最后一个无空白 `@query`；all 优先、排除本人、昵称/userID 不区分大小写匹配、最多 30 个成员；选择后插入 `@名称 ` 并把光标折叠到尾随空格之后 |
+| identity | `Message.mentions` 保存 `type=user|all`、稳定 `userID` 与可选 nickname snapshot；正文删除标签后发送前过滤，不从任意手输文本补造身份 |
+| send | `messages.sendMention` 唯一构造 type 106、`body.mention.text/targets/user_ids` 与 top-level mentions/entities；沿用同一 mutation queue 和 `sending -> sent/failed` 状态机 |
+| persistence | schema v10 `messages.mentions_json` 独立保存身份；history/full sync/send/realtime 均经 shared mapper/repository 重读 |
+| presentation | chat 读取 `body.mention.text`；会话列表按 `lastReadSeq < seq` 优先最近 incoming mention，再回退 latest message；命中本人显示 `[有人@我]` 并把 target nickname snapshot 替换为 `@我`，all 显示 `[所有人]`；shared cache 按 `friend remark -> group nickname -> user nickname` 补 `发送人：`，静音未读条数不得覆盖 mention 前缀 |
+| RN impact | shared source 进入 RN 编译只证明无平台依赖；RN app 未 import/call Web composition or shared mention facade，构建发布不会替换现有 RN service runtime |
+
+### Failure And Acceptance
+
+| case | required behavior |
+| :--- | :--- |
+| group missing from account cache | reject before member replacement or message send；不得伪造空群 |
+| member page/API failure | preserve last complete group-member snapshot；surface real error |
+| manually typed `@name` without picker identity | ordinary text send；never fabricate a user ID |
+| selected label removed before submit | omit that target；if no target remains, use ordinary text send |
+| invalid user/all target or permission loss | reject before Gateway send and do not claim success |
+| Gateway rejection/mismatched response | same optimistic type106 row becomes failed and retains payload/identity for audit |
+| local acceptance | SDK 52 files/163 tests、H5 33 files/116 tests、all-runtime boundary/typecheck、466 assets and production build pass |
+| real acceptance | requires explicit disposable-group authorization and proves top-level mentions/body targets、SQLite v10、realtime and list-back；currently blocked |
+
+`W6.a6.17.2.1` closes the older-unread-message gap without schema or page history scanning: shared `findLatestUnreadMention` queries only incoming、undeleted、sequenced rows after `lastReadSeq` and matches exact normalized `mentions_json` identity；H5 keeps `draft > unread mention > latest message` and only renders the returned snapshot. `.17.2.2` closes the provable sender-name gap: a complete contact pagination updates existing `friendships/users` under the shared mutation queue，later-page failure preserves the old relationship snapshot，and `resolveGroupSenderDisplayName` reads `friendships -> group_members -> users` in RN priority order. Cold caches remain unnamed；H5 must not use sender ID as a display-name substitute.
+
+## 45. W6.a6.18.1 Chat Text Search Contract
+
+| contract | frozen value |
+| :--- | :--- |
+| RN source | `ChatSearchScreen.tsx`、`SearchComponents.tsx`、`chatSearchHelpers.ts`、`message-search-helpers.ts` |
+| route | single-chat header -> `/conversations/:conversationID/search` -> `/conversations/:conversationID?messageID=<clientMsgID>` |
+| canonical runtime chain | H5 route -> `WebIMSync.messages.searchCached` -> `createIMMessageSearchSync` -> `MessageRepository.search` -> current-account sql.js |
+| search semantics | keyword is trimmed；SQL LIKE escapes literal `%/_`；deleted/revoked rows are excluded；final match only inspects visible message-body fields；results are newest-first |
+| focus semantics | result carries only stable client message ID；chat route rereads the target and surrounding window from the same account cache before DOM focus |
+| forbidden paths | page SQL/Repository/Gateway imports、remote search、WebSocket scan、history-page scan、metadata-only false positives、fake results |
+| local evidence | SDK Web 52 files/164 tests；H5 38 files/126 tests；all-runtime SDK typecheck、boundary gate、`build:web` package sync、466 assets、H5 typecheck/build/verify pass |
+| browser evidence | authenticated 458px search returned the real cached `😎😎` row with sender/date/highlight；result deep link and reload restored the target；no horizontal overflow or console error |
+| residual | date/media/file classifications、group-settings entry、automated browser back/forward matrix、desktop/light/dark visual matrix |
+
+Local closeout: the text subset is `implemented-local/acceptance-gated`, not full RN search parity. Search and focus are cache-only reads and do not trigger Gateway、WebSocket or mutation. The shared SDK is the only query owner；H5 owns route、input、result presentation and DOM focus only. `.18.2` remains a separately bounded indexed-category slice.
+
+## 46. W6.a6.18.2 Indexed Chat Search Contract
+
+| contract | frozen value |
+| :--- | :--- |
+| RN source | `ChatSearchScreen.tsx`、`indexedPages.tsx`、`chatSearchHelpers.ts`、`utils.ts`、`SearchComponents.tsx`；settings entry additionally comes from `SingleChatSettingsScreen.tsx` and `GroupSettingsScreen.tsx` |
+| category entry | search home exposes 日期、图片与视频、文件；text results expose 全部、图片与视频、文件；all stay under `/conversations/:conversationID/search` |
+| shared query owner | `RN openIMService/WebIMSync.messages.searchCached -> createIMMessageSearchSync -> MessageRepository.search -> current-account SQLite/sql.js` |
+| date semantics | shared query accepts inclusive `afterSendTime` and exclusive `beforeSendTime`；H5 initially renders current plus previous two calendar months and can extend older months；a day links to its oldest cached message by stable client ID |
+| media semantics | content types `102/104`、newest-first month grouping、全部/图片/视频 filters；safe media URL delegates to the existing chat media preview owner |
+| file semantics | content type `105`、newest-first month grouping、existing message view owns name/size projection；preview reuses the existing file interaction and this slice does not start download |
+| browser adaptation | RN scroll-top month extension is an explicit “加载更早月份” control；fixed-format 42-cell calendars and 3-column media grid preserve layout without viewport-font scaling |
+| forbidden paths | page history scanning、page SQL/Repository/Gateway imports、new media/file preview owner、remote query、fake result、download or mutation during acceptance |
+| local evidence | real sql.js lower/upper boundary test；SDK Web 52 files/165 tests；H5 39 files/129 tests；all-runtime typecheck、boundary、`build:web` sync、466 assets、production build/full verify pass |
+| browser evidence | authenticated 458px file category rendered real `剑来全文.txt` and existing preview；date rendered June/July/August 2026 and returned Aug 9 to the cached target；media rendered 11 real items, video filter reduced to one and preview opened；all checked views had no horizontal overflow or console error |
+| residual | `.18.2.3` entry is closed by section 47；back/forward、desktop and full light/dark visual matrix remain acceptance gates |
+
+Local closeout: `.18.2.1` and `.18.2.2` are `done-local/acceptance-gated`. The shared SDK owns reusable query/time-range/filter/pagination semantics，RN/Web production callers now consume the neutral facade，and H5 owns calendar/month/filter presentation only. `.18.2.3` closes the missing single/group entry through a real settings owner；cross-browser history and full theme/desktop proof remain acceptance gates.
+
+## 47. W6.a6.18.2.3 Chat Settings Entry Contract
+
+| contract | frozen value |
+| :--- | :--- |
+| RN source | `ChatDetailHeader.tsx`、`SingleChatSettingsScreen.tsx`、`GroupSettingsScreen.tsx` |
+| route | both chat headers -> `/conversations/:conversationID/settings`；settings search row -> existing `/conversations/:conversationID/search`；search back -> chat route |
+| data owner | settings page first reads `conversations.listCachedItems`；group projection additionally uses existing `groups.listCached/sync` and `groupMembers.listCached/sync`；no page SQL/Repository/Gateway access |
+| profile reuse | single peer avatar and group member items link to existing `/contacts/users/:userID` owner；settings does not create a second profile/detail implementation |
+| presentation | single title/row preserve RN “聊天设置/查看聊天记录”；group preserves “群设置/群成员/查找聊天内容” and uses cached group name/avatar/ID/member count |
+| fail behavior | missing target conversation fails visibly；refresh may retain valid cache while surfacing a sync error；unsupported operations are omitted instead of rendered as fake or disabled success paths |
+| excluded | mute、pin、auto-delete、clear-history、add-to-group and group-management mutations require a later frozen owner and action-specific authorization contract |
+| local evidence | H5 40 files/132 tests、typecheck、466 assets、full verify and production build passed；SDK Web remained 52/165 and no SDK source change was required |
+| browser evidence | authenticated 458px direct refresh rendered real single and 4-member group settings；profile/search links resolved, search returned directly to chat, document width stayed 458px and console errors were zero |
+| residual | cross-browser back/forward、light/dark and desktop visual matrix；all excluded settings operations move to `.18.3` contract freeze |
+
+Local closeout: `.18.2.3` is `done-local/acceptance-gated`. React Router remains the only page owner, shared SDK facades remain the only cache/sync owner, and no Gateway request、WebSocket listener、mutation or message send was added. RN search-entry parity is locally complete without claiming the broader settings capability set.
+
+## 47.1 Cross-runtime Single-track Acceptance Gate
+
+| gate | frozen decision |
+| :--- | :--- |
+| canonical owner | DTO/协议映射、校验、状态机、Repository/cache、sync/realtime 语义只位于 `im28-sdk/src/{core,modules,sync}`。 |
+| actual consumers | RN 经 `@im28/im-sdk/rn`、Web 经 `@im28/im-sdk/web` 实际调用同一实现；编译进入 RN dist 不等于 RN 已接入。 |
+| platform adapters | 只允许 SQLite/sql.js/Electron driver、transport、lifecycle、media source、navigation 与 UI projection 差异。 |
+| compatibility | 客户端等价路径必须删除，或在 SDK consumer matrix 登记调用方、原因和退出条件。 |
+| acceptance | `contract + behavior + proof + compatibility` 均齐全才可标记 `converged`。 |
+
+会话设置与自动删除、消息转发/删除/编辑、群 mention 和聊天记录搜索均已完成跨端收敛：RN/Web production callers 分别委托 neutral shared facade，等价 RN Gateway/Repository/filter/state-machine 路径已删除。部分 sync/realtime 仍只证明 shared core + Web consumer 本地闭环，状态保持 `shared-core-ready` 或 `compat-debt`。历史局部证据仍有效，但不能作为整体无双轨结论。`clear-history` core 继续暂停，直到相关 sync/realtime consumer 收敛。
+
+## 48. W6.a6.18.3 Chat Settings Capability Contract
+
+> AXIOM: 会话设置必须按 operation 风险拆分，shared SDK 是 Gateway、当前账号 SQLite 与 realtime 收敛的唯一 owner；H5 只能投影权限、状态和明确操作，不能直接调用 transport 或用本地开关伪造服务端成功。
+
+| capability | RN production chain | current shared status | frozen next slice / gate |
+| :--- | :--- | :--- | :--- |
+| setting detail | `fetchConversationSetting -> POST /v1/conversation/setting/detail -> local conversation` | `infra-only`：Gateway typed client 已有，shared conversation facade 未公开 | `.18.3.1`；严格校验 target，成功后只更新已有会话的 pin/mute 索引列 |
+| conversation mute | `setConversationMessageMute -> POST /v1/conversation/mute -> local isMuted` | `runtime-chain-partial`：Gateway client + Repository column 已有，无 Web caller | `.18.3.1`；非破坏性，可本地实现；真实写入仍是 acceptance gate |
+| conversation pin | `pinConversation -> POST /v1/conversation/pin -> local isPinned/pinnedAt` | `runtime-chain-partial`：Gateway client + Repository column 已有，无 Web caller | `.18.3.1`；非破坏性，可本地实现；真实写入仍是 acceptance gate |
+| auto delete | `fetchConversationDetail/updateConversationAutoDelete -> POST /v1/conversation/auto-delete/update -> type1701 realtime` | `runtime-chain-partial`：typed client 已有，core setting/cache/realtime lifecycle 尚未闭合 | `.18.3.2` 独立合同；只影响设置后新消息，但属于消息生命周期 mutation，需权限和 realtime/cache 回归 |
+| clear history | `deleteConversation -> POST /v1/conversation/clear -> local message clear` | `infra-only/destructive`：typed client 已有，shared 批量 cache 收敛与 route 后果未冻结 | `blocked-destructive-authorization`；必须按 `self|both|all_members` 分别证明 Gateway、SQLite、会话摘要和第二客户端行为 |
+| group profile/member settings | nickname、introduction、announcement、member add/remove、role/owner transfer | `infra-only`：Gateway operations 存在，Web shared group facade 目前只读 | 独立 group-management family；按最多三个紧密 operations 冻结权限、事件和 cache owner |
+| group mute | group/member mute -> `/v1/group/mute/update`、`/v1/group/member/mute/update` | `infra-only`：RN 有权限投影和 realtime helper，Web shared facade 未接入 mutation | 独立 group-mute slice；群主/管理员权限、mute-until、composer disable 与 realtime 必须同时验收 |
+| quit/dismiss | `/v1/group/leave`、`/v1/group/dismiss` + conversation/member cache transition | `infra-only/destructive` | `blocked-destructive-authorization`；群主退出前管理员约束、清历史选项和 route/cache 清理必须单独证明 |
+
+`.18.3.1` 的默认运行链固定为 `ChatSettingsPage -> WebIMSync.conversations -> GatewayHTTPClient -> ConversationRepository -> runtime dataVersion -> existing list/settings projections`。Mutation 只有 Gateway resolve 后才写当前账号 SQLite；Gateway 或本地持久化失败必须保持错误可见，不得显示成功。H5 不注册第二个 WebSocket listener，远端其他端变化继续由已有 realtime conversation upsert 收敛。
+
+Contract-freeze verdict: operation scope 为 setting detail、mute、pin 三项；状态分别为 `🟡 infra-only`、`🟡 runtime-chain-partial`、`🟡 runtime-chain-partial`。未发现 mock shortcut 或 fake-success；清空、退群、解散保持 `🔴 authorization-blocked`，其余群设置保持 `🟡 separately-bounded`。
+
+`.18.3.1` reviewer verdict: setting detail 已达到 `✅ implemented-local/read-verified`；mute 与 pin 达到 `🟡 implemented-local/mutation-acceptance-gated`。Shared SDK 通过 4 个真实 sql.js 用例证明详情读取、成功写入、Gateway 失败保留 cache 和响应目标不匹配 fail-closed；SDK Web 53 files/169 tests、all-runtime typecheck、boundary、`build:web` 与 H5 generated package sync 均通过。H5 40 files/132 tests、typecheck、466 assets、生产构建与 full verify 通过；认证态 458px 单聊/群聊 settings 均从真实 cache/Gateway detail 显示两个 enabled switches，无溢出和 console error。浏览器验收未点击开关，因此不声称真实 mute/pin 写入；无 mock、fake-success、页面 Gateway/Repository/SQLite caller 或第二 WebSocket listener。
+
+### W6.a6.18.3.2 Auto-delete Contract Freeze
+
+| operation | production truth | frozen owner / failure contract | local closeout |
+| :--- | :--- | :--- | :--- |
+| authoritative read | RN `fetchConversationDetail -> /v1/conversation/get` reads unwrapped `direct/group_conversation.auto_delete_seconds`；setting detail may expose the same field but is not the RN authority | shared conversation auto-delete facade calls typed `getConversation`、requires an existing current-account conversation、strictly matches the returned target and persists only validated metadata | `✅ schema v11 + real sql.js` |
+| update | `updateConversationAutoDelete -> /v1/conversation/auto-delete/update`；allowed seconds are `0/21600/43200/86400/259200/604800/1296000/2592000/5184000/7776000/15552000` | shared facade validates the enum before I/O；Gateway must return the requested conversation and exact seconds before success-only SQLite convergence；failure or mismatch preserves cache | `✅ local；real mutation gated` |
+| realtime convergence | Gateway writes and pushes type `1701`、`event_type=conversation_auto_delete_changed` with operator、seconds and enabled；RN renders it in single/group chat | existing realtime owner persists the message and applies the latest valid system notice to the same conversation metadata；invalid event/seconds/enabled combination changes no setting | `✅ deterministic；second account gated` |
+
+Lifecycle AXIOM: auto-delete only affects messages sent after the server accepts the setting. Gateway owns message `expire_at`、actual expiry and later history/list-back results；SDK/H5 must not start browser timers、retroactively delete cached history、guess expiry from the current conversation setting or rewrite old message rows. Realtime type 1701 is a normal durable system message plus a conversation-setting delta, not proof that any prior message was deleted.
+
+Permission AXIOM: direct-conversation participants may update；group entry is visible only when the existing joined-group snapshot says `owner|admin`, while Gateway remains the authoritative permission check. Unknown group role fails closed by omitting the entry. H5 uses a React Router child page, keeps selection as draft until explicit confirm, and shows success only after shared facade resolve；browser acceptance does not confirm a real update without action-time authorization.
+
+Implementation split: `.18.3.2.1` owns core Conversation fields、schema v11、Repository、strict read/update and realtime 1701 convergence；`.18.3.2.2` owns the RN-derived options route and single/group message wording. Clear-history、local expiry scheduling and group-management mutations remain excluded.
+
+Closeout: `getAutoDelete -> Gateway detail -> schema v11`、`setAutoDelete -> exact success-only cache`、`realtime type1701 -> durable message + latest valid setting` 三条本地链已闭合；H5 React Router 页面只呈现 RN 九档，协议有效但 RN 未展示的 15 天/2 个月保持未选中并禁用确认。SDK Web 55/174、聚焦 5/20、H5 聚焦 4/16、all-runtime typecheck/boundary、`build:web` package sync、production build 与 authenticated 458px read-only route proof 通过。无 mock/fake-success、browser timer、retroactive purge、RN caller 或 `build:package:desktop:web` 变更；真实 update、第二账号 realtime/list-back 与完整 theme/desktop matrix 仍为 acceptance gate。
+
+### W6.a6.18.3.3 Clear-history Contract Freeze
+
+> DESTRUCTIVE AXIOM: `/v1/conversation/clear` 返回的 `ConversationCursor.clear_before_seq` 是本地清空边界；客户端不得在 Gateway 成功前删行，不得把没有稳定身份的 type 2102 控制通知当普通消息，也不得用 `DELETE conversation_id=*` 覆盖并发到达的新消息。
+
+| operation | production truth | frozen owner / failure contract | pre-implementation status |
+| :--- | :--- | :--- | :--- |
+| clear self | RN settings/list `deleteConversation(id, self) -> Gateway clear -> local message clear`；单聊暂时隐藏，群聊保留入口 | shared facade requires current-account target、stable `operation_id` and exact response target/cursor；success-only transaction advances clear boundary、clears unread/latest and removes only rows at/before the boundary plus pre-operation local-only rows | `🟡 infra-only` |
+| clear direct both | RN single sheet exposes “为我和对方删除”；Gateway accepts `scope=both` only for direct participants | same facade validates direct type before I/O；response cursor converges current account，other participant relies on type 2102/re-sync；H5 returns to conversation list after success | `🟡 infra-only/destructive` |
+| clear group all | RN group sheet exposes “为我和所有群成员删除” only through `canClearMessages`；Gateway authorizes owner or admin with clear permission | H5 uses joined-group role/permission snapshot only for presentation；unknown permission fails closed，Gateway remains authority；group conversation stays visible with empty latest/unread | `🟡 permission-projection-gap` |
+| realtime control | Gateway type `2102` / `event_type=conversation_cleared` carries conversation/peer/operator context and may omit message IDs | existing realtime owner must branch before `collectGatewayMessages`，strictly resolve one current-account target and apply the same cursor/cache transition；event is not persisted as a visible chat message | `🔴 current handler rejects identity-less event` |
+
+State contract: schema v12 adds indexed `clear_before_seq` and `list_hidden` to `Conversation`; history/full-sync/realtime reads must ignore messages at/before the persisted boundary. Clear convergence runs in the existing shared mutation queue and one database transaction: validate target/cursor -> remove eligible target rows -> set `latestMessageID=undefined`、`unreadCount=0`、`lastReadSeq>=clearBeforeSeq`、`clearBeforeSeq` and list visibility. Rows with server seq above the returned boundary are concurrent new history and must survive. Gateway failure、missing/mismatched target、invalid uint64 cursor or SQLite failure must not produce a success state.
+
+Idempotency contract: generated OpenAPI exposes optional `operation_id`, but current handwritten `GatewayClearConversationRequest` drops it. `.18.3.3.1` must add the field and require a shared stable operation ID across transport retry；H5 must not generate a new ID after an ambiguous timeout. The response is `ConversationCursorEnvelope`, not a generic acknowledgement；an empty/mismatched state is failure for destructive convergence.
+
+Permission/route contract: `self` is available to any cached participant；`both` only for direct conversation；`all_members` only when group permission projection resolves `can_clear_message(s)` or the RN role fallback allows owner/admin, with unknown role/permission fail-closed. Settings uses the existing RN confirmation sheet semantics and never submits on open. Direct success navigates to `/conversations`; group success keeps the group route available and renders empty history/summary after cache reread.
+
+Excluded: `clearConversationAndDeleteAllMsg` fallback、friend-delete `clear_scope`、group leave/dismiss `clear_history`、member-history `clear_before_seq` and physical expiry deletion are separate owners. Contract trace found no H5 fake path because the row is still omitted. Shared gaps are explicit: no clear facade、no schema cursor/list-hidden fields、no atomic boundary delete、no 2102 control handler，and current realtime normalization routes 2102 into ordinary message collection where an identity-less event fails. Verdict: contract `done-read-only`；implementation may proceed with deterministic sql.js/realtime tests, but real `self|both|all_members` acceptance remains `blocked-destructive-authorization`.

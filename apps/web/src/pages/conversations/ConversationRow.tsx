@@ -20,16 +20,17 @@ import {
 /** RN 会话行只接收 Web SDK 已组合的稳定缓存项。 */
 interface ConversationRowProps {
   readonly item: WebIMConversationListItem;
+  readonly currentUserID: string;
 }
 
 /** 渲染 RN 72px 会话行及其头像、摘要、时间和未读状态。 */
-export function ConversationRow({ item }: ConversationRowProps) {
+export function ConversationRow({ item, currentUserID }: ConversationRowProps) {
   // conversation 缩短模板内领域字段访问路径。
   const { conversation, latestMessage } = item;
   // title 使用 RN name -> target ID 回退语义。
   const title = getConversationTitle(conversation);
   // preview 已在纯 helper 中处理草稿和静音前缀。
-  const preview = getConversationDisplayPreview(item);
+  const preview = getConversationDisplayPreview(item, currentUserID);
   // unread 保证 badge 不出现负值或小数。
   const unread = Math.max(0, Math.trunc(conversation.unreadCount));
   // avatarStyle 复用 RN fallback 渐变算法。

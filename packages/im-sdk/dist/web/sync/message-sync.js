@@ -1,4 +1,4 @@
-import { MessageRepository, mapGatewayMessageToCore, } from '@im28/im-sdk/core';
+import { ConversationRepository, MessageRepository, } from '@im28/im-sdk/core';
 import { sendWebIMAudioMessage, } from './message-audio-send.js';
 import { sendWebIMFileMessage, sendWebIMImageMessage, } from './message-media-send.js';
 import { sendWebIMCustomEmojiMessage, } from './message-custom-emoji-send.js';
@@ -7,11 +7,11 @@ import { sendWebIMTextMessage, } from './message-text-send.js';
 import { sendWebIMMentionMessage, } from './message-mention-send.js';
 import { sendWebIMVideoMessage, } from './message-video-send.js';
 import { retryWebIMMessage, } from './message-retry.js';
-import { forwardWebIMMessages, } from './message-forward.js';
-import { deleteWebIMMessages, } from './message-delete.js';
-import { editWebIMTextMessage, } from './message-edit.js';
+import { createIMMessageMutationSync, } from './message-mutations.js';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
+import { pullWebIMMessageHistory } from './message-history-pull.js';
+import { createIMMessageSearchSync, } from './message-search.js';
 /** 创建认证账号绑定的浏览器消息同步服务。 */
 export function createWebIMMessageSync(dependencies) {
     return new WebIMMessageSyncImpl(dependencies);
@@ -22,11 +22,20 @@ class WebIMMessageSyncImpl {
     dependencies;
     // mutationQueue 在聚合 facade 中与会话和 realtime 共用。
     mutationQueue;
+    /** messageMutations 让 Web facade 与 RN 消费同一主动写入实现。 */
+    messageMutations;
+    /** messageSearch 让 Web facade 与 RN 消费同一只读查询实现。 */
+    messageSearch;
     /** 保存 runtime owners，不持有独立认证或数据库状态。 */
     constructor(dependencies) {
         this.dependencies = dependencies;
         this.mutationQueue =
             dependencies.mutationQueue ?? createWebIMSyncMutationQueue();
+        this.messageMutations = createIMMessageMutationSync({
+            ...dependencies,
+            mutationQueue: this.mutationQueue,
+        });
+        this.messageSearch = createIMMessageSearchSync(dependencies);
     }
     /** 从当前账号 SQLite 返回 newest-first 历史窗口。 */
     async getCachedHistory(options) {
@@ -35,6 +44,10 @@ class WebIMMessageSyncImpl {
         // repository 每次绑定当前 account database。
         const repository = new MessageRepository(context.database);
         return repository.getHistory(options);
+    }
+    /** 在当前账号 SQLite 中按会话、关键词和消息类型搜索缓存。 */
+    async searchCached(options) {
+        return this.messageSearch.search(options);
     }
     /** 按调用顺序读取稳定消息 ID，供跨路由预览复用账号 cache。 */
     async getCachedByClientMsgIDs(clientMsgIDs) {
@@ -52,38 +65,7 @@ class WebIMMessageSyncImpl {
     async pullHistory(options) {
         // context 固定本轮账号与 database owner。
         const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
-        return this.mutationQueue.enqueue(() => this.pullHistoryDirect(context, options));
-    }
-    /** 在共享队列内完成历史拉取、映射和持久化。 */
-    async pullHistoryDirect(context, options) {
-        // conversationID 是远端和本地分区共同主键。
-        const conversationID = options.conversationID.trim();
-        // fromSeq 保留 uint64 string，禁止经过 JS number 截断。
-        const fromSeq = options.fromSeq.trim();
-        if (!conversationID || !fromSeq) {
-            throw createWebIMSyncError('INVALID_HISTORY_CURSOR', 'Message history requires a conversation ID and fromSeq.');
-        }
-        // response failure 直接 reject，不退化为 fake cache success。
-        const response = await this.dependencies.gatewayClient.pullMessages({
-            conversation_id: conversationID,
-            from_seq: fromSeq,
-            limit: clampLimit(options.limit),
-            desc: options.desc ?? true,
-        });
-        // messages 在任何写入前全部完成字段校验和映射。
-        const messages = (response.messages ?? []).map(message => mapGatewayMessageToCore(message, {
-            currentUserID: context.userID,
-            conversationID,
-        }));
-        // repository 使用稳定 clientMsgID 幂等 upsert。
-        const repository = new MessageRepository(context.database);
-        for (const message of messages) {
-            await repository.upsert(message);
-        }
-        return repository.getHistory({
-            conversationID,
-            limit: clampLimit(options.limit),
-        });
+        return this.mutationQueue.enqueue(() => pullWebIMMessageHistory(context, options, this.dependencies.gatewayClient));
     }
     /** 先落 sending 文本，再按 Gateway 结果收敛为 sent/failed。 */
     async sendText(options) {
@@ -93,6 +75,20 @@ class WebIMMessageSyncImpl {
     }
     /** 发送 type106 群聊提及并保存完整目标身份。 */
     async sendMention(options) {
+        // 生产 composition 委托 neutral facade；独立单测保留底层状态机入口。
+        if (this.dependencies.groupMentionSync) {
+            // conversation 从当前账号 cache 读取稳定群目标，禁止从 ID 前缀猜测。
+            const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
+            // conversationRepository 只负责兼容旧 messages.sendMention 调用的目标投影。
+            const conversation = await new ConversationRepository(context.database).getByID(options.conversationID.trim());
+            if (!conversation || conversation.type !== 'group') {
+                throw createWebIMSyncError('MENTION_GROUP_CONVERSATION_MISMATCH', 'Mention target must be a cached group conversation.');
+            }
+            return this.dependencies.groupMentionSync.send({
+                ...options,
+                groupID: conversation.targetID,
+            });
+        }
         // context 保证提及消息与当前账号 SQLite 一致。
         const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
         return this.mutationQueue.enqueue(() => sendWebIMMentionMessage(context, options, this.dependencies));
@@ -147,21 +143,15 @@ class WebIMMessageSyncImpl {
     }
     /** 从当前账号 cache 重读来源并执行逐项可审计的批量转发。 */
     async forward(options) {
-        // context 在来源读取和 optimistic 写入前固定账号数据库。
-        const context = requireWebIMSyncContext(this.dependencies, 'Message forward');
-        return this.mutationQueue.enqueue(() => forwardWebIMMessages(context, options, this.dependencies));
+        return this.messageMutations.forward(options);
     }
     /** 从当前账号 cache 重读目标并执行 self/all 单删或批删。 */
     async delete(options) {
-        // context 在 Gateway 和 SQLite mutation 前固定账号 owner。
-        const context = requireWebIMSyncContext(this.dependencies, 'Message delete');
-        return this.mutationQueue.enqueue(() => deleteWebIMMessages(context, options, this.dependencies));
+        return this.messageMutations.delete(options);
     }
     /** 从当前账号 cache 重读目标并编辑同一条已发送文本消息。 */
     async editText(options) {
-        // context 在 Gateway 和 SQLite mutation 前固定账号 owner。
-        const context = requireWebIMSyncContext(this.dependencies, 'Message edit');
-        return this.mutationQueue.enqueue(() => editWebIMTextMessage(context, options, this.dependencies));
+        return this.messageMutations.editText(options);
     }
     /** 从当前账号 cache 恢复并重试同一条受支持的失败消息。 */
     async retry(options) {
@@ -175,11 +165,5 @@ class WebIMMessageSyncImpl {
         const context = requireWebIMSyncContext(this.dependencies, 'Message recovery');
         return this.mutationQueue.enqueue(() => new MessageRepository(context.database).failInterruptedOutgoingSends(context.userID));
     }
-}
-/** 将 history window 限制在 Gateway 可控范围。 */
-function clampLimit(value) {
-    if (!Number.isFinite(value))
-        return 30;
-    return Math.min(100, Math.max(1, Math.trunc(value ?? 30)));
 }
 //# sourceMappingURL=message-sync.js.map

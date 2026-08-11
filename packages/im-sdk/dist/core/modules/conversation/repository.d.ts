@@ -16,6 +16,8 @@ export declare class ConversationRepository extends Repository {
     incrementUnread(conversationID: string, count?: number): Promise<void>;
     updatePinned(conversationID: string, isPinned: boolean, pinnedAt?: number): Promise<void>;
     updateMuted(conversationID: string, isMuted: boolean): Promise<void>;
+    /** 更新服务端确认的自动删除设置，不修改已有消息记录。 */
+    updateAutoDelete(conversationID: string, autoDeleteSeconds: number, updatedBy?: string, updatedAt?: number): Promise<void>;
     updateDraft(conversationID: string, draft: string): Promise<void>;
     deleteByID(conversationID: string): Promise<void>;
 }

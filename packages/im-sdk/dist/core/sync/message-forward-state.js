@@ -1,6 +1,7 @@
 import { ConversationRepository, MessageRepository, } from '@im28/im-sdk/core';
 import { createWebIMClientMessageID, } from './message-send-state.js';
 import { buildWebIMPersistedMessageRequest } from './message-retry.js';
+import { assertReusableForwardOutputRows, normalizeForwardOutputIDs, } from './message-forward-identities.js';
 import { createWebIMSyncError } from './sync-context.js';
 /** 单次共享转发最多接受 Gateway 允许的 100 条源消息。 */
 const WEB_IM_FORWARD_MAX_ITEMS = 100;
@@ -42,6 +43,18 @@ export async function prepareWebIMForwardBatch(context, options, dependencies) {
     const hiddenSenderRequests = hideSenderName
         ? sourceMessages.map(buildWebIMPersistedMessageRequest)
         : [];
+    // outputClientMsgIDs 对齐平台预创建的 optimistic 实体，缺省时仍由 SDK 生成。
+    const outputClientMsgIDs = normalizeForwardOutputIDs(options, sourceClientMsgIDs);
+    // 平台提供的既有 ID 只能复用同一目标中对应来源的 failed outgoing 行。
+    await assertReusableForwardOutputRows({
+        context,
+        conversationID,
+        messageRepository,
+        sourceMessages,
+        outputClientMsgIDs,
+        commentText: options.comment?.trim() ?? '',
+        commentClientMsgID: options.commentClientMsgID?.trim() ?? '',
+    });
     // batchID 同时用于 Gateway 幂等和本地失败行关联。
     const batchID = createWebIMClientMessageID(dependencies);
     // startedAt 保证整批消息在当前会话内具有稳定递增顺序。
@@ -55,13 +68,18 @@ export async function prepareWebIMForwardBatch(context, options, dependencies) {
         hideSenderName,
         sendTime: startedAt + index,
         dependencies,
-        hiddenSenderRequest: hiddenSenderRequests[index],
+        ...(outputClientMsgIDs[index]
+            ? { clientMsgID: outputClientMsgIDs[index] }
+            : {}),
+        ...(hiddenSenderRequests[index]
+            ? { hiddenSenderRequest: hiddenSenderRequests[index] }
+            : {}),
     }));
     // commentText 只在 trim 后非空时生成独立普通文本行。
     const commentText = options.comment?.trim() ?? '';
     // commentMessage 始终位于所有转发项之后。
     const commentMessage = commentText
-        ? createForwardCommentMessage(context, conversationID, batchID, commentText, startedAt + items.length, dependencies)
+        ? createForwardCommentMessage(context, conversationID, batchID, commentText, startedAt + items.length, dependencies, options.commentClientMsgID)
         : undefined;
     // optimisticMessages 通过 Repository 事务一次写入，避免半批次可见。
     const optimisticMessages = commentMessage
@@ -135,7 +153,7 @@ function createPreparedForwardItem(params) {
         };
     // localMessage 复制正文快照但生成新的目标会话身份。
     const localMessage = {
-        clientMsgID: createWebIMClientMessageID(params.dependencies),
+        clientMsgID: params.clientMsgID ?? createWebIMClientMessageID(params.dependencies),
         conversationID: params.conversationID,
         senderID: params.context.userID,
         direction: 'outgoing',
@@ -155,9 +173,9 @@ function createPreparedForwardItem(params) {
     };
 }
 /** 创建批次末尾的普通文本评论 optimistic 行。 */
-function createForwardCommentMessage(context, conversationID, batchID, text, sendTime, dependencies) {
+function createForwardCommentMessage(context, conversationID, batchID, text, sendTime, dependencies, clientMsgID) {
     return {
-        clientMsgID: createWebIMClientMessageID(dependencies),
+        clientMsgID: clientMsgID?.trim() || createWebIMClientMessageID(dependencies),
         conversationID,
         senderID: context.userID,
         direction: 'outgoing',

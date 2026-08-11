@@ -83,6 +83,12 @@ export class GroupMemberRepository extends Repository {
         const rows = await this.query(statement('SELECT * FROM group_members WHERE group_id = ? ORDER BY updated_at DESC', [groupID]));
         return rows.map(mapGroupMemberRow);
     }
+    /** 按群和稳定用户 ID 读取单个成员快照，供共享只读投影复用。 */
+    async getByGroupAndUserID(groupID, userID) {
+        /** rows 只允许命中当前群的精确复合身份。 */
+        const rows = await this.query(statement('SELECT * FROM group_members WHERE group_id = ? AND user_id = ? LIMIT 1', [groupID, userID]));
+        return rows[0] ? mapGroupMemberRow(rows[0]) : null;
+    }
 }
 function mapGroupRow(row) {
     const faceURL = readOptionalString(row, 'face_url');

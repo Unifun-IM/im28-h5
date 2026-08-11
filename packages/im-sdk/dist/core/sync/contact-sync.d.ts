@@ -1,4 +1,6 @@
 import { type GatewayHTTPClient } from '@im28/im-sdk/core';
+import type { WebIMSyncContextDependencies } from './sync-context.js';
+import type { WebIMSyncMutationQueueDependencies } from './sync-mutation-queue.js';
 /** 页面可消费的标准化好友记录。 */
 export interface WebIMContact {
     readonly userID: string;
@@ -34,9 +36,8 @@ export interface WebIMContactSync {
     searchUsers(keyword: string): Promise<readonly WebIMContactSearchUser[]>;
 }
 /** 通讯录能力只依赖 runtime 已持有的 Gateway 与认证 owner。 */
-export interface WebIMContactSyncDependencies {
+export interface WebIMContactSyncDependencies extends WebIMSyncContextDependencies, WebIMSyncMutationQueueDependencies {
     readonly gatewayClient: GatewayHTTPClient;
-    readonly getCurrentUserID: () => string | null;
 }
 /** 创建只通过共享 Gateway client 读取好友列表的 Web facade。 */
 export declare function createWebIMContactSync(dependencies: WebIMContactSyncDependencies): WebIMContactSync;

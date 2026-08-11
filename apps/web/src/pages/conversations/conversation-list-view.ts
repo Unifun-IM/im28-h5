@@ -35,30 +35,43 @@ export function getConversationTitle(conversation: Conversation): string {
 /** 将会话草稿和最新消息转换为 RN 会话行摘要。 */
 export function getConversationListPreview(
   item: WebIMConversationListItem,
+  currentUserID = '',
 ): ConversationListPreview {
   // draft 延续 RN 优先显示草稿的规则。
   const draft = item.conversation.draft?.trim();
   if (draft) {
     return { isDraft: true, text: draft };
   }
-  return {
+  /** message 在当前账号存在有效未读提醒时优先于最新普通消息。 */
+  const message = currentUserID.trim() && item.unreadMention
+    ? item.unreadMention.message
+    : item.latestMessage;
+  /** preview 是消息类型和 entity 已完成基础投影的摘要。 */
+  const preview: ConversationListPreview = {
     isDraft: false,
-    text: getMessagePreviewText(item.latestMessage),
-    ...(item.latestMessage?.entities?.length
-      ? { entities: item.latestMessage.entities }
+    text: getMessagePreviewText(message),
+    ...(message?.entities?.length
+      ? { entities: message.entities }
       : {}),
   };
+  return projectMentionPreview(item, message, preview, currentUserID);
 }
 
 /** 静音会话用条数前缀表达未读，保持 RN 行内信息层级。 */
 export function getConversationDisplayPreview(
   item: WebIMConversationListItem,
+  currentUserID = '',
 ): ConversationListPreview {
   // preview 先处理草稿与具体消息类型。
-  const preview = getConversationListPreview(item);
+  const preview = getConversationListPreview(item, currentUserID);
   // unread 只接受非负整数用于界面展示。
   const unread = Math.max(0, Math.trunc(item.conversation.unreadCount));
-  if (preview.isDraft || !item.conversation.isMuted || unread <= 0) {
+  if (
+    preview.isDraft ||
+    isMentionConversationPreview(preview.text) ||
+    !item.conversation.isMuted ||
+    unread <= 0
+  ) {
     return preview;
   }
   /** text 是用户最终看到的免打扰前缀与正文组合。 */
@@ -72,6 +85,66 @@ export function getConversationDisplayPreview(
       displayText: text,
     }),
   };
+}
+
+/** 将消息级 mention 身份投影为 RN 会话列表提醒。 */
+function projectMentionPreview(
+  item: WebIMConversationListItem,
+  message: Message | null,
+  preview: ConversationListPreview,
+  currentUserID: string,
+): ConversationListPreview {
+  /** userID 为空时禁止用展示文本猜测当前账号。 */
+  const userID = currentUserID.trim();
+  /** message 只接受 shared facade 选出的稳定 mention 身份。 */
+  if (!userID || item.conversation.type !== 'group' || !message?.mentions?.length) {
+    return preview;
+  }
+  /** mention 优先识别 @所有人，否则查找当前用户稳定 ID。 */
+  const mention = message.mentions.find(target => target.type === 'all') ??
+    message.mentions.find(target => target.type === 'user' && target.userID === userID);
+  if (!mention) return preview;
+  /** bodyText 将当前用户的历史昵称快照替换为 RN 的 @我。 */
+  const bodyText = mention.type === 'user' && mention.nickname
+    ? replaceMentionNickname(preview.text, mention.nickname)
+    : preview.text;
+  /** senderDisplayName 只属于同一未读 mention 快照，缺失时不猜名称。 */
+  const senderDisplayName = item.unreadMention?.message.clientMsgID === message.clientMsgID
+    ? item.unreadMention.senderDisplayName?.trim()
+    : '';
+  /** messageText 对齐 RN 群摘要的“发送人：正文”格式。 */
+  const messageText = senderDisplayName
+    ? `${senderDisplayName}：${bodyText}`
+    : bodyText;
+  /** prefix 区分群发提醒与单人提醒。 */
+  const prefix = mention.type === 'all' ? '[所有人]' : '[有人@我]';
+  /** text 是会话行最终可见摘要。 */
+  const text = `${prefix}${messageText}`;
+  return {
+    ...preview,
+    text,
+    ...(preview.entities?.length
+      ? {
+          entities: projectPresetEmojiEntitiesToDisplayText({
+            sourceText: preview.text,
+            sourceEntities: preview.entities,
+            displayText: text,
+          }),
+        }
+      : {}),
+  };
+}
+
+/** 将当前用户的 mention 昵称快照替换为统一 @我 文案。 */
+function replaceMentionNickname(text: string, nickname: string): string {
+  /** token 只替换带 @ 前缀的完整快照，避免误改普通正文昵称。 */
+  const token = `@${nickname.trim()}`;
+  return token === '@' ? text : text.split(token).join('@我');
+}
+
+/** 判断摘要是否已经包含 RN mention 优先前缀。 */
+function isMentionConversationPreview(text: string): boolean {
+  return text.startsWith('[有人@我]') || text.startsWith('[所有人]');
 }
 
 /** 按标题和当前摘要执行 RN 组件已有的本地搜索分支。 */

@@ -1,11 +1,11 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a6.16.1 shared message edit core + W6.a6.16.2 H5 edit UI done-local`
-- next_step: `W6.a6.16.3 authorized disposable Gateway/SQLite/list-back/realtime edit acceptance`
+- current_step: `W6.a6.12.1 active；conversation settings、auto-delete、message forward/delete/edit/group mention/search RN/Web consumer convergence completed`
+- next_step: `converge RN realtime-message normalization and cache consumers on the shared realtime owner`
 - blockers: `W5.a3 browser matrix remains blocked-environment; W3.real-gateway and final data-backed acceptance require Gateway test credentials`
-- gate_state: `edit shared core/H5 UI accepted locally；real edit blocked-mutation-authorization；real delete blocked-destructive-authorization；forward partial-result/desktop remain blocked-external`
-- latest_evidence: `2026-08-11 SDK Web 48 files/155 tests、all-runtime typecheck、boundary gate、build:web sync、H5 32 files/109 tests、typecheck、466 assets、production build and authenticated read-only edit-preview proof passed`
+- gate_state: `settings/auto-delete/message forward/delete/edit/group mention/search converged；sync-realtime remains compat-debt；clear-history core blocked-by-convergence-gate`
+- latest_evidence: `2026-08-11 neutral createIMMessageSearchSync consumed by RN/Web for current-account query validation、visible-body filtering and pagination；SDK 58 files/184 tests、all-runtime typecheck/build passed；RN tsc、8 search-service + 28 search-page tests passed；H5 55 files/179 tests、466 assets and production build passed`
 
 ## Current Readout
 
@@ -17,7 +17,19 @@
 | `W3` | `gated` | browser orchestration、account SQLite 与 privacy gate 已通过，等待真实 smoke |
 | `W4` | `gated` | HTTP MVP、默认 routes、新消息/会话/update 与 same-tab ordering 已本地完成；真实 flow gated |
 | `W5` | `gated` | W5.a1/W5.a2 done-local；W5.a3 code done-local，真实三浏览器矩阵 pending |
-| `W6` | `active` | preset/custom/media/retry/quote/copy/edit local chains、SDK boundary、forward normal+hidden real flow and message delete local chain done；real edit/delete and forward partial/desktop remain open |
+| `W6` | `active` | preset/custom/media/retry/quote/copy/edit local chains、SDK boundary、forward normal+hidden real flow and RN/Web message forward/delete/edit/group-mention/search single-track consumption done；realtime consumer convergence and real mutation residuals remain open |
+
+## Latest Closed Group Mention Slice
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.17.1-shared-group-mention-core + .17.2-h5-group-mention-ui + .17.2.1-unread-projection + .17.2.2-sender-display-name-cache-parity` |
+| production_flow | group cache -> group-member cache/full sync -> RN-derived picker -> shared type106 optimistic send -> Gateway -> SQLite v10 -> existing realtime/cache reread；conversation list separately reads `lastReadSeq < seq` latest incoming mention |
+| ownership | SDK owns member/contact/user cache、mention identity、Gateway convergence、unread query and RN sender-name priority；H5 owns picker/composer and returned snapshot presentation only |
+| failure contract | unknown group、pagination failure、invalid target/permission reject visibly；invalid seq or absent stable mention fails closed to latest message；H5 never scans history or guesses identity/name |
+| verification | SDK Web 52/163、all-runtime typecheck、boundary gate、build:web sync；H5 33/116、typecheck、466 assets、production build；authenticated 7-contact -> 19-conversation navigation and 458x786 no-overflow/zero-console proof |
+| RN impact | RN now explicitly composes `createIMGroupMentionSync` through `group-mention-shared-service.ts`；send/member-candidate callers consume the neutral facade，while RN DTO/events/presentation remain app-owned |
+| residual | real type106 send、Gateway mention echo、SQLite/list-back and second-client realtime remain `blocked-mutation-authorization`；current account has no real unread mention browser sample；cold sender caches intentionally render no guessed name |
 
 ## Latest Closed Message Edit Slice
 
@@ -28,7 +40,7 @@
 | ownership | SDK owns eligibility、operation ID、Gateway body、same-row persistence and editedAt；H5 owns action、composer preview/draft and edited-time projection only |
 | failure contract | invalid/local-only/forwarded/non-text rows reject before I/O；Gateway failure or target mismatch preserves original cache；H5 keeps editing state and draft |
 | verification | SDK Web 48/155、all-runtime typecheck、boundary gate、build:web sync；H5 32/109、typecheck/build、466 assets；authenticated 458x786 preview/cancel/no-overflow proof |
-| RN impact | no RN app/service caller changed；shared code compiles for RN but cannot alter runtime without explicit composition/service cutover |
+| RN impact | RN `openIMService.editTextMessage` now consumes the neutral shared mutation facade；RN owns only auth/context、MessageItem projection and existing event emission，legacy inline Gateway/SQLite edit path is deleted |
 | residual | real Gateway edit、same-row SQLite/list-back and second-client realtime remain `blocked-mutation-authorization`；revoke remains excluded |
 
 ## Latest Closed Message Delete Slice
@@ -316,8 +328,9 @@ Local closeout: shared `message-send-state` now owns conversation guard、stable
 | Chat album video send core | migration/verification | mixed selection、browser metadata、shared video body/snapshot and SQLite state are implemented-local；an explicitly authorized real upload/send and final Network/cache proof are absent | yes |
 | Chat voice send core | migration/verification | RN voice composer、browser recorder lifecycle、shared audio body and SQLite state are implemented-local；real microphone、recording/upload/send and authenticated Network/cache proof are absent | yes |
 | Chat forward UI/core | migration/verification | shared core and H5 flow are implemented；authorized normal origin/list-back and hidden-origin removal pass；real partial-result and desktop visual proof remain | yes |
+| Chat auto-delete core | migration/verification | schema v11、strict detail/update、type1701 convergence and RN nine-option route are done-local；real update、second-account realtime/list-back and theme/desktop proof remain | yes |
 | General settings residual | migration/contract | version done-local；network blocked-browser；cache blocked-storage；real update response、notification/permission writes and cross-browser proof pending | yes |
-| Contacts cache/index parity | migration/API gap | `/contacts` 真实远端分页已完成；shared Web entry 未导出 `FriendshipRepository`，中文拼音索引未对齐 | yes |
+| Contacts index parity | resolved | RN 同版本/同参数 `pinyin-pro`、中文/多音/拉丁/fallback 回归和真实 `A/D/Z/H` 分组均已通过；词典已随 `/contacts` 按路由加载，不进入其他页面首包 | no |
 | Primary tab shell | migration | global owner 和四个 route 均已启用；friend/group application badge、me dark/real logout proof 缺失 | yes |
 | Calls real-account parity | migration/verification | cache/sync/delete、SQLite tests、route/guest guard 已完成；账号 session 失效，缺真实列表/删除与 light/dark screenshot | yes |
 | Verification code send | API gap | Gateway OpenAPI 无发送验证码 operation；页面只展示固定 `666666` 联调约束，不制造发送成功态 | yes |
@@ -330,8 +343,19 @@ Local closeout: shared `message-send-state` now owns conversation guard、stable
 
 | field | value |
 | :--- | :--- |
-| closed_slice | `W6.a6.15.1 shared delete core + W6.a6.15.2 H5 delete UI` |
-| deliverable_verdict | `implemented-local/destructive-acceptance-gated` |
-| gate_verdict | `SDK Web 47/152、all-runtime typecheck、build:web sync；H5 31/107、466 assets、typecheck/build and authenticated mobile read-only proof passed` |
-| debt_or_drift | `no duplicate H5 transport/cache owner、fake success、revoke shortcut or RN runtime wiring；real self/all/partial/list-back evidence is intentionally absent` |
-| next_activation_decision | `require explicit action-time authorization and disposable messages before W6.a6.15.3；retain W6.a6.14.3 partial/desktop as separate external gates` |
+| closed_slice | `W6.a6.18.3.2.1/.2 shared auto-delete core + H5 route` |
+| deliverable_verdict | `done-local/mutation-acceptance-gated` |
+| gate_verdict | `SDK Web 55/174、auto-delete focused 5/20、all-runtime typecheck/boundary/build:web sync、H5 focused 4/16、466 assets、full verify/build and authenticated 458px read-only role/route/nine-option proof passed` |
+| debt_or_drift | `no page SQL/Gateway、second setting/cache/realtime owner、browser timer、retroactive purge、mock/fake result、RN runtime caller or build:package:desktop:web change；real update、second-account realtime/list-back and theme/desktop matrix remain explicit residuals` |
+| next_activation_decision | `keep W6.a6.18.3.3.1 blocked；activate RN/Web message mutation consumer convergence next` |
+
+## Latest Cross-Runtime Closeout Verdict
+
+| field | value |
+| :--- | :--- |
+| closed_slice | `W6.a6.12.1.5-message-search-consumer-convergence` |
+| deliverable_verdict | `converged/acceptance-gated` |
+| primary_path | `RN/Web actual callers -> createIMMessageSearchSync -> shared query validation + visible-body filter + MessageRepository.search/pagination；platform code retains parameter、DTO、sender and UI projection only` |
+| gate_verdict | `SDK 58/184、all-runtime boundary/typecheck/build、RN tsc、8 search-service + 28 search-page tests、H5 55/179 verify/build passed` |
+| debt_or_drift | `RN direct local-store Repository search、duplicated visible-body filtering and legacy search result types removed；search remains cache-only with no Gateway mutation；RN Jest requires forceExit because of pre-existing open handles` |
+| next_activation_decision | `activate RN/Web realtime-message consumer convergence；do not modify build:package:desktop:web` |

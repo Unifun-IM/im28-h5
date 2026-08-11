@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/components/navbar/nav-arrow-left.svg';
 import mutedIconURL from '../../assets/rn/assets/icons/imm28/bell-off.regular.svg';
+import moreIconURL from '../../assets/rn/assets/icons/imm28/more-horiz.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import {
   getRNAvatarGradient,
@@ -75,7 +76,17 @@ export function ChatHeader({ conversation }: ChatHeaderProps) {
         </span>
       </span>
 
-      <span className="rn-chat-header-actions" aria-hidden="true" />
+      <span className="rn-chat-header-actions">
+        {conversation ? (
+          <Link
+            className="rn-chat-header-settings"
+            to={`/conversations/${encodeURIComponent(conversation.conversationID)}/settings`}
+            aria-label={conversation.type === 'group' ? '群聊设置' : '聊天设置'}
+          >
+            <RNAssetIcon assetURL={moreIconURL} />
+          </Link>
+        ) : null}
+      </span>
     </header>
   );
 }

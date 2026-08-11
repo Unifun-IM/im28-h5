@@ -5,7 +5,7 @@ import { type WebIMBlacklistSync } from '../../../sync/blacklist-sync.js';
 import { type WebIMFriendApplicationSync } from '../../../sync/friend-application-sync.js';
 import { type WebIMGroupApplicationSync } from '../../../sync/group-application-sync.js';
 import { type WebIMJoinedGroupSync } from '../../../sync/joined-group-sync.js';
-import { type WebIMGroupMemberSync } from '../../../sync/group-member-sync.js';
+import { type IMGroupMentionSync } from '../../../sync/group-mention.js';
 import { type WebIMPeerProfileSync } from '../../../sync/peer-profile-sync.js';
 import { type WebIMConversationSync } from '../../../sync/conversation-sync.js';
 import { type WebIMMessageSync } from '../../../sync/message-sync.js';
@@ -24,7 +24,12 @@ export interface WebIMSync {
     readonly friendApplications: WebIMFriendApplicationSync;
     readonly groupApplications: WebIMGroupApplicationSync;
     readonly groups: WebIMJoinedGroupSync;
-    readonly groupMembers: WebIMGroupMemberSync;
+    readonly groupMentions: IMGroupMentionSync;
+    /** 兼容非 mention 群成员页面；实现委托同一 neutral facade。 */
+    readonly groupMembers: {
+        listCached(groupID: string): ReturnType<IMGroupMentionSync['listMembers']>;
+        sync(groupID: string, options?: Parameters<IMGroupMentionSync['syncMembers']>[1]): ReturnType<IMGroupMentionSync['syncMembers']>;
+    };
     readonly messages: WebIMMessageSync;
     readonly peerProfile: WebIMPeerProfileSync;
     readonly profile: WebIMProfileSync;

@@ -73,7 +73,7 @@ export async function editWebIMTextMessage(context, options, dependencies) {
         status: existing.status,
         sendTime: existing.sendTime,
         ...(existing.seq === undefined ? {} : { seq: existing.seq }),
-        payload: { text: { text: document.text } },
+        payload: replaceMessageTextPayload(existing.payload, document.text),
         ...(entities.length ? { entities } : { entities: [] }),
         localEx: createEditedLocalExtra(existing.localEx, editedAt),
     };
@@ -123,12 +123,34 @@ function readMessageText(message) {
     if (!message.payload || typeof message.payload !== 'object' || Array.isArray(message.payload)) {
         return '';
     }
-    // textValue 只接受 body.text 普通对象。
-    const textValue = message.payload.text;
-    if (!textValue || typeof textValue !== 'object' || Array.isArray(textValue))
+    /** payload 同时兼容 canonical Gateway body 和迁移前 RN 缓存快照。 */
+    const payload = message.payload;
+    /** textValue 是 canonical body.text 容器。 */
+    const textValue = payload.text;
+    if (textValue && typeof textValue === 'object' && !Array.isArray(textValue)) {
+        /** value 对应 Gateway body.text.text。 */
+        const value = textValue.text;
+        if (typeof value === 'string')
+            return value;
+    }
+    /** legacyTextValue 只用于读取迁移前 RN payload.textElem。 */
+    const legacyTextValue = payload.textElem;
+    if (!legacyTextValue ||
+        typeof legacyTextValue !== 'object' ||
+        Array.isArray(legacyTextValue)) {
         return '';
-    // value 对应 Gateway body.text.text。
-    const value = textValue.text;
-    return typeof value === 'string' ? value : '';
+    }
+    /** legacyContent 是旧 RN SQLite 行保留的文本正文。 */
+    const legacyContent = legacyTextValue.content;
+    return typeof legacyContent === 'string' ? legacyContent : '';
+}
+/** 替换 canonical 文本正文，同时保留客户端旧快照中的非业务展示字段。 */
+function replaceMessageTextPayload(payload, text) {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+        return { text: { text } };
+    }
+    /** record 保留迁移期客户端 payload 的非正文兼容字段。 */
+    const record = payload;
+    return { ...record, text: { text } };
 }
 //# sourceMappingURL=message-edit.js.map

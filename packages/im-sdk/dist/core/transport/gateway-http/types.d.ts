@@ -146,11 +146,9 @@ export interface GatewayGroupUserPermission {
 export interface GatewayGroupMember {
     readonly group_id?: string;
     readonly user_id?: string;
-    readonly nickname?: string;
-    readonly role?: 'member' | 'owner' | 'admin' | string;
+    readonly role?: 20 | 60 | 100 | 'member' | 'owner' | 'admin' | string;
     readonly state?: 'active' | 'left' | 'removed' | 'banned' | string;
     readonly joined_at?: string;
-    readonly admin_since?: string;
     readonly updated_at?: string;
     readonly mute_until?: string;
     readonly is_muted?: boolean;

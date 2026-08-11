@@ -14,6 +14,7 @@
 - 在独立 `im28-sdk` Git 仓库建立浏览器平台 owner，以 `@im28/im-sdk/core` 复用公共逻辑，并通过 `@im28/im-sdk/web` 交付 SQLite/IndexedDB、Gateway 和同步运行时适配。
 - 以纵向切片逐步交付认证、会话和消息能力，每个切片都有明确验证和残留项。
 - 以 `im28-phone` 为视觉、资产、页面行为和能力源，按 React Router SPA 路由逐页完成可追踪 parity 迁移。
+- 防止 RN/Web 双轨：共享能力必须先在 `im28-sdk` 收敛为平台中性实现，再由 RN/Web production callers 实际消费；compile-only 不作为完成证据。
 
 ## Scope
 
@@ -23,6 +24,13 @@
 - `../im28-sdk/src/platforms/web/**`：浏览器 SDK、存储适配和后续 Gateway runtime。
 - `docs/active/h5-foundation/**`：当前阶段的 plan/status/workset 真相源。
 - `architecture.md`、`README.md`、`docs/web-im-storage.md`：稳定边界和已实现事实。
+- `../im28-sdk/docs/shared-capability-consumer-matrix.md`：跨端 owner、实际消费者、compat debt 与退出条件真相源。
+
+## Active Convergence Gate
+
+- `W6.a6.12.1-rn-web-single-track-convergence-gate`：consumer matrix 已建立；conversation settings 与 auto-delete 已通过中性 facade、RN/Web actual callers 和旧路径删除完成首个收敛，下一组处理 message mutation、mention、search、sync/realtime。
+- H5 已闭环能力保留局部证据，但在 RN 接入同一 shared implementation 前只能标记 `shared-core-ready` 或 `compat-debt`。
+- `W6.a6.18.3.3.1-shared-clear-history-core` 状态改为 `blocked-by-convergence-gate`，不得在既有双轨上继续增加共享业务表面。
 
 ## Non-goals
 
@@ -39,7 +47,7 @@
 | Web application | Vite + React Router 根壳、404 与 authenticated `PrimaryTabsLayout` 已实现 | `apps/web`; `architecture.md` |
 | RN parity foundation | 迁移合同已冻结；466 个资产按字节同步；auth entry、conversation、chat、contacts/contact-profile、friend/group applications、calls、me/profile/security、settings、global tab shell 与 onboarding core 均为 local/acceptance-gated；valid authenticated data/mutations、onboarding context、cache/network blocked or gated | `docs/rn-h5-migration-contract.md`; `apps/web/src/assets/rn`; `apps/web/src/styles/rn-theme.css` |
 | shared SDK | `@im28/im-sdk/core` 提供平台中立 contract、Repository 和 Gateway client | `../im28-sdk/src/core.ts` |
-| Web SDK/runtime | `sql.js + IndexedDB`、login/register/account-credential auth-bound lifecycle、notification/permission settings facade、public platform-term/client-version adapters、共享 mutation queue、HTTP/realtime sync、remote contact list/user search、peer profile/conversation/apply、call-record cache/sync/delete、current-profile read/update、preset/custom emoji、same-row retry、uploaded-media checkpoint recovery 和 shared forward core 已实现；当前 SDK 全量共 49 文件/150 测试 | `../im28-sdk/src/platforms/web/runtime/**`; `../im28-sdk/src/platforms/web/storage/**`; `../im28-sdk/src/sync/**` |
+| Web SDK/runtime | `sql.js + IndexedDB`、login/register/account-credential auth-bound lifecycle、notification/permission settings facade、public platform-term/client-version adapters、共享 mutation queue、HTTP/realtime sync、remote contact list/user search、peer profile/conversation/apply、call-record cache/sync/delete、current-profile read/update、preset/custom emoji、same-row retry、uploaded-media checkpoint recovery、shared forward、群 mention core、未读 mention、sender cache priority 与聊天缓存关键词/类型/时间范围查询已实现；当前 SDK Web 全量共 52 文件/165 测试 | `../im28-sdk/src/platforms/web/runtime/**`; `../im28-sdk/src/platforms/web/storage/**`; `../im28-sdk/src/sync/**` |
 | Gateway runtime | 本地 auth/realtime/account DB 实现与验证已通过；真实环境 smoke 保留为 deployment gate | `docs/runtime-contracts/web-gateway-runtime.md` |
 | package shape | H5 workspace 仅保留 `apps/web`；浏览器 SDK 已迁入独立兄弟 Git 仓库 | `package.json`; `../im28-sdk/package.json` |
 
@@ -126,6 +134,24 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；缺少部署 URL �
   - `W6.a6.16.1-shared-message-edit-core` 已完成本地闭环：SDK 从当前账号 SQLite 重读本人已发送且非转发的 type 101，Gateway 成功后才用同 ID/顺序/状态替换原行；RN runtime 未接线。
   - `W6.a6.16.2-h5-message-edit-ui` 已完成本地闭环：action、RN 编辑预览、原文/entities 回填、取消/提交和 `已编辑 HH:mm` 投影只调用 shared facade；未提交真实编辑。
   - `W6.a6.16.3-message-edit-acceptance` 需在经明确授权的可丢弃文本上验证 Gateway、SQLite/list-back 与第二客户端 realtime，当前保持 `blocked-mutation-authorization`。
+  - `W6.a6.17.1-shared-group-mention-core` 已完成本地闭环：SDK schema v10 持久化顶层 mention 身份，群成员 facade cache-first 全分页同步，type 106 发送沿用共享 optimistic 状态机；Web composition 显式接线，RN service/runtime 未接线。
+  - `W6.a6.17.2-h5-group-mention-ui` 已完成本地闭环：群聊 composer 按 RN 规则提供 `@成员/@所有人` 候选、稳定 ID 选择和光标恢复，消息正文与会话列表消费 shared mention；命中当前用户显示 `[有人@我]`，all target 显示 `[所有人]`。
+  - `W6.a6.17.2.1-unread-mention-conversation-projection` 已完成本地闭环：shared SDK 按 `lastReadSeq < seq` 从结构化 mention 身份中选择最近 incoming 提醒，组合已有群成员昵称；H5 保持 `草稿 > 未读 mention > 最新消息`，不扫描页面 history、不猜发送人。
+  - `W6.a6.17.2.2-sender-display-name-cache-parity` 已完成本地闭环：成功联系人全分页在 shared mutation queue 中更新 `friendships/users`，会话 facade 按 RN `好友备注 -> 群昵称 -> 用户昵称` 只读解析；分页失败保留旧关系，冷 cache 不猜名称。
+  - `W6.a6.18.1-chat-text-search` 已完成本地闭环：单聊 header 进入 React Router 搜索页，shared SDK 在当前账号 SQLite 中按会话和可见正文搜索；结果按稳定 client ID 返回详情并恢复目标缓存窗口，不触发 Gateway、WebSocket 或 mutation。
+  - `W6.a6.18.2.1-shared-indexed-search-range` 已完成本地闭环：shared SDK 在当前账号 SQLite 中提供包含下界、排除上界的发送时间范围，并继续复用消息类型查询；不触发 Gateway，也不新增平台专属索引。
+  - `W6.a6.18.2.2-h5-date-media-file-index` 已完成本地闭环：React Router 搜索页复刻 RN 日期、图片与视频、文件分类，按月/日投影缓存消息，媒体复用既有预览 owner，日期结果以稳定 client ID 返回聊天页。
+  - `W6.a6.18.2.3-chat-settings-entry` 已完成本地闭环：单聊/群聊 header 更多按钮进入独立 React Router settings route，页面只读真实会话、群、成员 cache/facade，资料入口复用既有 profile route，“查看聊天记录/查找聊天内容”进入同一 search owner；未冻结的设置 mutation 不渲染。
+  - `W6.a6.18.3-chat-settings-capability-contract-freeze` 已完成：会话设置按非破坏性、消息生命周期、破坏性和群权限域拆分，冻结 shared SDK/Gateway/SQLite/realtime owner 与逐 operation 授权门。
+  - `W6.a6.18.3.1-shared-conversation-setting-core` 已完成本地闭环：setting detail、会话免打扰和会话置顶由 shared SDK 严格校验 Gateway target 并 success-only 收敛当前账号 SQLite；H5 只投影真实状态/失败，真实写入仍待授权，自动删除、清空记录和所有群管理 mutation 不进入本切片。
+  - `W6.a6.18.3.2-auto-delete-contract` 已冻结：权威详情读取、枚举更新和 type 1701 realtime 为唯一三个 operation；服务端拥有新消息 expiry/实际删除，客户端只持久设置元数据和系统消息，不启动 timer 或追溯清理历史。
+  - `W6.a6.18.3.2.1-shared-auto-delete-core` 已完成本地闭环：Conversation/schema v11、Repository、严格 read/update 与 type 1701 durable-message/setting convergence 由 shared SDK 单一持有；真实 mutation 不进入本地验收。
+  - `W6.a6.18.3.2.2-h5-auto-delete-route` 已完成本地闭环：React Router 子页复刻 RN 九档，单聊开放、群聊 owner/admin fail-closed，显式确认后才调用 shared mutation，单聊/群聊 type 1701 使用操作者感知文案；真实 update 与第二账号 realtime 仍待授权。
+  - `W6.a6.18.3.3-clear-history-contract-trace` 已完成只读冻结：`self|both|all_members`、stable operation ID、Gateway cursor、schema v12 clear boundary/list visibility、type 2102 control event、permission 与 route 后果均有唯一 owner；旧 OpenIM fallback、好友删除和退群 clear-history 排除。
+  - `W6.a6.18.3.3.1-shared-clear-history-core` 暂停于 `blocked-by-convergence-gate`；setting/auto-delete caller 已收敛，但相关 sync/realtime consumer 仍未收敛，暂不恢复 schema/Repository/facade/realtime deterministic chain。真实 `self|both|all_members`、页面确认与 destructive browser acceptance 继续保持授权门。
+  - `W6.a5.2.1.1-contact-pinyin-index-parity` 已完成本地闭环：H5 联系人展示层复用 RN `pinyin-pro@3.28.1` 和同一姓氏优先参数，中文索引、数字/符号 fallback 与分组顺序均有纯函数回归和真实 7 行只读证明；SDK/RN runtime 未改动。
+  - `W6.a5.2.1.2-contact-route-code-split` 已完成本地闭环：`/contacts` 经 React Router `React.lazy + Suspense` 按路由加载，搜索过滤从拼音分组模块拆出；生产 main chunk 从 1,088.14 kB/366.35 kB gzip 降至 793.79 kB/222.24 kB gzip，联系人 chunk 为 294.92 kB/145.52 kB gzip。
+  - `W6.a6.17.3-group-mention-acceptance` 仅允许在明确授权的可丢弃群聊中验证真实 type 106 send、Gateway top-level mentions、SQLite v10、realtime 和 list-back；当前保持 `blocked-mutation-authorization`。
 - exit:
   - 已迁移页面具有源映射、RN 资产、明暗主题、响应式、路由和真实 API 证据；不存在 generic placeholder 视觉或第二条 API 链。
 

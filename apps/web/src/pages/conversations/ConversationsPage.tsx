@@ -173,6 +173,7 @@ export function ConversationsPage() {
               <ConversationRow
                 key={item.conversation.conversationID}
                 item={item}
+                currentUserID={snapshot.userID ?? ''}
               />
             ))
           ) : (

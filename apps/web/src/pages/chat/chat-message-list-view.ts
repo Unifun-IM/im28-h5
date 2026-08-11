@@ -25,6 +25,7 @@ export type ChatMessageListEntry =
 export function buildChatMessageListEntries(
   messages: readonly Message[],
   isGroup: boolean,
+  currentUserID = '',
 ): readonly ChatMessageListEntry[] {
   // ordered 保持页面从旧到新的自然文档流。
   const ordered = [...messages].reverse();
@@ -32,7 +33,7 @@ export function buildChatMessageListEntries(
   const entries: ChatMessageListEntry[] = [];
   ordered.forEach((message, index) => {
     // view 在分组判断前完成系统消息归类。
-    const view = getChatMessageView(message, isGroup);
+    const view = getChatMessageView(message, isGroup, currentUserID);
     // previous 是视觉上方的较旧消息。
     const previous = ordered[index - 1];
     // next 是视觉下方的较新消息。

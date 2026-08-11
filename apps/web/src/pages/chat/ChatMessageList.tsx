@@ -7,11 +7,13 @@ import type { ChatMessageView } from './chat-message-view.js';
 import {
   resolveChatQuoteSource,
 } from './chat-quote-view.js';
+import { focusChatMessageRow } from './chat-message-focus.js';
 
 /** RN 消息列表只消费 Repository 消息和页面加载状态。 */
 interface ChatMessageListProps {
   readonly messages: readonly Message[];
   readonly isGroup: boolean;
+  readonly currentUserID: string;
   readonly loading: boolean;
   readonly listRef: RefObject<HTMLElement | null>;
   readonly customEmojiActionDisabled: boolean;
@@ -33,6 +35,7 @@ interface ChatMessageListProps {
 export function ChatMessageList({
   messages,
   isGroup,
+  currentUserID,
   loading,
   listRef,
   customEmojiActionDisabled,
@@ -51,35 +54,13 @@ export function ChatMessageList({
 }: ChatMessageListProps) {
   // entries 只在消息窗口或会话类型变化时重新计算。
   const entries = useMemo(
-    () => buildChatMessageListEntries(messages, isGroup),
-    [isGroup, messages],
+    () => buildChatMessageListEntries(messages, isGroup, currentUserID),
+    [currentUserID, isGroup, messages],
   );
 
   /** 将已解析引用来源滚动到列表中央并短暂聚焦。 */
   function handleOpenQuotedMessage(message: Message) {
-    // list 是唯一允许滚动的消息容器。
-    const list = listRef.current;
-    if (!list) return;
-    // nodes 只在当前可见缓存窗口查找真实来源行。
-    const nodes = list.querySelectorAll<HTMLElement>('.rn-chat-message-row');
-    // target 同时匹配 source 的 server/client ID。
-    const target = Array.from(nodes).find(
-      node =>
-        node.dataset.clientMessageId === message.clientMsgID ||
-        Boolean(
-          message.serverMsgID &&
-          node.dataset.serverMessageId === message.serverMsgID,
-        ),
-    );
-    target?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    target?.animate(
-      [
-        { backgroundColor: 'transparent' },
-        { backgroundColor: 'var(--im-bg-pressed)' },
-        { backgroundColor: 'transparent' },
-      ],
-      { duration: 900 },
-    );
+    focusChatMessageRow(listRef.current, message.clientMsgID);
   }
 
   return (

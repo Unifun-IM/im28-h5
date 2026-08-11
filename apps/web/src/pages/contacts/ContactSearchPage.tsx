@@ -12,7 +12,7 @@ import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { ContactProfileAvatar } from './ContactProfileShared.js';
 import { buildContactProfileRoute } from './contact-profile-view.js';
-import { filterWebIMContacts } from './contact-list-view.js';
+import { filterWebIMContacts } from './contact-filter.js';
 import {
   getContactSearchDescription,
   splitContactSearchText,

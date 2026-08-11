@@ -36,11 +36,20 @@ export async function sendWebIMMentionMessage(context, options, dependencies) {
     };
     return executeWebIMMessageSend(context, {
         conversationID: options.conversationID,
+        ...(options.clientMsgID ? { clientMsgID: options.clientMsgID } : {}),
         contentType: 106,
         payload: body,
         mentions,
         ...(entities.length ? { entities } : {}),
-    }, body, dependencies, gatewayEntities, gatewayMentions);
+    }, body, dependencies, gatewayEntities, gatewayMentions, {
+        entities: gatewayEntities,
+        mentions: gatewayMentions,
+        ...(options.maxAttempts === undefined ? {} : { maxAttempts: options.maxAttempts }),
+        ...(options.onSending ? { onSending: options.onSending } : {}),
+        ...(options.waitBeforeRetry
+            ? { waitBeforeRetry: options.waitBeforeRetry }
+            : {}),
+    });
 }
 /** 将共享提及目标序列化为 Gateway 线格式。 */
 function serializeMessageMentions(mentions) {

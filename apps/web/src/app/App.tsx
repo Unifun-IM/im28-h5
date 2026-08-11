@@ -1,10 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { ChatPage } from '../pages/chat/ChatPage.js';
 import { CustomEmojiManagerPage } from '../pages/chat/CustomEmojiManagerPage.js';
 import { ChatForwardTargetPage } from '../pages/chat/ChatForwardTargetPage.js';
 import { ConversationsPage } from '../pages/conversations/ConversationsPage.js';
-import { ContactsPage } from '../pages/contacts/ContactsPage.js';
 import { ContactFriendApplicationPage } from '../pages/contacts/ContactFriendApplicationPage.js';
 import { ContactProfilePage } from '../pages/contacts/ContactProfilePage.js';
 import { ContactSearchPage } from '../pages/contacts/ContactSearchPage.js';
@@ -34,6 +34,15 @@ import { NotFoundPage } from '../pages/not-found/NotFoundPage.js';
 import { WebIMRuntimeProvider } from '../runtime/index.js';
 import { PrimaryTabsLayout } from './PrimaryTabsLayout.js';
 
+/** 联系人主页面按 React Router 路由加载，避免拼音词典进入其他页面首包。 */
+const ContactsPage = lazy(() => import('../pages/contacts/ContactsPage.js'));
+/** 聊天记录搜索按详情子路由加载，不增加会话列表首包。 */
+const ChatMessageSearchPage = lazy(() => import('../pages/chat/ChatMessageSearchPage.js'));
+/** 聊天设置按详情子路由加载，保持会话列表首包不变。 */
+const ChatSettingsPage = lazy(() => import('../pages/chat/ChatSettingsPage.js'));
+/** 定时删除选择页按设置子路由加载。 */
+const ChatAutoDeletePage = lazy(() => import('../pages/chat/ChatAutoDeletePage.js'));
+
 /** Web 应用根组件只负责装配浏览器路由，页面能力由对应 page owner 承担。 */
 export function App() {
   return (
@@ -53,7 +62,14 @@ export function App() {
           <Route path="/auth/complete-profile/bio" element={<AuthOnboardingProfileEditorPage mode="bio" />} />
           <Route element={<PrimaryTabsLayout />}>
             <Route path="/conversations" element={<ConversationsPage />} />
-            <Route path="/contacts" element={<ContactsPage />} />
+            <Route
+              path="/contacts"
+              element={(
+                <Suspense fallback={<ContactsRouteLoadingState />}>
+                  <ContactsPage />
+                </Suspense>
+              )}
+            />
             <Route path="/calls" element={<CallsPage />} />
             <Route path="/me" element={<MePage />} />
           </Route>
@@ -86,6 +102,30 @@ export function App() {
             element={<CustomEmojiManagerPage />}
           />
           <Route
+            path="/conversations/:conversationID/search"
+            element={(
+              <Suspense fallback={<ChatSearchRouteLoadingState />}>
+                <ChatMessageSearchPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <ChatSettingsPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/auto-delete"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <ChatAutoDeletePage />
+              </Suspense>
+            )}
+          />
+          <Route
             path="/conversations/:conversationID/forward"
             element={<ChatForwardTargetPage />}
           />
@@ -94,5 +134,32 @@ export function App() {
         </AuthOnboardingProvider>
       </WebIMRuntimeProvider>
     </BrowserRouter>
+  );
+}
+
+/** 联系人路由块下载期间保持明确且可访问的页面状态。 */
+function ContactsRouteLoadingState() {
+  return (
+    <main className="rn-contacts-page-state" aria-busy="true">
+      <strong>正在加载通讯录</strong>
+    </main>
+  );
+}
+
+/** 聊天搜索路由块下载期间保持明确且可访问的页面状态。 */
+function ChatSearchRouteLoadingState() {
+  return (
+    <main className="rn-chat-page-state" aria-busy="true">
+      <strong>正在加载聊天记录搜索</strong>
+    </main>
+  );
+}
+
+/** 聊天设置路由块下载期间保持明确且可访问的页面状态。 */
+function ChatSettingsRouteLoadingState() {
+  return (
+    <main className="rn-chat-page-state" aria-busy="true">
+      <strong>正在加载聊天设置</strong>
+    </main>
   );
 }

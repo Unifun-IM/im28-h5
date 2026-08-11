@@ -41,6 +41,12 @@ export interface Conversation {
     readonly isPinned?: boolean;
     readonly pinnedAt?: number;
     readonly isMuted?: boolean;
+    /** 自动删除秒数只描述设置后新消息的服务端生命周期。 */
+    readonly autoDeleteSeconds?: number;
+    /** 最近一次自动删除设置的服务端操作者。 */
+    readonly autoDeleteUpdatedBy?: string;
+    /** 最近一次自动删除设置的服务端时间戳。 */
+    readonly autoDeleteUpdatedAt?: number;
     readonly draft?: string;
     readonly updatedAt: number;
     readonly payload?: unknown;

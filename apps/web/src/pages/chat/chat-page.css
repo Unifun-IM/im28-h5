@@ -133,10 +133,24 @@
 }
 
 .rn-chat-header-actions {
-  width: 96px;
+  display: flex;
+  width: 44px;
   min-height: 32px;
-  flex: 0 0 96px;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: flex-end;
 }
+
+.rn-chat-header-settings {
+  display: grid;
+  width: 44px;
+  height: 32px;
+  place-items: center;
+  color: var(--im-icon-primary);
+  text-decoration: none;
+}
+
+.rn-chat-header-settings .rn-asset-icon { width: 30px; height: 30px; }
 
 .rn-chat-error {
   flex: 0 0 auto;

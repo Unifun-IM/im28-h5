@@ -1,5 +1,8 @@
 import type { WebIMContact } from '@im28/im-sdk/web';
 
+import { filterWebIMContacts } from './contact-filter.js';
+import { getContactIndexKey } from './contact-index-helpers.js';
+
 /** 通讯录页面分组后的稳定渲染项。 */
 export type ContactListEntry =
   | { readonly type: 'section'; readonly key: string; readonly title: string }
@@ -7,30 +10,6 @@ export type ContactListEntry =
 
 /** 星标好友在 RN 字母索引中的固定标识。 */
 export const STARRED_CONTACT_INDEX = '★';
-
-/** 按 RN remark、nickname、账号、ID、手机号和邮箱字段执行本地搜索。 */
-export function filterWebIMContacts(
-  contacts: readonly WebIMContact[],
-  keyword: string,
-): readonly WebIMContact[] {
-  // query 统一大小写和首尾空白，不改变原始记录。
-  const query = keyword.trim().toLocaleLowerCase();
-  if (!query) return contacts;
-  return contacts.filter(contact =>
-    [
-      contact.displayName,
-      contact.nickname,
-      contact.remark,
-      contact.account,
-      contact.userID,
-      contact.phone,
-      contact.email,
-    ]
-      .join('\n')
-      .toLocaleLowerCase()
-      .includes(query),
-  );
-}
 
 /** 将好友列表转换为星标优先、随后按索引分组的 RN 列表。 */
 export function buildContactListEntries(
@@ -76,15 +55,6 @@ export function getContactIndexes(
     .filter((entry): entry is Extract<ContactListEntry, { readonly type: 'section' }> =>
       entry.type === 'section')
     .map(entry => entry.title);
-}
-
-/** 将联系人显示名称映射为字母、数字或其他分组。 */
-function getContactIndexKey(displayName: string): string {
-  // firstCharacter 跳过显示名称开头空白。
-  const firstCharacter = Array.from(displayName.trim())[0] ?? '#';
-  if (/^[A-Za-z]$/.test(firstCharacter)) return firstCharacter.toUpperCase();
-  if (/^[0-9]$/.test(firstCharacter)) return '0-9';
-  return '#';
 }
 
 /** 为分组标题生成稳定 DOM anchor。 */

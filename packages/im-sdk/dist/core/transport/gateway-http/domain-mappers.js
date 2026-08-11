@@ -1,4 +1,5 @@
 import { IMError } from '../../core/errors.js';
+import { normalizeConversationAutoDeleteSeconds } from '../../core/conversation-auto-delete.js';
 import { normalizePresetEmojiEntities } from '../../modules/message/preset-emoji.js';
 import { normalizeMessageMentions } from '../../modules/message/mention.js';
 /** 将 Gateway message 映射为跨平台 core message。 */
@@ -114,6 +115,19 @@ export function mapGatewayConversationToCore(input, currentUserID) {
     // faceURL 按显式头像和对象资料回退。
     const faceURL = readString(body.avatar_url) ||
         readString(type === 'group' ? body.group?.avatar_url : body.user?.avatar_url);
+    // autoDeleteSeconds 缺失时保持可选，存在时必须满足 Gateway 枚举。
+    const autoDeleteSeconds = normalizeConversationAutoDeleteSeconds(body.auto_delete_seconds);
+    if (body.auto_delete_seconds !== undefined &&
+        autoDeleteSeconds === undefined) {
+        throw invalidGatewayEntity('conversation', {
+            conversationID,
+            autoDeleteSeconds: String(body.auto_delete_seconds),
+        });
+    }
+    // autoDeleteUpdatedBy 只接受非空服务端用户标识。
+    const autoDeleteUpdatedBy = readString(body.auto_delete_updated_by);
+    // autoDeleteUpdatedAt 使用与会话一致的 Gateway 时间归一化。
+    const autoDeleteUpdatedAt = readTimestamp(body.auto_delete_updated_at);
     return {
         conversation: {
             conversationID,
@@ -133,6 +147,9 @@ export function mapGatewayConversationToCore(input, currentUserID) {
             isPinned: pinnedAt > 0,
             pinnedAt,
             isMuted: Boolean(body.notification_muted),
+            ...(autoDeleteSeconds !== undefined ? { autoDeleteSeconds } : {}),
+            ...(autoDeleteUpdatedBy ? { autoDeleteUpdatedBy } : {}),
+            ...(autoDeleteUpdatedAt > 0 ? { autoDeleteUpdatedAt } : {}),
             updatedAt,
             payload: input,
         },

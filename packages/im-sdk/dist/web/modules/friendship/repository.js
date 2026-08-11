@@ -22,6 +22,11 @@ export class FriendshipRepository extends Repository {
         const rows = await this.query(statement('SELECT * FROM friendships WHERE is_friend = 1 ORDER BY updated_at DESC'));
         return rows.map(mapFriendshipRow);
     }
+    /** 按稳定用户 ID 读取单条好友关系缓存。 */
+    async getByUserID(userID) {
+        const rows = await this.query(statement('SELECT * FROM friendships WHERE user_id = ?', [userID]));
+        return rows[0] ? mapFriendshipRow(rows[0]) : null;
+    }
     async replaceAll(friendships) {
         await this.transaction(async (tx) => {
             await tx.execute(statement('DELETE FROM friendships'));

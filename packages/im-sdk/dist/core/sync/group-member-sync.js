@@ -1,5 +1,6 @@
 import { GroupMemberRepository, GroupRepository, } from '@im28/im-sdk/core';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
+import { refreshGroupMemberUserProfiles, resolveGroupMemberDisplayProfiles, } from './group-member-profile.js';
 /** 创建当前账号绑定的群成员同步 facade。 */
 export function createWebIMGroupMemberSync(dependencies) {
     /** mutationQueue 与消息、会话写入保持同一顺序 owner。 */
@@ -17,7 +18,7 @@ async function readCachedMembers(dependencies, groupID) {
     const normalizedGroupID = requireGroupID(groupID);
     /** repository 绑定当前账号数据库。 */
     const repository = new GroupMemberRepository(context.database);
-    return mapCachedMembers(await repository.listByGroupID(normalizedGroupID));
+    return mapCachedMembers(context.database, await repository.listByGroupID(normalizedGroupID));
 }
 /** 在共享队列内完成群校验、全分页和 success-only replace。 */
 async function executeMemberSync(dependencies, mutationQueue, groupID, options) {
@@ -34,10 +35,12 @@ async function executeMemberSync(dependencies, mutationQueue, groupID, options) 
         }
         /** remoteMembers 只有所有页面成功后才会写入。 */
         const remoteMembers = await pullAllMembers(dependencies.gatewayClient, normalizedGroupID, clampPageSize(options?.pageSize));
+        /** 用户资料必须先完整拉取，失败时不得用 ID 快照覆盖旧成员展示。 */
+        await refreshGroupMemberUserProfiles(context.database, dependencies.gatewayClient, remoteMembers);
         /** repository 用一个事务替换该群快照。 */
         const repository = new GroupMemberRepository(context.database);
         await repository.replaceGroupMembers(normalizedGroupID, remoteMembers);
-        return mapCachedMembers(await repository.listByGroupID(normalizedGroupID));
+        return mapCachedMembers(context.database, await repository.listByGroupID(normalizedGroupID));
     };
     return mutationQueue ? mutationQueue.enqueue(operation) : operation();
 }
@@ -76,7 +79,7 @@ async function pullAllMembers(gatewayClient, groupID, pageSize) {
 }
 /** 将 Gateway 成员映射为共享 Repository 记录。 */
 function mapGatewayMember(item, groupID) {
-    /** record 读取 Gateway 未来可能补充的头像字段。 */
+    /** record 只把未进入正式 OpenAPI 的群昵称/头像视为兼容扩展。 */
     const record = item;
     /** userID 是成员稳定主键。 */
     const userID = item.user_id?.trim() ?? '';
@@ -87,32 +90,49 @@ function mapGatewayMember(item, groupID) {
     return {
         groupID,
         userID,
-        nickname: item.nickname?.trim() || userID,
+        ...(record.nickname?.trim() && record.nickname.trim() !== userID
+            ? { nickname: record.nickname.trim() }
+            : {}),
         faceURL: record.face_url?.trim() ?? '',
         roleLevel: roleLevel(item.role),
-        ...(item.admin_since?.trim() ? { adminSince: item.admin_since.trim() } : {}),
+        ...(record.admin_since?.trim() ? { adminSince: record.admin_since.trim() } : {}),
         payload: item,
     };
 }
 /** 将 Repository 成员映射为稳定页面 DTO。 */
-function mapCachedMembers(members) {
+async function mapCachedMembers(database, members) {
+    /** profiles 在共享层关联群昵称和公开用户资料。 */
+    const profiles = await resolveGroupMemberDisplayProfiles(database, members);
     return [...members]
         .sort((left, right) => (right.roleLevel ?? 0) - (left.roleLevel ?? 0) ||
-        (left.nickname || left.userID).localeCompare(right.nickname || right.userID))
-        .map(member => ({
-        groupID: member.groupID,
-        userID: member.userID,
-        nickname: member.nickname || member.userID,
-        avatarURL: member.faceURL ?? '',
-        role: memberRole(member.roleLevel),
-    }));
+        (profiles.get(left.userID)?.nickname ?? left.userID).localeCompare(profiles.get(right.userID)?.nickname ?? right.userID))
+        .map(member => {
+        /** profile 总是由相同成员集合生成。 */
+        const profile = profiles.get(member.userID) ?? {
+            nickname: member.userID,
+            avatarURL: '',
+        };
+        return {
+            groupID: member.groupID,
+            userID: member.userID,
+            ...(profile.remark ? { remark: profile.remark } : {}),
+            ...(profile.groupNickname ? { groupNickname: profile.groupNickname } : {}),
+            nickname: profile.nickname,
+            avatarURL: profile.avatarURL,
+            role: memberRole(member.roleLevel),
+        };
+    });
 }
-/** 将 Gateway 角色转换为 Repository 数值。 */
+/** 将 Gateway 字符串或数值角色转换为 Repository 数值。 */
 function roleLevel(role) {
-    if (role === 'owner')
+    /** normalizedRole 兼容 Gateway 的文字枚举、数字和数字字符串。 */
+    const normalizedRole = String(role ?? '').trim().toLowerCase();
+    if (role === 100 || normalizedRole === '100' || normalizedRole === 'owner')
         return 100;
-    if (role === 'admin')
+    if (role === 60 || normalizedRole === '60' || normalizedRole === 'admin')
         return 60;
+    if (role === 20 || normalizedRole === '20' || normalizedRole === 'member')
+        return 20;
     return 0;
 }
 /** 将 Repository 数值转换为页面角色。 */

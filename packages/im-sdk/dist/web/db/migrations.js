@@ -98,6 +98,15 @@ export const SDK_MIGRATIONS = [
             `ALTER TABLE messages ADD COLUMN mentions_json TEXT`,
         ],
     },
+    {
+        version: 11,
+        name: 'add_conversation_auto_delete_metadata',
+        statements: [
+            `ALTER TABLE conversations ADD COLUMN auto_delete_seconds INTEGER NOT NULL DEFAULT 0`,
+            `ALTER TABLE conversations ADD COLUMN auto_delete_updated_by TEXT`,
+            `ALTER TABLE conversations ADD COLUMN auto_delete_updated_at INTEGER NOT NULL DEFAULT 0`,
+        ],
+    },
 ];
 export async function runMigrations(database, migrations = SDK_MIGRATIONS) {
     await database.open();

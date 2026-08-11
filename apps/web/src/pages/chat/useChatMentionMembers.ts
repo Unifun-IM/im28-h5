@@ -35,10 +35,10 @@ export function useChatMentionMembers(
         const group = cachedGroups.find(item => item.groupID === groupID);
         if (!group) throw new Error('群聊不存在或尚未同步');
         /** cachedMembers 先呈现 SQLite 候选。 */
-        const cachedMembers = await sync.groupMembers.listCached(groupID);
+        const cachedMembers = await sync.groupMentions.listMembers(groupID);
         if (active) setState({ members: cachedMembers, canMentionAll: group.canMentionAll });
         /** members 在完整远端成功后替换 cache。 */
-        const members = await sync.groupMembers.sync(groupID);
+        const members = await sync.groupMentions.syncMembers(groupID);
         if (active) setState({ members, canMentionAll: group.canMentionAll });
       } catch (cause) {
         if (active) onError(cause instanceof Error ? cause.message : String(cause));

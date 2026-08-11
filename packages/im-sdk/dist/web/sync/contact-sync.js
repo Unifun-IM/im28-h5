@@ -1,5 +1,6 @@
 import {} from '@im28/im-sdk/core';
 import { createWebIMSyncError } from './sync-context.js';
+import { replaceWebIMContactCache } from './contact-cache.js';
 /** 创建只通过共享 Gateway client 读取好友列表的 Web facade。 */
 export function createWebIMContactSync(dependencies) {
     return new WebIMContactSyncImpl(dependencies);
@@ -8,17 +9,33 @@ export function createWebIMContactSync(dependencies) {
 class WebIMContactSyncImpl {
     // dependencies 保持唯一 Gateway client 和动态认证状态。
     dependencies;
+    /** mutationQueue 让联系人快照写入与其他账号 cache mutation 串行。 */
+    mutationQueue;
     /** 保存 runtime owners，不复制 token 或 transport 状态。 */
     constructor(dependencies) {
         this.dependencies = dependencies;
+        this.mutationQueue = dependencies.mutationQueue;
     }
     /** 拉取全部好友分页并返回稳定、去重的页面记录。 */
     async list(options = {}) {
+        /** operation 在真正执行时重新绑定当前认证账号与数据库。 */
+        const operation = () => this.listDirect(options);
+        return this.mutationQueue ? this.mutationQueue.enqueue(operation) : operation();
+    }
+    /** 完整分页成功后在同一队列 operation 中替换联系人 cache。 */
+    async listDirect(options) {
         this.requireAuthenticatedUser();
+        /** database 必须来自当前已打开账号，禁止把联系人写入跨账号缓存。 */
+        const database = this.dependencies.accountDatabase.getDatabase();
+        if (!database) {
+            throw createWebIMSyncError('CONTACT_DATABASE_UNAVAILABLE', 'Contact list requires an open account database.');
+        }
         // pageSize 限制异常调用造成的服务端压力。
         const pageSize = clampContactPageSize(options.pageSize);
         // contacts 仅在远端分页完整成功后交给页面。
         const contacts = [];
+        /** cachedFriends 保留与页面首见去重一致的远端关系快照。 */
+        const cachedFriends = [];
         // seenUserIDs 防止服务端跨页重复好友。
         const seenUserIDs = new Set();
         // page 从 Gateway 的 1-based 首屏递增，最多执行安全上限次数。
@@ -36,11 +53,13 @@ class WebIMContactSyncImpl {
                 if (contact && !seenUserIDs.has(contact.userID)) {
                     seenUserIDs.add(contact.userID);
                     contacts.push(contact);
+                    cachedFriends.push(friend);
                 }
             }
             // total 在服务端提供时优先作为完成信号。
             const total = Math.max(0, Math.trunc(response.total ?? 0));
             if (friends.length < pageSize || (total > 0 && contacts.length >= total)) {
+                await replaceWebIMContactCache(database, cachedFriends);
                 return sortWebIMContacts(contacts);
             }
         }

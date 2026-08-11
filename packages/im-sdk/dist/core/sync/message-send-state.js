@@ -14,8 +14,10 @@ export async function prepareWebIMMessageSend(context, definition, dependencies)
     if (!conversation) {
         throw createWebIMSyncError('CONVERSATION_NOT_FOUND', 'Message sending requires an existing cached conversation.');
     }
+    // messageRepository 管理稳定 ID 冲突校验和同一实体的状态收敛。
+    const messageRepository = new MessageRepository(context.database);
     // clientMsgID 在 upload、Gateway send 与状态更新中保持不变。
-    const clientMsgID = createWebIMClientMessageID(dependencies);
+    const clientMsgID = await resolveWebIMClientMessageID(context, definition, dependencies, messageRepository);
     // localMessage 在任何远端 I/O 前持久化。
     const localMessage = {
         clientMsgID,
@@ -29,8 +31,6 @@ export async function prepareWebIMMessageSend(context, definition, dependencies)
         ...(definition.mentions?.length ? { mentions: definition.mentions } : {}),
         payload: definition.payload,
     };
-    // messageRepository 管理同一 client ID 的状态收敛。
-    const messageRepository = new MessageRepository(context.database);
     await messageRepository.upsert(localMessage);
     await conversationRepository.updateLatestMessage(conversationID, clientMsgID, localMessage.sendTime);
     return {
@@ -97,15 +97,59 @@ export async function failWebIMMessageSend(prepared, cause) {
     throw cause;
 }
 /** 为无需平台上传的 body 执行完整 optimistic send 状态机。 */
-export async function executeWebIMMessageSend(context, definition, body, dependencies, entities, mentions) {
+export async function executeWebIMMessageSend(context, definition, body, dependencies, entities, mentions, execution) {
     // prepared 保证 Gateway 调用前已有可见 sending row。
     const prepared = await prepareWebIMMessageSend(context, definition, dependencies);
+    // onSending 在本地 sending 行可读取后、任何远端 I/O 前通知平台层。
+    execution?.onSending?.(prepared.localMessage);
+    // maxAttempts 默认保持 Web 现有单次调用，RN 可显式保留三次策略。
+    const maxAttempts = normalizeSendMaxAttempts(execution?.maxAttempts);
+    // lastCause 保存最后一次真实发送或状态收敛错误。
+    let lastCause;
     try {
-        return await completeWebIMMessageSend(prepared, body, dependencies, entities, mentions);
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+            try {
+                return await completeWebIMMessageSend(prepared, body, dependencies, execution?.entities ?? entities, execution?.mentions ?? mentions);
+            }
+            catch (cause) {
+                lastCause = cause;
+                if (attempt >= maxAttempts)
+                    break;
+                await execution?.waitBeforeRetry?.(attempt);
+            }
+        }
+        throw lastCause;
     }
     catch (cause) {
         return failWebIMMessageSend(prepared, cause);
     }
+}
+/** 解析平台提供或 SDK 生成的 client ID，并阻止覆盖不相关缓存行。 */
+async function resolveWebIMClientMessageID(context, definition, dependencies, repository) {
+    // requestedID 缺省时沿用 SDK 生成逻辑。
+    const requestedID = definition.clientMsgID?.trim() ?? '';
+    if (!requestedID)
+        return createWebIMClientMessageID(dependencies);
+    // existing 是同一账号库内可能被 optimistic upsert 覆盖的实体。
+    const existing = await repository.getByClientMsgID(requestedID);
+    if (!existing)
+        return requestedID;
+    // reusable 只允许同会话、同发送者、同类型的失败 outgoing 重试。
+    const reusable = existing.conversationID === definition.conversationID.trim() &&
+        existing.senderID === context.userID &&
+        existing.direction === 'outgoing' &&
+        existing.contentType === definition.contentType &&
+        existing.status === 'failed';
+    if (!reusable) {
+        throw createWebIMSyncError('CLIENT_MESSAGE_ID_CONFLICT', 'Client message ID already belongs to another cached message.');
+    }
+    return requestedID;
+}
+/** 将平台重试次数限制在共享发送状态机允许的安全范围。 */
+function normalizeSendMaxAttempts(value) {
+    if (!Number.isFinite(value))
+        return 1;
+    return Math.min(3, Math.max(1, Math.trunc(value ?? 1)));
 }
 /** 创建并校验本地消息幂等 ID。 */
 export function createWebIMClientMessageID(dependencies) {

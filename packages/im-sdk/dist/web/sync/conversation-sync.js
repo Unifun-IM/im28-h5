@@ -1,6 +1,8 @@
 import { ConversationRepository, MessageRepository, mapGatewayConversationToCore, } from '@im28/im-sdk/core';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
+import { createIMConversationSettingsSync, } from './conversation-settings.js';
+import { readUnreadMentionSnapshot, } from './conversation-unread-mention.js';
 /** 创建认证账号绑定的浏览器会话同步服务。 */
 export function createWebIMConversationSync(dependencies) {
     return new WebIMConversationSyncImpl(dependencies);
@@ -11,11 +13,17 @@ class WebIMConversationSyncImpl {
     dependencies;
     // mutationQueue 在聚合 facade 中与消息和 realtime 共用。
     mutationQueue;
+    /** settingsSync 是 RN/Web 共用的会话设置与自动删除 owner。 */
+    settingsSync;
     /** 保存 runtime owners，不复制 transport 或 storage 状态。 */
     constructor(dependencies) {
         this.dependencies = dependencies;
         this.mutationQueue =
             dependencies.mutationQueue ?? createWebIMSyncMutationQueue();
+        this.settingsSync = createIMConversationSettingsSync({
+            ...dependencies,
+            mutationQueue: this.mutationQueue,
+        });
     }
     /** 从当前账号 SQLite 返回排序后的会话 cache。 */
     async listCached(options = {}) {
@@ -35,18 +43,41 @@ class WebIMConversationSyncImpl {
         const messageRepository = new MessageRepository(context.database);
         // conversations 先冻结本轮列表窗口，避免组合过程中改变排序。
         const conversations = await conversationRepository.list(options);
-        return Promise.all(conversations.map(async (conversation) => ({
-            conversation,
-            latestMessage: conversation.latestMessageID
+        return Promise.all(conversations.map(async (conversation) => {
+            /** latestMessage 保留会话远端指针指向的普通摘要真相。 */
+            const latestMessage = conversation.latestMessageID
                 ? await messageRepository.getByClientMsgID(conversation.latestMessageID)
-                : null,
-        })));
+                : null;
+            /** unreadMention 由共享 SQLite 未读窗口查询提供，不扫描页面 history。 */
+            const unreadMention = await readUnreadMentionSnapshot(context, conversation);
+            return { conversation, latestMessage, unreadMention };
+        }));
     }
     /** 全分页拉取 Gateway 会话后替换当前账号 cache。 */
     async sync(options = {}) {
         // context 在网络请求前冻结本轮 user/database owner。
         const context = requireWebIMSyncContext(this.dependencies, 'Conversation sync');
         return this.mutationQueue.enqueue(() => this.syncDirect(context, options));
+    }
+    /** 读取真实 Gateway 设置并委托唯一 setting owner。 */
+    getSetting(conversationID) {
+        return this.settingsSync.getSetting(conversationID);
+    }
+    /** 设置免打扰并委托唯一 setting owner。 */
+    async setMuted(conversationID, isMuted) {
+        return this.settingsSync.setMuted(conversationID, isMuted);
+    }
+    /** 设置置顶并委托唯一 setting owner。 */
+    async setPinned(conversationID, isPinned) {
+        return this.settingsSync.setPinned(conversationID, isPinned);
+    }
+    /** 读取权威自动删除设置并委托唯一生命周期 owner。 */
+    getAutoDelete(conversationID) {
+        return this.settingsSync.getAutoDelete(conversationID);
+    }
+    /** 设置自动删除时长并委托唯一生命周期 owner。 */
+    setAutoDelete(conversationID, autoDeleteSeconds) {
+        return this.settingsSync.setAutoDelete(conversationID, autoDeleteSeconds);
     }
     /** 在共享队列内完成全分页拉取、映射和 cache 替换。 */
     async syncDirect(context, options) {

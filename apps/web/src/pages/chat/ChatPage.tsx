@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Conversation, Message, WebIMSync } from '@im28/im-sdk/web';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { ChatComposer } from './ChatComposer.js';
 import { ChatHeader } from './ChatHeader.js';
@@ -11,7 +11,7 @@ import { ChatPageFeedback } from './ChatPageFeedback.js';
 import { ChatPageFooter } from './ChatPageFooter.js';
 import { copyChatMessage } from './chat-message-copy.js';
 import type { ChatMessageView } from './chat-message-view.js';
-import { ChatPageState, pullAndReadChatHistory, readChatPageError, upsertVisibleMessage } from './chat-page-helpers.js';
+import { ChatPageState, readChatPageError, readInitialChatMessageWindow, upsertVisibleMessage } from './chat-page-helpers.js';
 import { useChatVoiceRecorder } from './useChatVoiceRecorder.js';
 import { useChatCustomEmojiActions } from './useChatCustomEmojiActions.js';
 import { useChatOutgoingMessageActions } from './useChatOutgoingMessageActions.js';
@@ -19,11 +19,16 @@ import { useChatForwardFlow } from './useChatForwardFlow.js';
 import { useChatMessageDeleteFlow } from './useChatMessageDeleteFlow.js';
 import { useChatMessageEditFlow } from './useChatMessageEditFlow.js';
 import { useChatMentionMembers } from './useChatMentionMembers.js';
+import { focusChatMessageRow, readFocusedChatMessageWindow } from './chat-message-focus.js';
 import './chat-page.css';
 /** RN chat detail 页面只编排 Web SDK cache/pull/send/realtime facade。 */
 export function ChatPage() {
   // conversationID 由 React Router path param 管理并自动解码。
   const { conversationID = '' } = useParams();
+  // searchParams 保留可刷新搜索结果定位身份。
+  const [searchParams] = useSearchParams();
+  // focusedMessageID 只接受稳定 client ID，不从 URL 恢复消息正文。
+  const focusedMessageID = searchParams.get('messageID')?.trim() ?? '';
   // navigate 只负责 React Router SPA 管理页切换。
   const navigate = useNavigate();
   // runtime context 提供 auth guard、配置错误和聚合 sync facade。
@@ -49,6 +54,7 @@ export function ChatPage() {
   // outgoingActions 统一复用 SDK message facade 和页面 operation owner。
   const outgoingActions = useChatOutgoingMessageActions({
     conversationID,
+    groupID: conversation?.type === 'group' ? conversation.targetID : '',
     onSending: handleLocalSendingMessage,
     runMessageOperation,
   });
@@ -109,18 +115,13 @@ export function ChatPage() {
         );
         if (!target) throw new Error('会话不存在或尚未同步');
         if (active) setConversation(target);
-        // cachedMessages 先呈现当前账号本地历史。
-        const cachedMessages = await sync.messages.getCachedHistory({
-          conversationID,
-          limit: 50,
-        });
-        if (active) setMessages(cachedMessages);
-        // refreshedMessages 从 pull 后 SQLite 重读，包含并发发送或实时写入。
-        const refreshedMessages = await pullAndReadChatHistory(sync.messages, {
+        // refreshedMessages 按普通或搜索目标模式读取当前账号 SQLite 窗口。
+        const refreshedMessages = await readInitialChatMessageWindow(sync.messages, {
           conversationID,
           fromSeq: target.lastMsgSeq ?? '0',
+          focusedMessageID,
           limit: 50,
-        });
+        }, cached => { if (active) setMessages(cached); });
         if (active) setMessages(refreshedMessages);
       } catch (cause) {
         if (active) setError(readChatPageError(cause));
@@ -131,7 +132,7 @@ export function ChatPage() {
     return () => {
       active = false;
     };
-  }, [conversationID, snapshot.userID, sync]);
+  }, [conversationID, focusedMessageID, snapshot.userID, sync]);
   useEffect(() => {
     if (
       !sync ||
@@ -145,7 +146,9 @@ export function ChatPage() {
     let active = true;
     void Promise.all([
       sync.conversations.listCached({ limit: 500 }),
-      sync.messages.getCachedHistory({ conversationID, limit: 50 }),
+      focusedMessageID
+        ? readFocusedChatMessageWindow(sync.messages, conversationID, focusedMessageID)
+        : sync.messages.getCachedHistory({ conversationID, limit: 50 }),
     ])
       .then(([cachedConversations, cachedMessages]) => {
         if (!active) return;
@@ -162,16 +165,18 @@ export function ChatPage() {
     return () => {
       active = false;
     };
-  }, [conversationID, snapshot.dataVersion, snapshot.userID, sync]);
+  }, [conversationID, focusedMessageID, snapshot.dataVersion, snapshot.userID, sync]);
   useEffect(() => {
     // frame 等待新消息 DOM 完成布局后再保持列表底部可见。
     const frame = requestAnimationFrame(() => {
       // list 是页面唯一滚动 owner，避免 scrollIntoView 推动整个 viewport。
       const list = messageListRef.current;
-      list?.scrollTo({ top: list.scrollHeight });
+      if (!focusChatMessageRow(list, focusedMessageID)) {
+        list?.scrollTo({ top: list.scrollHeight });
+      }
     });
     return () => cancelAnimationFrame(frame);
-  }, [messages.length]);
+  }, [focusedMessageID, messages.length]);
   /** 复制真实消息投影，并只在 clipboard 完成后展示成功反馈。 */
   async function handleCopyMessage(view: ChatMessageView): Promise<boolean> {
     setError(null);
@@ -229,6 +234,7 @@ export function ChatPage() {
           <ChatMessageList
             messages={messages}
             isGroup={isGroup}
+            currentUserID={snapshot.userID}
             loading={loading}
             listRef={messageListRef}
             customEmojiActionDisabled={customEmojiActions.mutating}

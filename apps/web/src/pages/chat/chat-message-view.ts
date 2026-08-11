@@ -1,4 +1,5 @@
 import type { Message, PresetEmojiEntity } from '@im28/im-sdk/web';
+import { getChatAutoDeleteSystemText } from './chat-auto-delete-system-view.js';
 /** Chat 消息正文在浏览器中的受控呈现类型。 */
 export type ChatMessageViewKind =
   | 'system'
@@ -55,6 +56,7 @@ const SYSTEM_MESSAGE_FALLBACKS: Readonly<Record<number, string>> = {
 export function getChatMessageView(
   message: Message,
   isGroup: boolean,
+  currentUserID = '',
 ): ChatMessageView {
   if (message.status === 'revoked') {
     return { kind: 'system', text: '消息已撤回' };
@@ -66,6 +68,16 @@ export function getChatMessageView(
   const body = asRecord(message.payload);
   // systemText 优先使用服务端兼容文案，业务判断仍基于 contentType。
   const systemText = readNestedString(body, 'system', 'text');
+  if (message.contentType === 1701) {
+    return {
+      kind: 'system',
+      text:
+        getChatAutoDeleteSystemText(message, currentUserID) ||
+        systemText ||
+        SYSTEM_MESSAGE_FALLBACKS[1701] ||
+        '消息自动删除设置已更新',
+    };
+  }
   if (
     message.contentType === 1201 ||
     (isGroup && GROUP_SYSTEM_MESSAGE_TYPES.has(message.contentType))

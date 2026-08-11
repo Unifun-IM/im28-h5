@@ -159,4 +159,26 @@ describe('chat message view media mapping', () => {
       quoteMessageID: 'source-server-1',
     });
   });
+
+  it('在单聊中也用当前账号投影 type1701 自动删除文案', () => {
+    /** notice 使用 Gateway 标准 system.extra 字段。 */
+    const notice = {
+      ...createMessage(1701, {
+        system: {
+          event_type: 'conversation_auto_delete_changed',
+          extra: {
+            operator_user_id: 'user-1',
+            operator_nickname: '张三',
+            auto_delete_seconds: '604800',
+            enabled: 'true',
+          },
+        },
+      }),
+      senderID: 'user-1',
+    };
+    expect(getChatMessageView(notice, false, 'user-1')).toEqual({
+      kind: 'system',
+      text: '你已设置消息在7天后自动删除',
+    });
+  });
 });

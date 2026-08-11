@@ -4,7 +4,7 @@ import { createWebIMBlacklistSync } from '../../../sync/blacklist-sync.js';
 import { createWebIMFriendApplicationSync, } from '../../../sync/friend-application-sync.js';
 import { createWebIMGroupApplicationSync, } from '../../../sync/group-application-sync.js';
 import { createWebIMJoinedGroupSync, } from '../../../sync/joined-group-sync.js';
-import { createWebIMGroupMemberSync, } from '../../../sync/group-member-sync.js';
+import { createIMGroupMentionSync, } from '../../../sync/group-mention.js';
 import { createWebIMPeerProfileSync, } from '../../../sync/peer-profile-sync.js';
 import { createWebIMConversationSync, } from '../../../sync/conversation-sync.js';
 import { createWebIMMessageSync, } from '../../../sync/message-sync.js';
@@ -19,7 +19,14 @@ export function createWebIMSync(dependencies) {
     // sharedDependencies 仅增加队列 owner，不复制 Gateway 或账号状态。
     const sharedDependencies = { ...dependencies, mutationQueue };
     // contacts 是 blacklist 好友关系 enrichment 的唯一现有 owner。
-    const contacts = createWebIMContactSync(dependencies);
+    const contacts = createWebIMContactSync(sharedDependencies);
+    // groupMentions 是群成员身份、权限和 type106 发送的唯一业务 owner。
+    const groupMentions = createIMGroupMentionSync(sharedDependencies);
+    // messages 保留旧公开入口，但生产组合显式注入同一 neutral facade。
+    const messages = createWebIMMessageSync({
+        ...sharedDependencies,
+        groupMentionSync: groupMentions,
+    });
     return {
         blacklist: createWebIMBlacklistSync({
             gatewayClient: dependencies.gatewayClient,
@@ -33,8 +40,12 @@ export function createWebIMSync(dependencies) {
         friendApplications: createWebIMFriendApplicationSync(dependencies),
         groupApplications: createWebIMGroupApplicationSync(dependencies),
         groups: createWebIMJoinedGroupSync(sharedDependencies),
-        groupMembers: createWebIMGroupMemberSync(sharedDependencies),
-        messages: createWebIMMessageSync(sharedDependencies),
+        groupMentions,
+        groupMembers: {
+            listCached: groupID => groupMentions.listMembers(groupID),
+            sync: (groupID, options) => groupMentions.syncMembers(groupID, options),
+        },
+        messages,
         peerProfile: createWebIMPeerProfileSync(sharedDependencies),
         profile: createWebIMProfileSync(dependencies),
         realtime: createWebIMRealtimeSync(sharedDependencies),
