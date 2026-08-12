@@ -35,7 +35,7 @@ async function executeMemberSync(dependencies, mutationQueue, groupID, options) 
         }
         /** remoteMembers 只有所有页面成功后才会写入。 */
         const remoteMembers = await pullAllMembers(dependencies.gatewayClient, normalizedGroupID, clampPageSize(options?.pageSize));
-        /** 用户资料必须先完整拉取，失败时不得用 ID 快照覆盖旧成员展示。 */
+        /** 用户资料属于非阻断增强，失败时复用既有 cache 或身份兜底。 */
         await refreshGroupMemberUserProfiles(context.database, dependencies.gatewayClient, remoteMembers);
         /** repository 用一个事务替换该群快照。 */
         const repository = new GroupMemberRepository(context.database);
@@ -120,6 +120,7 @@ async function mapCachedMembers(database, members) {
             nickname: profile.nickname,
             avatarURL: profile.avatarURL,
             role: memberRole(member.roleLevel),
+            roleLevel: member.roleLevel ?? 0,
         };
     });
 }

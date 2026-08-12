@@ -7,6 +7,8 @@ export declare class FriendshipRepository extends Repository {
     listFriends(): Promise<readonly Friendship[]>;
     /** 按稳定用户 ID 读取单条好友关系缓存。 */
     getByUserID(userID: string): Promise<Friendship | null>;
+    /** 一次读取多个好友关系，供群成员展示避免逐成员查询。 */
+    getByUserIDs(userIDs: readonly string[]): Promise<readonly Friendship[]>;
     replaceAll(friendships: readonly Friendship[]): Promise<void>;
     deleteByUserID(userID: string): Promise<void>;
 }

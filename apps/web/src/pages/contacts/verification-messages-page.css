@@ -1,0 +1,100 @@
+.rn-verification-messages-page {
+  min-height: 100dvh;
+  color: var(--im-text-primary);
+  background: var(--im-bg-page);
+}
+
+.rn-verification-messages-surface {
+  width: min(100%, 480px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--im-bg-app);
+  box-shadow: 0 0 36px rgba(31, 38, 46, 0.07);
+}
+
+.rn-verification-messages-header {
+  display: grid;
+  height: calc(var(--im-safe-top) + 56px);
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  align-items: end;
+  padding: var(--im-safe-top) 16px 0;
+}
+
+.rn-verification-messages-header > a,
+.rn-verification-messages-header > span {
+  display: grid;
+  height: 56px;
+  place-items: center start;
+  color: var(--im-icon-primary);
+}
+
+.rn-verification-messages-header .rn-asset-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.rn-verification-messages-header h1 {
+  align-self: center;
+  margin: 0;
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 27px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-verification-messages-tabs {
+  display: flex;
+  height: 48px;
+  align-items: flex-start;
+}
+
+.rn-verification-messages-tabs > a {
+  position: relative;
+  display: grid;
+  height: 48px;
+  place-items: center;
+  padding: 0 16px;
+  color: var(--im-text-muted);
+  font-size: 16px;
+  line-height: 24px;
+  text-decoration: none;
+}
+
+.rn-verification-messages-tabs > a.is-active {
+  color: var(--im-text-primary);
+}
+
+.rn-verification-messages-tabs > a.is-active::after {
+  position: absolute;
+  bottom: 0;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--im-brand-primary);
+  content: '';
+}
+
+.rn-verification-messages-body,
+.rn-friend-applications-embedded,
+.rn-group-verification-embedded {
+  min-height: calc(100dvh - var(--im-safe-top) - 104px);
+}
+
+.rn-verification-messages-state {
+  display: grid;
+  min-height: 100dvh;
+  place-content: center;
+  gap: 8px;
+  color: var(--im-text-primary);
+  background: var(--im-bg-page);
+  text-align: center;
+}
+
+.rn-verification-messages-state span {
+  max-width: 320px;
+  color: var(--im-text-secondary);
+}

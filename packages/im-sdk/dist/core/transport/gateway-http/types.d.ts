@@ -205,6 +205,8 @@ export interface GatewayFriend {
     readonly remark?: string;
     readonly tags?: readonly string[];
     readonly is_starred?: boolean;
+    /** 建立好友关系时由申请链保存的来源码。 */
+    readonly source_type?: string;
     readonly created_at?: string;
     readonly user?: GatewayUser;
     readonly permission?: GatewayUserPermissionSetting;
@@ -511,7 +513,7 @@ export interface GatewayDeleteFriendRequest {
     /** self 仅清空自己的聊天记录；both 清空双方聊天记录。 */
     readonly clear_scope: 'self' | 'both';
     /** 前端生成的本次删除操作唯一 ID，用于关系通知和清空操作幂等。 */
-    readonly operation_id: string;
+    readonly operation_id?: string;
 }
 export interface GatewayUpdateFriendProfileRequest {
     readonly friend_user_id: string;
@@ -825,6 +827,7 @@ export interface GatewayMarkUnreadRequest {
 export interface GatewayClearConversationRequest {
     readonly conversation_id: string;
     readonly scope?: 'self' | 'both' | 'all_members';
+    readonly operation_id: string;
 }
 export interface GatewayArchiveConversationRequest {
     readonly conversation_id: string;

@@ -235,6 +235,7 @@ export function ChatPage() {
             messages={messages}
             isGroup={isGroup}
             currentUserID={snapshot.userID}
+            groupMembers={mentionMembers.members}
             loading={loading}
             listRef={messageListRef}
             customEmojiActionDisabled={customEmojiActions.mutating}

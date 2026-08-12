@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { getContactIndexKey } from './contact-index-helpers.js';
+import {
+  compareContactIndexedNames,
+  getContactIndexKey,
+  getContactSortKey,
+} from './contact-index-helpers.js';
 
 // 联系人索引回归锁定 RN pinyin-pro 参数和 fallback 语义。
 describe('contact index helpers', () => {
@@ -16,5 +20,12 @@ describe('contact index helpers', () => {
     expect(getContactIndexKey('1号')).toBe('#');
     expect(getContactIndexKey('😊用户')).toBe('#');
     expect(getContactIndexKey('   ')).toBe('#');
+  });
+
+  it('使用 RN 同一拼音参数排序中文和拉丁名称', () => {
+    /** names 模拟群成员页面的混合展示名称。 */
+    const names = ['张三', 'Alice', '李四'];
+    expect([...names].sort(compareContactIndexedNames)).toEqual(['Alice', '李四', '张三']);
+    expect(getContactSortKey('重庆')).toBe('chongqing');
   });
 });

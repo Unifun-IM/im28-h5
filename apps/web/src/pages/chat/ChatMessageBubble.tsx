@@ -3,7 +3,9 @@ import {
   canEditWebIMTextMessage,
   canForwardWebIMMessage,
   canRetryWebIMMessage,
+  reconcilePresetEmojiEntitiesAfterTextChange,
   type Message,
+  type WebIMGroupMember,
 } from '@im28/im-sdk/web';
 
 import incomingTailDarkURL from '../../assets/rn/assets/icons/chat/bubbletail-left-dark.svg';
@@ -24,11 +26,17 @@ import type { ChatMessageView } from './chat-message-view.js';
 import { formatChatMessageTimeText } from './chat-message-edit-view.js';
 import type { ChatQuoteSourceView } from './chat-quote-view.js';
 import { canQuoteChatMessage } from './chat-quote-view.js';
+import {
+  getChatGroupSenderView,
+  resolveChatMentionDisplayText,
+} from './chat-group-message-view.js';
+import { getChatAudioBubbleWidth } from './chat-media-layout.js';
 
 /** Chat 气泡只接收已完成日期与连续分组计算的消息条目。 */
 interface ChatMessageBubbleProps {
   readonly entry: Extract<ChatMessageListEntry, { readonly kind: 'message' }>;
   readonly isGroup: boolean;
+  readonly membersByID: ReadonlyMap<string, WebIMGroupMember>;
   readonly customEmojiActionDisabled: boolean;
   readonly onAddCustomEmoji: (emojiID: string) => Promise<boolean>;
   readonly retryDisabled: boolean;
@@ -50,6 +58,7 @@ interface ChatMessageBubbleProps {
 export function ChatMessageBubble({
   entry,
   isGroup,
+  membersByID,
   customEmojiActionDisabled,
   onAddCustomEmoji,
   retryDisabled,
@@ -81,14 +90,54 @@ export function ChatMessageBubble({
   } as CSSProperties;
   // forwardAllowed 复用 shared 来源 guard 控制动作和多选按钮。
   const forwardAllowed = canForwardWebIMMessage(message);
+  // senderView 复用 SDK 群成员名称、头像和角色投影。
+  const senderView = getChatGroupSenderView(message, membersByID);
+  // senderInsideBubble 对齐 RN：普通媒体名称在上方，其余名称属于气泡内容。
+  const senderInsideBubble = !mine && isGroup && entry.showSenderName &&
+    (Boolean(message.forwardOrigin) || (view.kind !== 'image' && view.kind !== 'video'));
+  // senderOutsideBubble 仅用于 RN 图片与视频的媒体标题行。
+  const senderOutsideBubble = !mine && isGroup && entry.showSenderName &&
+    !message.forwardOrigin && (view.kind === 'image' || view.kind === 'video');
+  // displayView 只替换可见 mention 文本，不改变持久化身份或正文。
+  const displayView: ChatMessageView = view.kind === 'text' && isGroup
+    ? (() => {
+        /** text 是按当前群成员快照解析后的页面文案。 */
+        const text = resolveChatMentionDisplayText(message, view.text, membersByID);
+        if (text === view.text) return view;
+        /** document 复用 SDK 的 UTF-16 entity 偏移校正，避免昵称替换破坏表情。 */
+        const document = reconcilePresetEmojiEntitiesAfterTextChange(
+          { text: view.text, entities: view.entities ?? [] },
+          text,
+        );
+        return {
+          kind: 'text' as const,
+          text: document.text,
+          ...(document.entities.length ? { entities: document.entities } : {}),
+        };
+      })()
+    : view;
+  // bubbleStyle 仅为语音应用 RN 时长宽度，其他消息保持内容自适应。
+  const bubbleStyle = view.kind === 'audio'
+    ? { width: getChatAudioBubbleWidth(view.durationSeconds) }
+    : undefined;
+  // senderIdentity 在气泡内外共用同一名称和角色结构。
+  const senderIdentity = (
+    <span className="rn-chat-sender-identity">
+      <span>{senderView.displayName}</span>
+      {senderView.roleLabel ? (
+        <small>{senderView.roleLabel}</small>
+      ) : null}
+    </span>
+  );
   // bubble 保持多选态与普通动作态共用同一消息内容 DOM。
   const bubble = (
-    <span className="rn-chat-bubble">
+    <span className="rn-chat-bubble" style={bubbleStyle}>
+      {senderInsideBubble ? senderIdentity : null}
       {message.forwardOrigin ? (
         <ChatForwardOrigin origin={message.forwardOrigin} mine={mine} />
       ) : null}
       <ChatMessageContent
-        view={view}
+        view={displayView}
         messageID={message.clientMsgID}
         mine={mine}
         quoteSource={quoteSource}
@@ -121,7 +170,14 @@ export function ChatMessageBubble({
       {!mine && isGroup ? (
         entry.showSenderAvatar ? (
           <span className="rn-chat-sender-avatar" style={avatarStyle}>
-            {getRNAvatarInitial(message.senderID)}
+            {getRNAvatarInitial(senderView.displayName)}
+            {senderView.avatarURL ? (
+              <img
+                src={senderView.avatarURL}
+                alt=""
+                onError={event => { event.currentTarget.hidden = true; }}
+              />
+            ) : null}
           </span>
         ) : (
           <span className="rn-chat-sender-avatar-placeholder" />
@@ -129,8 +185,8 @@ export function ChatMessageBubble({
       ) : null}
 
       <span className="rn-chat-message-column">
-        {!mine && entry.showSenderName ? (
-          <span className="rn-chat-sender-name">{message.senderID}</span>
+        {senderOutsideBubble ? (
+          <span className="rn-chat-sender-name">{senderIdentity}</span>
         ) : null}
         <span className="rn-chat-message-line">
           {mine ? (

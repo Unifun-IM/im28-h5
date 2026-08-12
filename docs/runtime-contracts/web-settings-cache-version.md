@@ -18,7 +18,7 @@ Current verdict: `blocked-storage-semantics`；不注册 route、不显示空间
 | local data class | current owner | disposable | clear decision |
 | :--- | :--- | :--- | :--- |
 | auth session | `sessionStorage` / auth runtime | no | **PRESERVE**；清缓存不得退出账号 |
-| device identity | `localStorage` / device store | no | **PRESERVE**；清缓存不得改变设备身份 |
+| device identity | `sessionStorage` / tab device store | no | **PRESERVE**；清缓存不得改变当前 tab 设备身份 |
 | theme preference | `localStorage` / Web theme owner | no | **PRESERVE** |
 | conversations/messages/cursors/calls | account SQLite snapshot | partially | remote rows 可重建，但当前与 local state 共库，禁止整库删除 |
 | drafts、`sending/failed` messages、`pending_tasks` | account SQLite snapshot | no without product decision | **PRESERVE**；Gateway 不能完整恢复 |

@@ -147,23 +147,6 @@ function isMentionConversationPreview(text: string): boolean {
   return text.startsWith('[有人@我]') || text.startsWith('[所有人]');
 }
 
-/** 按标题和当前摘要执行 RN 组件已有的本地搜索分支。 */
-export function filterConversationListItems(
-  items: readonly WebIMConversationListItem[],
-  keyword: string,
-): readonly WebIMConversationListItem[] {
-  // query 统一 trim/lowercase，空值直接保留 Repository 排序。
-  const query = keyword.trim().toLocaleLowerCase();
-  if (!query) {
-    return items;
-  }
-  return items.filter(item => {
-    // searchableText 只组合用户当前可见的标题和摘要。
-    const searchableText = `${getConversationTitle(item.conversation)} ${getConversationListPreview(item).text}`.toLocaleLowerCase();
-    return searchableText.includes(query);
-  });
-}
-
 /** 汇总非静音会话未读数，供 RN 标题“聊天(n)”展示。 */
 export function getConversationUnreadTotal(
   items: readonly WebIMConversationListItem[],

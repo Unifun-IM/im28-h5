@@ -11,6 +11,7 @@ export interface IMGroupMentionMember {
     readonly nickname: string;
     readonly avatarURL: string;
     readonly role: 'owner' | 'admin' | 'member';
+    readonly roleLevel: number;
 }
 /** 群提及发送只接收稳定群、会话和用户身份。 */
 export interface IMSendGroupMentionOptions {

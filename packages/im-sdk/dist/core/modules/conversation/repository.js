@@ -22,9 +22,11 @@ export class ConversationRepository extends Repository {
           auto_delete_seconds,
           auto_delete_updated_by,
           auto_delete_updated_at,
+          clear_before_seq,
+          list_hidden,
           draft,
           raw_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT is_pinned FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT pinned_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT is_muted FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_seconds FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_updated_by FROM conversations WHERE conversation_id = ?), NULL), COALESCE(?, (SELECT auto_delete_updated_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT draft FROM conversations WHERE conversation_id = ?), NULL), ?)`, [
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT is_pinned FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT pinned_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT is_muted FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_seconds FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_updated_by FROM conversations WHERE conversation_id = ?), NULL), COALESCE(?, (SELECT auto_delete_updated_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT clear_before_seq FROM conversations WHERE conversation_id = ?), '0'), COALESCE(?, (SELECT list_hidden FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT draft FROM conversations WHERE conversation_id = ?), NULL), ?)`, [
             conversation.conversationID,
             conversation.type,
             conversation.targetID,
@@ -46,6 +48,12 @@ export class ConversationRepository extends Repository {
             conversation.conversationID,
             conversation.autoDeleteUpdatedAt ?? null,
             conversation.conversationID,
+            conversation.clearBeforeSeq ?? null,
+            conversation.conversationID,
+            conversation.listHidden === undefined
+                ? null
+                : Number(conversation.listHidden),
+            conversation.conversationID,
             conversation.draft ?? null,
             conversation.conversationID,
             JSON.stringify(conversation),
@@ -53,21 +61,21 @@ export class ConversationRepository extends Repository {
     }
     async getByID(conversationID) {
         const rows = await this.query(statement('SELECT * FROM conversations WHERE conversation_id = ?', [conversationID]));
-        return rows[0] ? mapConversationRow(rows[0]) : null;
+        return rows[0] ? mapStoredConversationRow(rows[0]) : null;
     }
     async list(options = {}) {
         const limit = options.limit ?? 50;
         const offset = options.offset ?? 0;
         if (options.archived !== undefined) {
-            const rows = await this.query(statement('SELECT * FROM conversations WHERE is_archived = ? ORDER BY is_pinned DESC, pinned_at DESC, updated_at DESC LIMIT ? OFFSET ?', [
+            const rows = await this.query(statement('SELECT * FROM conversations WHERE is_archived = ? AND list_hidden = 0 ORDER BY is_pinned DESC, pinned_at DESC, updated_at DESC LIMIT ? OFFSET ?', [
                 Number(options.archived),
                 limit,
                 offset,
             ]));
-            return rows.map(mapConversationRow);
+            return rows.map(mapStoredConversationRow);
         }
-        const rows = await this.query(statement('SELECT * FROM conversations ORDER BY is_pinned DESC, pinned_at DESC, updated_at DESC LIMIT ? OFFSET ?', [limit, offset]));
-        return rows.map(mapConversationRow);
+        const rows = await this.query(statement('SELECT * FROM conversations WHERE list_hidden = 0 ORDER BY is_pinned DESC, pinned_at DESC, updated_at DESC LIMIT ? OFFSET ?', [limit, offset]));
+        return rows.map(mapStoredConversationRow);
     }
     async replaceAll(conversations) {
         await this.transaction(async (tx) => {
@@ -88,9 +96,11 @@ export class ConversationRepository extends Repository {
                 auto_delete_seconds,
                 auto_delete_updated_by,
                 auto_delete_updated_at,
+                clear_before_seq,
+                list_hidden,
                 draft,
                 raw_json
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
                 conversation.conversationID,
                 conversation.type,
                 conversation.targetID,
@@ -106,13 +116,43 @@ export class ConversationRepository extends Repository {
                 conversation.autoDeleteSeconds ?? 0,
                 conversation.autoDeleteUpdatedBy ?? null,
                 conversation.autoDeleteUpdatedAt ?? 0,
+                conversation.clearBeforeSeq ?? '0',
+                Number(conversation.listHidden ?? false),
                 conversation.draft || null,
                 JSON.stringify(conversation),
             ]))));
         });
     }
+    /** 只替换普通会话集合，保留独立归档端点维护的归档快照。 */
+    async replaceUnarchived(conversations) {
+        await this.transaction(async (tx) => {
+            await tx.execute(statement('DELETE FROM conversations WHERE is_archived = 0'));
+            await Promise.all(conversations.map(conversation => tx.execute(buildConversationInsertStatement({
+                ...conversation,
+                isArchived: false,
+            }))));
+        });
+    }
+    /** 用服务端完整归档快照收敛索引，同时保留已取消归档会话的其他本地字段。 */
+    async reconcileArchivedSnapshot(conversations) {
+        /** archivedIDs 是本次服务端完整快照中的稳定会话集合。 */
+        const archivedIDs = new Set(conversations.map(item => item.conversationID));
+        await this.transaction(async (tx) => {
+            /** currentArchivedRows 与写入处于同一事务，避免并发动作造成快照误判。 */
+            const currentArchivedRows = await tx.query(statement('SELECT conversation_id FROM conversations WHERE is_archived = 1'));
+            await Promise.all(currentArchivedRows
+                .map(row => readRequiredString(row, 'conversation_id'))
+                .filter(conversationID => !archivedIDs.has(conversationID))
+                .map(conversationID => tx.execute(statement('UPDATE conversations SET is_archived = 0, list_hidden = 0 WHERE conversation_id = ?', [conversationID]))));
+            await Promise.all(conversations.map(conversation => tx.execute(buildConversationInsertStatement({
+                ...conversation,
+                isArchived: true,
+                listHidden: false,
+            }))));
+        });
+    }
     async updateLatestMessage(conversationID, latestMessageID, updatedAt) {
-        await this.execute(statement('UPDATE conversations SET latest_message_id = ?, updated_at = ? WHERE conversation_id = ?', [
+        await this.execute(statement('UPDATE conversations SET latest_message_id = ?, list_hidden = 0, updated_at = ? WHERE conversation_id = ?', [
             latestMessageID,
             updatedAt,
             conversationID,
@@ -142,13 +182,16 @@ export class ConversationRepository extends Repository {
         await this.execute(statement('DELETE FROM conversations WHERE conversation_id = ?', [conversationID]));
     }
 }
-function mapConversationRow(row) {
+/** 将 conversations 表行恢复为平台中立会话。 */
+export function mapStoredConversationRow(row) {
     const name = readOptionalString(row, 'name');
     const faceURL = readOptionalString(row, 'face_url');
     const latestMessageID = readOptionalString(row, 'latest_message_id');
     const draft = readOptionalString(row, 'draft');
     /** autoDeleteUpdatedBy 保留服务端最近操作者，可为空。 */
     const autoDeleteUpdatedBy = readOptionalString(row, 'auto_delete_updated_by');
+    /** clearBeforeSeq 是当前账号已确认的单调清空边界。 */
+    const clearBeforeSeq = readRequiredString(row, 'clear_before_seq');
     const raw = parseJsonColumn(row, 'raw_json', {});
     return {
         ...raw,
@@ -166,6 +209,8 @@ function mapConversationRow(row) {
         autoDeleteSeconds: readRequiredNumber(row, 'auto_delete_seconds'),
         ...(autoDeleteUpdatedBy !== undefined ? { autoDeleteUpdatedBy } : {}),
         autoDeleteUpdatedAt: readRequiredNumber(row, 'auto_delete_updated_at'),
+        clearBeforeSeq,
+        listHidden: readRequiredNumber(row, 'list_hidden') === 1,
         draft: draft ?? '',
         updatedAt: readRequiredNumber(row, 'updated_at'),
     };
@@ -176,8 +221,59 @@ function readConversationArchivedFlag(conversation) {
         ? conversation.payload
         : {};
     return Number(Boolean(conversation.isArchived ??
-        payload.archived ??
-        payload.list_hidden ??
-        payload.listHidden));
+        payload.archived));
+}
+/** 构造事务内完整会话写入语句，避免归档同步绕过 Repository 字段契约。 */
+function buildConversationInsertStatement(conversation) {
+    return statement(`INSERT OR REPLACE INTO conversations (
+      conversation_id,
+      type,
+      target_id,
+      name,
+      face_url,
+      latest_message_id,
+      unread_count,
+      updated_at,
+      is_archived,
+      is_pinned,
+      pinned_at,
+      is_muted,
+      auto_delete_seconds,
+      auto_delete_updated_by,
+      auto_delete_updated_at,
+      clear_before_seq,
+      list_hidden,
+      draft,
+      raw_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT is_pinned FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT pinned_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT is_muted FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_seconds FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_updated_by FROM conversations WHERE conversation_id = ?), NULL), COALESCE(?, (SELECT auto_delete_updated_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT clear_before_seq FROM conversations WHERE conversation_id = ?), '0'), COALESCE(?, (SELECT list_hidden FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT draft FROM conversations WHERE conversation_id = ?), NULL), ?)`, [
+        conversation.conversationID,
+        conversation.type,
+        conversation.targetID,
+        conversation.name ?? null,
+        conversation.faceURL ?? null,
+        conversation.latestMessageID ?? null,
+        conversation.unreadCount,
+        conversation.updatedAt,
+        readConversationArchivedFlag(conversation),
+        conversation.isPinned === undefined ? null : Number(conversation.isPinned),
+        conversation.conversationID,
+        conversation.pinnedAt ?? null,
+        conversation.conversationID,
+        conversation.isMuted === undefined ? null : Number(conversation.isMuted),
+        conversation.conversationID,
+        conversation.autoDeleteSeconds ?? null,
+        conversation.conversationID,
+        conversation.autoDeleteUpdatedBy ?? null,
+        conversation.conversationID,
+        conversation.autoDeleteUpdatedAt ?? null,
+        conversation.conversationID,
+        conversation.clearBeforeSeq ?? null,
+        conversation.conversationID,
+        conversation.listHidden === undefined ? null : Number(conversation.listHidden),
+        conversation.conversationID,
+        conversation.draft ?? null,
+        conversation.conversationID,
+        JSON.stringify(conversation),
+    ]);
 }
 //# sourceMappingURL=repository.js.map

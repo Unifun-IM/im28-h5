@@ -12,6 +12,7 @@ export interface WebIMGroupMember {
     readonly nickname: string;
     readonly avatarURL: string;
     readonly role: WebIMGroupMemberRole;
+    readonly roleLevel: number;
 }
 /** 群成员全量同步参数。 */
 export interface WebIMGroupMemberSyncOptions {

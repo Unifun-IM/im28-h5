@@ -6,6 +6,7 @@ export interface MappedRealtimeMessage {
 }
 /** 消息批次写入后用于推进会话的聚合结果。 */
 export interface PersistedRealtimeMessageBatch {
+    readonly messages: readonly Message[];
     readonly unreadDelta: number;
 }
 /** 递归收集带稳定身份的 Gateway 消息。 */

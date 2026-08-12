@@ -101,7 +101,14 @@ export function CallsPage() {
     return () => {
       active = false;
     };
-  }, [cacheRevision, calls, filter, keyword, snapshot.userID]);
+  }, [
+    cacheRevision,
+    calls,
+    filter,
+    keyword,
+    snapshot.dataVersion,
+    snapshot.userID,
+  ]);
 
   /** 加载当前筛选的下一段 SQLite cache。 */
   const loadMore = useCallback(async () => {

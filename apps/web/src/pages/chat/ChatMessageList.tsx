@@ -1,5 +1,5 @@
 import { useMemo, type RefObject } from 'react';
-import type { Message } from '@im28/im-sdk/web';
+import type { Message, WebIMGroupMember } from '@im28/im-sdk/web';
 
 import { ChatMessageBubble } from './ChatMessageBubble.js';
 import { buildChatMessageListEntries } from './chat-message-list-view.js';
@@ -8,12 +8,14 @@ import {
   resolveChatQuoteSource,
 } from './chat-quote-view.js';
 import { focusChatMessageRow } from './chat-message-focus.js';
+import { indexChatGroupMembers } from './chat-group-message-view.js';
 
 /** RN 消息列表只消费 Repository 消息和页面加载状态。 */
 interface ChatMessageListProps {
   readonly messages: readonly Message[];
   readonly isGroup: boolean;
   readonly currentUserID: string;
+  readonly groupMembers: readonly WebIMGroupMember[];
   readonly loading: boolean;
   readonly listRef: RefObject<HTMLElement | null>;
   readonly customEmojiActionDisabled: boolean;
@@ -36,6 +38,7 @@ export function ChatMessageList({
   messages,
   isGroup,
   currentUserID,
+  groupMembers,
   loading,
   listRef,
   customEmojiActionDisabled,
@@ -56,6 +59,11 @@ export function ChatMessageList({
   const entries = useMemo(
     () => buildChatMessageListEntries(messages, isGroup, currentUserID),
     [currentUserID, isGroup, messages],
+  );
+  // membersByID 复用当前页面已同步的 SDK 群成员快照。
+  const membersByID = useMemo(
+    () => indexChatGroupMembers(groupMembers),
+    [groupMembers],
   );
 
   /** 将已解析引用来源滚动到列表中央并短暂聚焦。 */
@@ -84,6 +92,7 @@ export function ChatMessageList({
             key={entry.key}
             entry={entry}
             isGroup={isGroup}
+            membersByID={membersByID}
             customEmojiActionDisabled={customEmojiActionDisabled}
             onAddCustomEmoji={onAddCustomEmoji}
             retryDisabled={retryDisabled}

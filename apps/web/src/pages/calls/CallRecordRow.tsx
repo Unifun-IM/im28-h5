@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { GatewayCall } from '@im28/im-sdk/web';
+import { Link } from 'react-router-dom';
 
 import directionIconURL from '../../assets/rn/assets/icons/imm28/arrow-up-right.regular.svg';
 import checkedIconURL from '../../assets/rn/assets/icons/imm28/check-circle.solid.svg';
@@ -56,6 +57,30 @@ export function CallRecordRow({
     : isCanceledCall(call) ? phoneDisabledIconURL : phoneIconURL;
   // incoming 控制方向箭头旋转。
   const incoming = getCallDirection(call, selfID) === 'incoming';
+  /** content 复用编辑态和普通导航态的记录主体。 */
+  const content = (
+    <>
+      <span className="rn-call-avatar" style={avatarStyle}>
+        <span>{getRNAvatarInitial(name || peerID)}</span>
+        {call.avatar_url?.trim() ? <img src={call.avatar_url} alt="" loading="lazy" onError={event => {
+          event.currentTarget.hidden = true;
+        }} /> : null}
+      </span>
+      <div className="rn-call-body">
+        <div className="rn-call-text">
+          <strong className={missed ? 'is-missed' : ''}>{name}</strong>
+          <span className="rn-call-meta">
+            <RNAssetIcon assetURL={statusIconURL} />
+            {formatCallStatus(call)}
+          </span>
+        </div>
+        <div className={`rn-call-side${missed ? ' is-missed' : ''}`}>
+          <time>{formatCallTime(call.started_at)}</time>
+          <RNAssetIcon assetURL={directionIconURL} className={incoming ? 'is-incoming' : ''} />
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <article className={`rn-call-row${editing ? ' is-editing' : ''}`}>
@@ -70,27 +95,17 @@ export function CallRecordRow({
           <RNAssetIcon assetURL={selected ? checkedIconURL : uncheckedIconURL} />
         </button>
       ) : null}
-      <div className="rn-call-row-content">
-        <span className="rn-call-avatar" style={avatarStyle}>
-          <span>{getRNAvatarInitial(name || peerID)}</span>
-          {call.avatar_url?.trim() ? <img src={call.avatar_url} alt="" loading="lazy" onError={event => {
-            event.currentTarget.hidden = true;
-          }} /> : null}
-        </span>
-        <div className="rn-call-body">
-          <div className="rn-call-text">
-            <strong className={missed ? 'is-missed' : ''}>{name}</strong>
-            <span className="rn-call-meta">
-              <RNAssetIcon assetURL={statusIconURL} />
-              {formatCallStatus(call)}
-            </span>
-          </div>
-          <div className={`rn-call-side${missed ? ' is-missed' : ''}`}>
-            <time>{formatCallTime(call.started_at)}</time>
-            <RNAssetIcon assetURL={directionIconURL} className={incoming ? 'is-incoming' : ''} />
-          </div>
-        </div>
-      </div>
+      {editing ? (
+        <div className="rn-call-row-content">{content}</div>
+      ) : (
+        <Link
+          className="rn-call-row-content"
+          aria-label={`通话记录 ${name}`}
+          to={`/calls/${encodeURIComponent(callID)}`}
+        >
+          {content}
+        </Link>
+      )}
     </article>
   );
 }

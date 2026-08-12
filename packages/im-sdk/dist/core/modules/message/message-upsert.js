@@ -11,6 +11,7 @@ export function createMessageUpsertStatement(message) {
       status,
       send_time,
       seq,
+      seq_text,
       payload_json,
       entities_json,
       mentions_json,
@@ -21,7 +22,7 @@ export function createMessageUpsertStatement(message) {
       deleted,
       revoked,
       updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT local_extra_json FROM messages WHERE client_msg_id = ?), NULL), COALESCE((SELECT deleted FROM messages WHERE client_msg_id = ?), 0), COALESCE((SELECT revoked FROM messages WHERE client_msg_id = ?), 0), ?)`, [
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT local_extra_json FROM messages WHERE client_msg_id = ?), NULL), COALESCE((SELECT deleted FROM messages WHERE client_msg_id = ?), 0), COALESCE((SELECT revoked FROM messages WHERE client_msg_id = ?), 0), ?)`, [
         message.clientMsgID,
         message.serverMsgID ?? null,
         message.conversationID,
@@ -31,6 +32,7 @@ export function createMessageUpsertStatement(message) {
         message.status,
         message.sendTime,
         message.seq ?? null,
+        message.seqString ?? (message.seq === undefined ? null : String(message.seq)),
         JSON.stringify(message.payload),
         message.entities?.length ? JSON.stringify(message.entities) : null,
         message.mentions?.length ? JSON.stringify(message.mentions) : null,

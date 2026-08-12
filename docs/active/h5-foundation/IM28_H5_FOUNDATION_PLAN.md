@@ -28,9 +28,9 @@
 
 ## Active Convergence Gate
 
-- `W6.a6.12.1-rn-web-single-track-convergence-gate`：consumer matrix 已建立；conversation settings 与 auto-delete 已通过中性 facade、RN/Web actual callers 和旧路径删除完成首个收敛，下一组处理 message mutation、mention、search、sync/realtime。
+- `W6.a6.12.1-rn-web-single-track-convergence-gate`：consumer matrix 已建立；conversation settings、auto-delete、conversation read/manual-unread/archive、message mutation、mention、search、realtime 和 clear-history 均已通过中性 facade、RN/Web actual callers 与旧路径删除完成本地收敛。
 - H5 已闭环能力保留局部证据，但在 RN 接入同一 shared implementation 前只能标记 `shared-core-ready` 或 `compat-debt`。
-- `W6.a6.18.3.3.1-shared-clear-history-core` 状态改为 `blocked-by-convergence-gate`，不得在既有双轨上继续增加共享业务表面。
+- `W6.a6.18.3.3.1/.3.3.2` 已完成 shared clear-history core 与 RN/H5 production caller 收敛；旧 RN 整删/type2102 双轨已删除，真实破坏性 mutation 仍必须单独授权。
 
 ## Non-goals
 
@@ -47,8 +47,8 @@
 | Web application | Vite + React Router 根壳、404 与 authenticated `PrimaryTabsLayout` 已实现 | `apps/web`; `architecture.md` |
 | RN parity foundation | 迁移合同已冻结；466 个资产按字节同步；auth entry、conversation、chat、contacts/contact-profile、friend/group applications、calls、me/profile/security、settings、global tab shell 与 onboarding core 均为 local/acceptance-gated；valid authenticated data/mutations、onboarding context、cache/network blocked or gated | `docs/rn-h5-migration-contract.md`; `apps/web/src/assets/rn`; `apps/web/src/styles/rn-theme.css` |
 | shared SDK | `@im28/im-sdk/core` 提供平台中立 contract、Repository 和 Gateway client | `../im28-sdk/src/core.ts` |
-| Web SDK/runtime | `sql.js + IndexedDB`、login/register/account-credential auth-bound lifecycle、notification/permission settings facade、public platform-term/client-version adapters、共享 mutation queue、HTTP/realtime sync、remote contact list/user search、peer profile/conversation/apply、call-record cache/sync/delete、current-profile read/update、preset/custom emoji、same-row retry、uploaded-media checkpoint recovery、shared forward、群 mention core、未读 mention、sender cache priority 与聊天缓存关键词/类型/时间范围查询已实现；当前 SDK Web 全量共 52 文件/165 测试 | `../im28-sdk/src/platforms/web/runtime/**`; `../im28-sdk/src/platforms/web/storage/**`; `../im28-sdk/src/sync/**` |
-| Gateway runtime | 本地 auth/realtime/account DB 实现与验证已通过；真实环境 smoke 保留为 deployment gate | `docs/runtime-contracts/web-gateway-runtime.md` |
+| Web SDK/runtime | `sql.js + IndexedDB`、login/register/account-credential auth-bound lifecycle、notification/permission settings facade、public platform-term/client-version adapters、共享 mutation queue、HTTP/realtime sync、remote contact list/user search、peer profile/conversation/apply、call-record cache/sync/delete、current-profile read/update、preset/custom emoji、same-row retry、uploaded-media checkpoint recovery、shared forward、群 mention/realtime/clear-history/list-actions core 与聊天缓存关键词/类型/时间范围查询已实现；当前 SDK Web 全量共 59 文件/204 测试 | `../im28-sdk/src/platforms/web/runtime/**`; `../im28-sdk/src/platforms/web/storage/**`; `../im28-sdk/src/sync/**` |
+| Gateway runtime | real phone-code login、refresh restore、Gateway-backed reads、two-account tab isolation and dual WebSocket online passed；realtime delivery/list-back and offline SQLite-hit remain deployment gates | `docs/runtime-contracts/web-gateway-runtime.md` |
 | package shape | H5 workspace 仅保留 `apps/web`；浏览器 SDK 已迁入独立兄弟 Git 仓库 | `package.json`; `../im28-sdk/package.json` |
 
 ## Workstreams
@@ -86,10 +86,10 @@
 
 | gate | blocks | does_not_block |
 | :--- | :--- | :--- |
-| `W3.real-gateway` | W3 closeout、W4/W6 data-backed final acceptance、真实聊天 smoke | W4 contract/sync 与 W6 source mapping/asset/theme/local UI implementation |
+| `W3.real-gateway` | realtime delivery/list-back、offline SQLite-hit、W3 closeout and W4/W6 mutation-backed final acceptance | read-only real login/data、dual-account online、W4 contract/sync and W6 local implementation |
 | `W5.browser-matrix` | storage production acceptance | W6 local style/route/API implementation |
 
-W4 本地实现以 W3 code/contract/storage gates 为 entry；缺少部署 URL 或测试账号不能被解释为 W3/W4 已验收。
+W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实登录/读取/online 不能被解释为消息投递、离线 cache 或 mutation 已验收。
 
 ### `W5` 生产化门禁
 
@@ -148,9 +148,26 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；缺少部署 URL �
   - `W6.a6.18.3.2.1-shared-auto-delete-core` 已完成本地闭环：Conversation/schema v11、Repository、严格 read/update 与 type 1701 durable-message/setting convergence 由 shared SDK 单一持有；真实 mutation 不进入本地验收。
   - `W6.a6.18.3.2.2-h5-auto-delete-route` 已完成本地闭环：React Router 子页复刻 RN 九档，单聊开放、群聊 owner/admin fail-closed，显式确认后才调用 shared mutation，单聊/群聊 type 1701 使用操作者感知文案；真实 update 与第二账号 realtime 仍待授权。
   - `W6.a6.18.3.3-clear-history-contract-trace` 已完成只读冻结：`self|both|all_members`、stable operation ID、Gateway cursor、schema v12 clear boundary/list visibility、type 2102 control event、permission 与 route 后果均有唯一 owner；旧 OpenIM fallback、好友删除和退群 clear-history 排除。
-  - `W6.a6.18.3.3.1-shared-clear-history-core` 暂停于 `blocked-by-convergence-gate`；setting/auto-delete caller 已收敛，但相关 sync/realtime consumer 仍未收敛，暂不恢复 schema/Repository/facade/realtime deterministic chain。真实 `self|both|all_members`、页面确认与 destructive browser acceptance 继续保持授权门。
+  - `W6.a6.18.3.3.1-shared-clear-history-core` 已完成本地闭环：schema v12、精确 uint64 seq/cursor、stable operation ID、success-only transaction、单聊 list-hidden、type2102 幂等及 history/realtime late-message guard 由 shared SDK 单一持有；Web composition 已接入，RN/H5 production caller convergence 与真实 `self|both|all_members` acceptance 仍未完成。
+  - `W6.a6.18.3.3.2-clear-history-consumer-convergence` 已完成本地闭环：RN 主动 action/type2102、Web runtime 和 H5 settings action 均委托 `createIMConversationClearSync`；旧 RN Gateway/本地整会话删除、OpenIM fallback 与控制事件业务分支已删除，H5 只保留 scope 文案、确认和导航。真实 `self|both|all_members` mutation 与双账号 list-back 仍需显式授权。
+  - `W6.a6.18.3.4-h5-group-introduction-readonly` 已完成本地闭环：群设置按 RN 顺序显示群简介副标题并进入可深链 React Router 子页；页面只从当前账号会话与 joined-group shared facade 读取真实简介，空值、单聊误入、会话/群资料缺失均显式处理，不复制编辑 mutation。
   - `W6.a5.2.1.1-contact-pinyin-index-parity` 已完成本地闭环：H5 联系人展示层复用 RN `pinyin-pro@3.28.1` 和同一姓氏优先参数，中文索引、数字/符号 fallback 与分组顺序均有纯函数回归和真实 7 行只读证明；SDK/RN runtime 未改动。
   - `W6.a5.2.1.2-contact-route-code-split` 已完成本地闭环：`/contacts` 经 React Router `React.lazy + Suspense` 按路由加载，搜索过滤从拼音分组模块拆出；生产 main chunk 从 1,088.14 kB/366.35 kB gzip 降至 793.79 kB/222.24 kB gzip，联系人 chunk 为 294.92 kB/145.52 kB gzip。
+  - `W6.a5.2.1.4-contact-list-interaction-contract-freeze` 已完成本地闭环：联系人页面先读账号 SQLite cache 再远端刷新，触屏下拉与会话列表共用单一浏览器 hook；右侧索引补齐 RN 顶部图标和活动态。RN 长按菜单四动作已冻结，但 H5 不在联系人 shared facade 缺失时创建部分菜单或 Web-only mutation。
+  - `W6.a5.2.1.5.1-shared-friend-delete-core` 已完成本地闭环：SDK 以一次 Gateway `friend/delete` 和 success-only SQLite 事务统一删除关系、目标单聊与消息；RN/Web 均消费同一 facade，RN 菜单不再追加第二次会话删除。未执行真实破坏性请求。
+  - `W6.a5.2.1.5.2-shared-user-card-core` 已完成本地闭环：SDK 统一名片目标过滤与一次批量 share operation，非空附言复用 shared direct-conversation mapper/Repository 和 type101 状态机；RN/Web 均消费同一 contact facade，旧 RN Gateway/helper 编排已删除。未执行真实分享或发送。
+  - `W6.a5.2.1.5.3.1-shared-rtc-control-convergence` 已完成本地闭环：SDK 统一认证、稳定 ID、六项通话信令、LiveKit 凭证与 E2EE fail-closed；RN/Web production composition 均消费 `createIMCallControlSync`，旧 RN Gateway 控制 helper 和重复 token 校验已删除。Web LiveKit room/permission/route lifecycle 仍由 `.1.5.3.2` 平台 adapter 承接，未执行真实呼叫或媒体权限。
+  - `W6.a5.2.1.5.3.2.1-web-call-media-session` 已完成本地闭环：SDK `/web` 通过注入式 `WebIMCallMediaPort` 单一持有连接、麦克风/摄像头、参与者、重连、自动播放恢复和终止快照，不保存 token、不进入 RN 包且不制造假房间。
+  - `W6.a5.2.1.5.3.2.2-web-livekit-client-port` 已完成本地闭环：SDK Web port 映射真实 Room/track/device event，outgoing owner 组合 shared start/cancel/hangup/token-refresh 和媒体补偿；H5 全局 Provider 与 `/calls/active` 只持有 DOM/route/可见错误。LiveKit 在明确呼出且 Gateway start 成功后的 media connect 动态加载；未执行真实呼叫或权限。
+  - `W6.a5.2.1.5.4-contact-action-menu-ui` 已完成本地闭环：H5 联系人行复用 300ms/8px 长按合同并渲染 RN 四动作；消息/通话先走 shared direct-conversation facade，通话交给唯一 Web call owner，名片分享由独立 React Router 好友选择页确认后调用 shared facade，删除保留 `self|both` 二次确认。未执行真实会话创建、名片分享、删除、呼叫或媒体权限。
+  - `W6.a5.2.1.5.6-friend-source-convergence` 已完成本地与真实账号只读闭环：Gateway `Friend.source_type` 进入共享 DTO，SDK `friend-source.ts` 统一来源码、搜索推断与历史兼容文案；RN 删除页面 helper，H5 删除申请页映射表并由资料 facade 输出 `sourceType/sourceLabel`。真实好友资料显示“通过ID添加”和服务端添加时间，所有信息行左右占满卡片；未执行任何 mutation、通话或媒体权限。
+  - `W6.a5.2.1.5.7-incoming-call-ringtone-contract` 已完成合同与第一步 consumer convergence：SDK strict parser 统一 type1601..1608、system/custom 包装、必填字段和 event ID 去重，RN 生产消息 helper 改为薄调用且原来来电 Provider/通知/消息行为回归通过；后续 runtime core 已由 `.5.7.1` 闭环，ringtone/UI 留到 `.5.7.2`，未执行真实呼叫、声音或权限。
+  - `W6.a5.2.1.5.7.1-incoming-call-runtime-core` 已完成本地闭环：SDK `incoming-call-lifecycle.ts` 统一 event/call 去重、同 call accept/终态清理、终态先到防复活、有界状态和 pending 校验；Web runtime 订阅过程通知，在 login/restore/reconnect 与显式 refresh 时恢复 pending，公开 snapshot 不含 token，账号切换/退出清理身份。H5 全局来电 UI、visibility 调用、ringtone/autoplay 与 answer/reject 留到 `.5.7.2`，未执行真实呼叫、声音或权限。
+  - `W6.a5.2.1.5.7.2-incoming-call-web-ui-ringtone` 已完成本地闭环：H5 全局 Provider 只投影 SDK 来电快照，具备 RN 同语义 banner/fullscreen/可拖动 floating、联系人资料补齐、visibility pending refresh、复用音频的循环铃声与 autoplay 手势恢复；SDK `/web` 来电编排保证 reject 不创建媒体，answer 成功后才惰性创建 LiveKit 会话并复用现有 active route。未执行真实呼叫、声音或媒体权限，真实双账号 RTC 仍为显式验收门。
+  - `W6.a5.2.3.1-call-detail-shared-convergence` 已完成本地与真实账号只读闭环：中性 `createIMCallRecordSync` 统一 raw 字段无损缓存、详情远端优先合并回写和同日筛选；RN 删除旧详情 Gateway/cache merge owner，H5 以 React Router `/calls/:callID` 消费相同 facade。未执行通话、媒体权限或删除。
+  - `W6.a5.2.3.2-call-record-list-consumer-convergence` 已完成本地结构闭环：shared facade 统一远端单页、完整分页、cache、删除、pending、批量保存与终结状态映射；RN 删除旧 Gateway service、通话表 CRUD/schema 和应用层状态推导，只保留资料补齐及事件投影。终结 wrapper 解析和 Web realtime 接线已由 `.3.3` 继续闭环，未执行真实删除或通话。
+  - `W6.a5.2.3.3-web-realtime-call-history-composition` 已完成本地运行链：shared parser 统一 system/custom/RN 包装，Web runtime 对终结 frame 调用同一 `convergeTerminalSignals`，普通消息失败不阻断通话记录落库，`/calls` 通过 data version 重读 cache。真实双账号终结事件仍为外部验收门。
+  - `W6.a5.2.15-group-members-route-parity` 已完成本地与真实账号只读闭环：复用既有 shared `groupMembers.listCached/sync` 和统一成员显示名 resolver，补齐 RN 群设置“全部”入口、完整成员页、搜索/分组/角色和资料返回；未新增 SDK/RN 逻辑，也未进入 presence、群管理 mutation、好友申请或 RTC。
   - `W6.a6.17.3-group-mention-acceptance` 仅允许在明确授权的可丢弃群聊中验证真实 type 106 send、Gateway top-level mentions、SQLite v10、realtime 和 list-back；当前保持 `blocked-mutation-authorization`。
 - exit:
   - 已迁移页面具有源映射、RN 资产、明暗主题、响应式、路由和真实 API 证据；不存在 generic placeholder 视觉或第二条 API 链。
@@ -169,6 +186,7 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；缺少部署 URL �
 - 已迁移页面通过 `docs/rn-h5-migration-contract.md` 的视觉、资产、API 和路由 parity gates。
 - 根级验证、浏览器冒烟和关键持久化回归均有证据。
 - 剩余媒体、RTC、通知或生产化能力已进入新执行包或显式 backlog。
+- W6.a3.2 已关闭归档会话能力：SDK 统一全分页/latest-message/快照收敛并隔离普通缓存，RN/Web 实际消费同一 owner，H5 以 React Router 独立归档页完成入口、搜索、分页、下拉和菜单投影；真实 mutation/list-back 保留验收门。
 
 ## Verification Ladder
 

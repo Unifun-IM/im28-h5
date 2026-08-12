@@ -1,0 +1,56 @@
+.rn-conversation-archive-surface {
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.rn-conversation-archive-back {
+  display: grid;
+  width: 72px;
+  min-height: 48px;
+  flex: 0 0 72px;
+  place-items: center start;
+  color: var(--im-icon-primary);
+}
+
+.rn-conversation-archive-back .rn-asset-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.rn-conversation-archive-page .rn-conversation-search {
+  cursor: text;
+}
+
+.rn-conversation-archive-page .rn-conversation-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--im-text-primary);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 20px;
+}
+
+.rn-conversation-archive-page .rn-conversation-search input::placeholder {
+  color: var(--im-text-muted);
+  opacity: 1;
+}
+
+.rn-conversation-archive-page .rn-conversation-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.rn-conversation-archive-loading-more {
+  min-height: 40px;
+  padding: 10px 16px;
+  color: var(--im-text-muted);
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 18px;
+  text-align: center;
+}

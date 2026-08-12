@@ -2,6 +2,8 @@ import { IMError } from '../../core/errors.js';
 import { normalizeConversationAutoDeleteSeconds } from '../../core/conversation-auto-delete.js';
 import { normalizePresetEmojiEntities } from '../../modules/message/preset-emoji.js';
 import { normalizeMessageMentions } from '../../modules/message/mention.js';
+/** Gateway uint64 字段允许的最大十进制值。 */
+const GATEWAY_UINT64_MAX = 18446744073709551615n;
 /** 将 Gateway message 映射为跨平台 core message。 */
 export function mapGatewayMessageToCore(message, options) {
     // serverMsgID 只接受非空服务端标识。
@@ -23,8 +25,10 @@ export function mapGatewayMessageToCore(message, options) {
     const direction = senderID === options.currentUserID ? 'outgoing' : 'incoming';
     // status 结合显式 Gateway 状态和消息方向归一化。
     const status = mapMessageStatus(message.status, direction);
-    // seq 超出 JS 安全整数时不写入数值索引，原值仍保留在 payload。
-    const seq = readSafeInteger(message.msg_seq);
+    // seqString 精确保留 Gateway uint64，供清空边界和跨端 cursor 使用。
+    const seqString = readUint64String(message.msg_seq);
+    // seq 仅为现有安全整数排序接口保留兼容索引。
+    const seq = readSafeInteger(seqString);
     // entity 区间只对文本正文有意义，未知或错误输入保守降级为 Unicode。
     const entities = normalizePresetEmojiEntities(message.entities, readGatewayMessageText(message.body));
     // mentions 使用顶层服务端身份，正文 targets 只作 payload 快照。
@@ -41,6 +45,7 @@ export function mapGatewayMessageToCore(message, options) {
         status,
         sendTime: readTimestamp(message.sent_at ?? message.updated_at),
         ...(seq === undefined ? {} : { seq }),
+        ...(seqString ? { seqString } : {}),
         ...(forwardOrigin ? { forwardOrigin } : {}),
         ...(entities.length ? { entities } : {}),
         ...(mentions.length ? { mentions } : {}),
@@ -128,6 +133,8 @@ export function mapGatewayConversationToCore(input, currentUserID) {
     const autoDeleteUpdatedBy = readString(body.auto_delete_updated_by);
     // autoDeleteUpdatedAt 使用与会话一致的 Gateway 时间归一化。
     const autoDeleteUpdatedAt = readTimestamp(body.auto_delete_updated_at);
+    // clearBeforeSeq 精确保留服务端 destructive cursor。
+    const clearBeforeSeq = readUint64String(body.clear_before_seq);
     return {
         conversation: {
             conversationID,
@@ -142,8 +149,11 @@ export function mapGatewayConversationToCore(input, currentUserID) {
             ...(readString(body.last_msg_seq)
                 ? { lastMsgSeq: readString(body.last_msg_seq) }
                 : {}),
+            ...(clearBeforeSeq ? { clearBeforeSeq } : {}),
+            listHidden: Boolean(body.list_hidden),
             unreadCount: readBoundedCount(body.unread_count),
-            isArchived: Boolean(body.archived ?? body.list_hidden),
+            manualUnread: Boolean(body.manual_unread),
+            isArchived: Boolean(body.archived),
             isPinned: pinnedAt > 0,
             pinnedAt,
             isMuted: Boolean(body.notification_muted),
@@ -270,6 +280,23 @@ function readSafeInteger(value) {
     // parsed 是 SQLite numeric seq 索引候选值。
     const parsed = Number(value);
     return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
+}
+/** 将 Gateway uint64 归一化为无前导零十进制字符串。 */
+function readUint64String(value) {
+    /** text 只接受 number 或 string 输入。 */
+    const text = typeof value === 'number' || typeof value === 'string'
+        ? String(value).trim()
+        : '';
+    if (!/^\d+$/.test(text))
+        return '';
+    try {
+        /** parsed 必须处于协议声明的 uint64 范围内。 */
+        const parsed = BigInt(text);
+        return parsed <= GATEWAY_UINT64_MAX ? parsed.toString() : '';
+    }
+    catch {
+        return '';
+    }
 }
 /** 将 ISO、秒或毫秒时间归一化为毫秒时间戳。 */
 function readTimestamp(value) {

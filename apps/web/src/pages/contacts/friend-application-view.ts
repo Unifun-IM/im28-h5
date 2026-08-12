@@ -1,23 +1,12 @@
-import type { WebIMFriendApplication } from '@im28/im-sdk/web';
+import {
+  formatIMFriendSourceType,
+  type WebIMFriendApplication,
+} from '@im28/im-sdk/web';
 
 /** 好友申请列表的 section/row 联合模型。 */
 export type FriendApplicationListEntry =
   | { readonly type: 'section'; readonly key: string; readonly title: string }
   | { readonly type: 'application'; readonly key: string; readonly application: WebIMFriendApplication };
-
-/** RN 好友来源类型到展示文案的稳定映射。 */
-const FRIEND_SOURCE_LABELS: Readonly<Record<string, string>> = {
-  phone: '通过手机号添加',
-  email: '通过邮箱添加',
-  user_id: '通过ID添加',
-  account: '通过账号添加',
-  nickname: '通过昵称添加',
-  search: '通过搜索添加',
-  group: '通过群聊添加',
-  card: '通过名片添加',
-  invite_code: '通过邀请码添加',
-  qrcode: '通过二维码添加',
-};
 
 /** 按 RN 可见字段搜索并生成最近三天/三天前分组。 */
 export function buildFriendApplicationEntries(
@@ -53,16 +42,7 @@ export function buildFriendApplicationEntries(
 /** 返回 RN 申请来源文案。 */
 export function getFriendApplicationSourceText(application: WebIMFriendApplication): string {
   if (application.direction === 'outgoing') return '我申请添加对方';
-  // sourceType 允许历史自由文本直接展示。
-  const sourceType = application.sourceType.trim();
-  if (!sourceType) return '通过ID添加';
-  // normalizedSource 用于匹配稳定 Gateway code。
-  const normalizedSource = sourceType.toLocaleLowerCase();
-  if (FRIEND_SOURCE_LABELS[normalizedSource]) return FRIEND_SOURCE_LABELS[normalizedSource];
-  for (const [code, label] of Object.entries(FRIEND_SOURCE_LABELS)) {
-    if (normalizedSource.includes(code)) return label;
-  }
-  return sourceType;
+  return formatIMFriendSourceType(application.sourceType, '通过ID添加');
 }
 
 /** 返回 RN 申请消息文案。 */

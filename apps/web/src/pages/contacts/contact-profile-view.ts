@@ -50,3 +50,18 @@ export function buildContactProfileRoute(userID: string): string {
 export function buildContactFriendApplicationRoute(userID: string): string {
   return `${buildContactProfileRoute(userID)}/add`;
 }
+
+/** 只接受群成员或联系人域内的内部资料返回路由。 */
+export function resolveContactProfileBackHref(state: unknown): string {
+  if (!state || typeof state !== 'object') return '/contacts';
+  /** backHref 从 Router state 读取，禁止外部 URL 和任意页面跳转。 */
+  const backHref = Reflect.get(state, 'backHref');
+  if (typeof backHref !== 'string') return '/contacts';
+  /** normalizedHref 只保留明确的应用内群成员页或通讯录子页。 */
+  const normalizedHref = backHref.trim();
+  if (/^\/conversations\/[^/]+\/settings\/members$/.test(normalizedHref)) {
+    return normalizedHref;
+  }
+  if (normalizedHref.startsWith('/contacts')) return normalizedHref;
+  return '/contacts';
+}

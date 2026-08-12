@@ -13,8 +13,14 @@ export async function refreshGroupMemberUserProfiles(database, gatewayClient, me
         const batchUserIDs = userIDs.slice(offset, offset + GROUP_MEMBER_PROFILE_BATCH_SIZE);
         /** requestedUserIDs 拒绝服务端混入非本群用户资料。 */
         const requestedUserIDs = new Set(batchUserIDs);
-        /** gatewayUsers 缺失条目可由既有 cache 回退，但请求失败必须中断成员替换。 */
-        const gatewayUsers = await gatewayClient.batchGetUsers({ user_ids: batchUserIDs });
+        /** gatewayUsers 是补充展示资料；失败时成员集合仍保持权威可提交。 */
+        let gatewayUsers;
+        try {
+            gatewayUsers = await gatewayClient.batchGetUsers({ user_ids: batchUserIDs });
+        }
+        catch {
+            return false;
+        }
         for (const gatewayUser of gatewayUsers) {
             /** user 只接收本批请求内且有稳定身份的公开资料。 */
             const user = mapGatewayUser(gatewayUser, requestedUserIDs);
@@ -22,11 +28,10 @@ export async function refreshGroupMemberUserProfiles(database, gatewayClient, me
                 profiles.set(user.userID, user);
         }
     }
-    /** repository 复用共享 users 表，不把公开昵称复制成群昵称。 */
+    /** repository 原子合并本批公开资料，不把公开昵称复制成群昵称。 */
     const repository = new UserRepository(database);
-    for (const profile of profiles.values()) {
-        await repository.upsert(profile);
-    }
+    await repository.upsertMany([...profiles.values()]);
+    return true;
 }
 /** 将成员身份与已有用户/好友公开资料合成为页面展示快照。 */
 export async function resolveGroupMemberDisplayProfiles(database, members) {
@@ -34,15 +39,25 @@ export async function resolveGroupMemberDisplayProfiles(database, members) {
     const users = new UserRepository(database);
     /** friendships 提供当前账号备注并补偿历史内嵌用户快照。 */
     const friendships = new FriendshipRepository(database);
-    /** entries 并行读取每个稳定身份，避免平台层再次请求用户资料。 */
-    const entries = await Promise.all(members.map(async (member) => {
+    /** userIDs 固定本轮成员身份集合。 */
+    const userIDs = members.map(member => member.userID.trim()).filter(Boolean);
+    /** snapshots 用两次批量查询代替逐成员 2N 次 SQLite 查询。 */
+    const [userSnapshots, friendshipSnapshots] = await Promise.all([
+        users.getByIDs(userIDs),
+        friendships.getByUserIDs(userIDs),
+    ]);
+    /** usersByID 为公开资料提供常数时间关联。 */
+    const usersByID = new Map(userSnapshots.map(user => [user.userID, user]));
+    /** friendshipsByID 为当前账号备注提供常数时间关联。 */
+    const friendshipsByID = new Map(friendshipSnapshots.map(friendship => [friendship.userID, friendship]));
+    /** entries 只做内存投影，平台层无需再次请求资料。 */
+    const entries = members.map(member => {
         /** userID 是 users、friendships 和 group_members 的关联键。 */
         const userID = member.userID.trim();
-        /** snapshots 只读当前账号数据库。 */
-        const [user, friendship] = await Promise.all([
-            users.getByID(userID),
-            friendships.getByUserID(userID),
-        ]);
+        /** user 是公开用户快照。 */
+        const user = usersByID.get(userID);
+        /** friendship 是当前账号好友关系快照。 */
+        const friendship = friendshipsByID.get(userID) ?? null;
         /** groupNickname 忽略历史错误写入的 userID 占位符。 */
         const groupNickname = normalizeGroupNickname(member.nickname, userID);
         /** friendshipProfile 分字段保留好友备注和历史公开资料。 */
@@ -60,7 +75,7 @@ export async function resolveGroupMemberDisplayProfiles(database, members) {
             avatarURL,
         };
         return [userID, profile];
-    }));
+    });
     return new Map(entries);
 }
 /** 将 Gateway 公开用户资料映射到共享 User Repository。 */

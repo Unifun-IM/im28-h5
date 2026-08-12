@@ -1,0 +1,57 @@
+.rn-contact-sheet-backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 8px calc(var(--im-safe-bottom) + 8px);
+  background: var(--im-bg-overlay);
+}
+
+.rn-contact-sheet {
+  display: flex;
+  width: min(100%, 464px);
+  gap: 8px;
+  flex-direction: column;
+}
+
+.rn-contact-sheet-group,
+.rn-contact-sheet > button {
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--im-bg-card);
+}
+
+.rn-contact-sheet-group p {
+  margin: 0;
+  padding: 16px;
+  color: var(--im-text-secondary);
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: 19px;
+  text-align: center;
+}
+
+.rn-contact-sheet button {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 0;
+  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: var(--im-status-danger);
+  background: var(--im-bg-card);
+  cursor: pointer;
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0;
+  line-height: 24px;
+}
+
+.rn-contact-sheet > button {
+  border-top: 0;
+  color: var(--im-text-primary);
+}
+
+.rn-contact-sheet button:active:not(:disabled) { background: var(--im-bg-pressed); }
+.rn-contact-sheet button:disabled { cursor: default; opacity: 0.55; }

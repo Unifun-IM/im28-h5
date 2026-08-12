@@ -82,8 +82,8 @@ Current canonical routes:
 | `/conversations` | `ChatHomeScreen` chats tab + `ConversationListScreen` | authenticated route; list state survives child navigation | `core-done-local/acceptance-gated` |
 | `/conversations/:conversationID` | `ChatDetailScreen` | encoded ID, refresh restore, browser back returns list | `core-done-local/acceptance-gated` |
 | `/contacts` | `ChatHomeScreen` contacts tab + `ContactListScreen` | authenticated route; real paged friend list, local search and index navigation | `core-done-local/acceptance-gated` |
-| `/contacts/friend-applications` | `FriendApplicationsScreen` standalone branch | authenticated friend application list/search/section/status and real accept | `implemented-local/acceptance-gated` |
-| `/contacts/group-applications` | `GroupVerificationListScreen` | authenticated pending-group aggregation/search/role/count through audit facade | `implemented-local/acceptance-gated` |
+| `/contacts/verifications/:tab` | `VerificationMessagesScreen` + embedded friend/group lists | authenticated RN `验证消息` shell、route-stable friend/group tabs and existing real application facades | `accepted-readonly/mutation-gated` |
+| `/contacts/friend-applications`、`/contacts/group-applications` | legacy Web index paths | redirect-only compatibility to canonical verification tabs；no page/business owner | `compatibility-only` |
 | `/contacts/group-applications/:groupID` | `GroupApplicationsScreen` + `GroupApplicationListView` | authenticated per-group filter/search/section/status and real accept/reject through same audit facade | `implemented-local/acceptance-gated` |
 | `/contacts/groups` | `ContactGroupListScreen` + `contactGroupHelpers` | authenticated cache-first joined-group list/search/status/role and real conversation lookup/open | `implemented-local/acceptance-gated` |
 | `/contacts/users/:userID` | `ContactListScreen` -> `UserProfileScreen` | authenticated real user/friend profile, RN 120px hero and success-only direct-conversation creation/persistence | `implemented-local/acceptance-gated` |
@@ -219,20 +219,20 @@ W6.a5.1 的 `20002` 未注册分支只对 phone/email 生效，并调用真实 `
 | :--- | :--- |
 | feature slice | authenticated contact-list core |
 | phase | vertical migration / one-operation Web SDK facade + React Router caller |
-| production flow | `ContactListScreen.tsx` -> `WebIMContactSync.list` -> shared `GatewayHTTPClient.listFriends` |
+| production flow | `ContactListScreen.tsx` -> `WebIMContactSync.listCached/list` -> account SQLite + shared `GatewayHTTPClient.listFriends` |
 | operation | `POST /v1/friend/list` with bounded `page/page_size` pagination |
 | current status | `done-local/acceptance-gated` |
 | must-have fields | `userID`; alias-first `displayName`; `nickname`; `remark`; `avatarURL`; `isStarred`; `addedAt` |
 | adapters | `../im28-sdk/src/sync/contact-sync.ts`; runtime `getSync().contacts`; React Router `/contacts` caller |
 | route | `/contacts`; guest deep link replaces to `/login` -> `/auth/phone` |
 | source assets/style | RN search、clear、star SVG; 48px header、40px search、56px row、40px avatar、star/letter groups and right index |
-| local evidence | `npm run verify`: 466 assets、22 files / 60 tests、SDK/Web typecheck and production build passed; 390x844 + 760x900 light/dark proof, no horizontal overflow, rows 56px, desktop surface 480px; refresh/back/forward/guest guard and clean console passed |
+| local evidence | original visual gates plus `.1.4`: shared pull contract 2/2、SDK Web 59/204、full verify；authenticated 390x600 D index reached `scrollY=196` with active state、no overflow/error and header search entered `/contacts/search` |
 | API evidence | 2 behavior tests prove authenticated fail-fast, paging, dedupe, field normalization and sort; page has no fetch/shared SDK/Gateway/Repository import |
-| no-fake verdict | real Gateway list only; loading/error/empty are explicit; temporary visual proof HTML deleted; verification/group/action entries without bounded facades are omitted |
-| open gaps | authenticated 7-row cache/Pinyin proof exists；broader responsive/light-dark/history、profile/action/group/verification-message flows remain separate gates |
+| no-fake verdict | cache and remote list both use the shared contact facade；loading/error/empty are explicit；long-press menu is omitted until all visible actions have bounded shared owners |
+| open gaps | physical touch/offline block/drag index/cross-browser proof；long-press message、RTC、card and delete facade convergence plus authorized mutation acceptance |
 | acceptance gate | shared cache-first pagination/failure regression is closed by `.17.2.2`，RN-equivalent Pinyin index by `.a5.2.1.1`；broader visual/history matrix remains before full parity |
 
-W6.a5.2.1 只恢复联系人列表核心。`朋友验证消息`、`我的群组`、好友操作菜单和 profile navigation 均需要独立 operation/route card；当前页面不会渲染不可工作的入口。
+W6.a5.2.1 恢复联系人列表核心；验证消息、我的群聊、profile 和搜索已由后续独立 route cards 接入。`.1.4` 只增加 cache-first、下拉和索引平台交互：RN 长按菜单固定为发消息、音视频通话、分享好友名片和删除好友，但共享联系人 action facade 尚未覆盖完整动作，所以页面继续不渲染不可工作的菜单。Gateway client 已有 `deleteFriend` 不等于应用获得直连授权；RN 现存应用 service 调用需要在 `.1.5` 收敛到 shared SDK 后，Web 才能复用同一业务路径。
 
 `.a5.2.1.1` reviewer verdict: H5 只在联系人展示 owner 增加 RN 同版本 `pinyin-pro@3.28.1`，参数逐项保持 `pattern:first / mode:surname / surname:head / nonZh:consecutive`；数字、符号和空名称与 RN 一样回退 `#`，分组内及分组首次出现顺序继续服从 SDK 的好友添加时间结果。纯函数和列表测试覆盖中文、多音、拉丁、fallback、搜索态星标去重；真实 7 行只读页面把“最后那一秒/海绵宝宝不吃香蕉”投影为 `Z/H`，458px 无溢出且控制台无 warning/error。没有 mock shortcut、fake success、第二 API/cache owner、SDK 或 RN runtime 改动。Verdict: `done-local/acceptance-gated`；完整联系人视觉矩阵仍独立 gated，新增词典对主 chunk 的成本进入性能债。
 
@@ -450,15 +450,15 @@ Local closeout: `WebIMSync.blacklist` now owns authenticated pagination、dedupe
 
 ## 20. W6.a5.2.10 Friend Applications Core Contract
 
-> AXIOM: 好友申请真相只来自 Gateway；本轮只迁 RN standalone 列表的默认可达能力，接受成功前不得修改申请状态，未读/群验证/用户资料链不得以 placeholder 补齐。
+> AXIOM: 好友申请真相只来自 Gateway；列表以内嵌方式复用在 RN 同款“验证消息”容器中，接受成功前不得修改申请状态，未读/用户资料链不得以 placeholder 补齐。
 
 | dimension | RN truth | Web owner/verdict |
 | :--- | :--- | :--- |
-| entry/route | `ContactListScreen` verification shortcut -> standalone `FriendApplicationsScreen` | `/contacts` shortcut -> `/contacts/friend-applications` React Router route；full-screen route outside primary tab shell |
+| entry/route | `ContactListScreen` single verification shortcut -> `VerificationMessagesScreen` friend tab -> embedded `FriendApplicationsScreen` | `/contacts` shortcut -> `/contacts/verifications/friend`；old `/contacts/friend-applications` redirects to the canonical full-screen route outside primary tab shell |
 | list | `fetchFriendApplicationsAsRecipient(..., 100)` -> pending-first/time-desc | `WebIMSync.friendApplications.list` -> shared `GatewayHTTPClient.listFriendApplications`；authenticated pagination/dedupe/normalization |
 | accept | row `加好友` -> confirm -> `acceptFriendApplication` -> reload | `WebIMSync.friendApplications.accept(applicationID)` -> shared accept operation；success then reload，failure keeps original state |
-| row/view | standalone search、最近三天/三天前、72px row、48px avatar、source/message/status、confirm dialog | normalized direction/user/message/source/status/time/read model + pure view projection |
-| deferred | row press marks read then opens user profile；combined friend/group tabs + badges；reject exists in injected hook but has no page caller | no click/no-op、unread/read、group tab/badge、reject facade；each requires a later bounded route/caller slice |
+| row/view | embedded mode removes the standalone search；最近三天/三天前、72px row、48px avatar、source/message/status、confirm dialog | normalized direction/user/message/source/status/time/read model + pure view projection；统一容器只持有 tab route |
+| deferred | row press marks read then opens user profile；friend/group unread badges；reject exists in injected hook but has no page caller | no click/no-op、unread/read、badge or reject facade；each requires a later bounded route/caller slice |
 | acceptance | empty/error/refresh/handling/confirm、guest/history/theme/responsive | local gates + approved real accept mutation；without mutation authorization remains acceptance-gated |
 
 ## 21. W6.a5.2.11 Group Applications Core Contract
@@ -467,11 +467,11 @@ Local closeout: `WebIMSync.blacklist` now owns authenticated pagination、dedupe
 
 | dimension | RN truth | Web owner/verdict |
 | :--- | :--- | :--- |
-| entry/routes | `ContactListScreen` -> `GroupVerificationListScreen` -> selected `GroupApplicationsScreen` | `/contacts` shortcut -> `/contacts/group-applications` -> `/:groupID` React Router routes；full-screen outside primary tab shell |
+| entry/routes | `ContactListScreen` single verification shortcut -> `VerificationMessagesScreen` group tab -> embedded `GroupVerificationListScreen` -> selected `GroupApplicationsScreen` | `/contacts/verifications/group` -> `/contacts/group-applications/:groupID`；old group index URL redirects to the canonical tab；full-screen outside primary tab shell |
 | audit/index | `fetchGroupApplicationAuditList` -> pending group count、owner/admin role、group search | `WebIMSync.groupApplications.list` -> shared `GatewayHTTPClient.listGroupApplicationAudit`；authenticated pagination/dedupe/group+requester normalization |
 | detail | selected group filters audit applications -> pending-first/time-desc -> recent/older sections | direct URL repeats the same audit read and filters by route `groupID`；no page fetch or per-group transport |
 | handle | pending row -> action sheet -> accept/refuse -> reload | `accept/reject(applicationID)` -> shared Gateway operations；success then reload，failure keeps original state |
-| deferred | combined friend/group tabs、application unread/read、group profile/manage、ordinary member join | omitted and acceptance-gated；no placeholder、mock badge or fake success |
+| deferred | application unread/read and tab badges、group profile/manage、ordinary member join | omitted and acceptance-gated；no placeholder、mock badge or fake success |
 | local evidence | RN source/API trace、4 SDK facade tests、5 pure view tests、466 asset check、30 SDK files/93 tests、H5 typecheck/build、index/detail guest guards | `implemented-local/acceptance-gated`；authenticated group data/theme/history and explicitly approved real mutations remain open |
 
 ## 22. W6.a5.2.12 Joined Groups Core Contract
@@ -1127,3 +1127,82 @@ Idempotency contract: generated OpenAPI exposes optional `operation_id`, but cur
 Permission/route contract: `self` is available to any cached participant；`both` only for direct conversation；`all_members` only when group permission projection resolves `can_clear_message(s)` or the RN role fallback allows owner/admin, with unknown role/permission fail-closed. Settings uses the existing RN confirmation sheet semantics and never submits on open. Direct success navigates to `/conversations`; group success keeps the group route available and renders empty history/summary after cache reread.
 
 Excluded: `clearConversationAndDeleteAllMsg` fallback、friend-delete `clear_scope`、group leave/dismiss `clear_history`、member-history `clear_before_seq` and physical expiry deletion are separate owners. Contract trace found no H5 fake path because the row is still omitted. Shared gaps are explicit: no clear facade、no schema cursor/list-hidden fields、no atomic boundary delete、no 2102 control handler，and current realtime normalization routes 2102 into ordinary message collection where an identity-less event fails. Verdict: contract `done-read-only`；implementation may proceed with deterministic sql.js/realtime tests, but real `self|both|all_members` acceptance remains `blocked-destructive-authorization`.
+
+## 49. W6.a5.2.15 Group-members Route Parity
+
+| contract | RN truth | H5 implementation |
+| :--- | :--- | :--- |
+| entry/route | 群设置成员预览通过“全部”进入完整成员页 | `/conversations/:conversationID/settings/members` 是唯一 React Router owner；直达、返回和成员资料回跳保留群上下文 |
+| data | group cache + member cache/full sync | 页面只调用 shared `groups.listCached/list` 与 `groupMembers.listCached/sync`，不直连 Gateway、SQLite 或 WebSocket |
+| identity | `备注 > 群内昵称 > 公开昵称 > userID` | 设置预览与完整列表统一调用 SDK `resolveIMGroupMemberDisplayName`，不建立 H5-only 优先级 |
+| presentation | 搜索、拼音分组/索引、群主/管理员标签、成员资料入口 | H5 仅拥有 DOM/CSS、搜索状态、索引滚动和 pull-refresh 手势；资料继续复用 `/contacts/users/:userID` |
+
+Closeout verdict: `done-local/read-only-accepted`。H5 focused 4 files/15 tests、typecheck、production build 与 full verify 通过；认证态真实群渲染 4 名成员和群主标签，名称搜索、成员资料返回、567x786/390x844 无横向溢出且 console 为零。未修改 SDK/RN source，未执行 presence、好友申请、成员邀请/移除或其他群管理 mutation；large-group、offline、physical-touch 和 Safari/Firefox 保持验收门。
+
+## 50. W6.a5.2.1.5.3.2.2 Web LiveKit Runtime Contract
+
+| owner | frozen responsibility |
+| :--- | :--- |
+| shared control | `createIMCallControlSync` 单一持有 start/cancel/hangup/token refresh、稳定 ID、凭据校验和 E2EE fail-closed；RN/Web 不复制 Gateway body 或 token 规则。 |
+| SDK Web media | `createWebIMCallMediaSession` 持有稳定状态，`createLiveKitCallMediaPort` 只适配真实 Room/track/device event，`createWebIMOutgoingCall` 持有首次失败 cancel、接通后 hangup、重试和 cleanup。 |
+| H5 application | `WebIMCallProvider` 持有单实例内存生命周期；`/calls/active` 只绑定 DOM、React Router 和可见错误。token 不进入 Context、route、storage、SQLite 或日志。 |
+| platform boundary | LiveKit 只存在于 SDK `/web` 与 H5 runtime dependency；RN native room 不变，Desktop 后续使用独立 adapter。 |
+
+Route refresh/deep-link 没有内存 token 时必须回到 `/calls`，不得恢复假通话。好友关系与真实 conversation ID 同时成立才开放详情动作。浏览器引擎在用户明确呼出且 Gateway start 成功后的 media `connect()` 动态加载，`index.html` 不得预加载 RTC chunk；首次媒体失败取消已创建 call，远端成员曾进入后结束走 hangup，route/logout/unmount 必须释放 Room、track 和 listener。真实双账号 start/connect/hangup、permission prompt、弱网 reconnect、token expiry 和 terminal list-back 仍需显式授权验收；incoming call、ringtone 和系统级后台唤醒是后续独立切片。
+
+Closeout verdict: `done-local/call-acceptance-gated`。SDK media 4 files/20 tests，通话与 realtime 聚焦 8 files/39 tests，all-runtime typecheck/boundary、`build:web` package sync、H5 typecheck/production build 均通过；认证 Chromium 仅只读验证详情三动作与 active-route guard，新标签冷启动认证 guard 无 console error；未点击呼出、未请求媒体权限、未连接 Room。RN/Desktop 入口与 `build:package:desktop:web` 未修改。
+
+## 51. W6.a5.2.1.5.4 Contact Action Menu Contract
+
+| action | shared/platform owner | H5 responsibility |
+| :--- | :--- | :--- |
+| 发消息 | `peerProfile.openConversation` 创建或复用 canonical direct conversation | 300ms 长按菜单、关闭气泡并导航真实 conversation ID |
+| 音视频通话 | direct conversation facade + shared call control + SDK Web LiveKit port | 二次选择 audio/video，随后交给唯一 `WebIMCallProvider` |
+| 分享好友名片 | `contacts.shareUserCard` 校验/过滤目标并执行 Gateway operation | 懒加载 `/contacts/users/:userID/share`，只列好友、单选并在“分享”后调用 |
+| 删除好友 | `contacts.deleteFriend` success-only Gateway + SQLite transaction | 显示 RN `self|both` 二次确认，成功后移除当前页面行 |
+
+菜单定位固定复用 RN 168x224、8px margin、12px gap，支持 300ms pointer/touch、8px 移动取消和 context menu；长按后的合成 click 必须被消费。名片 route state 只允许 userID/displayName/avatarURL，URL 与 state 用户不匹配或刷新丢失时回到资料页，不恢复假选择。任何选择层打开都不得触发 Gateway；只有用户点击发消息、选择具体媒体类型、点击分享或确认删除范围后才进入真实 owner。
+
+Closeout verdict: `done-local/mutation-acceptance-gated`。通讯录 9 files/34 tests、Web typecheck 与 production build 通过；认证 Chromium 真实 7 联系人页面只读展示四项菜单且 URL 保持 `/contacts`。未点击任何动作，未创建会话、未分享名片、未删除好友、未发起呼叫或请求媒体权限；这些结果和 physical touch/Safari/Firefox 仍需独立授权验收。SDK source 和生成包未因本切片修改。
+
+## 54. W6.a3.2 Archived Conversation Route Parity
+
+| contract | canonical owner | client responsibility |
+| :--- | :--- | :--- |
+| full archived snapshot | SDK `createIMConversationArchiveSync` | RN/Web 注入账号数据库；RN 可补齐平台资料，客户端不得复制分页/DTO/SQLite 状态机 |
+| cache separation | SDK `ConversationRepository.replaceUnarchived/reconcileArchivedSnapshot` | 普通列表读取 `archived:false`，归档列表读取 `archived:true`；不得用 `listHidden` 代替 archive |
+| H5 route | React Router `/conversations/archived` | 主列表只在真实归档 cache 非空时显示通栏；归档页 cache-first、30-row SQLite pagination、本地搜索和 top-only pull refresh |
+| actions | shared conversation list/clear facade | 长按菜单只做 presentation；取消归档成功后重读 cache，最后一条消失则返回主列表；删除仍走独立 clear contract |
+| failure | shared sync rejection + existing cache | 任一远端分页/映射/持久化失败保留已渲染 cache，不制造空成功；完整成功空快照才允许清理 archive index |
+
+Closeout verdict: `done-local/mutation-acceptance-gated`。RN 原私有 archive pager/replacer 已退出，`openIMService` 通过薄 composition 调用 SDK；普通会话同步不再删除归档行，历史 RN `isArchived + listHidden` 数据在 shared 路径兼容读取后清理。H5 真实账号在 567x786 显示 `donk三大爷` 归档行和主列表通栏，480px surface 无横向溢出且零 console warning/error。SDK all-runtime、build:rn/build:web、12/12，RN tsc/2，H5 70 files/273 tests、466 assets和 production build 通过。未执行取消归档/删除等 mutation；第二账号 list-back、physical touch 与跨浏览器仍为显式验收门。
+
+## 52. W6.a5.2.1.5.5 Contact Profile Action Convergence
+
+| capability | canonical owner | RN/Web consumer rule |
+| :--- | :--- | :--- |
+| remark/star | `IMContactActionsSync.updateFriendRemark/updateFriendStar` | Gateway 成功后字段级合并 friendship raw；部分响应必须保留用户昵称头像，失败不得改 cache/UI success |
+| blacklist | `IMContactActionsSync.setBlacklist` | 空目标/本人 fail before I/O；RN 和资料页仅投影确认与结果，不再保留 app Gateway helper |
+| common groups | `IMContactActionsSync.listCommonGroups` | 完整 token 分页、重复 token fail、按 group ID 去重、全部成功后增量 upsert group cache；不得 replace 我的群聊 |
+| profile navigation | H5 React Router + existing peer/conversation facades | `/groups` 打开群聊前必须从当前账号 conversation 集合验证真实主键，禁止 `groupID => conversationID` 猜测 |
+| UI actions | H5 profile presentation + global call owner | 三项快捷动作、发消息、备注/签名、添加时间、共同群/分享、更多黑名单/删除；sheet/dialog 打开不产生 mutation |
+
+RN 生产 `openIMService` 已删除 `updateGatewayFriendRemark/updateGatewayFriendStar/addGatewayBlacklist/removeGatewayBlacklist/fetchGatewayCommonGroups` 直连，保留既有 RN snapshot、friendship event、DTO 映射和共同群失败时空列表兼容语义。SDK sql.js 10/10 覆盖 success-only cache、失败保留、目标 guard、分页去重与增量 group cache；RN focused composition test/tsc、H5 contacts 10 files/37 tests、typecheck/build 通过。认证 Chromium 真实好友资料显示 3 个共同群，备注/更多层与共同群路由冷重载均无新增 error；未执行真实写入、conversation creation、RTC 或媒体权限。
+
+Residual contract: RN 资料页“来源”字段当前没有 `WebIMPeerProfile`/shared DTO，H5 不得伪造；presence、群成员受限资料、incoming call/ringtone、真实 mutation/list-back 与跨浏览器明暗矩阵继续独立验收。`build:package:desktop:web` 未修改或执行。
+
+## 53. W6.a5.2.1.5.7 Incoming Call And Ringtone Contract
+
+> PROCESS AXIOM: type `1601..1608` 是不占会话 seq 的个人 RTC 过程通知；它们不得作为聊天消息持久化，也不得用通话记录 summary 反推一个正在响铃的来电。活动来电只接受 shared strict parser 输出或 Gateway pending 权威结果。
+
+| contract | RN/Gateway truth | frozen shared/Web owner |
+| :--- | :--- | :--- |
+| process signal | RN 同时消费 Gateway system notice 和历史 custom wrapper；多设备可能收到相同 `event_id` | SDK `parseIMCallRealtimeSignal/normalizeIMCallRealtimeSignals` 单一解析 type1601..1608、system/custom、字段别名、audio/voice 与 event ID；缺 `call_id/call_type/room_name` 或未知事件 fail-closed |
+| terminal record | reject/cancel/hangup/ended/missed/failed/summary 最终进入 call record | 宽松 `normalizeIMCallTerminalSignals -> convergeTerminalSignals` 保持独立，可凭 call ID/detail 补齐；不得作为 ringing source |
+| pending restore | RN mount 与 AppState active 调 Gateway pending，恢复仍有效的来电 | Web restore/reconnect/visibility 回前台只调用 `calls.getPending()`；空、过期、本人呼出或身份不完整结果不产生 incoming UI |
+| lifecycle | invite -> incoming ringing；accept/answer -> connecting/active；reject/cancel/hangup/ended/timeout -> terminal cleanup | shared 层下一片持有 call ID、event dedupe/order 与单活动通话 transition；Web Provider 只投影 modal/banner/route，不能维护第二套协议 switch |
+| ringtone | RN native `rtcToneService` 循环来电音并在任一终态停止 | Web-only audio adapter 复用镜像音频并负责 play/loop/stop；浏览器 autoplay 拒绝必须显示可操作的“恢复声音”状态，不能报告已播放；铃声失败不得阻止接听/拒绝 UI |
+| answer/reject | reject 不请求媒体；answer 先走 shared control，再把短期 credential 交平台媒体 session | H5 只在用户明确点击时调用；answer 才允许请求麦克风/摄像头，失败可见并执行服务端/媒体补偿；token 不进入 Context、route、storage、SQLite 或日志 |
+| route/cleanup | RN 在 active chat 可用 banner，其他场景全局来电层；终态统一停止铃声并释放 room/track/listener | H5 全局 owner 不依赖当前页面；route/logout/unmount/账号切换清理 UI/audio/media，页面刷新只可通过 pending 重新验证，不能恢复内存 token |
+
+Contract trace verdict: shared strict process parser 已由 RN 生产 `parseRTCServerCallSignal` 实际消费；`incoming-call-lifecycle.ts` 持有 event/call 去重、同 call accept/终态清理、终态先到防复活、有界集合与 Gateway pending 校验，Web runtime 实际订阅过程通知并发布无 token 的 `incomingCall` snapshot，登录/restore/reconnect/visibility 前台恢复 pending，账号切换/退出清空身份。H5 全局 Provider 已投影 RN 同语义 banner/fullscreen/可拖动 floating、shared 资料补齐、铃声/autoplay 恢复与 active route；SDK Web incoming orchestrator 保证 reject 不创建媒体，answer 成功后才创建 LiveKit session，远端终态只释放媒体且不回发 hangup，幂等 cleanup 且 token 不进入 React state/cache。SDK all-runtime typecheck/boundary、incoming/runtime 22/22 and final 15/15、build:web；H5 typecheck、UI/tone 6/6、build 和认证浏览器冷启动零遮罩/零 console smoke 已通过，状态为 `done-local/real-call-acceptance-gated`。真实双账号 invite/answer/reject/timeout、铃声、后台/多 tab 和媒体权限继续需要显式授权；本切片未执行任何呼叫、接听、声音播放或权限请求。

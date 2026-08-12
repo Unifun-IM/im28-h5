@@ -3,6 +3,7 @@ import type {
   WebIMGroupMember,
   WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
+import { resolveIMGroupMemberDisplayName } from '@im28/im-sdk/web';
 
 /** 聊天设置页可验证的会话与群资料投影。 */
 export interface ChatSettingsView {
@@ -14,7 +15,9 @@ export interface ChatSettingsView {
   readonly pageTitle: string;
   readonly searchLabel: string;
   readonly memberCount: number;
+  readonly introduction: string;
   readonly canManageAutoDelete: boolean;
+  readonly canClearForAll: boolean;
 }
 
 /** 群设置首卡可展示的稳定成员身份。 */
@@ -45,6 +48,13 @@ export function buildChatSettingsView(
   const memberCount = isGroup && group?.groupID === targetID
     ? Math.max(0, group.memberCount)
     : 0;
+  // introduction 只投影同一群的 shared facade 字段，禁止误用其他群缓存。
+  const introduction = isGroup && group?.groupID === targetID
+    ? group.introduction.trim()
+    : '';
+  // canManageGroupMessages 只接受同目标群的 owner/admin 权限快照。
+  const canManageGroupMessages = group?.groupID === targetID &&
+    (group.currentUserRole === 'owner' || group.currentUserRole === 'admin');
   return {
     conversationID: conversation.conversationID,
     targetID,
@@ -54,11 +64,9 @@ export function buildChatSettingsView(
     pageTitle: isGroup ? '群设置' : '聊天设置',
     searchLabel: isGroup ? '查找聊天内容' : '查看聊天记录',
     memberCount,
-    canManageAutoDelete:
-      !isGroup ||
-      (group?.groupID === targetID &&
-        (group.currentUserRole === 'owner' ||
-          group.currentUserRole === 'admin')),
+    introduction,
+    canManageAutoDelete: !isGroup || canManageGroupMessages,
+    canClearForAll: !isGroup || canManageGroupMessages,
   };
 }
 
@@ -78,7 +86,7 @@ export function buildChatSettingsMemberViews(
     seenIDs.add(userID);
     views.push({
       userID,
-      name: member.nickname.trim() || userID,
+      name: resolveIMGroupMemberDisplayName(member, userID),
       avatarURL: member.avatarURL.trim(),
     });
     if (views.length >= Math.max(0, limit)) break;

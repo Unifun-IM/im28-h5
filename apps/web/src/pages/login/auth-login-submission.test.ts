@@ -9,7 +9,12 @@ import {
 
 /** 创建认证成功后的最小公开 runtime snapshot。 */
 function createSnapshot(userID: string): WebIMRuntimeSnapshot {
-  return { state: 'connecting', userID, dataVersion: 0 };
+  return {
+    state: 'connecting',
+    userID,
+    dataVersion: 0,
+    incomingCall: { phase: 'idle', call: null, revision: 0 },
+  };
 }
 
 /** 创建 Gateway 未注册业务错误。 */

@@ -1,5 +1,6 @@
 import {
   reconcilePresetEmojiEntitiesAfterTextChange,
+  resolveIMGroupMemberDisplayName,
   type MessageMention,
   type PresetEmojiDocument,
   type WebIMGroupMember,
@@ -73,21 +74,29 @@ export function buildChatMentionPickerItems(options: {
   }
   options.members
     .filter(member => member.userID !== options.selfID)
-    .filter(member => !query || member.nickname.toLocaleLowerCase().includes(query) ||
-      member.userID.toLocaleLowerCase().includes(query))
+    .filter(member => {
+      /** displayName 复用 SDK 的备注、群昵称、公开昵称优先级。 */
+      const displayName = resolveIMGroupMemberDisplayName(member, member.userID);
+      return !query || displayName.toLocaleLowerCase().includes(query) ||
+        member.userID.toLocaleLowerCase().includes(query);
+    })
     .slice(0, options.limit ?? 30)
-    .forEach(member => items.push({
-      key: `user:${member.userID}`,
-      label: member.nickname || member.userID,
-      description: member.userID,
-      avatarURL: member.avatarURL,
-      mention: {
+    .forEach(member => {
+      /** displayName 是 picker 与发送快照共用的当前可见名称。 */
+      const displayName = resolveIMGroupMemberDisplayName(member, member.userID);
+      items.push({
         key: `user:${member.userID}`,
-        type: 'user',
-        userID: member.userID,
-        nickname: member.nickname || member.userID,
-      },
-    }));
+        label: displayName,
+        description: member.userID,
+        avatarURL: member.avatarURL,
+        mention: {
+          key: `user:${member.userID}`,
+          type: 'user',
+          userID: member.userID,
+          nickname: displayName,
+        },
+      });
+    });
   return items;
 }
 

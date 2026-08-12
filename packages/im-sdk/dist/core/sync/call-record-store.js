@@ -9,11 +9,26 @@ export async function ensureCallSchema(database) {
       raw_json TEXT NOT NULL, updated_at INTEGER NOT NULL
     )`,
     });
+    await ensureCallColumn(database, 'answer_status', 'TEXT');
     await database.execute({
         sql: 'CREATE INDEX IF NOT EXISTS idx_call_records_started ON call_records(started_at_ms DESC, call_id DESC)',
     });
     await database.execute({
         sql: 'CREATE INDEX IF NOT EXISTS idx_call_records_answer_status ON call_records(answer_status, started_at_ms DESC, call_id DESC)',
+    });
+}
+/** 为旧 RN/H5 缓存表补齐 shared 查询依赖的列。 */
+async function ensureCallColumn(database, columnName, columnType) {
+    /** rows 使用 SQLite 元数据判断旧表是否需要增量兼容。 */
+    const rows = await database.query({
+        sql: 'PRAGMA table_info(call_records)',
+    });
+    /** exists 只比较代码内固定列名，不接受外部输入。 */
+    const exists = rows.some(row => readString(row.name) === columnName);
+    if (exists)
+        return;
+    await database.execute({
+        sql: `ALTER TABLE call_records ADD COLUMN ${columnName} ${columnType}`,
     });
 }
 /** 用完整远端 snapshot 原子替换本地通话记录。 */
@@ -57,6 +72,33 @@ export async function queryCachedCalls(database, options) {
     const total = Number(totalRows[0]?.total ?? 0);
     return { list: rows.map(mapCallRow), total: Number.isFinite(total) ? total : 0 };
 }
+/** 按稳定服务端 ID 读取单条缓存通话记录。 */
+export async function queryCachedCall(database, callID) {
+    /** rows 最多包含目标主键对应的一条记录。 */
+    const rows = await database.query({
+        sql: 'SELECT * FROM call_records WHERE call_id = ? LIMIT 1',
+        params: [callID],
+    });
+    return rows[0] ? mapCallRow(rows[0]) : null;
+}
+/** 写入单条远端已确认或详情补齐后的通话记录。 */
+export async function saveCachedCall(database, call) {
+    await ensureCallSchema(database);
+    await upsertCachedCall(database, call, Date.now());
+}
+/** 在一个事务内写入同批实时或平台补齐后的通话记录。 */
+export async function saveCachedCalls(database, calls) {
+    if (!calls.length)
+        return;
+    await ensureCallSchema(database);
+    await database.transaction(async (transaction) => {
+        /** updatedAt 让同一批记录共享稳定缓存时间。 */
+        const updatedAt = Date.now();
+        for (const call of calls) {
+            await upsertCachedCall(transaction, call, updatedAt);
+        }
+    });
+}
 /** 写入单条具备稳定服务端 ID 的通话记录。 */
 async function upsertCachedCall(executor, call, updatedAt) {
     // callID 是本地 cache 唯一主键。
@@ -89,6 +131,22 @@ function buildCallQuery(options) {
         where.push('answer_status = ?');
         params.push(options.answerStatus);
     }
+    if (options.conversationID?.trim()) {
+        where.push('conversation_id = ?');
+        params.push(options.conversationID.trim());
+    }
+    if (options.peerUserID?.trim()) {
+        where.push('user_id = ?');
+        params.push(options.peerUserID.trim());
+    }
+    if (Number.isFinite(options.startedAtFromMs)) {
+        where.push('started_at_ms >= ?');
+        params.push(Number(options.startedAtFromMs));
+    }
+    if (Number.isFinite(options.startedAtToMs)) {
+        where.push('started_at_ms < ?');
+        params.push(Number(options.startedAtToMs));
+    }
     if (options.keyword?.trim()) {
         // pattern 转义 LIKE 控制字符后使用参数绑定。
         const pattern = `%${options.keyword.trim().toLowerCase().replace(/[\\%_]/g, '\\$&')}%`;
@@ -99,6 +157,8 @@ function buildCallQuery(options) {
 }
 /** 将 SQLite 行还原为 Gateway 通话 DTO。 */
 function mapCallRow(row) {
+    /** raw 保留 Gateway 后续新增且本地索引列未覆盖的字段。 */
+    const raw = parseCallRaw(row.raw_json);
     // optionalFields 只在 SQLite 真实有值时写入 DTO。
     const optionalFields = {
         ...(readString(row.client_call_id) ? { client_call_id: readString(row.client_call_id) } : {}),
@@ -115,7 +175,22 @@ function mapCallRow(row) {
         ...(readString(row.answered_at) ? { answered_at: readString(row.answered_at) } : {}),
         ...(readString(row.ended_at) ? { ended_at: readString(row.ended_at) } : {}),
     };
-    return { call_id: readString(row.call_id), ...optionalFields };
+    return { ...raw, call_id: readString(row.call_id), ...optionalFields };
+}
+/** 安全解析缓存中的 Gateway 原始通话对象。 */
+function parseCallRaw(value) {
+    if (typeof value !== 'string' || !value.trim())
+        return {};
+    try {
+        /** parsed 仅允许普通对象进入 DTO 回填。 */
+        const parsed = JSON.parse(value);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+            ? parsed
+            : {};
+    }
+    catch {
+        return {};
+    }
 }
 /** 归一化服务端接听分类值。 */
 function normalizeAnswerStatus(value) {

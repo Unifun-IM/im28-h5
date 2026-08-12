@@ -12,11 +12,16 @@ import {
 import { useChatMediaInteraction } from './ChatMediaInteractionProvider.js';
 import type { ChatMessageView } from './chat-message-view.js';
 import type { ChatQuoteSourceView } from './chat-quote-view.js';
-import { normalizeChatMediaURL } from './chat-media-view.js';
+import {
+  getChatImageDisplayURL,
+  normalizeChatMediaURL,
+} from './chat-media-view.js';
+import { getChatImageDisplaySize } from './chat-media-layout.js';
 import {
   isSinglePresetEmojiText,
   PresetEmojiTextContent,
 } from './PresetEmojiTextContent.js';
+import './chat-message-content.css';
 
 /** 消息正文接收已收窄的展示模型和显式动作。 */
 interface ChatMessageContentProps {
@@ -40,15 +45,63 @@ export function ChatMessageContent({
   if (view.kind === 'image') {
     // imageURL 保持缩略图展示，同时拒绝不安全协议。
     const imageURL = normalizeChatMediaURL(view.thumbnailURL || view.mediaURL);
+    /** imageSize 按 Gateway 原始宽高复刻 RN 的 180px 比例缩放。 */
+    const imageSize = getChatImageDisplaySize(view.width, view.height);
+    /** previewURL 在缩略图失败时提供原图回退。 */
+    const previewURL = normalizeChatMediaURL(view.mediaURL || view.thumbnailURL);
+    /** fallbackURL 只在缩略图与原图都无法解码时转换权威原图。 */
+    const fallbackURL = getChatImageDisplayURL(previewURL || imageURL);
     return imageURL ? (
       <button
         className="rn-chat-media-action"
         type="button"
         aria-label="预览图片"
-        disabled={!normalizeChatMediaURL(view.mediaURL || view.thumbnailURL)}
+        disabled={!previewURL}
         onClick={() => media.openPreview(view)}
       >
-        <img className="rn-chat-media-image" src={imageURL} alt="图片消息" />
+        <img
+          className="rn-chat-media-image"
+          src={imageURL}
+          alt="图片消息"
+          width={imageSize.width}
+          height={imageSize.height}
+          style={imageSize}
+          onLoad={event => {
+            /** image 在历史消息缺少元数据时使用浏览器解码的真实宽高。 */
+            if (view.width && view.height) return;
+            /** naturalSize 补偿早期消息未持久化 width/height 的情况。 */
+            const naturalSize = getChatImageDisplaySize(
+              event.currentTarget.naturalWidth,
+              event.currentTarget.naturalHeight,
+            );
+            event.currentTarget.style.width = `${naturalSize.width}px`;
+            event.currentTarget.style.height = `${naturalSize.height}px`;
+          }}
+          onError={event => {
+            /** image 先尝试同消息原图，再尝试 OSS JPEG 解码回退。 */
+            const image = event.currentTarget;
+            if (
+              previewURL &&
+              image.currentSrc !== previewURL &&
+              image.dataset.originalAttempted !== 'true'
+            ) {
+              image.dataset.originalAttempted = 'true';
+              image.src = previewURL;
+              return;
+            }
+            if (
+              fallbackURL &&
+              image.currentSrc !== fallbackURL &&
+              image.dataset.fallbackAttempted !== 'true'
+            ) {
+              image.dataset.fallbackAttempted = 'true';
+              image.src = fallbackURL;
+              return;
+            }
+            image.closest('.rn-chat-media-action')?.classList.add('is-load-error');
+          }}
+        />
+        <span className="rn-chat-media-load-error">图片加载失败</span>
       </button>
     ) : (
       <span className="rn-chat-message-text">{view.text}</span>

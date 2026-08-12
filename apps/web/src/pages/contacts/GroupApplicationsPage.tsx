@@ -74,11 +74,11 @@ export function GroupApplicationsPage() {
   if (restoring) return <GroupApplicationsPageState label="正在恢复入群申请" />;
   if (!runtime) return <GroupApplicationsPageState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
-  if (!groupID) return <Navigate to="/contacts/group-applications" replace />;
+  if (!groupID) return <Navigate to="/contacts/verifications/group" replace />;
 
   return <main className="rn-group-applications-page" aria-busy={loading}>
     <section className="rn-group-applications-surface">
-      <GroupApplicationsHeader title="入群申请" backTo="/contacts/group-applications" />
+      <GroupApplicationsHeader title="入群申请" backTo="/contacts/verifications/group" />
       <p className="rn-group-applications-group-name">{groupName}</p>
       <label className="rn-group-applications-search"><RNAssetIcon assetURL={searchIconURL} /><input type="search" value={keyword} placeholder="搜索申请人/用户ID" aria-label="搜索入群申请" onChange={event => setKeyword(event.target.value)} />{keyword ? <button type="button" aria-label="清除" onClick={() => setKeyword('')}><RNAssetIcon assetURL={clearIconURL} /></button> : null}</label>
       {error ? <GroupApplicationsError message={error} onRetry={() => void loadApplications()} /> : null}

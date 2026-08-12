@@ -27,6 +27,18 @@ export class FriendshipRepository extends Repository {
         const rows = await this.query(statement('SELECT * FROM friendships WHERE user_id = ?', [userID]));
         return rows[0] ? mapFriendshipRow(rows[0]) : null;
     }
+    /** 一次读取多个好友关系，供群成员展示避免逐成员查询。 */
+    async getByUserIDs(userIDs) {
+        /** normalizedUserIDs 去重并过滤空身份。 */
+        const normalizedUserIDs = [...new Set(userIDs.map(userID => userID.trim()).filter(Boolean))];
+        if (!normalizedUserIDs.length)
+            return [];
+        /** placeholders 只表达参数数量，不拼接身份值。 */
+        const placeholders = normalizedUserIDs.map(() => '?').join(', ');
+        /** rows 由调用方按 userID 建立展示索引。 */
+        const rows = await this.query(statement(`SELECT * FROM friendships WHERE user_id IN (${placeholders})`, normalizedUserIDs));
+        return rows.map(mapFriendshipRow);
+    }
     async replaceAll(friendships) {
         await this.transaction(async (tx) => {
             await tx.execute(statement('DELETE FROM friendships'));

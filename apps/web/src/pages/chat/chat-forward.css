@@ -213,11 +213,12 @@
 .rn-chat-forward-origin {
   display: flex;
   min-width: 0;
-  align-items: center;
-  gap: 6px;
+  align-items: flex-start;
+  gap: 4px;
   padding-bottom: 5px;
   border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
   color: var(--im-text-secondary);
+  flex-direction: column;
 }
 
 .rn-chat-forward-origin.is-mine {

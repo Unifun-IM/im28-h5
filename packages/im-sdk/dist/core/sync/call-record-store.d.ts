@@ -8,4 +8,10 @@ export declare function replaceCachedCalls(database: DatabaseAdapter, calls: rea
 export declare function removeCachedCalls(database: DatabaseAdapter, callIDs: readonly string[]): Promise<void>;
 /** 查询缓存列表并复用同一筛选条件统计总数。 */
 export declare function queryCachedCalls(database: DatabaseAdapter, options: WebIMCallListOptions): Promise<WebIMCallListResult>;
+/** 按稳定服务端 ID 读取单条缓存通话记录。 */
+export declare function queryCachedCall(database: DatabaseAdapter, callID: string): Promise<GatewayCall | null>;
+/** 写入单条远端已确认或详情补齐后的通话记录。 */
+export declare function saveCachedCall(database: DatabaseAdapter, call: GatewayCall): Promise<void>;
+/** 在一个事务内写入同批实时或平台补齐后的通话记录。 */
+export declare function saveCachedCalls(database: DatabaseAdapter, calls: readonly GatewayCall[]): Promise<void>;
 //# sourceMappingURL=call-record-store.d.ts.map

@@ -16,6 +16,8 @@ apps/web config + pages
 sessionStorage
 -> WebIMAuthSessionStore
 -> runtime-only Bearer token access
+-> WebIMDeviceIdentityStore
+-> tab-scoped non-secret device identity
 
 SQLite/IndexedDB
 -> message/conversation cache only
@@ -44,7 +46,7 @@ OpenIM documents Web as platform ID `5`: <https://docs.openim.io/sdks/enum/platf
 | access token | `WebIMAuthSessionStore` | JS-readable because the shared client sends `Authorization: Bearer`; stored in `sessionStorage`, never SQLite/localStorage |
 | refresh token | `WebIMAuthSessionStore` | same tab-scoped session as access token; cleared on invalid/corrupt state |
 | user ID | auth session | normalized non-empty string; scopes SQLite database after authentication |
-| device ID | `WebIMDeviceIdentityStore` | non-secret stable browser identity; passed to login, register, refresh and WebSocket auth |
+| device ID | `WebIMDeviceIdentityStore` | non-secret stable tab identity in `sessionStorage`; passed unchanged to login, register, refresh and WebSocket auth；must not be shared across concurrent account tabs |
 | logout | `WebIMRuntimeImpl` | best-effort remote logout, mandatory realtime close, local session clear and account database close |
 | account database | `WebIMAccountDatabaseLifecycle` | open/migrate before authenticated state; switch by normalized userID; close on sign-out, kicked or token-expired |
 
@@ -112,9 +114,11 @@ npm run smoke:gateway
 
 Optional variables: `IM28_GATEWAY_PLATFORM_ID` (default `5`), `IM28_GATEWAY_LANGUAGE` (default `zh-CN`) and `IM28_GATEWAY_DEVICE_ID`. The script keeps tokens in process memory, prints only `state/userID`, and performs remote logout in `finally`. Never commit smoke credentials or place them in `.env.example`.
 
-Current gate state on 2026-08-09:
+Current gate state on 2026-08-12:
 
 - implementation: passed with 10 Vitest files / 25 tests and workspace typecheck/build;
 - Chromium App and account SQLite smoke: passed; WASM open/migrate/close completed with no console warning/error and the isolated smoke database was deleted;
-- real Gateway smoke: not run because URL/account/password variables are absent; fail-closed preflight returned exit code `1` before network access;
+- real Gateway read-only smoke: phone-code login、refresh restore、Gateway-backed conversation/contact/profile reads and two-account tab isolation passed；no message or mutation was executed;
+- realtime observability: `PrimaryTabsLayout[data-im-runtime-state]` exposes only the token-free SDK lifecycle state；the initial two-account run exposed alternating `online/reconnecting` caused by origin-shared device identity，and tab-scoped `sessionStorage` device identity removed that collision；a 30-second sample produced 19/20 dual-online states plus one simultaneous transient reconnect that recovered on the next sample;
+- offline SQLite hit and realtime message delivery remain separate acceptance gates；populated pages and zero console errors are not sufficient evidence;
 - upstream privacy gate: passed after removing raw `event.data` logging from the canonical `@im28/im-sdk` realtime client; shared SDK and H5 regression gates passed.

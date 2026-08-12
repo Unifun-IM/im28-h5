@@ -34,6 +34,7 @@ describe('chat message view media mapping', () => {
       kind: 'audio',
       text: '[语音]',
       mediaURL: 'https://media.example.com/voice.aac',
+      durationSeconds: 62,
       detail: '1:02',
     });
   });
@@ -47,6 +48,8 @@ describe('chat message view media mapping', () => {
               {
                 url: 'https://media.example.com/full.jpg',
                 thumbnail_url: 'https://media.example.com/thumb.jpg',
+                width: 400,
+                height: 368,
               },
             ],
           },
@@ -57,6 +60,8 @@ describe('chat message view media mapping', () => {
       kind: 'image',
       mediaURL: 'https://media.example.com/full.jpg',
       thumbnailURL: 'https://media.example.com/thumb.jpg',
+      width: 400,
+      height: 368,
     });
     expect(
       getChatMessageView(

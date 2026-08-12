@@ -1,5 +1,6 @@
 import { type GatewayHTTPClient } from '@im28/im-sdk/core';
 import type { WebIMSyncContextDependencies } from './sync-context.js';
+import { type IMContactActionsSync } from './contact-actions.js';
 import type { WebIMSyncMutationQueueDependencies } from './sync-mutation-queue.js';
 /** 页面可消费的标准化好友记录。 */
 export interface WebIMContact {
@@ -31,7 +32,8 @@ export interface WebIMContactSearchUser {
     readonly bio: string;
 }
 /** 页面可消费的认证通讯录能力。 */
-export interface WebIMContactSync {
+export interface WebIMContactSync extends IMContactActionsSync {
+    listCached(): Promise<readonly WebIMContact[]>;
     list(options?: WebIMContactListOptions): Promise<readonly WebIMContact[]>;
     searchUsers(keyword: string): Promise<readonly WebIMContactSearchUser[]>;
 }

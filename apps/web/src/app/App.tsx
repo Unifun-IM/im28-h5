@@ -8,11 +8,11 @@ import { ConversationsPage } from '../pages/conversations/ConversationsPage.js';
 import { ContactFriendApplicationPage } from '../pages/contacts/ContactFriendApplicationPage.js';
 import { ContactProfilePage } from '../pages/contacts/ContactProfilePage.js';
 import { ContactSearchPage } from '../pages/contacts/ContactSearchPage.js';
-import { FriendApplicationsPage } from '../pages/contacts/FriendApplicationsPage.js';
 import { GroupApplicationsPage } from '../pages/contacts/GroupApplicationsPage.js';
-import { GroupVerificationPage } from '../pages/contacts/GroupVerificationPage.js';
 import { JoinedGroupsPage } from '../pages/contacts/JoinedGroupsPage.js';
+import { VerificationMessagesPage } from '../pages/contacts/VerificationMessagesPage.js';
 import { CallsPage } from '../pages/calls/CallsPage.js';
+import { CallDetailPage } from '../pages/calls/CallDetailPage.js';
 import { AccountRegisterPage } from '../pages/login/AccountRegisterPage.js';
 import { AuthCompleteProfilePage } from '../pages/login/AuthCompleteProfilePage.js';
 import { AuthInvitePage } from '../pages/login/AuthInvitePage.js';
@@ -31,24 +31,39 @@ import { MeTermsPage } from '../pages/me/MeTermsPage.js';
 import { MeSecurityCredentialPage } from '../pages/me/MeSecurityCredentialPage.js';
 import { MeSecurityPage } from '../pages/me/MeSecurityPage.js';
 import { NotFoundPage } from '../pages/not-found/NotFoundPage.js';
-import { WebIMRuntimeProvider } from '../runtime/index.js';
+import { WebIMCallProvider, WebIMRuntimeProvider } from '../runtime/index.js';
 import { PrimaryTabsLayout } from './PrimaryTabsLayout.js';
 
 /** 联系人主页面按 React Router 路由加载，避免拼音词典进入其他页面首包。 */
 const ContactsPage = lazy(() => import('../pages/contacts/ContactsPage.js'));
+/** 好友名片选择页按动作路由加载，不进入通讯录和主路由首包。 */
+const ContactCardSharePage = lazy(() => import('../pages/contacts/ContactCardSharePage.js'));
+/** 共同群聊按资料子路由加载，不进入联系人主列表首包。 */
+const ContactCommonGroupsPage = lazy(() => import('../pages/contacts/ContactCommonGroupsPage.js'));
+/** 首页会话搜索按独立路由加载，保持主列表首包稳定。 */
+const ConversationSearchPage = lazy(() => import('../pages/conversations/ConversationSearchPage.js'));
+/** 归档会话按独立路由加载，保持主列表首包稳定。 */
+const ArchivedConversationsPage = lazy(() => import('../pages/conversations/ArchivedConversationsPage.js'));
 /** 聊天记录搜索按详情子路由加载，不增加会话列表首包。 */
 const ChatMessageSearchPage = lazy(() => import('../pages/chat/ChatMessageSearchPage.js'));
 /** 聊天设置按详情子路由加载，保持会话列表首包不变。 */
 const ChatSettingsPage = lazy(() => import('../pages/chat/ChatSettingsPage.js'));
+/** 群成员页按群设置子路由加载，避免拼音词典进入聊天首包。 */
+const GroupMembersPage = lazy(() => import('../pages/chat/GroupMembersPage.js'));
+/** 群简介只读页按群设置子路由加载，保持聊天主包稳定。 */
+const GroupIntroductionPage = lazy(() => import('../pages/chat/GroupIntroductionPage.js'));
 /** 定时删除选择页按设置子路由加载。 */
 const ChatAutoDeletePage = lazy(() => import('../pages/chat/ChatAutoDeletePage.js'));
+/** LiveKit 通话页按交互路由加载，避免浏览器媒体引擎进入主列表首包。 */
+const ActiveCallPage = lazy(() => import('../pages/calls/ActiveCallPage.js'));
 
 /** Web 应用根组件只负责装配浏览器路由，页面能力由对应 page owner 承担。 */
 export function App() {
   return (
     <BrowserRouter>
       <WebIMRuntimeProvider>
-        <AuthOnboardingProvider>
+        <WebIMCallProvider>
+          <AuthOnboardingProvider>
           <Routes>
           <Route path="/" element={<Navigate to="/conversations" replace />} />
           <Route path="/login" element={<Navigate to="/auth/phone" replace />} />
@@ -73,13 +88,56 @@ export function App() {
             <Route path="/calls" element={<CallsPage />} />
             <Route path="/me" element={<MePage />} />
           </Route>
+          <Route
+            path="/conversations/search"
+            element={(
+              <Suspense fallback={<ConversationSearchRouteLoadingState />}>
+                <ConversationSearchPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/archived"
+            element={(
+              <Suspense fallback={<ConversationArchiveRouteLoadingState />}>
+                <ArchivedConversationsPage />
+              </Suspense>
+            )}
+          />
           <Route path="/me/settings" element={<MeSettingsPage />} />
-          <Route path="/contacts/friend-applications" element={<FriendApplicationsPage />} />
-          <Route path="/contacts/group-applications" element={<GroupVerificationPage />} />
+          <Route
+            path="/calls/active"
+            element={(
+              <Suspense fallback={<CallRouteLoadingState />}>
+                <ActiveCallPage />
+              </Suspense>
+            )}
+          />
+          <Route path="/calls/:callID" element={<CallDetailPage />} />
+          <Route path="/contacts/verifications" element={<Navigate to="/contacts/verifications/friend" replace />} />
+          <Route path="/contacts/verifications/:tab" element={<VerificationMessagesPage />} />
+          <Route path="/contacts/friend-applications" element={<Navigate to="/contacts/verifications/friend" replace />} />
+          <Route path="/contacts/group-applications" element={<Navigate to="/contacts/verifications/group" replace />} />
           <Route path="/contacts/group-applications/:groupID" element={<GroupApplicationsPage />} />
           <Route path="/contacts/groups" element={<JoinedGroupsPage />} />
           <Route path="/contacts/search" element={<ContactSearchPage />} />
+          <Route
+            path="/contacts/users/:userID/share"
+            element={(
+              <Suspense fallback={<ContactsRouteLoadingState />}>
+                <ContactCardSharePage />
+              </Suspense>
+            )}
+          />
           <Route path="/contacts/users/:userID" element={<ContactProfilePage />} />
+          <Route
+            path="/contacts/users/:userID/groups"
+            element={(
+              <Suspense fallback={<ContactsRouteLoadingState />}>
+                <ContactCommonGroupsPage />
+              </Suspense>
+            )}
+          />
           <Route path="/contacts/users/:userID/add" element={<ContactFriendApplicationPage />} />
           <Route path="/me/settings/display" element={<MeDisplaySettingsPage />} />
           <Route path="/me/settings/notifications" element={<MeNotificationSettingsPage />} />
@@ -126,14 +184,54 @@ export function App() {
             )}
           />
           <Route
+            path="/conversations/:conversationID/settings/members"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupMembersPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/introduction"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupIntroductionPage />
+              </Suspense>
+            )}
+          />
+          <Route
             path="/conversations/:conversationID/forward"
             element={<ChatForwardTargetPage />}
           />
           <Route path="*" element={<NotFoundPage />} />
           </Routes>
-        </AuthOnboardingProvider>
+          </AuthOnboardingProvider>
+        </WebIMCallProvider>
       </WebIMRuntimeProvider>
     </BrowserRouter>
+  );
+}
+
+/** LiveKit route chunk 加载期间保持明确通话状态。 */
+function CallRouteLoadingState() {
+  return <main className="rn-calls-page-state" aria-busy="true"><strong>正在加载通话</strong></main>;
+}
+
+/** 首页会话搜索路由块下载期间保持明确状态。 */
+function ConversationSearchRouteLoadingState() {
+  return (
+    <main className="rn-conversation-search-state" aria-busy="true">
+      <strong>正在加载搜索</strong>
+    </main>
+  );
+}
+
+/** 归档会话路由块下载期间保持明确状态。 */
+function ConversationArchiveRouteLoadingState() {
+  return (
+    <main className="rn-conversation-page-state" aria-busy="true">
+      <strong>正在加载归档会话</strong>
+    </main>
   );
 }
 

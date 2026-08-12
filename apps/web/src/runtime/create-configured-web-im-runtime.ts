@@ -27,9 +27,9 @@ export function createConfiguredWebIMRuntime(): WebIMRuntime {
   const authSessionStore = createWebIMAuthSessionStore(
     globalThis.sessionStorage,
   );
-  // 非敏感 device identity 使用 localStorage 跨刷新保持稳定。
+  // 非敏感 device identity 与认证会话同为 tab 级，避免多账号 Push 连接争用同一设备 ID。
   const deviceIdentityStore = createWebIMDeviceIdentityStore(
-    globalThis.localStorage,
+    globalThis.sessionStorage,
   );
   // Fetch adapter 不复制 Gateway endpoint 或 envelope 语义。
   const gatewayFetch = createBrowserGatewayFetch(globalThis.fetch);

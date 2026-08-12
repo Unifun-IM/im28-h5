@@ -107,6 +107,32 @@ export const SDK_MIGRATIONS = [
             `ALTER TABLE conversations ADD COLUMN auto_delete_updated_at INTEGER NOT NULL DEFAULT 0`,
         ],
     },
+    {
+        version: 12,
+        name: 'add_conversation_clear_boundary',
+        statements: [
+            `ALTER TABLE conversations ADD COLUMN clear_before_seq TEXT NOT NULL DEFAULT '0'`,
+            `ALTER TABLE conversations ADD COLUMN list_hidden INTEGER NOT NULL DEFAULT 0`,
+            `ALTER TABLE messages ADD COLUMN seq_text TEXT`,
+            `UPDATE messages SET seq_text = CAST(seq AS TEXT) WHERE seq IS NOT NULL`,
+            `CREATE INDEX IF NOT EXISTS idx_conversations_list_hidden_updated ON conversations(list_hidden, is_pinned DESC, pinned_at DESC, updated_at DESC)`,
+            `CREATE INDEX IF NOT EXISTS idx_messages_conversation_seq_text ON messages(conversation_id, length(seq_text) DESC, seq_text DESC)`,
+            `CREATE TRIGGER IF NOT EXISTS trg_messages_ignore_cleared_insert
+       BEFORE INSERT ON messages
+       WHEN NEW.seq_text IS NOT NULL AND EXISTS (
+         SELECT 1 FROM conversations
+         WHERE conversation_id = NEW.conversation_id
+           AND clear_before_seq <> '0'
+           AND (
+             length(NEW.seq_text) < length(clear_before_seq)
+             OR (length(NEW.seq_text) = length(clear_before_seq) AND NEW.seq_text <= clear_before_seq)
+           )
+       )
+       BEGIN
+         SELECT RAISE(IGNORE);
+       END`,
+        ],
+    },
 ];
 export async function runMigrations(database, migrations = SDK_MIGRATIONS) {
     await database.open();

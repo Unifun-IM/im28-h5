@@ -7,3 +7,11 @@ export {
 } from './WebIMRuntimeProvider.js';
 /** 导出页面消费的 runtime context contract。 */
 export type { WebIMRuntimeContextValue } from './WebIMRuntimeProvider.js';
+/** 导出全局 Web 通话生命周期 Provider 与消费 hook。 */
+export { WebIMCallProvider, useWebIMCall } from './WebIMCallProvider.js';
+/** 导出 H5 通话入口所需的非敏感 view contract。 */
+export type {
+  WebIMActiveCallView,
+  WebIMCallContextValue,
+  WebIMStartOutgoingCallOptions,
+} from './WebIMCallProvider.js';

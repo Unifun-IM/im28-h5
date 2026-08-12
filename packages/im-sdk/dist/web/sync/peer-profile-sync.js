@@ -1,6 +1,7 @@
 import { ConversationRepository, MessageRepository, mapGatewayConversationToCore, } from '@im28/im-sdk/core';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
+import { formatIMFriendSourceType } from './friend-source.js';
 /** 好友申请缺省验证消息与 RN 保持一致。 */
 const DEFAULT_FRIEND_APPLICATION_MESSAGE = '你好，我想添加你为好友';
 /** 创建联系人资料、单聊创建和好友申请 facade。 */
@@ -52,26 +53,10 @@ class WebIMPeerProfileSyncImpl {
         if (normalizedUserID === context.userID) {
             throw createWebIMSyncError('PEER_PROFILE_SELF_CONVERSATION_UNAVAILABLE', 'A direct conversation cannot target the current user.');
         }
-        return this.mutationQueue.enqueue(async () => {
-            // remoteConversation 必须来自真实 open operation。
-            const remoteConversation = await this.dependencies.gatewayClient.openDirectConversation({
-                peer_user_id: normalizedUserID,
-            });
-            // mapping 复用共享 Gateway-to-core 唯一映射 owner。
-            const mapping = mapGatewayConversationToCore(remoteConversation, context.userID);
-            if (mapping.latestMessage) {
-                // messageRepository 先保存会话引用的 latest message。
-                const messageRepository = new MessageRepository(context.database);
-                await messageRepository.upsert(mapping.latestMessage);
-            }
-            // conversationRepository 让聊天页可从同一账号 cache 恢复。
-            const conversationRepository = new ConversationRepository(context.database);
-            await conversationRepository.upsert(mapping.conversation);
-            return mapping.conversation;
-        });
+        return this.mutationQueue.enqueue(() => openAndCacheWebIMDirectConversation(context, normalizedUserID, this.dependencies.gatewayClient));
     }
     /** 提交真实好友申请，失败时不产生本地成功状态。 */
-    async applyFriend(userID, message = '') {
+    async applyFriend(userID, message = '', sourceType = 'user_id') {
         // context 只用于认证和 self guard，不写入好友关系 cache。
         const context = requireWebIMSyncContext(this.dependencies, 'Friend application');
         // normalizedUserID 防止空目标或本人申请。
@@ -84,14 +69,34 @@ class WebIMPeerProfileSyncImpl {
         if (Array.from(normalizedMessage).length > 80) {
             throw createWebIMSyncError('PEER_PROFILE_APPLICATION_MESSAGE_TOO_LONG', 'Friend application message cannot exceed 80 characters.');
         }
+        // normalizedSourceType 只保存调用入口的真实来源，空值按现有 ID 资料页回退。
+        const normalizedSourceType = sourceType.trim() || 'user_id';
         await this.mutationQueue.enqueue(async () => {
             await this.dependencies.gatewayClient.applyFriend({
                 target_id: normalizedUserID,
                 message: normalizedMessage,
-                source_type: 'user_id',
+                source_type: normalizedSourceType,
             });
         });
     }
+}
+/** 打开真实单聊并持久化共享映射，供资料页与联系人动作共同复用。 */
+export async function openAndCacheWebIMDirectConversation(context, peerUserID, gatewayClient) {
+    /** remoteConversation 必须来自真实 open operation。 */
+    const remoteConversation = await gatewayClient.openDirectConversation({
+        peer_user_id: peerUserID,
+    });
+    /** mapping 复用共享 Gateway-to-core 唯一映射 owner。 */
+    const mapping = mapGatewayConversationToCore(remoteConversation, context.userID);
+    if (mapping.latestMessage) {
+        /** messageRepository 先保存会话引用的 latest message。 */
+        const messageRepository = new MessageRepository(context.database);
+        await messageRepository.upsert(mapping.latestMessage);
+    }
+    /** conversationRepository 让后续消息发送和页面跳转读取同一账号 cache。 */
+    const conversationRepository = new ConversationRepository(context.database);
+    await conversationRepository.upsert(mapping.conversation);
+    return mapping.conversation;
 }
 /** 拒绝缺失的联系人路由参数。 */
 function requirePeerUserID(userID) {
@@ -113,6 +118,8 @@ function normalizePeerProfile(user, friend, relationship) {
     const remark = friend?.alias?.trim() || friend?.remark?.trim() || '';
     // nickname 保留公开昵称供 RN 二级名称显示。
     const nickname = user.nickname?.trim() ?? '';
+    // sourceType 保留服务端来源码，sourceLabel 复用跨端唯一展示规则。
+    const sourceType = friend?.source_type?.trim() ?? '';
     // displayName 按 RN remark、nickname、account、phone、ID 回退。
     const displayName = remark || nickname || user.account?.trim() ||
         user.phone?.trim() || userID;
@@ -126,6 +133,8 @@ function normalizePeerProfile(user, friend, relationship) {
         bio: user.bio?.trim() ?? '',
         relationship,
         isStarred: friend?.is_starred === true,
+        sourceType,
+        sourceLabel: sourceType ? formatIMFriendSourceType(sourceType, '') : '',
         addedAt: friend?.created_at?.trim() ?? '',
     };
 }

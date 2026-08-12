@@ -1,4 +1,5 @@
-import { MessageRepository, mapGatewayMessageToCore, } from '@im28/im-sdk/core';
+import { ConversationRepository, MessageRepository, mapGatewayMessageToCore, } from '@im28/im-sdk/core';
+import { isConversationMessageAfterClearBoundary } from './conversation-clear-state.js';
 import { createWebIMSyncError } from './sync-context.js';
 /** 从 Gateway 拉取历史并持久化后返回当前本地窗口。 */
 export async function pullWebIMMessageHistory(context, options, gatewayClient) {
@@ -18,8 +19,12 @@ export async function pullWebIMMessageHistory(context, options, gatewayClient) {
         limit,
         desc: options.desc ?? true,
     });
+    /** conversation 提供本地已确认的单调清空边界。 */
+    const conversation = await new ConversationRepository(context.database).getByID(conversationID);
+    /** sourceMessages 阻止补拉把边界内旧消息重新写回 SQLite。 */
+    const sourceMessages = (response.messages ?? []).filter(message => isConversationMessageAfterClearBoundary(message.msg_seq, conversation?.clearBeforeSeq));
     /** messages 在任何写入前全部完成字段校验和映射。 */
-    const messages = (response.messages ?? []).map(message => mapGatewayMessageToCore(message, {
+    const messages = sourceMessages.map(message => mapGatewayMessageToCore(message, {
         currentUserID: context.userID,
         conversationID,
     }));

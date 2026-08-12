@@ -7,7 +7,7 @@ import type {
   WebIMGroupMember,
   WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
@@ -22,6 +22,11 @@ import {
   buildChatSettingsView,
 } from './chat-settings-view.js';
 import { ChatConversationSettingsControls } from './ChatConversationSettingsControls.js';
+import { ChatClearHistorySheet } from './ChatClearHistorySheet.js';
+import {
+  clearChatHistory,
+  type ChatClearHistoryScope,
+} from './chat-clear-history.js';
 import { formatChatAutoDeleteValue } from './chat-auto-delete-view.js';
 import type {
   ChatSettingsMemberView,
@@ -33,6 +38,8 @@ import './chat-settings-page.css';
 export function ChatSettingsPage() {
   // conversationID 由稳定 SPA path 提供并自动解码。
   const { conversationID = '' } = useParams();
+  // navigate 只处理 shared clear 成功后的 SPA route 后果。
+  const navigate = useNavigate();
   // runtime context 提供认证状态和唯一聚合 sync facade。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // sync 生命周期跟随认证 runtime，页面不创建 Gateway 或 Repository。
@@ -47,6 +54,12 @@ export function ChatSettingsPage() {
   const [loading, setLoading] = useState(true);
   // error 保留真实读取失败，不用空设置页伪装成功。
   const [error, setError] = useState<string | null>(null);
+  // notice 展示 shared clear 成功后的群聊页面反馈。
+  const [notice, setNotice] = useState<string | null>(null);
+  // clearSheetOpen 控制显式 destructive confirmation。
+  const [clearSheetOpen, setClearSheetOpen] = useState(false);
+  // clearing 阻止确认层重复提交真实 mutation。
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     if (!sync || !snapshot.userID || !conversationID) return;
@@ -54,6 +67,8 @@ export function ChatSettingsPage() {
     let active = true;
     setLoading(true);
     setError(null);
+    setNotice(null);
+    setClearSheetOpen(false);
     setConversation(null);
     setGroup(null);
     setMembers([]);
@@ -101,6 +116,33 @@ export function ChatSettingsPage() {
     };
   }, [conversationID, snapshot.userID, sync]);
 
+  /** 确认后只调用 shared conversation clear facade。 */
+  async function confirmClearHistory(scope: ChatClearHistoryScope): Promise<void> {
+    if (!sync || !conversation || clearing) return;
+    setClearing(true);
+    setError(null);
+    setNotice(null);
+    try {
+      /** next 是 Gateway 成功并完成 SQLite 边界事务后的 canonical 快照。 */
+      const next = await clearChatHistory(
+        sync.conversations,
+        conversation.conversationID,
+        scope,
+      );
+      setConversation(next);
+      setClearSheetOpen(false);
+      if (next.type === 'single' && next.listHidden) {
+        navigate('/conversations', { replace: true });
+        return;
+      }
+      setNotice('聊天记录已清空');
+    } catch (cause) {
+      setError(readChatSettingsError(cause));
+    } finally {
+      setClearing(false);
+    }
+  }
+
   if (restoring) return <ChatSettingsPageState label="正在恢复聊天设置" />;
   if (!runtime) return <ChatSettingsPageState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
@@ -123,6 +165,7 @@ export function ChatSettingsPage() {
         </header>
         <div className="rn-chat-settings-content">
           {error ? <p className="rn-chat-settings-error" role="status">{error}</p> : null}
+          {notice ? <p className="rn-chat-settings-notice" role="status">{notice}</p> : null}
           {view ? (
             <>
               {view.isGroup ? (
@@ -130,6 +173,7 @@ export function ChatSettingsPage() {
               ) : (
                 <SingleSettingsCard view={view} />
               )}
+              {view.isGroup ? <GroupIntroductionSettingsCard view={view} /> : null}
               {sync ? (
                 <ChatConversationSettingsControls
                   conversationID={view.conversationID}
@@ -145,13 +189,71 @@ export function ChatSettingsPage() {
                   autoDeleteSeconds={conversation?.autoDeleteSeconds}
                 />
               ) : null}
+              <ChatClearHistorySettingsCard
+                clearing={clearing}
+                onOpen={() => setClearSheetOpen(true)}
+              />
             </>
           ) : loading ? (
             <p className="rn-chat-settings-state">正在加载聊天设置</p>
           ) : null}
         </div>
       </section>
+      {clearSheetOpen && conversation ? (
+        <ChatClearHistorySheet
+          conversation={conversation}
+          canClearForAll={view?.canClearForAll ?? false}
+          clearing={clearing}
+          onCancel={() => setClearSheetOpen(false)}
+          onConfirm={scope => { void confirmClearHistory(scope); }}
+        />
+      ) : null}
     </main>
+  );
+}
+
+/** 群简介入口保持 RN 第二张设置卡的位置与空值副标题。 */
+function GroupIntroductionSettingsCard({ view }: { readonly view: ChatSettingsView }) {
+  // introductionURL 使用当前真实会话 ID 构造可刷新、可深链的设置子页。
+  const introductionURL =
+    `/conversations/${encodeURIComponent(view.conversationID)}/settings/introduction`;
+  return (
+    <div className="rn-chat-settings-card">
+      <Link
+        className="rn-chat-settings-row rn-chat-settings-stacked-row"
+        to={introductionURL}
+        aria-label="查看群简介"
+      >
+        <span className="rn-chat-settings-row-copy">
+          <strong>群简介</strong>
+          <small>{view.introduction || '请输入群的内容介绍'}</small>
+        </span>
+        <RNAssetIcon assetURL={arrowIconURL} />
+      </Link>
+    </div>
+  );
+}
+
+/** 清空聊天记录入口保持 RN 设置卡片布局并要求二次确认。 */
+function ChatClearHistorySettingsCard({
+  clearing,
+  onOpen,
+}: {
+  readonly clearing: boolean;
+  readonly onOpen: () => void;
+}) {
+  return (
+    <div className="rn-chat-settings-card">
+      <button
+        className="rn-chat-settings-row rn-chat-settings-clear-row"
+        type="button"
+        disabled={clearing}
+        onClick={onOpen}
+      >
+        <span>清空聊天记录</span>
+        {clearing ? <span className="rn-chat-settings-row-trailing">清空中</span> : null}
+      </button>
+    </div>
   );
 }
 
@@ -207,6 +309,8 @@ function GroupSettingsCard({
 }) {
   // visibleMemberCount 优先使用群事实，并在冷 cache 时回退已读成员数。
   const visibleMemberCount = view.memberCount || members.length;
+  // membersURL 由当前真实会话 ID 构造独立 React Router 子页。
+  const membersURL = `/conversations/${encodeURIComponent(view.conversationID)}/settings/members`;
   return (
     <div className="rn-chat-settings-card">
       <div className="rn-chat-settings-group-info">
@@ -217,7 +321,13 @@ function GroupSettingsCard({
         </span>
       </div>
       <div className="rn-chat-settings-members">
-        <h2>群成员（{visibleMemberCount}）</h2>
+        <Link className="rn-chat-settings-members-header" to={membersURL} aria-label="查看全部群成员">
+          <h2>群成员（{visibleMemberCount}）</h2>
+          <span>
+            <span>全部</span>
+            <RNAssetIcon assetURL={arrowIconURL} />
+          </span>
+        </Link>
         <div className="rn-chat-settings-member-grid">
           {members.map(member => (
             <Link key={member.userID} to={`/contacts/users/${encodeURIComponent(member.userID)}`} aria-label={`查看${member.name}的资料`}>

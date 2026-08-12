@@ -28,3 +28,24 @@ export function getContactIndexKey(displayName: string): string {
 
   return ALPHABET_INDEX_PATTERN.test(firstPinyinLetter) ? firstPinyinLetter : '#';
 }
+
+/** 按 RN 同一拼音参数生成成员或联系人排序键。 */
+export function getContactSortKey(displayName: string): string {
+  /** normalizedName 避免空白参与排序并保持稳定空值。 */
+  const normalizedName = displayName.trim();
+  if (!normalizedName) return '';
+  return pinyin(normalizedName, {
+    toneType: 'none',
+    separator: '',
+    mode: 'surname',
+    surname: 'head',
+    nonZh: 'consecutive',
+  }).toLocaleLowerCase();
+}
+
+/** 复刻 RN 联系人与群成员列表的拼音优先排序。 */
+export function compareContactIndexedNames(left: string, right: string): number {
+  /** sortResult 优先比较规范化拼音，再用中文原文稳定消歧。 */
+  const sortResult = getContactSortKey(left).localeCompare(getContactSortKey(right));
+  return sortResult || left.localeCompare(right, 'zh-Hans-CN');
+}

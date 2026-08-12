@@ -146,6 +146,8 @@
   flex: 1;
   align-items: center;
   gap: 16px;
+  color: inherit;
+  text-decoration: none;
 }
 .rn-call-avatar {
   position: relative;

@@ -17,8 +17,22 @@ describe('chat mention composer', () => {
   it('所有人优先并过滤自己和昵称查询', () => {
     /** members 提供稳定 SDK DTO。 */
     const members = [
-      { groupID: 'g1', userID: 'self', nickname: '自己', avatarURL: '', role: 'member' as const },
-      { groupID: 'g1', userID: 'u2', nickname: '用户B', avatarURL: '', role: 'admin' as const },
+      {
+        groupID: 'g1',
+        userID: 'self',
+        nickname: '自己',
+        avatarURL: '',
+        role: 'member' as const,
+        roleLevel: 20,
+      },
+      {
+        groupID: 'g1',
+        userID: 'u2',
+        nickname: '用户B',
+        avatarURL: '',
+        role: 'admin' as const,
+        roleLevel: 60,
+      },
     ];
     expect(buildChatMentionPickerItems({
       members,

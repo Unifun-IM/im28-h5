@@ -75,6 +75,23 @@
   white-space: nowrap;
 }
 
+.rn-contacts-pull {
+  display: grid;
+  height: 0;
+  place-items: center;
+  overflow: hidden;
+  color: var(--im-text-muted);
+  background: var(--im-bg-app);
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 18px;
+  transition: height 140ms ease;
+}
+
+.rn-contacts-pull.is-armed {
+  color: var(--im-text-secondary);
+}
+
 .rn-contacts-error {
   display: flex;
   align-items: center;
@@ -237,6 +254,116 @@
   line-height: 22px;
 }
 
+.rn-contact-action-backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+}
+
+.rn-contact-action-backdrop {
+  background: transparent;
+}
+
+.rn-contact-action-menu {
+  position: fixed;
+  width: 168px;
+  overflow: visible;
+  border: var(--im-hairline-width) solid var(--im-conversation-action-divider);
+  border-radius: 12px;
+  background: var(--im-conversation-action-background);
+  box-shadow: 0 8px 24px var(--im-conversation-action-shadow);
+}
+
+.rn-contact-action-menu::after {
+  position: absolute;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateX(-50%) rotate(45deg);
+  border: var(--im-hairline-width) solid var(--im-conversation-action-divider);
+  background: var(--im-conversation-action-background);
+  content: '';
+}
+
+.rn-contact-action-menu.is-above::after {
+  bottom: -7px;
+  border-top: 0;
+  border-left: 0;
+}
+
+.rn-contact-action-menu.is-below::after {
+  top: -7px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.rn-contact-action-menu button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 56px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border: 0;
+  border-bottom: var(--im-hairline-width) solid var(--im-conversation-action-divider);
+  color: var(--im-conversation-action-text);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 20px;
+  text-align: left;
+}
+
+.rn-contact-action-menu button:first-child {
+  border-radius: 12px 12px 0 0;
+}
+
+.rn-contact-action-menu button:last-child {
+  border-bottom: 0;
+  border-radius: 0 0 12px 12px;
+}
+
+.rn-contact-action-menu button:active:not(:disabled) {
+  background: var(--im-conversation-action-pressed);
+}
+
+.rn-contact-action-menu button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.rn-contact-action-menu button .rn-asset-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  color: var(--im-conversation-action-icon);
+}
+
+.rn-contact-action-menu button.is-danger {
+  color: var(--im-status-danger);
+}
+
+.rn-contact-action-error {
+  position: fixed;
+  z-index: 55;
+  right: max(16px, calc((100vw - 480px) / 2 + 16px));
+  bottom: calc(var(--im-primary-tab-bar-space, 0px) + var(--im-safe-bottom) + 16px);
+  left: max(16px, calc((100vw - 480px) / 2 + 16px));
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: var(--im-text-inverse);
+  background: var(--im-status-danger);
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: 18px;
+  text-align: center;
+}
+
 .rn-contacts-empty {
   margin: 0;
   padding: 64px 32px 0;
@@ -293,10 +420,24 @@
   line-height: 14px;
 }
 
+.rn-contact-index .rn-contact-index-search .rn-asset-icon {
+  width: 12px;
+  height: 12px;
+}
+
 .rn-contact-index button:active,
-.rn-contact-index button:focus-visible {
+.rn-contact-index button:focus-visible,
+.rn-contact-index button.is-active {
   color: var(--im-text-inverse);
   background: var(--im-brand-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rn-contacts-loading span,
+  .rn-contacts-pull {
+    animation: none;
+    transition: none;
+  }
 }
 
 .rn-contact-index .rn-asset-icon {

@@ -1,23 +1,10 @@
 import { MessageRepository, } from '@im28/im-sdk/core';
+import { normalizeIMRealtimeMessages } from './realtime-message-normalization.js';
 /** 递归收集带稳定身份的 Gateway 消息。 */
 export function collectGatewayMessages(value) {
-    // output 保留 wrapper 顺序，后续稳定 ID 去重。
-    const output = [];
-    visitWrappedRecords(value, record => {
-        // conversationID 可由 batch wrapper 向单条 message 继承。
-        const conversationID = readString(record.conversation_id);
-        // items 仅处理显式数组，避免把 body 当 transport wrapper。
-        const items = Array.isArray(record.messages) ? record.messages : [];
-        for (const item of items) {
-            if (isRecord(item))
-                pushGatewayMessage(output, item, conversationID);
-        }
-        if (isRecord(record.message)) {
-            pushGatewayMessage(output, record.message, conversationID);
-        }
-        pushGatewayMessage(output, record, undefined);
-    });
-    return deduplicateGatewayMessages(output);
+    return normalizeIMRealtimeMessages(value).filter(message => Boolean(readString(message.conversation_id) &&
+        readString(message.sender_id) &&
+        (readString(message.client_msg_id) || readString(message.msg_id))));
 }
 /** 收集带 conversation_id 的会话 DTO。 */
 export function collectGatewayConversations(value) {
@@ -34,7 +21,7 @@ export function collectGatewayConversations(value) {
             readString(record.conversation.conversation_id)) {
             output.push(record.conversation);
         }
-        if (readString(record.conversation_id) && !isMessageRecord(record)) {
+        if (readString(record.conversation_id) && !isRealtimeMessageRecord(record)) {
             output.push(record);
         }
     });
@@ -116,14 +103,78 @@ export function selectLatestMessage(messages) {
 export async function persistMappedMessages(repository, messages) {
     // unreadDelta 对 replay 保持幂等。
     let unreadDelta = 0;
+    /** persistedMessages 返回实际占用 SQLite 主键的最终实体。 */
+    const persistedMessages = [];
     for (const mapped of messages) {
         // existed 同时检查 client/server ID，兼容发送回显与历史补拉。
         const existed = await findStoredMessage(repository, mapped.value);
-        await repository.upsert(mapped.value);
+        /** persisted 复用已有 optimistic 主键并保留本地发送顺序。 */
+        const persisted = reconcileRealtimeMessage(existed, mapped.value);
+        await repository.upsert(persisted);
+        persistedMessages.push(persisted);
         if (!existed && mapped.value.direction === 'incoming')
             unreadDelta += 1;
     }
-    return { unreadDelta };
+    return { messages: persistedMessages, unreadDelta };
+}
+/** 让服务端回显覆盖已有发送行，不创建第二个 client identity。 */
+function reconcileRealtimeMessage(existing, incoming) {
+    if (!existing)
+        return incoming;
+    /** payload 只从旧快照保留客户端本地排序字段。 */
+    const payload = preserveRealtimeLocalOrder(existing.payload, incoming.payload);
+    return {
+        ...incoming,
+        clientMsgID: existing.clientMsgID,
+        ...(incoming.serverMsgID || existing.serverMsgID
+            ? { serverMsgID: incoming.serverMsgID || existing.serverMsgID }
+            : {}),
+        sendTime: existing.sendTime || incoming.sendTime,
+        ...(incoming.seq !== undefined || existing.seq !== undefined
+            ? { seq: incoming.seq ?? existing.seq }
+            : {}),
+        ...(incoming.forwardOrigin || existing.forwardOrigin
+            ? { forwardOrigin: incoming.forwardOrigin || existing.forwardOrigin }
+            : {}),
+        ...(incoming.forwardSourceMsgID || existing.forwardSourceMsgID
+            ? {
+                forwardSourceMsgID: incoming.forwardSourceMsgID || existing.forwardSourceMsgID,
+            }
+            : {}),
+        ...(incoming.forwardBatchID || existing.forwardBatchID
+            ? { forwardBatchID: incoming.forwardBatchID || existing.forwardBatchID }
+            : {}),
+        ...(incoming.localEx || existing.localEx
+            ? { localEx: incoming.localEx || existing.localEx }
+            : {}),
+        ...(incoming.entities?.length || existing.entities?.length
+            ? { entities: incoming.entities?.length ? incoming.entities : existing.entities }
+            : {}),
+        ...(incoming.mentions?.length || existing.mentions?.length
+            ? { mentions: incoming.mentions?.length ? incoming.mentions : existing.mentions }
+            : {}),
+        payload,
+    };
+}
+/** 从旧 payload 向新正文搬运 RN/Web 共用的本地发送排序标记。 */
+function preserveRealtimeLocalOrder(existing, incoming) {
+    /** existingRecord 仅接受普通对象缓存。 */
+    const existingRecord = isRecord(existing) ? existing : {};
+    /** incomingRecord 保留服务端最新正文，非对象原样返回。 */
+    const incomingRecord = isRecord(incoming) ? incoming : null;
+    if (!incomingRecord)
+        return incoming;
+    /** localSendOrder 使用 camelCase 兼容 RN 展示排序。 */
+    const localSendOrder = existingRecord.localSendOrder;
+    /** snakeLocalSendOrder 保留已落库的 legacy 字段。 */
+    const snakeLocalSendOrder = existingRecord.local_send_order;
+    return {
+        ...incomingRecord,
+        ...(localSendOrder !== undefined ? { localSendOrder } : {}),
+        ...(snakeLocalSendOrder !== undefined
+            ? { local_send_order: snakeLocalSendOrder }
+            : {}),
+    };
 }
 /** 返回十进制 uint64 集合的最大值，minimum=true 时返回最小值。 */
 export function maxDecimalString(values, minimum = false) {
@@ -167,21 +218,6 @@ function visitWrappedRecords(value, visit) {
             visitWrappedRecords(value[key], visit);
     }
 }
-/** 将有效 message record 补齐父级 conversation ID 后加入集合。 */
-function pushGatewayMessage(output, record, inheritedConversationID) {
-    if (!isMessageRecord(record))
-        return;
-    // conversationID 优先使用 message 自身字段。
-    const conversationID = readString(record.conversation_id) ?? inheritedConversationID;
-    if (!conversationID)
-        return;
-    output.push({ ...record, conversation_id: conversationID });
-}
-/** 判断 record 是否具备 mapper 要求的消息稳定身份。 */
-function isMessageRecord(record) {
-    return Boolean((readString(record.client_msg_id) || readString(record.msg_id)) &&
-        readString(record.sender_id));
-}
 /** 按原始 uint64 seq 降序比较，缺失或相同时按发送时间降序。 */
 function compareMappedMessages(left, right) {
     // leftSeq/rightSeq 只接受十进制 uint64 字符串。
@@ -193,6 +229,12 @@ function compareMappedMessages(left, right) {
         }
     }
     return right.value.sendTime - left.value.sendTime;
+}
+/** 判断对象是否携带消息稳定身份，防止被会话 collector 重复接收。 */
+function isRealtimeMessageRecord(record) {
+    return Boolean(readString(record.client_msg_id) ||
+        readString(record.msg_id) ||
+        readString(record.sender_id));
 }
 /** 判断 unknown 是否为非数组对象。 */
 function isRecord(value) {

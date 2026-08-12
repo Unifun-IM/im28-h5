@@ -41,7 +41,10 @@ export function PrimaryTabsLayout() {
   const showTabBar = Boolean(runtime && snapshot.userID && !restoring);
   return (
     <PrimaryTabBadgeProvider reportConversationUnreadTotal={reportConversationUnreadTotal}>
-      <div className={`rn-primary-tabs-layout${showTabBar ? ' has-tab-bar' : ''}`}>
+      <div
+        className={`rn-primary-tabs-layout${showTabBar ? ' has-tab-bar' : ''}`}
+        data-im-runtime-state={snapshot.state}
+      >
         <div className="rn-primary-tabs-content"><Outlet /></div>
         {showTabBar ? <PrimaryTabBar activeTab={activeTab} unreadTotal={unreadTotal} /> : null}
       </div>

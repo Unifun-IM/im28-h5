@@ -1,7 +1,10 @@
 import { ConversationRepository, MessageRepository, mapGatewayConversationToCore, } from '@im28/im-sdk/core';
+import { createIMConversationClearSync, } from './conversation-clear-sync.js';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
 import { createIMConversationSettingsSync, } from './conversation-settings.js';
+import { createIMConversationListActionsSync, } from './conversation-list-actions.js';
+import { createIMConversationArchiveSync, } from './conversation-archive-sync.js';
 import { readUnreadMentionSnapshot, } from './conversation-unread-mention.js';
 /** 创建认证账号绑定的浏览器会话同步服务。 */
 export function createWebIMConversationSync(dependencies) {
@@ -15,12 +18,30 @@ class WebIMConversationSyncImpl {
     mutationQueue;
     /** settingsSync 是 RN/Web 共用的会话设置与自动删除 owner。 */
     settingsSync;
+    /** clearSync 是 RN/Web/Desktop 共用的 destructive convergence owner。 */
+    clearSync;
+    /** listActionsSync 是 RN/Web/Desktop 共用的列表动作 owner。 */
+    listActionsSync;
+    /** archiveSync 是 RN/Web/Desktop 共用的归档分页与快照 owner。 */
+    archiveSync;
     /** 保存 runtime owners，不复制 transport 或 storage 状态。 */
     constructor(dependencies) {
         this.dependencies = dependencies;
         this.mutationQueue =
             dependencies.mutationQueue ?? createWebIMSyncMutationQueue();
         this.settingsSync = createIMConversationSettingsSync({
+            ...dependencies,
+            mutationQueue: this.mutationQueue,
+        });
+        this.clearSync = createIMConversationClearSync({
+            ...dependencies,
+            mutationQueue: this.mutationQueue,
+        });
+        this.listActionsSync = createIMConversationListActionsSync({
+            ...dependencies,
+            mutationQueue: this.mutationQueue,
+        });
+        this.archiveSync = createIMConversationArchiveSync({
             ...dependencies,
             mutationQueue: this.mutationQueue,
         });
@@ -58,6 +79,26 @@ class WebIMConversationSyncImpl {
         // context 在网络请求前冻结本轮 user/database owner。
         const context = requireWebIMSyncContext(this.dependencies, 'Conversation sync');
         return this.mutationQueue.enqueue(() => this.syncDirect(context, options));
+    }
+    /** 全分页同步归档端点，不复用普通会话替换语义。 */
+    syncArchived(options = {}) {
+        return this.archiveSync.sync(options);
+    }
+    /** 清空会话历史并委托共享 Gateway cursor 状态机。 */
+    clear(options) {
+        return this.clearSync.clear(options);
+    }
+    /** 标记已读并委托平台中立列表动作 owner。 */
+    markRead(conversationID, readSeq) {
+        return this.listActionsSync.markRead(conversationID, readSeq);
+    }
+    /** 标记未读并委托平台中立列表动作 owner。 */
+    markUnread(conversationID, manualUnread = true) {
+        return this.listActionsSync.markUnread(conversationID, manualUnread);
+    }
+    /** 切换归档并委托平台中立列表动作 owner。 */
+    setArchived(conversationID, archived) {
+        return this.listActionsSync.setArchived(conversationID, archived);
     }
     /** 读取真实 Gateway 设置并委托唯一 setting owner。 */
     getSetting(conversationID) {
@@ -103,7 +144,7 @@ class WebIMConversationSyncImpl {
         }
         // conversationRepository 最后原子替换完整会话集合。
         const conversationRepository = new ConversationRepository(context.database);
-        await conversationRepository.replaceAll(conversations);
+        await conversationRepository.replaceUnarchived(conversations);
         return conversationRepository.list();
     }
     /** 拉取全部分页，并拒绝循环 token 和无界分页。 */

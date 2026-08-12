@@ -17,6 +17,19 @@
   padding: 16px 16px calc(32px + env(safe-area-inset-bottom));
 }
 
+.rn-contact-profile-more {
+  display: grid;
+  width: 40px;
+  height: 56px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--im-icon-primary);
+  background: transparent;
+}
+
+.rn-contact-profile-more .rn-asset-icon { width: 24px; height: 24px; }
+
 .rn-contact-profile-hero {
   display: flex;
   flex-direction: column;
@@ -147,14 +160,47 @@
   opacity: 0.75;
 }
 
+.rn-contact-profile-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 12px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--im-bg-card);
+}
+
+.rn-contact-profile-quick-actions button {
+  display: flex;
+  min-width: 0;
+  height: 76px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex-direction: column;
+  padding: 8px 4px;
+  border: 0;
+  color: var(--im-icon-secondary);
+  background: transparent;
+  font: inherit;
+}
+
+.rn-contact-profile-quick-actions button:active:not(:disabled) { background: var(--im-bg-pressed); }
+.rn-contact-profile-quick-actions button:disabled { opacity: 0.55; }
+.rn-contact-profile-quick-actions button.is-selected { color: var(--im-status-warning, #f5a623); }
+.rn-contact-profile-quick-actions .rn-asset-icon { width: 24px; height: 24px; }
+.rn-contact-profile-quick-actions span { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+
 .rn-contact-profile-card {
   overflow: hidden;
   border-radius: 8px;
   background: var(--im-bg-card);
 }
 
+.rn-contact-profile-card-gap { margin-top: 12px; }
+
 .rn-contact-profile-row {
   display: flex;
+  width: calc(100% - 16px);
   align-items: center;
   justify-content: space-between;
   min-height: 56px;
@@ -162,6 +208,10 @@
   padding: 12px 16px 12px 0;
   gap: 20px;
   border-bottom: 1px solid var(--im-border-subtle);
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
 }
 
 .rn-contact-profile-row:last-child {
@@ -175,6 +225,15 @@
   line-height: 24px;
 }
 
+.rn-contact-profile-row-value {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
 .rn-contact-profile-row strong {
   min-width: 0;
   font-weight: 400;
@@ -185,6 +244,83 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.rn-contact-profile-row-value .rn-asset-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: var(--im-icon-muted);
+}
+
+.rn-contact-profile-row:active { background: var(--im-bg-pressed); }
+
+.rn-contact-profile-dialog-backdrop {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--im-bg-overlay);
+}
+
+.rn-contact-profile-dialog-backdrop > section {
+  width: min(100%, 360px);
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--im-bg-card);
+}
+
+.rn-contact-profile-dialog-backdrop h2 {
+  margin: 0;
+  padding: 20px 20px 8px;
+  color: var(--im-text-primary);
+  font-size: 17px;
+  text-align: center;
+}
+
+.rn-contact-profile-dialog-backdrop p {
+  margin: 0;
+  padding: 4px 20px 20px;
+  color: var(--im-text-secondary);
+  font-size: 14px;
+  line-height: 21px;
+  text-align: center;
+}
+
+.rn-contact-profile-dialog-backdrop input {
+  display: block;
+  width: calc(100% - 40px);
+  height: 44px;
+  margin: 8px 20px 20px;
+  padding: 0 12px;
+  border: 1px solid var(--im-border-input);
+  border-radius: 6px;
+  outline: 0;
+  color: var(--im-text-primary);
+  background: var(--im-bg-input);
+  font: inherit;
+}
+
+.rn-contact-profile-dialog-backdrop input:focus { border-color: var(--im-brand-primary); }
+
+.rn-contact-profile-dialog-backdrop footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--im-border-subtle);
+}
+
+.rn-contact-profile-dialog-backdrop footer button {
+  min-height: 50px;
+  border: 0;
+  border-right: 1px solid var(--im-border-subtle);
+  color: var(--im-text-secondary);
+  background: transparent;
+  font: inherit;
+}
+
+.rn-contact-profile-dialog-backdrop footer button:last-child { border-right: 0; color: var(--im-brand-primary); }
+.rn-contact-profile-dialog-backdrop footer button:disabled { opacity: 0.55; }
 
 .rn-contact-profile-state {
   display: flex;

@@ -7,6 +7,8 @@ export function mapStoredMessageRow(row) {
     const serverMsgID = readOptionalString(row, 'server_msg_id');
     /** seq 是可用于会话内排序和未读边界的安全整数。 */
     const seq = readOptionalNumber(row, 'seq');
+    /** seqString 保留 Gateway uint64 的精确十进制身份。 */
+    const seqString = readOptionalString(row, 'seq_text');
     /** localEx 保存编辑时间等本地扩展状态。 */
     const localEx = readOptionalString(row, 'local_extra_json');
     /** forwardSourceMsgID 保留普通转发失败行的服务端源身份。 */
@@ -31,6 +33,7 @@ export function mapStoredMessageRow(row) {
         status: readRequiredString(row, 'status'),
         sendTime: readRequiredNumber(row, 'send_time'),
         ...(seq !== undefined ? { seq } : {}),
+        ...(seqString !== undefined ? { seqString } : {}),
         ...(forwardOrigin ? { forwardOrigin } : {}),
         ...(forwardSourceMsgID ? { forwardSourceMsgID } : {}),
         ...(forwardBatchID ? { forwardBatchID } : {}),

@@ -20,6 +20,9 @@ export interface ChatMessageView {
   readonly detail?: string;
   readonly mediaURL?: string;
   readonly thumbnailURL?: string;
+  readonly width?: number;
+  readonly height?: number;
+  readonly durationSeconds?: number;
   readonly emojiID?: string;
   readonly quoteMessageID?: string;
   readonly entities?: readonly PresetEmojiEntity[];
@@ -93,21 +96,30 @@ export function getChatMessageView(
   if (message.contentType === 102) {
     // image 读取第一张图，与 RN 当前单图气泡主路径一致。
     const image = readFirstRecord(asRecord(body.image).list);
+    /** width 是 Gateway 保存的真实图片宽度。 */
+    const width = readPositiveNumber(image.width);
+    /** height 是 Gateway 保存的真实图片高度。 */
+    const height = readPositiveNumber(image.height);
     return {
       kind: 'image',
       text: '[图片]',
       mediaURL: readString(image.url),
       thumbnailURL: readString(image.thumbnail_url) || readString(image.url),
+      ...(width === undefined ? {} : { width }),
+      ...(height === undefined ? {} : { height }),
     };
   }
   if (message.contentType === 103) {
     // audio 使用协议中的真实 URL 和秒数形成可播放语音气泡。
     const audio = asRecord(body.audio ?? body.sound);
+    /** durationSeconds 保留原始秒数供 RN 语音宽度公式使用。 */
+    const durationSeconds = readNumber(audio.duration_seconds ?? audio.duration);
     return {
       kind: 'audio',
       text: '[语音]',
       mediaURL: readString(audio.url),
-      detail: formatDuration(readNumber(audio.duration_seconds ?? audio.duration)),
+      ...(durationSeconds > 0 ? { durationSeconds } : {}),
+      detail: formatDuration(durationSeconds),
     };
   }
   if (message.contentType === 104) {
@@ -309,4 +321,11 @@ function readNumber(value: unknown): number {
   // numberValue 统一处理 number 与 uint64 string。
   const numberValue = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(numberValue) ? numberValue : 0;
+}
+
+/** 将未知媒体尺寸收窄为有限正数。 */
+function readPositiveNumber(value: unknown): number | undefined {
+  /** numberValue 复用消息数值兼容转换。 */
+  const numberValue = readNumber(value);
+  return numberValue > 0 ? numberValue : undefined;
 }

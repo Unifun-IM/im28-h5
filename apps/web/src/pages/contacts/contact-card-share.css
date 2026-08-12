@@ -1,0 +1,265 @@
+.rn-contact-card-share-page,
+.rn-contact-card-share-state {
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--im-text-primary);
+  background: var(--im-bg-overlay);
+}
+
+.rn-contact-card-share-page {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.rn-contact-card-share-sheet {
+  position: relative;
+  display: grid;
+  width: min(100%, 480px);
+  height: min(72dvh, 640px);
+  min-height: 420px;
+  grid-template-rows: 56px 48px minmax(0, 1fr) auto;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: var(--im-bg-page);
+  box-shadow: 0 -8px 28px rgba(31, 38, 46, 0.12);
+}
+
+.rn-contact-card-share-header {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  align-items: center;
+}
+
+.rn-contact-card-share-header button,
+.rn-contact-card-share-header > span {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--im-icon-primary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.rn-contact-card-share-header .rn-asset-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.rn-contact-card-share-header h1 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 24px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-contact-card-share-search {
+  display: flex;
+  height: 40px;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 8px;
+  padding: 0 12px;
+  border: var(--im-hairline-width) solid var(--im-border-input);
+  border-radius: 6px;
+  color: var(--im-icon-muted);
+  background: var(--im-bg-input);
+}
+
+.rn-contact-card-share-search > .rn-asset-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.rn-contact-card-share-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--im-text-primary);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.rn-contact-card-share-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.rn-contact-card-share-search button {
+  display: grid;
+  width: 24px;
+  height: 32px;
+  flex: 0 0 24px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--im-icon-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.rn-contact-card-share-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-content: start;
+  gap: 20px 8px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.rn-contact-card-share-grid > button {
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  color: var(--im-text-primary);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.rn-contact-card-share-grid > button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.rn-contact-card-share-avatar {
+  position: relative;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  overflow: visible;
+  border-radius: 24px;
+  color: #ffffff;
+  background: var(--contact-card-target-gradient, var(--im-bg-input));
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.rn-contact-card-share-avatar > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.rn-contact-card-share-check {
+  position: absolute;
+  z-index: 1;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 2px solid var(--im-bg-page);
+  border-radius: 9px;
+  color: var(--im-text-inverse);
+  background: var(--im-brand-primary);
+}
+
+.rn-contact-card-share-check .rn-asset-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.rn-contact-card-share-grid strong {
+  width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 17px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-contact-card-share-grid > p {
+  grid-column: 1 / -1;
+  margin: 28px 0 0;
+  color: var(--im-text-muted);
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: 18px;
+  text-align: center;
+}
+
+.rn-contact-card-share-error {
+  position: absolute;
+  z-index: 2;
+  right: 16px;
+  left: 16px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: var(--im-text-inverse);
+  background: var(--im-status-danger);
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 18px;
+  text-align: center;
+}
+
+.rn-contact-card-share-footer {
+  padding: 12px 16px max(12px, var(--im-safe-bottom));
+  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+  background: var(--im-bg-page);
+}
+
+.rn-contact-card-share-footer button {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--im-text-inverse);
+  background: var(--im-brand-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.rn-contact-card-share-footer button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.rn-contact-card-share-state {
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.rn-contact-card-share-state span {
+  color: var(--im-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 360px) {
+  .rn-contact-card-share-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

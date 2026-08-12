@@ -30,6 +30,7 @@ export function ChatMediaPreviewOverlay({
     readonly text: string;
   } | null>(null);
   // downloadName 优先使用文件 payload 名称，其次使用 URL path。
+  // downloadName 优先使用文件 payload 名称，其次使用原始 URL path。
   const downloadName = getChatMediaDownloadName(
     preview.url,
     preview.fileName ?? '',
@@ -94,7 +95,22 @@ export function ChatMediaPreviewOverlay({
       ) : (
         <div className="rn-chat-media-preview-body" onClick={onClose}>
           {preview.kind === 'image' ? (
-            <img src={preview.url} alt="图片预览" onClick={stopClickPropagation} />
+            <img
+              src={preview.url}
+              alt="图片预览"
+              onClick={stopClickPropagation}
+              onError={event => {
+                /** image 仅在原始对象无法解码时切换到 OSS JPEG 投影。 */
+                const image = event.currentTarget;
+                if (
+                  preview.fallbackURL &&
+                  image.dataset.fallbackAttempted !== 'true'
+                ) {
+                  image.dataset.fallbackAttempted = 'true';
+                  image.src = preview.fallbackURL;
+                }
+              }}
+            />
           ) : (
             <video
               key={preview.url}

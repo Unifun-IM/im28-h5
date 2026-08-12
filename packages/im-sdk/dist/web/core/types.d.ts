@@ -36,7 +36,13 @@ export interface Conversation {
     readonly lastReadSeq?: string;
     readonly lastMsgSeq?: string;
     readonly oldestLoadedSeq?: string;
+    /** 服务端确认的历史清空边界，使用十进制字符串避免 uint64 截断。 */
+    readonly clearBeforeSeq?: string;
+    /** 单聊清空后可暂时从普通会话列表隐藏。 */
+    readonly listHidden?: boolean;
     readonly unreadCount: number;
+    /** 手动未读与服务端真实未读数分离，供各端一致展示长按状态。 */
+    readonly manualUnread?: boolean;
     readonly isArchived?: boolean;
     readonly isPinned?: boolean;
     readonly pinnedAt?: number;
@@ -76,6 +82,8 @@ export interface Message {
     readonly status: MessageStatus;
     readonly sendTime: number;
     readonly seq?: number;
+    /** 精确 Gateway uint64 seq；安全整数场景同时保留 seq。 */
+    readonly seqString?: string;
     readonly forwardOrigin?: ForwardOrigin;
     readonly forwardSourceMsgID?: string;
     readonly forwardBatchID?: string;

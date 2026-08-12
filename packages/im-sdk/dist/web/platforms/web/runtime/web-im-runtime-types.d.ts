@@ -8,6 +8,8 @@ import type { WebIMPlatformTerm, WebIMPlatformTermKey } from './platform-terms-c
 import type { WebIMRuntimeConfig } from './runtime-config.js';
 import type { WebIMRuntimeState } from './runtime-lifecycle.js';
 import type { WebIMUserSettings } from './web-im-user-settings.js';
+import type { IMIncomingCallSnapshot } from '../../../sync/incoming-call-lifecycle.js';
+import type { IMCallRealtimeSignal } from '../../../sync/call-realtime-signal.js';
 /** Web 登录请求由 runtime 统一注入稳定 device ID。 */
 export type WebIMLoginRequest = Omit<GatewayUserLoginRequest, 'device_id'>;
 /** Web 注册请求由 runtime 统一注入稳定 device ID。 */
@@ -27,6 +29,7 @@ export interface WebIMRuntimeSnapshot {
     readonly state: WebIMRuntimeState;
     readonly userID: string | null;
     readonly dataVersion: number;
+    readonly incomingCall: IMIncomingCallSnapshot;
 }
 /** Web runtime 对页面开放的最小认证与连接 API。 */
 export interface WebIMRuntime {
@@ -41,6 +44,9 @@ export interface WebIMRuntime {
     getSync(): WebIMSync;
     getSettings(): WebIMUserSettings;
     getClientVersion(): WebIMClientVersion;
+    refreshIncomingCall(): Promise<void>;
+    dismissIncomingCall(callID: string): void;
+    subscribeCallSignals(listener: (signals: readonly IMCallRealtimeSignal[]) => void): () => void;
     subscribe(listener: () => void): () => void;
     dispose(): void;
 }

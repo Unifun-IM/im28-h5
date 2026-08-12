@@ -7,6 +7,7 @@ import { createWebIMJoinedGroupSync, } from '../../../sync/joined-group-sync.js'
 import { createIMGroupMentionSync, } from '../../../sync/group-mention.js';
 import { createWebIMPeerProfileSync, } from '../../../sync/peer-profile-sync.js';
 import { createWebIMConversationSync, } from '../../../sync/conversation-sync.js';
+import { canIMGroupMemberClearAllMessages } from '../../../sync/conversation-clear-sync.js';
 import { createWebIMMessageSync, } from '../../../sync/message-sync.js';
 import { createWebIMRealtimeSync, } from '../../../sync/realtime-sync.js';
 import { createWebIMSyncMutationQueue } from '../../../sync/sync-mutation-queue.js';
@@ -22,6 +23,18 @@ export function createWebIMSync(dependencies) {
     const contacts = createWebIMContactSync(sharedDependencies);
     // groupMentions 是群成员身份、权限和 type106 发送的唯一业务 owner。
     const groupMentions = createIMGroupMentionSync(sharedDependencies);
+    /** canClearAllMembers 从共享成员 cache 读取当前账号角色并应用中性权限规则。 */
+    const canClearAllMembers = async (conversation) => {
+        /** currentUserID 只来自 runtime 私有认证 owner。 */
+        const currentUserID = dependencies.getCurrentUserID()?.trim() ?? '';
+        if (!currentUserID || conversation.type !== 'group')
+            return false;
+        /** members 与群设置、mention 共用同一账号数据库快照。 */
+        const members = await groupMentions.listMembers(conversation.targetID);
+        /** currentMember 未命中时保持 fail-closed。 */
+        const currentMember = members.find(member => member.userID === currentUserID);
+        return canIMGroupMemberClearAllMessages(currentMember);
+    };
     // messages 保留旧公开入口，但生产组合显式注入同一 neutral facade。
     const messages = createWebIMMessageSync({
         ...sharedDependencies,
@@ -35,7 +48,10 @@ export function createWebIMSync(dependencies) {
         }),
         calls: createWebIMCallSync(sharedDependencies),
         contacts,
-        conversations: createWebIMConversationSync(sharedDependencies),
+        conversations: createWebIMConversationSync({
+            ...sharedDependencies,
+            canClearAllMembers,
+        }),
         customEmojis: createWebIMCustomEmojiSync(sharedDependencies),
         friendApplications: createWebIMFriendApplicationSync(dependencies),
         groupApplications: createWebIMGroupApplicationSync(dependencies),

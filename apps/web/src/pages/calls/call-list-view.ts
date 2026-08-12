@@ -79,6 +79,49 @@ export function isCanceledCall(call: GatewayCall): boolean {
   return ['canceled', 'cancelled', 'rejected'].includes(status);
 }
 
+/** 生成通话所在本地自然日的半开时间范围。 */
+export function getCallDayRange(value: string | undefined): {
+  readonly startMs: number;
+  readonly endMs: number;
+} {
+  /** timestamp 仅接受有效服务端时间。 */
+  const timestamp = value ? Date.parse(value) : 0;
+  /** date 在时间无效时回退当前自然日，保持 RN 展示语义。 */
+  const date = Number.isFinite(timestamp) && timestamp > 0
+    ? new Date(timestamp)
+    : new Date();
+  /** start 是本地时区当天零点。 */
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  /** end 是次日零点的开区间边界。 */
+  const end = new Date(start);
+  end.setDate(start.getDate() + 1);
+  return { startMs: start.getTime(), endMs: end.getTime() };
+}
+
+/** 格式化 RN 通话详情日期标题。 */
+export function formatCallDateHeader(value: string | undefined): string {
+  /** timestamp 仅接受有效服务端时间。 */
+  const timestamp = value ? Date.parse(value) : 0;
+  /** date 在时间无效时回退当前日期。 */
+  const date = Number.isFinite(timestamp) && timestamp > 0
+    ? new Date(timestamp)
+    : new Date();
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
+/** 格式化通话详情记录的本地时分。 */
+export function formatCallClock(value: string | undefined): string {
+  /** timestamp 仅接受有效服务端时间。 */
+  const timestamp = value ? Date.parse(value) : 0;
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return '';
+  /** date 提供本地时区的时分显示。 */
+  const date = new Date(timestamp);
+  return [date.getHours(), date.getMinutes()]
+    .map(part => String(part).padStart(2, '0'))
+    .join(':');
+}
+
 /** 从单聊会话 ID 中解析对端 ID。 */
 function parseDirectPeerID(conversationID: string): string {
   // prefix 顺序与 RN helper 一致。

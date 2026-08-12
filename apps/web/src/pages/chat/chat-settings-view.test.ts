@@ -52,6 +52,8 @@ describe('chat settings view', () => {
       targetID: 'user-2',
       title: '小明',
       memberCount: 0,
+      introduction: '',
+      canClearForAll: true,
     });
   });
 
@@ -62,7 +64,7 @@ describe('chat settings view', () => {
       type: 'group',
       targetID: 'group-1',
       name: '旧群名',
-    }), createGroup());
+    }), createGroup({ introduction: '用于同步产品进度' }));
     expect(view).toMatchObject({
       isGroup: true,
       pageTitle: '群设置',
@@ -70,19 +72,81 @@ describe('chat settings view', () => {
       title: '产品群',
       avatarURL: 'https://example.test/group.png',
       memberCount: 23,
+      introduction: '用于同步产品进度',
+      canClearForAll: false,
     });
+  });
+
+  it('does not project an unrelated group introduction', () => {
+    /** conversation 是群简介入口当前绑定的真实群会话。 */
+    const conversation = createConversation({
+      conversationID: 'conversation-group-1',
+      type: 'group',
+      targetID: 'group-1',
+    });
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ groupID: 'other-group', introduction: '其他群简介' }),
+    ).introduction).toBe('');
+  });
+
+  it('only exposes all-member clear for a matching owner or admin snapshot', () => {
+    /** conversation 是当前设置页的真实群会话。 */
+    const conversation = createConversation({
+      conversationID: 'conversation-group-1',
+      type: 'group',
+      targetID: 'group-1',
+    });
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ currentUserRole: 'admin' }),
+    ).canClearForAll).toBe(true);
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ groupID: 'other-group', currentUserRole: 'owner' }),
+    ).canClearForAll).toBe(false);
   });
 
   it('deduplicates invalid member pages without changing first order', () => {
     // members 包含重复和空身份，模拟异常分页输入。
     const members: WebIMGroupMember[] = [
-      { groupID: 'group-1', userID: 'u1', nickname: '甲', avatarURL: '', role: 'member' },
-      { groupID: 'group-1', userID: '', nickname: '空', avatarURL: '', role: 'member' },
-      { groupID: 'group-1', userID: 'u1', nickname: '重复', avatarURL: '', role: 'member' },
-      { groupID: 'group-1', userID: 'u2', nickname: '', avatarURL: '', role: 'admin' },
+      {
+        groupID: 'group-1',
+        userID: 'u1',
+        remark: '好友备注',
+        groupNickname: '群昵称',
+        nickname: '甲',
+        avatarURL: '',
+        role: 'member',
+        roleLevel: 20,
+      },
+      {
+        groupID: 'group-1',
+        userID: '',
+        nickname: '空',
+        avatarURL: '',
+        role: 'member',
+        roleLevel: 20,
+      },
+      {
+        groupID: 'group-1',
+        userID: 'u1',
+        nickname: '重复',
+        avatarURL: '',
+        role: 'member',
+        roleLevel: 20,
+      },
+      {
+        groupID: 'group-1',
+        userID: 'u2',
+        nickname: '',
+        avatarURL: '',
+        role: 'admin',
+        roleLevel: 60,
+      },
     ];
     expect(buildChatSettingsMemberViews(members)).toEqual([
-      { userID: 'u1', name: '甲', avatarURL: '' },
+      { userID: 'u1', name: '好友备注', avatarURL: '' },
       { userID: 'u2', name: 'u2', avatarURL: '' },
     ]);
   });

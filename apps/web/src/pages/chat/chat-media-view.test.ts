@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getChatAudioURL,
+  getChatImageDisplayURL,
   getChatMediaPreview,
   normalizeChatMediaURL,
 } from './chat-media-view.js';
@@ -43,6 +44,24 @@ describe('chat media view', () => {
       url: 'https://media.example.com/thumb.jpg',
       title: '图片预览',
     });
+  });
+
+  it('公开 OSS 图片使用 JPEG 展示投影且不修改签名或第三方地址', () => {
+    expect(
+      getChatImageDisplayURL(
+        'https://im28.oss-cn-hongkong.aliyuncs.com/images/source.jpg',
+      ),
+    ).toBe(
+      'https://im28.oss-cn-hongkong.aliyuncs.com/images/source.jpg?x-oss-process=image/resize,w_360/format,jpg',
+    );
+    expect(
+      getChatImageDisplayURL(
+        'https://im28.oss-cn-hongkong.aliyuncs.com/images/source.jpg?OSSAccessKeyId=key&Signature=value',
+      ),
+    ).toContain('OSSAccessKeyId=key');
+    expect(getChatImageDisplayURL('https://media.example.com/source.heic')).toBe(
+      'https://media.example.com/source.heic',
+    );
   });
 
   it('视频和语音只消费各自的真实媒体地址', () => {

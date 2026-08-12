@@ -1,5 +1,5 @@
 import type { Conversation } from '../../core/types.js';
-import type { DatabaseAdapter } from '../../db/database.js';
+import type { DatabaseAdapter, DatabaseRow } from '../../db/database.js';
 import { Repository } from '../../db/repository.js';
 export interface ConversationListOptions {
     readonly limit?: number;
@@ -12,6 +12,10 @@ export declare class ConversationRepository extends Repository {
     getByID(conversationID: string): Promise<Conversation | null>;
     list(options?: ConversationListOptions): Promise<readonly Conversation[]>;
     replaceAll(conversations: readonly Conversation[]): Promise<void>;
+    /** 只替换普通会话集合，保留独立归档端点维护的归档快照。 */
+    replaceUnarchived(conversations: readonly Conversation[]): Promise<void>;
+    /** 用服务端完整归档快照收敛索引，同时保留已取消归档会话的其他本地字段。 */
+    reconcileArchivedSnapshot(conversations: readonly Conversation[]): Promise<void>;
     updateLatestMessage(conversationID: string, latestMessageID: string, updatedAt: number): Promise<void>;
     incrementUnread(conversationID: string, count?: number): Promise<void>;
     updatePinned(conversationID: string, isPinned: boolean, pinnedAt?: number): Promise<void>;
@@ -21,4 +25,6 @@ export declare class ConversationRepository extends Repository {
     updateDraft(conversationID: string, draft: string): Promise<void>;
     deleteByID(conversationID: string): Promise<void>;
 }
+/** 将 conversations 表行恢复为平台中立会话。 */
+export declare function mapStoredConversationRow(row: DatabaseRow): Conversation;
 //# sourceMappingURL=repository.d.ts.map
