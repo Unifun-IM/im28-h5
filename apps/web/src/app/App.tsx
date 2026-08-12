@@ -52,6 +52,8 @@ const ChatSettingsPage = lazy(() => import('../pages/chat/ChatSettingsPage.js'))
 const GroupMembersPage = lazy(() => import('../pages/chat/GroupMembersPage.js'));
 /** 群简介只读页按群设置子路由加载，保持聊天主包稳定。 */
 const GroupIntroductionPage = lazy(() => import('../pages/chat/GroupIntroductionPage.js'));
+/** 群公告只读页按群设置子路由加载，保持聊天主包稳定。 */
+const GroupAnnouncementPage = lazy(() => import('../pages/chat/GroupAnnouncementPage.js'));
 /** 定时删除选择页按设置子路由加载。 */
 const ChatAutoDeletePage = lazy(() => import('../pages/chat/ChatAutoDeletePage.js'));
 /** LiveKit 通话页按交互路由加载，避免浏览器媒体引擎进入主列表首包。 */
@@ -196,6 +198,14 @@ export function App() {
             element={(
               <Suspense fallback={<ChatSettingsRouteLoadingState />}>
                 <GroupIntroductionPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/announcement"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupAnnouncementPage />
               </Suspense>
             )}
           />

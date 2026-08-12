@@ -12,9 +12,12 @@ export interface WebIMJoinedGroup {
     readonly name: string;
     readonly avatarURL: string;
     readonly introduction: string;
+    readonly announcement: string;
+    readonly announcementVersion: string;
     readonly memberCount: number;
     readonly ownerUserID: string;
     readonly currentUserRole: WebIMJoinedGroupRole;
+    readonly canEditAnnouncement: boolean;
     readonly canMentionAll: boolean;
     readonly isCreatedByCurrentUser: boolean;
     readonly status: WebIMJoinedGroupStatus;

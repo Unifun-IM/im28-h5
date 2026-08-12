@@ -189,6 +189,9 @@ export function ChatSettingsPage() {
                   autoDeleteSeconds={conversation?.autoDeleteSeconds}
                 />
               ) : null}
+              {view.canShowAnnouncement ? (
+                <GroupAnnouncementSettingsCard view={view} />
+              ) : null}
               <ChatClearHistorySettingsCard
                 clearing={clearing}
                 onOpen={() => setClearSheetOpen(true)}
@@ -209,6 +212,28 @@ export function ChatSettingsPage() {
         />
       ) : null}
     </main>
+  );
+}
+
+/** 群公告入口只在 RN 同样的 owner/admin 设置区域显示。 */
+function GroupAnnouncementSettingsCard({ view }: { readonly view: ChatSettingsView }) {
+  // announcementURL 使用当前真实会话 ID 构造只读公告子页。
+  const announcementURL =
+    `/conversations/${encodeURIComponent(view.conversationID)}/settings/announcement`;
+  return (
+    <div className="rn-chat-settings-card">
+      <Link
+        className="rn-chat-settings-row rn-chat-settings-stacked-row"
+        to={announcementURL}
+        aria-label="查看群公告"
+      >
+        <span className="rn-chat-settings-row-copy">
+          <strong>群公告</strong>
+          <small>{view.announcement || '未设置'}</small>
+        </span>
+        <RNAssetIcon assetURL={arrowIconURL} />
+      </Link>
+    </div>
   );
 }
 

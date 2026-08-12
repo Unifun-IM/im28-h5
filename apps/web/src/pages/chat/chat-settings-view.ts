@@ -16,6 +16,8 @@ export interface ChatSettingsView {
   readonly searchLabel: string;
   readonly memberCount: number;
   readonly introduction: string;
+  readonly announcement: string;
+  readonly canShowAnnouncement: boolean;
   readonly canManageAutoDelete: boolean;
   readonly canClearForAll: boolean;
 }
@@ -52,6 +54,13 @@ export function buildChatSettingsView(
   const introduction = isGroup && group?.groupID === targetID
     ? group.introduction.trim()
     : '';
+  // announcement 只投影同一群的 shared facade 公告字段。
+  const announcement = isGroup && group?.groupID === targetID
+    ? group.announcement.trim()
+    : '';
+  // canShowAnnouncement 对齐 RN 设置页只向群主或管理员展示公告卡。
+  const canShowAnnouncement = isGroup && group?.groupID === targetID &&
+    (group.currentUserRole === 'owner' || group.currentUserRole === 'admin');
   // canManageGroupMessages 只接受同目标群的 owner/admin 权限快照。
   const canManageGroupMessages = group?.groupID === targetID &&
     (group.currentUserRole === 'owner' || group.currentUserRole === 'admin');
@@ -65,6 +74,8 @@ export function buildChatSettingsView(
     searchLabel: isGroup ? '查找聊天内容' : '查看聊天记录',
     memberCount,
     introduction,
+    announcement,
+    canShowAnnouncement,
     canManageAutoDelete: !isGroup || canManageGroupMessages,
     canClearForAll: !isGroup || canManageGroupMessages,
   };

@@ -107,15 +107,28 @@ function mapCoreGroupToWeb(group, currentUserID) {
     const payload = readJoinedGroupPayload(group);
     // ownerUserID 用于“我创建”标签。
     const ownerUserID = readString(payload.owner_user_id);
+    // currentUserRole 统一成员和权限快照中的当前账号角色。
+    const currentUserRole = normalizeJoinedGroupRole(payload);
+    // userPermission 提供 Gateway 对当前账号的显式群权限。
+    const userPermission = isRecord(payload.user_permission)
+        ? payload.user_permission
+        : {};
+    // canEditAnnouncement 优先信任显式权限，旧快照回退 RN 群主规则。
+    const canEditAnnouncement = typeof userPermission.can_edit_announcement === 'boolean'
+        ? userPermission.can_edit_announcement
+        : currentUserRole === 'owner';
     return {
         groupID: group.groupID,
         conversationID: readString(payload.conversation_id),
         name: group.name || group.groupID,
         avatarURL: group.faceURL ?? '',
         introduction: readString(payload.description),
+        announcement: readString(payload.announcement),
+        announcementVersion: readString(payload.announcement_version),
         memberCount: normalizeMemberCount(group.memberCount),
         ownerUserID,
-        currentUserRole: normalizeJoinedGroupRole(payload),
+        currentUserRole,
+        canEditAnnouncement,
         canMentionAll: Boolean(payload.can_mention_all),
         isCreatedByCurrentUser: Boolean(currentUserID.trim() && ownerUserID === currentUserID.trim()),
         status: normalizeJoinedGroupStatus(payload.status),

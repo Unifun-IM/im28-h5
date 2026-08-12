@@ -31,9 +31,12 @@ function createGroup(overrides: Partial<WebIMJoinedGroup> = {}): WebIMJoinedGrou
     name: '产品群',
     avatarURL: 'https://example.test/group.png',
     introduction: '',
+    announcement: '',
+    announcementVersion: '',
     memberCount: 23,
     ownerUserID: 'owner-1',
     currentUserRole: 'member',
+    canEditAnnouncement: false,
     canMentionAll: false,
     isCreatedByCurrentUser: false,
     status: 'active',
@@ -53,6 +56,8 @@ describe('chat settings view', () => {
       title: '小明',
       memberCount: 0,
       introduction: '',
+      announcement: '',
+      canShowAnnouncement: false,
       canClearForAll: true,
     });
   });
@@ -64,7 +69,11 @@ describe('chat settings view', () => {
       type: 'group',
       targetID: 'group-1',
       name: '旧群名',
-    }), createGroup({ introduction: '用于同步产品进度' }));
+    }), createGroup({
+      introduction: '用于同步产品进度',
+      announcement: '周五发布',
+      currentUserRole: 'admin',
+    }));
     expect(view).toMatchObject({
       isGroup: true,
       pageTitle: '群设置',
@@ -73,8 +82,24 @@ describe('chat settings view', () => {
       avatarURL: 'https://example.test/group.png',
       memberCount: 23,
       introduction: '用于同步产品进度',
-      canClearForAll: false,
+      announcement: '周五发布',
+      canShowAnnouncement: true,
+      canClearForAll: true,
     });
+  });
+
+  it('only exposes the announcement row to the matching owner or admin', () => {
+    /** conversation 是公告权限投影当前绑定的真实群会话。 */
+    const conversation = createConversation({
+      conversationID: 'conversation-group-1',
+      type: 'group',
+      targetID: 'group-1',
+    });
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ currentUserRole: 'owner', canEditAnnouncement: false }),
+    ).canShowAnnouncement).toBe(true);
+    expect(buildChatSettingsView(conversation, createGroup()).canShowAnnouncement).toBe(false);
   });
 
   it('does not project an unrelated group introduction', () => {
