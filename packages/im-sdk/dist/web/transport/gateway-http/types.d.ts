@@ -23,6 +23,8 @@ export interface GatewayHTTPClientOptions {
     readonly getBaseURL?: () => string;
     readonly fetch: GatewayFetch;
     readonly getAccessToken?: () => string | null | undefined;
+    /** 每次请求读取当前安装实例的稳定设备 ID，并通过统一 Header 发送。 */
+    readonly getDeviceID?: () => string | null | undefined;
     readonly getProxyConfig?: () => GatewayProxyConfig | null | undefined;
     readonly language?: string;
     readonly createRequestID?: () => string;
@@ -226,7 +228,6 @@ export interface GatewayRegisterUserRequest {
     readonly password?: string;
     readonly phone_area_code?: string;
     readonly verification_code?: string;
-    readonly device_id: string;
     readonly invite_code?: string;
 }
 export interface GatewayUserLoginRequest {
@@ -235,7 +236,6 @@ export interface GatewayUserLoginRequest {
     readonly password?: string;
     readonly phone_area_code?: string;
     readonly verification_code?: string;
-    readonly device_id: string;
 }
 export interface GatewayForgotPasswordRequest {
     readonly account: string;
@@ -263,7 +263,6 @@ export interface GatewayUpdatePhoneRequest {
 }
 export interface GatewayRefreshTokenRequest {
     readonly refresh_token: string;
-    readonly device_id?: string;
 }
 export interface GatewayLogoutRequest {
     readonly access_token?: string;
@@ -319,7 +318,6 @@ export interface GatewayStartCallRequest {
 }
 export interface GatewayAnswerCallRequest {
     readonly call_id: string;
-    readonly device_id?: string;
 }
 export interface GatewayCallIDRequest {
     readonly call_id: string;
@@ -736,7 +734,7 @@ export interface GatewayConversation {
     readonly list_hidden?: boolean;
     readonly archived?: boolean;
     readonly last_message?: GatewayMessage;
-    readonly unread_count?: GatewayUint64String;
+    readonly unread_count?: GatewayUint64String | number;
     readonly manual_unread?: boolean;
     readonly pinned_at?: string;
     readonly auto_delete_seconds?: number;
@@ -748,16 +746,71 @@ export interface GatewayConversation {
 }
 export interface GatewayConversationSyncState {
     readonly conversation_id?: string;
+    readonly state?: 'active' | 'left' | 'removed' | 'muted' | string;
     readonly last_msg_seq?: GatewayUint64String;
+    readonly last_update_seq?: GatewayUint64String;
     readonly last_read_seq?: GatewayUint64String;
     readonly last_delivered_seq?: GatewayUint64String;
     readonly version?: GatewayUint64String;
-    readonly unread_count?: GatewayUint64String;
+    readonly unread_count?: GatewayUint64String | number;
     readonly clear_before_seq?: GatewayUint64String;
     readonly list_hidden?: boolean;
     readonly archived?: boolean;
     readonly pinned_at?: string;
+    readonly pinned_sort?: number;
     readonly notification_muted?: boolean;
+    readonly manual_unread?: boolean;
+}
+/** 账号级 Difference 已完整应用到本地的无损游标。 */
+export interface GatewayAccountUpdateState {
+    readonly pts: GatewayUint64String;
+}
+/** 单条账号级差量声明某个会话游标状态发生变化。 */
+export interface GatewayDifferenceUpdate {
+    readonly type: 'conversation_state';
+    readonly pts: GatewayUint64String;
+    readonly state: GatewayConversationSyncState;
+}
+/** 获取账号级 Difference 的分页请求。 */
+export interface GatewayGetDifferenceRequest {
+    readonly pts?: GatewayUint64String;
+    readonly limit?: number;
+    readonly page_token?: string;
+}
+/** 账号级 Difference 分页响应，分页中间态与最终态互斥。 */
+export interface GatewayGetDifferenceData {
+    readonly updates: readonly GatewayDifferenceUpdate[];
+    readonly state?: GatewayAccountUpdateState;
+    readonly intermediate_state?: GatewayAccountUpdateState;
+    readonly next_page_token?: string;
+    readonly has_more: boolean;
+}
+/** 获取单会话消息与消息更新 Difference 的请求。 */
+export interface GatewayGetConversationDifferenceRequest {
+    readonly conversation_id: string;
+    readonly pts?: GatewayUint64String;
+    readonly qts?: GatewayUint64String;
+    readonly message_limit?: number;
+    readonly update_limit?: number;
+}
+/** 单会话 Difference 返回的下一轮双游标。 */
+export interface GatewayConversationUpdateState {
+    readonly pts: GatewayUint64String;
+    readonly qts: GatewayUint64String;
+}
+/** 单会话 Difference 原子返回消息、更新、资料快照与下一游标。 */
+export interface GatewayGetConversationDifferenceData {
+    readonly new_messages: readonly {
+        readonly message?: GatewayMessage;
+    }[];
+    readonly message_updates: readonly GatewayMessageUpdate[];
+    readonly users: readonly GatewayUser[];
+    readonly state: GatewayConversationUpdateState;
+    readonly message_count?: number;
+    readonly update_count?: number;
+    readonly messages_more?: boolean;
+    readonly updates_more?: boolean;
+    readonly has_more: boolean;
 }
 export interface GatewayConversationSetting {
     readonly conversation_id?: string;
@@ -814,7 +867,6 @@ export interface GatewayUpdateConversationAutoDeleteRequest {
 export interface GatewayAckConversationRequest {
     readonly conversation_id: string;
     readonly delivered_seq: GatewayUint64String;
-    readonly device_id?: string;
 }
 export interface GatewayMarkReadRequest {
     readonly conversation_id: string;
@@ -1186,7 +1238,7 @@ export interface GatewayApplyGroupApplicationRequest {
 }
 export interface GatewayInviteGroupApplicationRequest {
     readonly group_id: string;
-    readonly requester_user_id: string;
+    readonly requester_user_ids: readonly string[];
     readonly source_type?: string;
     readonly message?: string;
 }
@@ -1230,6 +1282,14 @@ export interface GatewayGroupMemberData {
 }
 export interface GatewayGroupApplicationData {
     readonly application?: GatewayGroupApplication;
+}
+/** 批量邀请申请响应的单项包装。 */
+export interface GatewayInviteGroupApplicationItem {
+    readonly application?: GatewayGroupApplication;
+}
+/** 批量邀请申请响应保持服务端顺序。 */
+export interface GatewayInviteGroupApplicationData {
+    readonly list?: readonly GatewayInviteGroupApplicationItem[];
 }
 export interface GatewayListGroupApplicationsData {
     readonly applications?: readonly GatewayGroupApplication[];

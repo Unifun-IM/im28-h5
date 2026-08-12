@@ -15,6 +15,8 @@ export function createOpenAPIRequestOptionsFactory(options) {
         const requestID = options.createRequestID?.();
         // token 始终读取 runtime 当前认证会话。
         const token = options.getAccessToken?.();
+        // deviceID 由安装实例持有，统一走 Header，禁止进入业务请求体。
+        const deviceID = options.getDeviceID?.()?.trim();
         // proxy 只在显式启用时交给平台 fetch adapter。
         const proxy = options.getProxyConfig?.();
         if (language)
@@ -23,6 +25,8 @@ export function createOpenAPIRequestOptionsFactory(options) {
             headers['X-Request-ID'] = requestID;
         if (token)
             headers.Authorization = `Bearer ${token}`;
+        if (deviceID)
+            headers['X-Device-ID'] = deviceID;
         return {
             baseURL,
             fetch: options.fetch,

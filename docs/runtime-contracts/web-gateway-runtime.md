@@ -29,8 +29,9 @@ SQLite/IndexedDB
 
 | environment key | required | normalized runtime field | rule |
 | :--- | :--- | :--- | :--- |
-| `VITE_GATEWAY_HTTP_URL` | yes | `gatewayHTTPURL` | absolute `http:` or `https:` URL; trailing slash removed |
+| `VITE_GATEWAY_HTTP_URL` | yes | `gatewayHTTPURL` | absolute `http:` or `https:` deployment root; runtime appends the configured client platform unless already present |
 | `VITE_GATEWAY_WS_URL` | yes | `gatewayWebSocketURL` | absolute `ws:`/`wss:` URL; `http:`/`https:` is normalized to the matching WebSocket protocol |
+| `VITE_GATEWAY_PLATFORM` | no | HTTP path platform | `h5` by default; accepts only `h5` or `pc`, and rejects a base URL ending in a different platform |
 | `VITE_IM_PLATFORM_ID` | no | `platformID` | positive integer; defaults to OpenIM Web platform `5` |
 | `VITE_IM_LANGUAGE` | no | `language` | non-empty BCP-47-style value; defaults to `zh-CN` |
 
@@ -53,6 +54,8 @@ OpenIM documents Web as platform ID `5`: <https://docs.openim.io/sdks/enum/platf
 `sessionStorage` limits persistence to the current tab session but does not protect tokens from XSS. Production acceptance therefore requires CSP, dependency hygiene and no unsafe HTML injection. An HttpOnly-cookie/BFF design would require a backend contract change and is not claimed here.
 
 ## 4. Shared Gateway Contract
+
+The updated OpenAPI uses `/{platform}/v1/**`. Production/browser builds default to the normalized `/h5` base path. Repository `npm run dev` loads `dev-pc`, using `im28-phone_2/src/config/appEnvironment.ts` development HTTP/WebSocket endpoints plus `/pc`; `npm run dev:h5` loads `dev-h5` with the same development endpoints plus `/h5`. The stable installation identity is sent through `X-Device-ID` for register, login, refresh and all authenticated calls; auth/call/conversation request bodies must not reintroduce `device_id`. WebSocket authentication keeps its existing `device_id` query/frame contract because it is not governed by the HTTP OpenAPI body migration.
 
 | channel | shared behavior reused from `@im28/im-sdk/core` |
 | :--- | :--- |

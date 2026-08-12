@@ -164,6 +164,47 @@
   overflow-wrap: anywhere;
 }
 
+.rn-chat-announcement {
+  display: flex;
+  min-width: 0;
+  margin: 8px 16px 4px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 8px;
+  align-items: center;
+  gap: 16px;
+  color: var(--im-text-primary);
+  background: var(--im-bg-card);
+  text-align: left;
+}
+
+.rn-chat-announcement .rn-asset-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
+.rn-chat-announcement .rn-asset-icon:first-child {
+  color: var(--im-status-warning);
+}
+
+.rn-chat-announcement .rn-asset-icon:last-child {
+  color: var(--im-icon-muted);
+}
+
+.rn-chat-announcement > span:not(.rn-asset-icon) {
+  display: -webkit-box;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 16px;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .rn-chat-message-list {
   position: relative;
   min-height: 0;

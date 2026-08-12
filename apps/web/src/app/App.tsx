@@ -33,6 +33,7 @@ import { MeSecurityPage } from '../pages/me/MeSecurityPage.js';
 import { NotFoundPage } from '../pages/not-found/NotFoundPage.js';
 import { WebIMCallProvider, WebIMRuntimeProvider } from '../runtime/index.js';
 import { PrimaryTabsLayout } from './PrimaryTabsLayout.js';
+import { RouteMotionController } from '../components/interaction/index.js';
 
 /** 联系人主页面按 React Router 路由加载，避免拼音词典进入其他页面首包。 */
 const ContactsPage = lazy(() => import('../pages/contacts/ContactsPage.js'));
@@ -50,10 +51,18 @@ const ChatMessageSearchPage = lazy(() => import('../pages/chat/ChatMessageSearch
 const ChatSettingsPage = lazy(() => import('../pages/chat/ChatSettingsPage.js'));
 /** 群成员页按群设置子路由加载，避免拼音词典进入聊天首包。 */
 const GroupMembersPage = lazy(() => import('../pages/chat/GroupMembersPage.js'));
+/** 群成员移除选择页按危险操作子路由加载。 */
+const GroupRemoveMembersPage = lazy(() => import('../pages/chat/GroupRemoveMembersPage.js'));
+/** 群成员邀请选择页按群设置动作子路由加载。 */
+const GroupInviteMembersPage = lazy(() => import('../pages/chat/GroupInviteMembersPage.js'));
 /** 群简介只读页按群设置子路由加载，保持聊天主包稳定。 */
 const GroupIntroductionPage = lazy(() => import('../pages/chat/GroupIntroductionPage.js'));
 /** 群公告只读页按群设置子路由加载，保持聊天主包稳定。 */
 const GroupAnnouncementPage = lazy(() => import('../pages/chat/GroupAnnouncementPage.js'));
+/** 群名片好友选择页按设置动作路由加载。 */
+const GroupCardSharePage = lazy(() => import('../pages/chat/GroupCardSharePage.js'));
+/** 群资料页按群设置子路由加载，只开放已收敛的群昵称 mutation。 */
+const GroupProfilePage = lazy(() => import('../pages/chat/GroupProfilePage.js'));
 /** 定时删除选择页按设置子路由加载。 */
 const ChatAutoDeletePage = lazy(() => import('../pages/chat/ChatAutoDeletePage.js'));
 /** LiveKit 通话页按交互路由加载，避免浏览器媒体引擎进入主列表首包。 */
@@ -66,6 +75,7 @@ export function App() {
       <WebIMRuntimeProvider>
         <WebIMCallProvider>
           <AuthOnboardingProvider>
+          <RouteMotionController />
           <Routes>
           <Route path="/" element={<Navigate to="/conversations" replace />} />
           <Route path="/login" element={<Navigate to="/auth/phone" replace />} />
@@ -178,6 +188,14 @@ export function App() {
             )}
           />
           <Route
+            path="/conversations/:conversationID/settings/profile"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupProfilePage />
+              </Suspense>
+            )}
+          />
+          <Route
             path="/conversations/:conversationID/settings/auto-delete"
             element={(
               <Suspense fallback={<ChatSettingsRouteLoadingState />}>
@@ -194,6 +212,22 @@ export function App() {
             )}
           />
           <Route
+            path="/conversations/:conversationID/settings/members/invite"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupInviteMembersPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/members/remove"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupRemoveMembersPage />
+              </Suspense>
+            )}
+          />
+          <Route
             path="/conversations/:conversationID/settings/introduction"
             element={(
               <Suspense fallback={<ChatSettingsRouteLoadingState />}>
@@ -206,6 +240,14 @@ export function App() {
             element={(
               <Suspense fallback={<ChatSettingsRouteLoadingState />}>
                 <GroupAnnouncementPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/share-group-card"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupCardSharePage />
               </Suspense>
             )}
           />

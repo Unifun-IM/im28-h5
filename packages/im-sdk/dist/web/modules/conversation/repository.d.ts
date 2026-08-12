@@ -27,4 +27,6 @@ export declare class ConversationRepository extends Repository {
 }
 /** 将 conversations 表行恢复为平台中立会话。 */
 export declare function mapStoredConversationRow(row: DatabaseRow): Conversation;
+/** 构造事务内完整会话写入语句，避免归档同步绕过 Repository 字段契约。 */
+export declare function createConversationUpsertStatement(conversation: Conversation): import("../../db/database.js").DatabaseStatement;
 //# sourceMappingURL=repository.d.ts.map

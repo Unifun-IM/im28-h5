@@ -1,0 +1,108 @@
+:root {
+  --im-motion-fast: 120ms;
+  --im-motion-base: 160ms;
+  --im-motion-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.im-page-enter {
+  animation: im-page-enter var(--im-motion-base) var(--im-motion-ease-out) both;
+}
+
+.im-message-enter {
+  transform-origin: bottom center;
+  animation: im-message-enter var(--im-motion-base) var(--im-motion-ease-out) both;
+}
+
+.im-interaction-modal {
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+}
+
+.im-interaction-modal[open] {
+  animation: im-modal-enter var(--im-motion-base) var(--im-motion-ease-out) both;
+}
+
+.im-interaction-modal[data-closing='true'] {
+  pointer-events: none;
+  animation: im-modal-exit var(--im-motion-base) ease-in both;
+}
+
+.im-interaction-modal::backdrop {
+  background: var(--im-bg-overlay, rgba(0, 0, 0, 0.4));
+}
+
+.im-interaction-modal[open]::backdrop {
+  animation: im-modal-backdrop-enter var(--im-motion-base) ease-out both;
+}
+
+.im-interaction-modal[data-closing='true']::backdrop {
+  animation: im-modal-backdrop-exit var(--im-motion-base) ease-in both;
+}
+
+.im-modal-sheet {
+  animation: im-sheet-enter var(--im-motion-base) var(--im-motion-ease-out) both;
+}
+
+.im-interaction-modal[data-closing='true'] .im-modal-sheet {
+  animation: im-sheet-exit var(--im-motion-base) ease-in both;
+}
+
+@keyframes im-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes im-message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+@keyframes im-modal-enter {
+  from { opacity: 0; }
+}
+
+@keyframes im-modal-exit {
+  to { opacity: 0; }
+}
+
+@keyframes im-modal-backdrop-enter {
+  from { opacity: 0; }
+}
+
+@keyframes im-modal-backdrop-exit {
+  to { opacity: 0; }
+}
+
+@keyframes im-sheet-enter {
+  from { transform: translateY(20px); }
+}
+
+@keyframes im-sheet-exit {
+  to { transform: translateY(20px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --im-motion-fast: 0ms;
+    --im-motion-base: 0ms;
+  }
+
+  .im-page-enter,
+  .im-message-enter,
+  .im-interaction-modal[open],
+  .im-interaction-modal[data-closing='true'],
+  .im-interaction-modal[open]::backdrop,
+  .im-interaction-modal[data-closing='true']::backdrop,
+  .im-modal-sheet,
+  .im-interaction-modal[data-closing='true'] .im-modal-sheet {
+    animation: none;
+  }
+}

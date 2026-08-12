@@ -24,6 +24,8 @@ class WebIMContactSyncImpl {
     deleteFriend = options => this.actionsSync.deleteFriend(options);
     /** 分享用户卡片完整委托中性 action facade。 */
     shareUserCard = options => this.actionsSync.shareUserCard(options);
+    /** 分享群名片完整委托中性 action facade。 */
+    shareGroupCard = options => this.actionsSync.shareGroupCard(options);
     /** 好友备注完整委托中性 action facade。 */
     updateFriendRemark = (userID, remark) => this.actionsSync.updateFriendRemark(userID, remark);
     /** 好友星标完整委托中性 action facade。 */
@@ -178,6 +180,8 @@ function normalizeWebIMContact(friend) {
     // displayName 按 RN remark -> nickname -> account -> phone -> ID 回退。
     const displayName = remark || nickname || user?.account?.trim() ||
         user?.phone?.trim() || userID;
+    /** allowGroupInvite 保留服务端缺失与明确 false 的差异。 */
+    const allowGroupInvite = readBoolean(friend.permission?.allow_group_invite);
     return {
         userID,
         displayName,
@@ -188,6 +192,7 @@ function normalizeWebIMContact(friend) {
         email: user?.email?.trim() ?? '',
         avatarURL: user?.avatar_url?.trim() ?? '',
         isStarred: friend.is_starred ?? false,
+        ...(allowGroupInvite === undefined ? {} : { allowGroupInvite }),
         addedAt: friend.created_at?.trim() ?? '',
     };
 }
@@ -210,6 +215,8 @@ function mapCachedWebIMContact(userID, friendshipPayload, user) {
     const phone = readString(userPayload.phone) || readString(nestedUser.phone);
     /** email 保留服务端允许缓存的邮箱字段。 */
     const email = readString(userPayload.email) || readString(nestedUser.email);
+    /** allowGroupInvite 从好友关系 permission 恢复并保留缺失状态。 */
+    const allowGroupInvite = readBoolean(asRecord(friendship.permission).allow_group_invite);
     return {
         userID,
         displayName: remark || nickname || account || phone || userID,
@@ -221,8 +228,13 @@ function mapCachedWebIMContact(userID, friendshipPayload, user) {
         avatarURL: user?.faceURL?.trim() || readString(userPayload.avatar_url) ||
             readString(nestedUser.avatar_url),
         isStarred: friendship.is_starred === true,
+        ...(allowGroupInvite === undefined ? {} : { allowGroupInvite }),
         addedAt: readString(friendship.created_at),
     };
+}
+/** 从缓存对象读取真实布尔值并保留缺失状态。 */
+function readBoolean(value) {
+    return typeof value === 'boolean' ? value : undefined;
 }
 /** 将未知缓存值收窄为只读普通对象。 */
 function asRecord(value) {

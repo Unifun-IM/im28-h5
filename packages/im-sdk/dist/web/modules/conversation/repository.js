@@ -6,58 +6,7 @@ export class ConversationRepository extends Repository {
         super(database);
     }
     async upsert(conversation) {
-        await this.execute(statement(`INSERT OR REPLACE INTO conversations (
-          conversation_id,
-          type,
-          target_id,
-          name,
-          face_url,
-          latest_message_id,
-          unread_count,
-          updated_at,
-          is_archived,
-          is_pinned,
-          pinned_at,
-          is_muted,
-          auto_delete_seconds,
-          auto_delete_updated_by,
-          auto_delete_updated_at,
-          clear_before_seq,
-          list_hidden,
-          draft,
-          raw_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT is_pinned FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT pinned_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT is_muted FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_seconds FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_updated_by FROM conversations WHERE conversation_id = ?), NULL), COALESCE(?, (SELECT auto_delete_updated_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT clear_before_seq FROM conversations WHERE conversation_id = ?), '0'), COALESCE(?, (SELECT list_hidden FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT draft FROM conversations WHERE conversation_id = ?), NULL), ?)`, [
-            conversation.conversationID,
-            conversation.type,
-            conversation.targetID,
-            conversation.name ?? null,
-            conversation.faceURL ?? null,
-            conversation.latestMessageID ?? null,
-            conversation.unreadCount,
-            conversation.updatedAt,
-            readConversationArchivedFlag(conversation),
-            conversation.isPinned === undefined ? null : Number(conversation.isPinned),
-            conversation.conversationID,
-            conversation.pinnedAt ?? null,
-            conversation.conversationID,
-            conversation.isMuted === undefined ? null : Number(conversation.isMuted),
-            conversation.conversationID,
-            conversation.autoDeleteSeconds ?? null,
-            conversation.conversationID,
-            conversation.autoDeleteUpdatedBy ?? null,
-            conversation.conversationID,
-            conversation.autoDeleteUpdatedAt ?? null,
-            conversation.conversationID,
-            conversation.clearBeforeSeq ?? null,
-            conversation.conversationID,
-            conversation.listHidden === undefined
-                ? null
-                : Number(conversation.listHidden),
-            conversation.conversationID,
-            conversation.draft ?? null,
-            conversation.conversationID,
-            JSON.stringify(conversation),
-        ]));
+        await this.execute(createConversationUpsertStatement(conversation));
     }
     async getByID(conversationID) {
         const rows = await this.query(statement('SELECT * FROM conversations WHERE conversation_id = ?', [conversationID]));
@@ -224,7 +173,7 @@ function readConversationArchivedFlag(conversation) {
         payload.archived));
 }
 /** 构造事务内完整会话写入语句，避免归档同步绕过 Repository 字段契约。 */
-function buildConversationInsertStatement(conversation) {
+export function createConversationUpsertStatement(conversation) {
     return statement(`INSERT OR REPLACE INTO conversations (
       conversation_id,
       type,
@@ -276,4 +225,6 @@ function buildConversationInsertStatement(conversation) {
         JSON.stringify(conversation),
     ]);
 }
+// 旧私有名称继续服务同文件快照替换，实际 SQL owner 已统一为公开构造器。
+const buildConversationInsertStatement = createConversationUpsertStatement;
 //# sourceMappingURL=repository.js.map

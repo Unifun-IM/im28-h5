@@ -16,18 +16,32 @@ export { createWebIMFriendApplicationSync } from './friend-application-sync.js';
 export { formatIMFriendSourceType, IM_FRIEND_SOURCE_TYPE_EMAIL, IM_FRIEND_SOURCE_TYPE_GROUP, IM_FRIEND_SOURCE_TYPE_PHONE, IM_FRIEND_SOURCE_TYPE_USER_ID, inferIMFriendSourceTypeFromKeyword, } from './friend-source.js';
 /** 创建认证账号绑定的群申请审核 service。 */
 export { createWebIMGroupApplicationSync } from './group-application-sync.js';
+/** 导出 RN、Web、Desktop 共用的群管理权限投影。 */
+export { resolveIMGroupManagementPermissions } from './group-management-permissions.js';
 /** 创建认证账号绑定的 cache-first 我的群聊 service。 */
 export { createWebIMJoinedGroupSync } from './joined-group-sync.js';
+/** 导出跨端共用的群公告发布、已读版本和权限合同。 */
+export { buildIMGroupAnnouncementMessageText, canUpdateIMGroupAnnouncement, getIMGroupAnnouncementReadStatus, IM_GROUP_ANNOUNCEMENT_MAX_LENGTH, markIMGroupAnnouncementRead, publishIMGroupAnnouncement, } from './group-announcement.js';
+/** 导出 type1519 跨端公告缓存收敛 helper。 */
+export { applyIMGroupAnnouncementRealtime, parseIMGroupAnnouncementRealtime, } from './group-announcement-realtime.js';
+/** 导出共享群资料权限和群昵称 success-only mutation。 */
+export { canUpdateIMGroupProfile, IM_GROUP_INTRODUCTION_MAX_LENGTH, updateIMGroupAvatar, updateIMGroupIntroduction, updateIMGroupName, } from './group-profile-update.js';
 /** 创建群成员 cache-first 同步服务。 */
 export { createWebIMGroupMemberSync } from './group-member-sync.js';
 /** 创建 RN、Web、Desktop 共用的群成员与提及 facade。 */
 export { createIMGroupMentionSync } from './group-mention.js';
+/** 导出群邀请候选过滤与单次写入核心。 */
+export { filterIMInvitableGroupContacts, inviteIMGroupMembers, } from './group-member-invitation.js';
+/** 导出群成员移除的候选过滤与单次写入核心。 */
+export { filterIMRemovableGroupMembers, removeIMGroupMembers, } from './group-member-removal.js';
 /** 导出 RN、Web、Desktop 共用的群成员名称优先级投影。 */
 export { resolveIMGroupMemberDisplayName } from './sender-display-name.js';
 /** 创建认证账号绑定的联系人资料与关系 action service。 */
 export { createWebIMPeerProfileSync } from './peer-profile-sync.js';
 /** 创建受认证账号约束的会话 cache/sync 服务。 */
 export { createWebIMConversationSync } from './conversation-sync.js';
+/** 导出新 Gateway Difference 原子同步 owner，供受控平台组合。 */
+export { syncIMGatewayDifference } from './gateway-difference-sync.js';
 /** 创建跨端共用的归档会话全分页与快照收敛 facade。 */
 export { createIMConversationArchiveSync } from './conversation-archive-sync.js';
 /** 创建跨端共用的会话列表动作 facade。 */

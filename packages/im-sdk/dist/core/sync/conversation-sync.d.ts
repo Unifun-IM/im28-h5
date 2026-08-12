@@ -25,6 +25,8 @@ export interface WebIMConversationSync extends IMConversationSettingsSync, IMCon
 }
 /** 会话同步依赖只接收 runtime 已持有的 canonical owners。 */
 export interface WebIMConversationSyncDependencies extends IMConversationClearSyncDependencies {
+    /** Web 新协议显式启用 Difference，Desktop/兼容测试默认保留列表同步。 */
+    readonly useGatewayDifference?: boolean;
 }
 /** 创建认证账号绑定的浏览器会话同步服务。 */
 export declare function createWebIMConversationSync(dependencies: WebIMConversationSyncDependencies): WebIMConversationSync;

@@ -28,7 +28,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `listConversations` | `limit/offset` | none | SQLite ordered list | DB error rejects |
 | `listConversationItems` | `limit/offset/archived` | none | SQLite ordered conversations + latest message rows | DB error rejects |
-| `syncConversations` | optional page limit | `listConversations` until page token empty | save latest messages -> atomic `replaceAll` conversations | existing cache unchanged; reject |
+| `syncConversations` | optional page limit | account `get-difference(pts)` -> changed conversation `get-conversation-difference(pts,qts)` -> conversation detail | atomically save users, latest/new messages, message updates, conversation and account/conversation cursors | existing cache and cursors unchanged; reject |
 | `getMessageHistory` | conversation, window | none | SQLite history, newest first | DB error rejects |
 | `pullMessageHistory` | conversation, `fromSeq`, limit | `pullMessages` | mapped messages upserted; return SQLite window | existing cache unchanged; reject |
 | `sendTextMessage` | conversation, trimmed text | `sendMessage` | local `sending` -> remote `sent`; conversation latest message updated | local message -> `failed`; reject |
@@ -49,7 +49,7 @@
 
 ## Ordering And Consistency
 
-1. `syncConversations`: fetch all pages -> map all DTOs -> upsert all available latest messages -> `replaceAll(conversations)`.
+1. `syncConversations`: read account `pts` -> page `get-difference` -> dedupe changed conversations by highest update `pts` -> fully fetch each conversation `pts/qts` window and detail -> commit one account page in one SQLite transaction. `intermediate_state.pts` and `next_page_token` are persisted as a pair; the final page replaces them with `state.pts`.
 2. IF any remote page or mapping fails THEN do not replace conversation cache.
 3. `sendTextMessage`: persist stable `clientMsgID` with `sending` -> call Gateway -> upsert remote message as `sent` -> update conversation latest pointer.
 4. IF send rejects THEN transition the same local row `sending -> failed` and rethrow.
@@ -75,7 +75,7 @@
 
 | rule | decision |
 | :--- | :--- |
-| cursor | 每个会话使用 `sync_cursors[message_updates:<conversationID>]` 保存独立十进制 `update_seq` |
+| cursor | 账号使用 `gateway_difference:account:pts`，会话消息使用 `gateway_difference:conversation:pts:<conversationID>`，消息更新沿用 `message_updates:<conversationID>` 保存 `qts/update_seq`；分页 token 与中间账号 pts 同事务提交 |
 | ordering | update 按 `update_seq` 升序串行应用；成功应用后才推进 cursor；不改变 `msg_seq` 或 unread |
 | gap recovery | realtime `update_seq > cursor + 1` 时调用 `pullMessageUpdates(after_update_seq=cursor)` 分页恢复；缺失/循环 cursor 或页数超限 reject |
 | edited | `update.message` 必须是可映射的完整 Gateway message；保留已有 client identity、sendTime 与 seq，仅替换服务端内容/状态并写 edit metadata |
@@ -90,12 +90,12 @@
 | :--- | :--- | :--- |
 | contract freeze | this document + production anchors | `passed` |
 | shared mapper | `gateway-domain-mappers.test.mjs` + shared SDK typecheck/build | `passed` |
-| browser sync | 6 sql.js/Repository tests: pages、failure retention、history、send convergence | `passed-local` |
+| browser sync | real sql.js/IndexedDB tests cover Difference entity/cursor atomic commit, rollback, queue ordering, history and send convergence | `passed-local` |
 | default caller | `/login`; `/conversations`; `/conversations/:conversationID` use runtime sync facade | `passed-local: build + auth guard; conversation and chat 390x844 light/dark + 760px responsive proof` |
 | realtime created/conversation | serialized persistence、replay、account isolation、paged gap recovery、runtime cache publication | `passed-local: 5 focused tests + workspace gate` |
 | realtime message updates | edit、stale cursorless guard、gap recovery、delete-all、runtime publication | `passed-local: sql.js + raw WebSocket integration` |
 | same-tab mutation ordering | delayed full sync -> realtime、history -> send -> realtime、failure continuation | `passed-local: 3 concurrency regressions` |
-| real environment | login + conversation + history + send smoke | `blocked: Gateway variables absent` |
+| real environment | updated `/h5` OpenAPI login + Difference conversation/history + send smoke | `pending: requires real Gateway two-account acceptance` |
 
 ## W6.a4 Caller Projection
 

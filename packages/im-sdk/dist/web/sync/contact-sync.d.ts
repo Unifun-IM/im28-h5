@@ -13,6 +13,7 @@ export interface WebIMContact {
     readonly email: string;
     readonly avatarURL: string;
     readonly isStarred: boolean;
+    readonly allowGroupInvite?: boolean;
     readonly addedAt: string;
 }
 /** 通讯录远端分页参数。 */

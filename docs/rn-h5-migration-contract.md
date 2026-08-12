@@ -4,6 +4,8 @@
 > STATUS: FROZEN / 2026-08-10
 > AXIOM: `im28-phone` 是产品视觉、静态资源、页面行为和能力范围真相源；`im28-h5` 只做浏览器语义适配，不另起一套设计或业务协议。
 
+> RN SOURCE FREEZE (2026-08-12): 本迁移只读 `im28-phone` 作为视觉、资产、行为和接口语义来源，不修改其业务源码、测试或原生工程。允许的 RN 变更仅为依赖/包接线、生成 `packages/im-sdk/**` 和不改变运行逻辑的 import specifier。SDK shared core 与 H5/Web caller 可继续建设；RN 未接入时标记 `shared-core-ready/web-consumed/rn-frozen`，不得伪报 convergence。
+
 ## 1. Hard Requirements
 
 | area | required outcome | forbidden shortcut |
@@ -1083,7 +1085,7 @@ Local closeout: `.18.2.3` is `done-local/acceptance-gated`. React Router remains
 | conversation pin | `pinConversation -> POST /v1/conversation/pin -> local isPinned/pinnedAt` | `runtime-chain-partial`：Gateway client + Repository column 已有，无 Web caller | `.18.3.1`；非破坏性，可本地实现；真实写入仍是 acceptance gate |
 | auto delete | `fetchConversationDetail/updateConversationAutoDelete -> POST /v1/conversation/auto-delete/update -> type1701 realtime` | `runtime-chain-partial`：typed client 已有，core setting/cache/realtime lifecycle 尚未闭合 | `.18.3.2` 独立合同；只影响设置后新消息，但属于消息生命周期 mutation，需权限和 realtime/cache 回归 |
 | clear history | `deleteConversation -> POST /v1/conversation/clear -> local message clear` | `infra-only/destructive`：typed client 已有，shared 批量 cache 收敛与 route 后果未冻结 | `blocked-destructive-authorization`；必须按 `self|both|all_members` 分别证明 Gateway、SQLite、会话摘要和第二客户端行为 |
-| group profile/member settings | nickname、introduction、announcement、member add/remove、role/owner transfer | `infra-only`：Gateway operations 存在，Web shared group facade 目前只读 | 独立 group-management family；按最多三个紧密 operations 冻结权限、事件和 cache owner |
+| group profile/member settings | name/avatar/introduction 已 shared；announcement、member add/remove、role/owner transfer | `partial-converged`：name/avatar/introduction 权限、校验与 success-only cache 已由 shared facade 持有 | 继续独立 group-management family；按最多三个紧密 operations 冻结其余权限、事件和 cache owner |
 | group mute | group/member mute -> `/v1/group/mute/update`、`/v1/group/member/mute/update` | `infra-only`：RN 有权限投影和 realtime helper，Web shared facade 未接入 mutation | 独立 group-mute slice；群主/管理员权限、mute-until、composer disable 与 realtime 必须同时验收 |
 | quit/dismiss | `/v1/group/leave`、`/v1/group/dismiss` + conversation/member cache transition | `infra-only/destructive` | `blocked-destructive-authorization`；群主退出前管理员约束、清历史选项和 route/cache 清理必须单独证明 |
 
@@ -1096,13 +1098,74 @@ Contract-freeze verdict: operation scope 为 setting detail、mute、pin 三项�
 | dimension | frozen contract |
 | :--- | :--- |
 | shared data owner | `WebIMSync.groups -> WebIMJoinedGroup` 显式投影 `introduction/announcement/announcementVersion/canEditAnnouncement`；页面不得读取 raw Gateway payload |
-| introduction | 群设置第二卡显示“群简介”，空副标题“请输入群的内容介绍”，详情空值“暂无群简介”，React Router 子页只读 |
+| introduction | 群设置第二卡显示“群简介”，空副标题“请输入群的内容介绍”，详情空值“暂无群简介”；owner/admin 在同一 React Router 子页进入 500 字编辑态，普通成员只读 |
 | announcement visibility | 对齐 RN，仅当前角色为 owner/admin 时在置顶/免打扰与清空记录之间显示“群公告”；空副标题“未设置” |
 | announcement detail | `/conversations/:conversationID/settings/announcement` 只读真实 shared facade，空值“暂无群公告”，无编辑/发布按钮 |
 | convergence | 简介与公告共用 `GroupTextDetailPage` 的会话校验、cache-first 群同步、错误和布局；字段/标题/空值由薄 page 配置 |
 | authorization gate | 本切片不调用 `/v1/group/update`、不标记公告已读、不发送公告文本消息；编辑、发布和第二账号通知均需独立合同与授权 |
 
-Local verdict: `.18.3.4/.18.3.5` 为 `done-local/read-only-accepted`；SDK 公告投影已由 Web 消费，RN 保持既有 service 兼容，后续 shared mutation consumer convergence 单独推进。
+Local verdict: `.18.3.4/.18.3.5` 的只读范围为 `done-local/read-only-accepted`；SDK 公告投影已由 Web 消费，简介 mutation 后续由 `.18.3.10` 收敛，公告 mutation 仍需单独推进。
+
+### W6.a6.18.3.6 Self Group Nickname
+
+| dimension | frozen contract |
+| :--- | :--- |
+| identity | 调用方只传 groupID/nickname；成员身份必须来自当前认证上下文，不能指定其他 userID |
+| validation | 昵称 trim 后不能为空且最多 24 字；当前成员必须已存在于目标群 cache，否则 fail-closed |
+| remote/cache | 一次 `/v1/group/member/nickname/update`；仅 Gateway 成功且响应身份一致后 upsert 当前成员，失败不修改旧 SQLite 快照 |
+| display | 返回值继续走 shared `备注 > 群内昵称 > 公开昵称 > userID` resolver；H5 不复制名称优先级 |
+| H5 | 群设置按 RN 顺序显示本人昵称，ConfirmModal 同语义编辑层持有草稿、取消、保存态和错误，成功 DTO 才更新页面 |
+| realtime/authorization | 不猜测群昵称 realtime event、不注册第二 listener；真实保存、第二账号/list-back 需要独立授权验收 |
+
+Local verdict: `.18.3.6` 为 `done-local/mutation-acceptance-gated`；RN 业务源码未改且编译通过，浏览器 open/cancel/layout smoke 因本工具会话无浏览器控制能力待补。
+
+### W6.a6.18.3.7 Shared Group Card
+
+| dimension | frozen contract |
+| :--- | :--- |
+| shared owner | `contacts.shareGroupCard` 单一持有目标保序去重/本人排除、真实单聊打开、type108 `body.card.group`、可选 type101 附言和消息 SQLite 状态收敛 |
+| RN | `rn-frozen/not-consumed`；保留当前 `shareGroupCard` 参数、选择器、Gateway/消息编排和事件语义，本 H5 任务不得改写 |
+| H5 | `/conversations/:conversationID/settings/share-group-card` 只从 URL 恢复真实群会话；对齐 RN 当前 production UI，仅好友目标、单选、无附言输入，点击分享前不执行 I/O |
+| failure/navigation | shared facade 失败必须保持错误可见且不导航；成功只使用 facade 返回的真实 direct conversation ID，页面不得猜测 ID 或伪造成功 |
+| acceptance gate | 未执行真实分享、附言、partial failure/retry 或第二账号 realtime/list-back；这些仍需显式 send 授权 |
+
+Local verdict: `.18.3.7` 为 `shared-core-ready/web-consumed/rn-frozen`；H5 使用 shared Web owner，RN 保持冻结基线。认证 Chromium 已证明目标加载、搜索、单选、取消和布局，但未点击分享。
+
+### W6.a6.18.3.8 Shared Group Profile Name
+
+| dimension | frozen contract |
+| :--- | :--- |
+| shared owner | `updateIMGroupName` 单一持有当前认证账号、owner/admin 与显式 `can_edit_group_info` 权限、非空群名、Gateway 响应 groupID/title 校验、旧字段保留和 success-only `GroupRepository` upsert |
+| RN | `rn-frozen/not-consumed`；当前 `updateGroupInfo`、内存 cache、Gateway/OpenIM 与事件投影保持基线 |
+| H5 | `/conversations/:conversationID/settings/profile` 从 URL 恢复真实群会话和 joined-group DTO；头像只读、群名按 shared 权限开放编辑、群 ID 通过真实 clipboard port 复制；页面不调用 Gateway/SQL |
+| failure | 空名、权限不足、Gateway 失败或响应目标错配必须显示错误并保持旧 cache/页面；部分响应不得清空 avatar/introduction/announcement/role/order |
+| acceptance gate | 本地 sql.js/consumer/browser 证明不等于真实改名；保存、普通成员拒绝、第二账号 type1520/list-back、RN device 与跨浏览器仍需独立验收 |
+
+Local verdict: `.18.3.8` 为 `shared-core-ready/web-consumed/rn-frozen`；认证 Chromium 已证明真实资料、编辑层打开/取消和布局，未保存群名或写 clipboard。
+
+### W6.a6.18.3.9 Shared Group Profile Avatar
+
+| dimension | frozen contract |
+| :--- | :--- |
+| shared owner | `updateIMGroupAvatar/WebIMSync.groups.updateAvatar` 单一持有 owner/admin 与显式 capability 权限、静态图片/10MB 上传输入、shared `IMMediaUploadPort`、HTTP(S) URL、Gateway groupID/avatar_url 校验、旧字段保留和 success-only `GroupRepository` upsert |
+| RN | `rn-frozen/not-consumed`；现有相册/相机、裁剪、上传、更新、cache 与事件投影保持基线 |
+| H5 | `/settings/profile` 的头像行只负责浏览器文件选择、JPEG/PNG/WEBP 校验、圆形拖动/1-4x 缩放和 512x512 JPEG Canvas 输出；确认后调用 shared facade，页面不获取上传凭证、不调 Gateway/SQL |
+| failure/performance | 越权在上传前失败；上传失败或 Gateway 错配保持旧页面/cache；上传在 shared 写队列外完成，Gateway/SQLite 写回串行，避免大文件阻塞消息/会话 cache |
+| acceptance gate | 本地图片预览/取消不等于真实上传；authorized upload/result、普通成员拒绝、第二账号 type1502/list-back、RN device camera/library 与跨浏览器触摸仍需独立验收 |
+
+Local verdict: `.18.3.9` 为 `shared-core-ready/web-consumed/rn-frozen`；认证 Chromium 已证明真实群资料入口、本地圆形裁剪、图片解码、取消和布局，未执行上传/群资料 mutation。
+
+### W6.a6.18.3.10 Shared Group Introduction
+
+| dimension | frozen contract |
+| :--- | :--- |
+| shared owner | `updateIMGroupIntroduction/WebIMSync.groups.updateIntroduction` 单一持有 owner/admin 与显式 capability 权限、trim 后非空/500 字、Gateway groupID/description 精确回包和 success-only `GroupRepository` merge |
+| RN | `rn-frozen/not-consumed`；现有简介 screen、表单错误、更新、cache 与事件投影保持基线 |
+| H5 | `/settings/introduction` 复用既有 cache-first 文本详情 owner；owner/admin 显示完成/取消和 textarea，普通成员继续只读；页面只调用 shared facade，不读 raw payload/Gateway/SQL |
+| empty/failure | 当前 Gateway 明确空 `description` 为保持原值，故空简介不能假清空；空值、超长、越权、Gateway 失败或响应错配必须可见失败并保持旧 cache |
+| acceptance gate | 本地 sql.js/consumer/browser 打开取消不等于真实写入；真实保存、普通成员拒绝、第二账号 type1521/list-back、RN device 与跨浏览器仍需独立验收 |
+
+Local verdict: `.18.3.10` 为 `shared-core-ready/web-consumed/rn-frozen`；H5 消费 shared Web owner，RN 保持冻结基线。认证 Chromium 仅打开编辑态并取消，没有执行 `/v1/group/update`；`build:package:desktop:web` 未修改或执行。
 
 `.18.3.1` reviewer verdict: setting detail 已达到 `✅ implemented-local/read-verified`；mute 与 pin 达到 `🟡 implemented-local/mutation-acceptance-gated`。Shared SDK 通过 4 个真实 sql.js 用例证明详情读取、成功写入、Gateway 失败保留 cache 和响应目标不匹配 fail-closed；SDK Web 53 files/169 tests、all-runtime typecheck、boundary、`build:web` 与 H5 generated package sync 均通过。H5 40 files/132 tests、typecheck、466 assets、生产构建与 full verify 通过；认证态 458px 单聊/群聊 settings 均从真实 cache/Gateway detail 显示两个 enabled switches，无溢出和 console error。浏览器验收未点击开关，因此不声称真实 mute/pin 写入；无 mock、fake-success、页面 Gateway/Repository/SQLite caller 或第二 WebSocket listener。
 
@@ -1130,7 +1193,7 @@ Closeout: `getAutoDelete -> Gateway detail -> schema v11`、`setAutoDelete -> ex
 | :--- | :--- | :--- | :--- |
 | clear self | RN settings/list `deleteConversation(id, self) -> Gateway clear -> local message clear`；单聊暂时隐藏，群聊保留入口 | shared facade requires current-account target、stable `operation_id` and exact response target/cursor；success-only transaction advances clear boundary、clears unread/latest and removes only rows at/before the boundary plus pre-operation local-only rows | `🟡 infra-only` |
 | clear direct both | RN single sheet exposes “为我和对方删除”；Gateway accepts `scope=both` only for direct participants | same facade validates direct type before I/O；response cursor converges current account，other participant relies on type 2102/re-sync；H5 returns to conversation list after success | `🟡 infra-only/destructive` |
-| clear group all | RN group sheet exposes “为我和所有群成员删除” only through `canClearMessages`；Gateway authorizes owner or admin with clear permission | H5 uses joined-group role/permission snapshot only for presentation；unknown permission fails closed，Gateway remains authority；group conversation stays visible with empty latest/unread | `🟡 permission-projection-gap` |
+| clear group all | RN group sheet exposes “为我和所有群成员删除” only through shared `canClearMessages`；Gateway remains authoritative | H5 uses `WebIMJoinedGroup.permissions.canClearMessages` only for presentation；unknown permission fails closed，Gateway remains authority；group conversation stays visible with empty latest/unread | `🟢 shared-permission-projection` |
 | realtime control | Gateway type `2102` / `event_type=conversation_cleared` carries conversation/peer/operator context and may omit message IDs | existing realtime owner must branch before `collectGatewayMessages`，strictly resolve one current-account target and apply the same cursor/cache transition；event is not persisted as a visible chat message | `🔴 current handler rejects identity-less event` |
 
 State contract: schema v12 adds indexed `clear_before_seq` and `list_hidden` to `Conversation`; history/full-sync/realtime reads must ignore messages at/before the persisted boundary. Clear convergence runs in the existing shared mutation queue and one database transaction: validate target/cursor -> remove eligible target rows -> set `latestMessageID=undefined`、`unreadCount=0`、`lastReadSeq>=clearBeforeSeq`、`clearBeforeSeq` and list visibility. Rows with server seq above the returned boundary are concurrent new history and must survive. Gateway failure、missing/mismatched target、invalid uint64 cursor or SQLite failure must not produce a success state.
@@ -1203,6 +1266,35 @@ Closeout verdict: `done-local/mutation-acceptance-gated`。RN 原私有 archive 
 RN 生产 `openIMService` 已删除 `updateGatewayFriendRemark/updateGatewayFriendStar/addGatewayBlacklist/removeGatewayBlacklist/fetchGatewayCommonGroups` 直连，保留既有 RN snapshot、friendship event、DTO 映射和共同群失败时空列表兼容语义。SDK sql.js 10/10 覆盖 success-only cache、失败保留、目标 guard、分页去重与增量 group cache；RN focused composition test/tsc、H5 contacts 10 files/37 tests、typecheck/build 通过。认证 Chromium 真实好友资料显示 3 个共同群，备注/更多层与共同群路由冷重载均无新增 error；未执行真实写入、conversation creation、RTC 或媒体权限。
 
 Residual contract: RN 资料页“来源”字段当前没有 `WebIMPeerProfile`/shared DTO，H5 不得伪造；presence、群成员受限资料、incoming call/ringtone、真实 mutation/list-back 与跨浏览器明暗矩阵继续独立验收。`build:package:desktop:web` 未修改或执行。
+
+## 52.2 W6.a6.18.3.13.2 Shared Group Member Removal
+
+> PROCESS AXIOM: Web 一次用户确认只能产生一次远端成员移除；远端成功后的 SQLite 或全量刷新失败是 partial success。RN 保持现有冻结实现，本合同不授权修改其 Gateway/OpenIM 行为。
+
+| contract | frozen owner and behavior |
+| :--- | :--- |
+| preflight | SDK 统一 trim/stable-ID 去重、空集合/本人/群主拒绝；owner 可移除普通成员与管理员，admin 只可移除普通成员；显式 permission 缺失字段 fail-closed |
+| mutation | `removeIMGroupMembers` 唯一调用 `GatewayHTTPClient.removeGroupMember`；响应群身份错配或本地事务失败输出 `remote-only`，不会尝试第二 transport |
+| cache | Gateway 成功后 Group memberCount 与目标 `group_members` 删除在同一事务提交；随后独立全量 sync 校准权威成员集合与人数；失败保留当前可用快照 |
+| RN consumer | `rn-frozen/not-consumed`；`openIMService.kickGroupMembers`、`imClientAdapter` 与 app Gateway helper 保持当前基线，本 H5 任务不得改写 |
+| H5 consumer | `/conversations/:conversationID/settings/members/remove` 复用 shared permission、候选过滤和名称 resolver；页面只持有 cache-first 读取、搜索、选择、确认、错误与导航；`remote-only` 禁用重复提交 |
+
+Closeout scope: 自动化覆盖 Web 权限拒绝零远端写、Gateway 失败旧 cache 保留、远端成功/刷新失败不重放、响应错配 partial state；H5 consumer regression 通过后标记 `shared-core-ready/web-consumed/rn-frozen`。RN 只做源码零差异和生成包兼容检查；真实最终确认、第二账号成员列表/realtime 与服务端拒绝样本仍是显式 destructive acceptance gate。`build:package:desktop:web` 未修改或执行。
+
+## 52.1 W6.a6.18.3.11 Shared Group Announcement Convergence
+
+> PROCESS AXIOM: 群公告是“群资料版本更新 + 公告文本消息 + 当前账号版本已读”的有序复合能力；任一客户端不得把三个动作拆成自己的业务实现，也不得在 status 缺失或失败时伪造已读。
+
+| contract | frozen owner and behavior |
+| :--- | :--- |
+| input and permission | shared SDK 统一非空 trim/1000；显式 `user_permission.can_edit_announcement` 优先，旧快照仅 owner 回退；H5/RN 表单只做同约束预检 |
+| publication | `publishIMGroupAnnouncement` 严格执行 `/group/update -> local group projection -> existing text send facade`；文本固定 `群公告\n正文`；公告更新成功但消息失败抛出可识别、可重试的部分成功错误，不伪回滚远端公告 |
+| cache | Gateway 必须回同 group ID、正文和非空 `announcement_version` 才字段级合并已有 Group；权限、排序和其他资料保留，发布者当前版本记为已读 |
+| read version | status 必须显式返回布尔 `is_read`；mark 只提交页面实际展示的非空版本并随后复查权威 status，旧版本不得清除服务器新版本未读 |
+| realtime | shared realtime 在普通 type1519 消息落库后解析 `group_announcement_changed` 结构化字段，只更新已存在群 cache；本人操作者已读、其他账号未读、同版本重复投递保持已读 |
+| consumers | RN composition 只注入当前 Nitro DB、Gateway、既有文本发送与内存事件投影；Web `groups` facade 复用同一 mutation queue/消息状态机；H5 只持有 React Router 表单、确认层、两行横幅和查看导航 |
+
+Closeout: SDK Web 73 files/290 tests，其中公告发布/已读/realtime real sql.js 8/8；all-runtime typecheck/boundary、`build:rn`、`build:web` 通过。RN TypeScript 和公告页/群详情/openIMService 146/146 通过；H5 full verify、466 assets、748-module production build 通过。认证 567px Chromium 验证真实 owner 群的强制只读详情、编辑态和发布前确认，确认层已取消且无横向溢出。没有执行公告更新、文本发送、read mark 或第二账号 type1519/list-back；历史启动期未登录日志不归因于公告路由。Verdict: `converged/local-mutation-acceptance-gated`。`build:package:desktop:web` 未修改或执行。
 
 ## 53. W6.a5.2.1.5.7 Incoming Call And Ringtone Contract
 

@@ -1,7 +1,9 @@
 import { GroupRepository, } from '@im28/im-sdk/core';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
-/** 缓存 payload 中保存服务端顺序的私有字段。 */
-const JOINED_GROUP_ORDER_KEY = '__joinedGroupOrder';
+import { sendWebIMTextMessage } from './message-text-send.js';
+import { getIMGroupAnnouncementReadStatus, markIMGroupAnnouncementRead, publishIMGroupAnnouncement, } from './group-announcement.js';
+import { updateIMJoinedGroupAvatar, updateIMJoinedGroupIntroduction, updateIMJoinedGroupName, } from './joined-group-profile-actions.js';
+import { mapCoreGroupToWeb, mapGatewayGroupToCore, readJoinedGroupCache, } from './joined-group-mappers.js';
 /** 创建当前账号绑定的我的群聊 facade。 */
 export function createWebIMJoinedGroupSync(dependencies) {
     return new WebIMJoinedGroupSyncImpl(dependencies);
@@ -41,6 +43,53 @@ class WebIMJoinedGroupSyncImpl {
         const queue = this.dependencies.mutationQueue;
         return queue ? queue.enqueue(operation) : operation();
     }
+    /** 更新群昵称并只在 Gateway 成功后收敛当前群缓存。 */
+    updateName(groupID, name) {
+        return updateIMJoinedGroupName(this.dependencies, groupID, name, mapCoreGroupToWeb);
+    }
+    /** 上传群头像后在共享写队列内收敛远端群资料。 */
+    async updateAvatar(groupID, input) {
+        return updateIMJoinedGroupAvatar(this.dependencies, groupID, input, mapCoreGroupToWeb);
+    }
+    /** 更新群简介并只在 Gateway 精确成功后收敛当前群缓存。 */
+    updateIntroduction(groupID, introduction) {
+        return updateIMJoinedGroupIntroduction(this.dependencies, groupID, introduction, mapCoreGroupToWeb);
+    }
+    /** 发布公告并复用同一写队列完成群缓存与消息状态收敛。 */
+    publishAnnouncement(options) {
+        // operation 内部消息端口直接调用底层发送，避免同一 FIFO 递归入队。
+        const operation = async () => {
+            // context 冻结公告更新和文本消息共同使用的账号数据库。
+            const context = requireWebIMSyncContext(this.dependencies, 'Group announcement publish');
+            // result 保留 shared owner 的部分失败与真实 message 状态。
+            const result = await publishIMGroupAnnouncement(context, options, this.dependencies.gatewayClient, {
+                sendText: messageOptions => sendWebIMTextMessage(context, messageOptions, this.dependencies),
+            });
+            return {
+                group: mapCoreGroupToWeb(result.group, context.userID),
+                message: result.message,
+            };
+        };
+        // queue 防止公告资料、消息和其他 cache mutation 交错覆盖。
+        const queue = this.dependencies.mutationQueue;
+        return queue ? queue.enqueue(operation) : operation();
+    }
+    /** 查询服务端公告版本状态并成功后更新群权限快照。 */
+    getAnnouncementReadStatus(groupID) {
+        // operation 在队列执行时绑定当前认证账号。
+        const operation = () => getIMGroupAnnouncementReadStatus(requireWebIMSyncContext(this.dependencies, 'Group announcement read status'), groupID, this.dependencies.gatewayClient);
+        // queue 阻止状态写回与群列表刷新交错。
+        const queue = this.dependencies.mutationQueue;
+        return queue ? queue.enqueue(operation) : operation();
+    }
+    /** 标记实际展示版本并复查权威状态，旧版本不会清除新公告未读。 */
+    markAnnouncementRead(groupID, announcementVersion) {
+        // operation 将 mark、status 复查和 cache 写回保持顺序。
+        const operation = () => markIMGroupAnnouncementRead(requireWebIMSyncContext(this.dependencies, 'Group announcement read mark'), groupID, announcementVersion, this.dependencies.gatewayClient);
+        // queue 与 realtime/full sync 共用唯一 mutation 顺序。
+        const queue = this.dependencies.mutationQueue;
+        return queue ? queue.enqueue(operation) : operation();
+    }
 }
 /** 拉取全部 token 分页并按首见 group ID 去重。 */
 async function fetchAllJoinedGroups(gatewayClient, pageSize) {
@@ -74,130 +123,10 @@ async function fetchAllJoinedGroups(gatewayClient, pageSize) {
     }
     throw createWebIMSyncError('JOINED_GROUP_PAGE_LIMIT_EXCEEDED', 'Gateway joined group pagination exceeded the safety limit.');
 }
-/** 将 Gateway group 转成共享 Group Repository 记录。 */
-function mapGatewayGroupToCore(group, order) {
-    // groupID 缺失的远端异常记录不能进入 cache。
-    const groupID = group.group_id?.trim() ?? '';
-    if (!groupID)
-        return null;
-    return {
-        groupID,
-        name: group.title?.trim() || groupID,
-        faceURL: group.avatar_url?.trim() ?? '',
-        memberCount: normalizeMemberCount(group.member_count),
-        payload: { ...group, [JOINED_GROUP_ORDER_KEY]: order },
-    };
-}
-/** 从共享 Group cache 恢复页面模型并按服务端顺序排序。 */
-async function readJoinedGroupCache(repository, currentUserID) {
-    // groups 由共享 repository 恢复 raw payload。
-    const groups = await repository.list();
-    return groups
-        .map(group => ({
-        group: mapCoreGroupToWeb(group, currentUserID),
-        order: readJoinedGroupOrder(readJoinedGroupPayload(group)),
-    }))
-        .sort((left, right) => left.order - right.order ||
-        left.group.groupID.localeCompare(right.group.groupID))
-        .map(item => item.group);
-}
-/** 将缓存记录映射为稳定 Web 群模型。 */
-function mapCoreGroupToWeb(group, currentUserID) {
-    // payload 兼容 Repository 将 raw_json 平铺到 Group 根对象的既有契约。
-    const payload = readJoinedGroupPayload(group);
-    // ownerUserID 用于“我创建”标签。
-    const ownerUserID = readString(payload.owner_user_id);
-    // currentUserRole 统一成员和权限快照中的当前账号角色。
-    const currentUserRole = normalizeJoinedGroupRole(payload);
-    // userPermission 提供 Gateway 对当前账号的显式群权限。
-    const userPermission = isRecord(payload.user_permission)
-        ? payload.user_permission
-        : {};
-    // canEditAnnouncement 优先信任显式权限，旧快照回退 RN 群主规则。
-    const canEditAnnouncement = typeof userPermission.can_edit_announcement === 'boolean'
-        ? userPermission.can_edit_announcement
-        : currentUserRole === 'owner';
-    return {
-        groupID: group.groupID,
-        conversationID: readString(payload.conversation_id),
-        name: group.name || group.groupID,
-        avatarURL: group.faceURL ?? '',
-        introduction: readString(payload.description),
-        announcement: readString(payload.announcement),
-        announcementVersion: readString(payload.announcement_version),
-        memberCount: normalizeMemberCount(group.memberCount),
-        ownerUserID,
-        currentUserRole,
-        canEditAnnouncement,
-        canMentionAll: Boolean(payload.can_mention_all),
-        isCreatedByCurrentUser: Boolean(currentUserID.trim() && ownerUserID === currentUserID.trim()),
-        status: normalizeJoinedGroupStatus(payload.status),
-    };
-}
-/** 读取显式 payload，缺失时回退 Repository 平铺后的 Group 根对象。 */
-function readJoinedGroupPayload(group) {
-    return isRecord(group.payload)
-        ? group.payload
-        : group;
-}
-/** 从成员和权限字段统一当前账号群角色。 */
-function normalizeJoinedGroupRole(group) {
-    // member 和 userPermission 兼容 my/list 的两种服务端结构。
-    const member = isRecord(group.member) ? group.member : {};
-    // userPermission 保留旧字段 role_level 回退。
-    const userPermission = isRecord(group.user_permission)
-        ? group.user_permission
-        : {};
-    // role 统一字符串与数值角色。
-    const role = member.role ?? userPermission.role_level ?? userPermission.role;
-    if (role === 100 || String(role).toLowerCase() === 'owner')
-        return 'owner';
-    if (role === 60 || String(role).toLowerCase() === 'admin')
-        return 'admin';
-    return 'member';
-}
-/** 将 RN 使用的群状态数值和 Gateway 字符串收敛为 Web 枚举。 */
-function normalizeJoinedGroupStatus(value) {
-    // normalized 允许数值和字符串共用映射表。
-    const normalized = String(value ?? '').trim().toLowerCase();
-    if (value === 0 || normalized === 'active' || normalized === 'normal')
-        return 'active';
-    if (value === 1 || normalized === 'disabled' || normalized === 'banned')
-        return 'banned';
-    if (value === 2 || normalized === 'dismissed')
-        return 'dismissed';
-    if (value === 3 || normalized === 'muted')
-        return 'muted';
-    return 'unknown';
-}
-/** 读取缓存中的服务端顺序，无效值排到末尾。 */
-function readJoinedGroupOrder(payload) {
-    if (!isRecord(payload))
-        return Number.MAX_SAFE_INTEGER;
-    // order 只接受非负有限整数。
-    const order = Number(payload[JOINED_GROUP_ORDER_KEY]);
-    return Number.isFinite(order) && order >= 0
-        ? Math.trunc(order)
-        : Number.MAX_SAFE_INTEGER;
-}
-/** 将成员数限制为非负整数。 */
-function normalizeMemberCount(value) {
-    // count 防止异常负值和小数进入视图。
-    const count = Number(value);
-    return Number.isFinite(count) && count > 0 ? Math.trunc(count) : 0;
-}
 /** 限制 myGroupList 单页大小。 */
 function clampJoinedGroupPageSize(value) {
     if (!Number.isFinite(value))
         return 50;
     return Math.min(200, Math.max(1, Math.trunc(value ?? 50)));
-}
-/** 判断未知值是否为可读取记录。 */
-function isRecord(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-/** 安全读取未知字符串字段并去除空白。 */
-function readString(value) {
-    return typeof value === 'string' ? value.trim() : '';
 }
 //# sourceMappingURL=joined-group-sync.js.map

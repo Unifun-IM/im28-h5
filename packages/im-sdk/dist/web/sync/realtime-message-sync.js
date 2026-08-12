@@ -1,5 +1,6 @@
 import { ConversationRepository, MessageRepository, mapGatewayConversationToCore, mapGatewayMessageToCore, } from '@im28/im-sdk/core';
 import { applyLatestConversationAutoDeleteNotice } from './conversation-auto-delete-sync.js';
+import { applyIMGroupAnnouncementRealtime } from './group-announcement-realtime.js';
 import { isConversationMessageAfterClearBoundary } from './conversation-clear-state.js';
 import { collectGatewayMessages, deduplicateGatewayMessages, groupGatewayMessages, hasDegradedMarker, hasSequenceGap, maxDecimalString, persistMappedMessages, readString, selectLatestMessage, } from './realtime-event-data.js';
 import { pullRealtimeMessageRecovery } from './realtime-message-recovery.js';
@@ -48,6 +49,8 @@ class IMRealtimeMessageSyncImpl {
             messages.push(...result.messages);
             conversations.push(result.conversation);
         }
+        /** announcementGroups 在普通消息入库后收敛 type1519 群公告版本和未读状态。 */
+        await applyIMGroupAnnouncementRealtime(context, messages);
         return { messages, conversations };
     }
     /** 恢复单会话缺口并推进消息、未读和 latest cursor。 */

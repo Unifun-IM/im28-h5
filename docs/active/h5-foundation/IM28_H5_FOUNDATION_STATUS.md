@@ -1,11 +1,135 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a6.18.3.5 shared 群公告投影、权限入口与只读 React Router 子页已完成本地闭环`
-- next_step: `继续 W6 群设置功能检索；优先冻结“我在本群的昵称”read/update/cache/realtime shared contract，再评估群名片类型是否可复用既有卡片 facade；真实编辑和分享保留显式授权门`
+- current_step: `W6.a7.1 H5 lightweight interaction foundation 已完成；RN 样式结构保持不变，SDK/RN 未修改`
+- next_step: `W6.a6.18.3.13.4 Web group admin/owner contract/core；先冻结 exactly-once 与 partial-success，不改 RN 业务逻辑，不执行真实 mutation`
 - blockers: `W5.a3 browser matrix remains blocked-environment；destructive/send/edit/delete/clear and real dual-account RTC flows require explicit authorization`
-- gate_state: `W6 group-announcement slice green/read-only-accepted；group introduction remains closed；clear-history、archive and incoming-call prior gates remain unchanged`
-- latest_evidence: `2026-08-12 group-announcement closeout: SDK joined-group real sql.js 4/4、all-runtime typecheck/boundary、build:rn/build:web；RN tsc；H5 focused 6/6、SDK Web 70/272、466 assets/typecheck/production build；authenticated owner/admin group showed entry + “暂无群公告” detail/back/480px no-overflow；no update/read-mark/send mutation；desktop:web script untouched`
+- gate_state: `W6 group-profile compatibility exit converged/local；真实群资料/公告写入与第二账号 realtime/list-back 未授权；clear-history、archive and incoming-call prior gates remain unchanged`
+- latest_interaction_evidence: `2026-08-13 H5 interaction closeout: components/interaction 单一 owner 提供 route main-only、realtime tail-message、TabBar selected 和 native dialog；prefers-reduced-motion fail-quiet；ConversationDeleteSheet 成为首个 modal consumer；H5 typecheck/build、466 assets、390x844 zero-overflow、authenticated tab route/zero-console passed；空账号无会话，真实 delete-sheet/message-entry visual remains data-gated；SDK/RN/build:package:desktop:web untouched`
+- latest_group_introduction_evidence: `2026-08-12 group-introduction closeout: SDK 74 files/287 tests + all-runtime typecheck/boundary、build:rn/build:web；RN tsc + openIMService 128/128；H5 full verify，SDK Web 71 files/282 tests、466 assets/typecheck/743-module production build；authenticated real owner/admin group opened 500-char editor and cancelled，567px zero-overflow/zero-console；no update/type1521/list-back；build:package:desktop:web untouched`
+- latest_evidence: `2026-08-12 group-announcement convergence closeout: SDK Web 73 files/290 tests including real sql.js publish/read/realtime 8/8、all-runtime typecheck/boundary、build:rn/build:web；RN tsc + announcement/detail/openIMService 146/146；H5 full verify、466 assets、748-module production build；authenticated owner group showed forced read-only detail and editor/publish-confirm cancel at 567px with zero overflow；no update/send/read-mark/type1519/list-back；build:package:desktop:web untouched`
+- latest_group_profile_compat_evidence: `2026-08-12 combined group-profile compatibility exit: zero RN/H5 combined production callers；RN request type is a mutually-exclusive single-field union；Gateway/OpenIM fallback and unused adapters removed；SDK all-runtime typecheck/boundary + group-profile/announcement 7/7；RN tsc + openIMService 128/128；H5 typecheck + related view 12/12；no real update/send/read/list-back；build:package:desktop:web untouched`
+- latest_group_management_audit_evidence: `2026-08-12 read-only caller/owner trace: 8 mutation capabilities across invite/remove/admin/settings/mute/transfer/leave/dismiss；SDK transport exists but shared mutation owner absent；H5 caller count 0；RN invite may replay after post-write sync failure and five domains catch arbitrary Gateway errors then call OpenIM；no source/runtime mutation, no real write, build:package:desktop:web untouched`
+- latest_group_management_permission_evidence: `2026-08-12 neutral resolveIMGroupManagementPermissions + WebIMJoinedGroup.permissions；SDK all-runtime typecheck/boundary + 11/11；RN tsc + helper 29/29；H5 full verify SDK Web 74/293、466 assets、749-module build plus focused 18/18；zero production owner/admin permission recomputation in H5 chat/conversation actions；no real mutation；build:package:desktop:web untouched`
+- latest_rn_freeze_evidence: `2026-08-12 RN 12 个 tracked 业务文件与 packages/im-sdk 恢复 HEAD、3 个新增 composition 文件及其生成产物移除；im28-phone 整仓 worktree clean，npx tsc --noEmit 通过；H5/Web 后续只 build:web/sync:web，不改 RN 业务源码或 RN 本地 SDK 包`
+- latest_group_member_removal_evidence: `2026-08-12 shared removeIMGroupMembers/createIMGroupMentionSync.removeMembers 为 Web owner；stable-ID 去重、角色目标限制、exactly-once Gateway write、group/member transaction、authoritative|local|remote-only；H5 React Router 页面消费，RN kickGroupMembers 保持冻结基线且不是 shared consumer；真实移除未执行，build:package:desktop:web 未修改或执行`
+- latest_group_member_invitation_evidence: `2026-08-12 新 OpenAPI requester_user_ids + data.list 已进入 Gateway facade；shared inviteIMGroupMembers/createIMGroupMentionSync.inviteMembers 按 join_approval_required 选择 application|direct，好友 allow_group_invite fail-closed、exactly-once、strict response、authoritative|local|remote-only；H5 /settings/members/invite 消费，SDK 17/17、H5 10/10/typecheck/build；真实邀请未执行，RN worktree clean，build:package:desktop:web 未修改或执行`
+- latest_group_card_evidence: `2026-08-12 group-card closeout: SDK contact-actions 12/12、RN/Web typecheck、build:rn/build:web；RN tsc + 43 focused；H5 focused 9/9、typecheck/build；authenticated real group showed entry, 7 real friend targets, search/single-select/cancel and 480px no-overflow；no share/send mutation；build:package:desktop:web untouched`
+- latest_group_profile_evidence: `2026-08-12 group-profile-name closeout: SDK joined-group 6/6、all-runtime typecheck/boundary、build:rn/build:web；RN tsc + openIMService 126/126 + group UI 5/5；H5 focused 10/10 + full verify，SDK Web 70/278、466 assets/typecheck/production build；authenticated real group opened profile/name editor and cancelled with 567px no-overflow/zero console error；no update/copy mutation；build:package:desktop:web untouched`
+- latest_group_avatar_evidence: `2026-08-12 group-avatar closeout: SDK 73 files/285 tests + all-runtime typecheck/boundary、build:rn/build:web；RN openIMService 127/127；H5 crop/profile 4/4、typecheck/production build；authenticated real group opened local 360px circular crop preview at 567x786, image decode/confirm readiness/zero-overflow/zero-console passed then cancelled；no upload/update mutation；build:package:desktop:web untouched`
+
+## W6.a6.18.3.13 Group Management Mutation Contract Audit
+
+| capability | state | frozen contract |
+| :--- | :--- | :--- |
+| caller/owner inventory | `done-read-only` | RN production caller 已覆盖邀请、移除、管理员、设置/mute、群主转让、退群/解散；H5 mutation caller 为 0；SDK 目前只有 Gateway transport |
+| duplicate-write risk | `confirmed` | invite 的 post-write member sync 失败可进入 OpenIM fallback；remove/admin/transfer/leave/dismiss 对任意 Gateway error 回退第二次写；必须改为 one action -> one remote write |
+| invite semantic gap | `resolved-by-openapi` | `join_approval_required=true` 走批量 `/group/application/invite`，false 走 `/group/member/invite`；shared owner 严格校验申请列表或群回包 |
+| execution split | `frozen` | permission projection -> member removal -> invite contract/core -> admin/owner -> settings/mute -> destructive lifecycle；每片最多 3 个 operation |
+
+本切片只读审计并写入 `docs/runtime-contracts/group-management-mutations.md`，没有执行或实现任何群管理 mutation，也未修改 SDK/RN/H5 运行代码。`build:package:desktop:web` 未修改或执行。
+
+## W6.a6.18.3.13.1 Shared Group Management Permissions
+
+| capability | state | frozen contract |
+| :--- | :--- | :--- |
+| canonical owner | `shared-core-ready/web-consumed/rn-frozen` | SDK resolver 服务 Web；RN 保持现有权限实现，不宣称跨端唯一 owner |
+| RN consumer | `frozen/not-consumed` | `getGroupPermissions(currentMember, group)` 已恢复当前 RN 基线，本任务不得改动 |
+| H5 consumer | `pass-local` | `WebIMJoinedGroup.permissions` 驱动群资料、简介、自动删除、消息/会话全员清理 presentation；页面不读 raw payload、不按角色重算 |
+| verification | `green` | SDK all-runtime + 11 tests；RN tsc + 29 tests；H5 full verify 74/293、466 assets、749 modules + focused 18 tests |
+
+本切片只有只读权限投影和 consumer 收敛，没有新增操作按钮、调用 Gateway mutation 或写入 SQLite。测试 fixture 也调用 production resolver，不维护第二份角色表。`build:package:desktop:web` 未修改或执行。
+
+## W6.a6.18.3.13.2 Shared Group Member Removal
+
+| capability | state | frozen contract |
+| :--- | :--- | :--- |
+| canonical owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 统一 Web stable-ID 去重、目标限制、exactly-once Gateway remove、群资料与成员事务、后置权威刷新 |
+| RN consumer | `frozen/not-consumed` | `openIMService.kickGroupMembers`、Gateway/OpenIM 兼容与事件投影保持当前 RN 基线 |
+| H5 consumer | `pass-local/read-only-proof` | React Router 成员选择页复用 shared permission/candidate/display resolver；搜索、选择、确认属于 presentation；`remote-only` 阻止再次提交 |
+| partial success | `fail-visible` | 远端成功且本地提交失败后只允许权威 refresh；refresh 仍失败返回 `remote-only`，不得自动重放远端删除 |
+| acceptance | `web-local-green/rn-source-clean/external-gated` | shared/H5 自动回归；RN 只验证源码零差异和 package 兼容；真实移除、第二账号 realtime/list-back 仍需显式批准 |
+
+本切片没有执行真实群成员移除。浏览器验收仅允许打开候选页、搜索、选择并取消确认；不得点击最终“移除”。`build:package:desktop:web` 未修改或执行。
+
+## W6.a6.18.3.13.3 Shared Group Member Invitation
+
+| capability | state | frozen contract |
+| :--- | :--- | :--- |
+| canonical owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 统一好友/成员/权限 preflight、审核分支、exactly-once Gateway write、严格响应和后置权威刷新 |
+| approval branch | `resolved` | `join_approval_required=true` 批量创建 invite applications；false 批量直接入群；审核开关缺失 fail-closed |
+| H5 consumer | `pass-local/no-real-write` | `/settings/members/invite` 只持有好友搜索、选择、验证消息和反馈，候选只接受 `allowGroupInvite=true` |
+| RN consumer | `frozen/not-consumed` | RN `inviteUsersToGroup`、Gateway/OpenIM fallback 与 UI/event 投影保持当前业务基线 |
+| partial success | `fail-visible` | 远端成功后的群 cache/成员 refresh 失败返回 `local|remote-only`，调用方不得自动重放邀请 |
+| acceptance | `web-local-green/external-gated` | SDK 17/17、H5 10/10/typecheck/build、dev-pc 运行；真实邀请与第二账号 application/member realtime/list-back 未执行 |
+
+本切片未点击最终邀请，不创建申请、不直接加群、不发送验证消息。仅执行 `build:web/sync:web`，未运行 RN 或 Desktop 发布脚本；`build:package:desktop:web` 未修改或执行。
+
+## W6.a6.18.3.12 Group Profile Combined Compatibility Exit
+
+| capability | state | frozen contract |
+| :--- | :--- | :--- |
+| caller inventory | `pass` | RN 4 个 production caller 均为 name/avatar/introduction 单字段；H5 分别调用 `groups.updateName/updateAvatar/updateIntroduction`，公告调用专属 facade；组合 caller 为 0 |
+| compatibility exit | `converged/local` | `UpdateGroupInfoRequest` 是互斥单字段 union；运行时拒绝组合和公告参数；旧 Gateway helper、OpenIM adapter method 与 `setGroupInfo` fallback 已删除 |
+| behavior preservation | `pass-local` | RN 页面、选图/裁剪/上传、shared 成功后的 group/conversation cache 与事件投影未改；H5 无源代码改动 |
+| verification | `green` | SDK all-runtime typecheck/boundary + 7 shared tests；RN tsc + 128 service tests；H5 typecheck + 12 related view tests；无真实 mutation |
+
+本切片只删除无生产消费者的兼容成功路径，没有调用 `/v1/group/update`、发送公告消息或写入 SQLite。`build:package:desktop:web` 未修改或执行。
+
+## W6.a6.18.3.11 Shared Group Announcement
+
+| capability | state | frozen contract |
+| :--- | :--- | :--- |
+| shared mutation owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 持有 Web 非空 trim/1000、权限、Gateway 回包、groups merge、`update -> type101` 顺序和部分成功 |
+| read/realtime owner | `converged/local` | mark 实际展示版本后必须复查权威 status；缺失 `is_read` fail-visible；type1519 只按结构化事件更新已有群 cache，发布者已读、其他成员未读、重复事件幂等 |
+| RN/Web consumers | `web-pass/rn-frozen` | H5 只持有 React Router、表单、确认层、聊天横幅和查看导航；RN 公告链已恢复冻结基线，不是本轮 shared consumer |
+| acceptance | `local-green/external-gated` | SDK 73/290、RN tsc + 146、H5 full verify/466/748、认证 567px 只读与确认取消通过；真实发布、发送、read mark 和第二账号 type1519/list-back 保留授权门 |
+
+本切片没有发布公告、发送消息或标记已读。浏览器只填写临时草稿以验证发布前确认层并取消；历史启动期“未登录”日志不作为本路由新增错误。`build:package:desktop:web` 未修改或执行。
+
+## W6.a6.18.3.10 Shared Group Introduction
+
+| capability | state | frozen contract |
+| :--- | :--- | :--- |
+| shared mutation owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 持有 Web 非空 trim/500 字、权限、Gateway 回包和 success-only groups merge |
+| RN consumer | `frozen/not-consumed` | RN introduction 更新、页面、内存 cache 与事件语义保持当前基线 |
+| H5 route/UI | `pass-auth-readonly` | 现有 React Router 群简介页按 shared role 切换 RN 编辑/只读态；页面不调用 Gateway/SQL |
+| acceptance | `local-green/external-gated` | SDK/RN/H5 回归、build:rn/build:web、真实账号打开/取消通过；真实保存和第二账号 type1521/list-back 保留授权门 |
+
+本切片不包含公告、成员邀请/移除、组合群资料更新，也不修改或执行 `build:package:desktop:web`。浏览器只打开真实群简介编辑页并取消，没有调用 `/v1/group/update`。
+
+## W6.a6.18.3.9 Shared Group Avatar
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared mutation owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 持有 Web 权限、图片/上传、Gateway 响应匹配和 success-only SQLite merge | authorized real upload/update、server permission denial sample |
+| RN consumer | `frozen/not-consumed` | RN 选库/相机、裁剪、上传、更新与事件链保持当前基线 | simulator/device baseline regression |
+| H5 platform UI | `pass-auth-local-preview` | 群头像行按 shared 角色开放浏览器选择；JPEG/PNG/WEBP、10MB、拖动/1-4x 缩放、圆形预览和 512x512 JPEG Canvas 输出后才调用 `groups.updateAvatar` | authorized real upload/result/list-back |
+| runtime/layout | `pass-chromium` | 真实群资料 567x786、360x360 裁剪区、图片解码、确认就绪、取消、零横向溢出与零 console warning/error | dark/desktop/Safari/Firefox、touch drag |
+
+本切片只选择仓库静态图片打开本地裁剪并取消，没有触发 OSS 上传、`/v1/group/update` 或 SQLite mutation。该头像切片关闭时简介仍走 RN 原路径，现已由 `.18.3.10` 收敛；公告和组合更新仍保留兼容路径。`build:package:desktop:web` 未修改或执行。
+
+## W6.a6.18.3.8 Shared Group Profile Name
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared mutation owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 持有 Web 群名权限、校验、Gateway 响应匹配和 success-only SQLite upsert | authorized real update、server permission denial sample |
+| RN consumer | `frozen/not-consumed` | RN `openIMService.updateGroupInfo`、内存 cache 与事件链保持当前基线 | simulator/device baseline regression |
+| H5 route/UI | `pass-auth-readonly` | 群设置真实资料头进入 `/settings/profile`；群头像只读，owner/admin 群名可打开编辑层，群 ID 提供真实 clipboard action | authorized save/copy result、ordinary-member sample |
+| runtime/layout | `pass-chromium` | 真实 `donk的群聊`/`64866675923` 加载、编辑层打开/取消、567x786 无横向溢出且 console error 为空 | dark/device/Safari/Firefox |
+
+本切片没有保存群名或点击复制。该名称切片关闭时其他字段尚未收敛；头像/简介现已由 `.18.3.9/.18.3.10` 闭环，公告和组合更新仍为兼容路径。`build:package:desktop:web` 未修改或执行。
+
+## W6.a6.18.3.7 Shared Group Card
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared send owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 持有 Web 好友目标、单聊打开、type108/type101 顺序和 SQLite 状态收敛 | authorized real send、partial failure/retry |
+| RN consumer | `frozen/not-consumed` | RN `openIMService.shareGroupCard` 与事件语义保持当前基线 | simulator/device baseline regression |
+| H5 route/UI | `pass-auth-readonly` | 群设置进入独立 React Router 选择页；对齐 RN 当前 production UI，仅好友、单选、无附言输入，显式“分享”后才调用 shared facade | authorized share success/failure navigation |
+| runtime/layout | `pass-chromium` | 真实群加载 7 个好友目标，搜索、选择、取消和返回通过；480px surface 无横向溢出且 warning/error 为空 | physical touch、dark/Safari/Firefox |
+
+本切片没有点击“分享”，没有创建单聊或写入消息。RN 当前群名片选择器未启用群目标且附言输入被注释，H5 因此不自行扩展这两项；SDK 仍保留可选附言能力。`build:package:desktop:web` 未修改或执行。
 
 ## W6 Shared Group Announcement Readonly Parity
 
@@ -15,6 +139,17 @@
 | RN visibility parity | `pass-auth-readonly` | H5 仅对匹配群的 owner/admin 显示公告卡，位置在置顶/免打扰之后、清空记录之前；空副标题“未设置” | ordinary-member authenticated sample |
 | detail owner | `pass` | 简介/公告共用 `GroupTextDetailPage` 的会话校验、cache-first 群同步、失败与布局；公告页只配置字段/标题/空值 | non-empty real announcement sample |
 | runtime/layout | `pass-chromium` | 真实 owner/admin 群进入 `/settings/announcement` 显示“暂无群公告”，返回群设置且 480px surface 无横向溢出 | dark/device/Safari/Firefox；dev HMR history logs not used as zero-console evidence |
+
+## W6.a6.18.3.6 Self Group Nickname
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared mutation | `done-local` | SDK 固定当前认证 userID、24 字非空校验、一次 Gateway update、响应身份校验和 success-only 单成员 SQLite upsert | real authorized update、server permission denial sample |
+| cache/identity | `pass` | 当前成员缺失 fail-closed；Gateway 失败/身份错配/非法输入均保留旧 cache；返回 DTO 继续使用 shared 名称 resolver | remote second-client nickname event contract |
+| H5 consumer | `done-local/interaction-unverified` | 群设置 RN 同顺序显示“我在本群的昵称”，编辑层含 24 字输入、取消/保存/保存态和可见错误；页面不调用 Gateway/SQL | browser open/cancel/layout proof；real save explicitly not executed |
+| RN boundary | `pass` | RN 业务源码未改，`build:rn` 仅同步 generated package，RN `tsc` 通过 | future guarded consumer convergence |
+
+本切片没有注册 Web-only realtime listener，也未执行真实群昵称保存。Gateway 尚无稳定群成员昵称事件合同，因此 realtime/list-back 保留显式外部验收门。
 
 本切片未执行 `/v1/group/update`、公告已读标记、公告文本发送或其他群管理 mutation。SDK 使用普通 `build:rn/build:web` 同步应用包；`build:package:desktop:web` 未修改或执行。
 
@@ -27,7 +162,7 @@
 | route/failure | `pass-auth-readonly` | `/conversations/:conversationID/settings/introduction` 可深链和返回；单聊误入、会话缺失、群资料缺失均 fail visible | cross-browser history matrix |
 | layout/runtime | `pass-chromium` | 567x786 与 390x844 surface/footer/正文无横向溢出，零 console error | physical device、dark theme |
 
-本切片未新增或修改 SDK/RN source，未调用群资料更新接口，也未执行编辑、分享、邀请、移除或其他群管理 mutation。`build:package:desktop:web` 未修改或执行。
+该只读切片当时未新增或修改 SDK/RN source，也未调用群资料更新接口；编辑 owner 后续由 `.18.3.10` 收敛。真实编辑、分享、邀请、移除或其他群管理 mutation 仍未执行；`build:package:desktop:web` 未修改或执行。
 
 ## W6 Archived Conversation Route Parity
 

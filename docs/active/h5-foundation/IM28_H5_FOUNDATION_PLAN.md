@@ -14,12 +14,13 @@
 - 在独立 `im28-sdk` Git 仓库建立浏览器平台 owner，以 `@im28/im-sdk/core` 复用公共逻辑，并通过 `@im28/im-sdk/web` 交付 SQLite/IndexedDB、Gateway 和同步运行时适配。
 - 以纵向切片逐步交付认证、会话和消息能力，每个切片都有明确验证和残留项。
 - 以 `im28-phone` 为视觉、资产、页面行为和能力源，按 React Router SPA 路由逐页完成可追踪 parity 迁移。
-- 防止 RN/Web 双轨：共享能力必须先在 `im28-sdk` 收敛为平台中性实现，再由 RN/Web production callers 实际消费；compile-only 不作为完成证据。
+- 防止 Web 自建业务分支：共享能力先在 `im28-sdk` 收敛为平台中性实现，再由 H5/Web production caller 消费。RN 当前业务冻结；未获独立授权前不改 RN caller，状态标记 `shared-core-ready/web-consumed/rn-frozen`，不得伪报跨端完成。
 
 ## Scope
 
 - `apps/web/**`：Vite + React H5 应用壳及后续页面能力。
 - 页面切换统一由 React Router 管理，页面组件不自行操作 History API。
+- 跨页面动效与 modal 生命周期统一归 `apps/web/src/components/interaction/**`；只操作瞬时 presentation state，不持有业务状态、SDK 调用或路由决策。
 - RN 样式、静态资产、页面状态与 API 能力只做浏览器适配，不另行设计。
 - `../im28-sdk/src/platforms/web/**`：浏览器 SDK、存储适配和后续 Gateway runtime。
 - `docs/active/h5-foundation/**`：当前阶段的 plan/status/workset 真相源。
@@ -39,6 +40,7 @@
 - 不直接复用 React Native runtime/`StyleSheet`，不在页面中调用 Gateway/OpenAPI，也不以第三方近似图标替换已有 RN 资产。
 - 不在 Worker 与多标签页 writer 实现及浏览器并发证据完成前声明浏览器存储达到生产级并发能力。
 - 不改变 `im28-phone` React Native 应用或原生工程。
+- 不以“跨端收敛”为理由修改 RN 业务源码、测试或运行语义；只允许依赖/包接线、生成 SDK 包和不改变行为的 import specifier。
 
 ## Current Baseline
 
@@ -152,6 +154,14 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实
   - `W6.a6.18.3.3.2-clear-history-consumer-convergence` 已完成本地闭环：RN 主动 action/type2102、Web runtime 和 H5 settings action 均委托 `createIMConversationClearSync`；旧 RN Gateway/本地整会话删除、OpenIM fallback 与控制事件业务分支已删除，H5 只保留 scope 文案、确认和导航。真实 `self|both|all_members` mutation 与双账号 list-back 仍需显式授权。
   - `W6.a6.18.3.4-h5-group-introduction-readonly` 已完成本地闭环：群设置按 RN 顺序显示群简介副标题并进入可深链 React Router 子页；页面只从当前账号会话与 joined-group shared facade 读取真实简介，空值、单聊误入、会话/群资料缺失均显式处理，不复制编辑 mutation。
   - `W6.a6.18.3.5-shared-group-announcement-readonly` 已完成本地闭环：shared joined-group DTO 显式投影公告、版本和当前账号编辑权限，H5 仅对 RN 同样的 owner/admin 展示公告入口并进入共用群文本详情页；未发布、标记已读或发送公告消息。
+  - `W6.a6.18.3.6-shared-self-group-nickname` 已完成本地结构闭环：shared 群成员 facade 固定当前认证账号、校验 24 字非空昵称、Gateway 成功和身份一致后才单成员写回 SQLite；H5 群设置只持有 RN 同语义草稿/编辑层/保存反馈，RN 业务源码未改。真实保存、第二账号 realtime/list-back 和 RN consumer convergence 保留验收门。
+  - `W6.a6.18.3.7-shared-group-card` 已完成 Web 本地结构闭环：shared contact facade 持有 Web 好友目标过滤、真实单聊打开、type108 群名片与可选 type101 附言状态机；H5 使用 React Router 好友单选页，RN 现有分享编排冻结不改。真实分享、失败重试与第二账号 list-back 保留验收门。
+  - `W6.a6.18.3.8/.9/.10-shared-group-profile` 已完成 Web 本地结构闭环：shared group facade 持有 Web 群名、头像、简介的权限/校验/Gateway/cache 规则，H5 提供 React Router 页面和浏览器裁剪；RN `updateGroupInfo` 全链保持冻结基线，三项均为 `shared-core-ready/web-consumed/rn-frozen`。
+  - `W6.a6.18.3.11-shared-group-announcement` 已完成 Web 本地结构闭环：shared SDK 持有 Web 公告发布、消息顺序、read-status 和 type1519 cache 收敛，H5 只保留表单/确认/横幅；RN 公告链保持冻结基线。真实发布、发送、read mark 与第二账号 list-back 保留授权门。
+  - `W6.a6.18.3.12-group-profile-combined-compat-exit` 的 RN 改造结论已撤销：RN 请求类型、Gateway/OpenIM 兼容和事件投影恢复基线并冻结；Web 继续只暴露单字段/公告专属 facade，禁止组合输入。
+  - `W6.a6.18.3.13-group-management-mutation-contract-audit` 已完成只读合同审计：邀请/移除/admin/settings/mute/transfer/leave/dismiss 的 SDK transport 均不能视为 shared business owner；H5 production mutation caller 为 0；RN invite 存在 post-write sync failure 后重放风险，remove/admin/transfer/leave/dismiss 存在任意 Gateway error 后 OpenIM 二次写风险。后续按 permission projection、member removal、invite contract、admin/owner、settings/mute、destructive lifecycle 分片，每片最多 3 个 operation，真实 mutation 均保留授权门。
+  - `W6.a6.18.3.13.1-shared-group-management-permissions` 已完成 Web 只读消费：SDK neutral resolver 持有 Web explicit capability/fail-closed 投影，H5 joined-group 快照驱动入口；RN 原 helper 已恢复并冻结，状态为 `shared-core-ready/web-consumed/rn-frozen`。
+  - `W6.a6.18.3.13.2-shared-member-removal` 已完成 Web 本地消费：SDK 持有 Web 成员目标校验、exactly-once Gateway remove、事务和独立权威刷新，H5 提供 React Router 候选/搜索/确认页；RN Gateway/OpenIM 与页面事件链恢复冻结基线，不是 shared consumer。真实移除与第二账号 realtime/list-back 保留授权门。
   - `W6.a5.2.1.1-contact-pinyin-index-parity` 已完成本地闭环：H5 联系人展示层复用 RN `pinyin-pro@3.28.1` 和同一姓氏优先参数，中文索引、数字/符号 fallback 与分组顺序均有纯函数回归和真实 7 行只读证明；SDK/RN runtime 未改动。
   - `W6.a5.2.1.2-contact-route-code-split` 已完成本地闭环：`/contacts` 经 React Router `React.lazy + Suspense` 按路由加载，搜索过滤从拼音分组模块拆出；生产 main chunk 从 1,088.14 kB/366.35 kB gzip 降至 793.79 kB/222.24 kB gzip，联系人 chunk 为 294.92 kB/145.52 kB gzip。
   - `W6.a5.2.1.4-contact-list-interaction-contract-freeze` 已完成本地闭环：联系人页面先读账号 SQLite cache 再远端刷新，触屏下拉与会话列表共用单一浏览器 hook；右侧索引补齐 RN 顶部图标和活动态。RN 长按菜单四动作已冻结，但 H5 不在联系人 shared facade 缺失时创建部分菜单或 Web-only mutation。

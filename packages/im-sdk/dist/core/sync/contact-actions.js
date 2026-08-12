@@ -4,6 +4,7 @@ import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.j
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
 import { openAndCacheWebIMDirectConversation } from './peer-profile-sync.js';
 import { sendWebIMTextMessage } from './message-text-send.js';
+import { shareIMGroupCard, } from './group-card-share.js';
 /** 创建 RN、Web、Desktop 共用的联系人写动作 facade。 */
 export function createIMContactActionsSync(dependencies) {
     /** mutationQueue 保证远端成功与本地清理不和同账号同步交错。 */
@@ -32,6 +33,12 @@ class IMContactActionsSyncImpl {
         /** context 保证目标过滤、会话和消息均属于同一认证账号。 */
         const context = requireWebIMSyncContext(this.dependencies, 'User card sharing');
         return this.mutationQueue.enqueue(() => this.shareUserCardDirect(context, options));
+    }
+    /** 冻结当前账号后执行一次群名片分享和可选附言发送。 */
+    shareGroupCard(options) {
+        /** context 防止排队期间切号后向错误账号会话发送卡片。 */
+        const context = requireWebIMSyncContext(this.dependencies, 'Group card sharing');
+        return this.mutationQueue.enqueue(() => shareIMGroupCard(context, options, this.dependencies));
     }
     /** 冻结账号后串行更新备注和当前关系快照。 */
     updateFriendRemark(friendUserID, remark) {

@@ -65,7 +65,7 @@ export function useConversationActions({
     setActionAnchor(anchor);
   }
 
-  /** openDeleteSheet 读取共享群角色快照后展示允许的删除范围。 */
+  /** openDeleteSheet 读取共享群 capability 后展示允许的删除范围。 */
   async function openDeleteSheet(target: WebIMConversationListItem): Promise<void> {
     if (!sync) return;
     closeActionMenu();
@@ -77,9 +77,7 @@ export function useConversationActions({
       const groups = await sync.groups.listCached();
       /** group 必须与会话 targetID 精确匹配。 */
       const group = groups.find(item => item.groupID === target.conversation.targetID);
-      setCanDeleteForAll(
-        group?.currentUserRole === 'owner' || group?.currentUserRole === 'admin',
-      );
+      setCanDeleteForAll(group?.permissions.canClearMessages === true);
     } catch (cause) {
       setCanDeleteForAll(false);
       reportError(readConversationActionError(cause));

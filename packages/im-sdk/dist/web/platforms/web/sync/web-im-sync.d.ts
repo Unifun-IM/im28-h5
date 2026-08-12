@@ -29,6 +29,9 @@ export interface WebIMSync {
     readonly groupMembers: {
         listCached(groupID: string): ReturnType<IMGroupMentionSync['listMembers']>;
         sync(groupID: string, options?: Parameters<IMGroupMentionSync['syncMembers']>[1]): ReturnType<IMGroupMentionSync['syncMembers']>;
+        updateSelfNickname(groupID: string, nickname: string): ReturnType<IMGroupMentionSync['updateSelfNickname']>;
+        inviteMembers(options: Parameters<IMGroupMentionSync['inviteMembers']>[0]): ReturnType<IMGroupMentionSync['inviteMembers']>;
+        removeMembers(options: Parameters<IMGroupMentionSync['removeMembers']>[0]): ReturnType<IMGroupMentionSync['removeMembers']>;
     };
     readonly messages: WebIMMessageSync;
     readonly peerProfile: WebIMPeerProfileSync;

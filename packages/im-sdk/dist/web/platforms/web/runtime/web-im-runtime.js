@@ -41,6 +41,7 @@ class WebIMRuntimeImpl {
             baseURL: options.config.gatewayHTTPURL,
             fetch: options.fetch,
             getAccessToken: () => this.currentSession?.accessToken,
+            getDeviceID: () => this.deviceID,
             language: options.config.language,
             ...(options.createRequestID ? { createRequestID: options.createRequestID } : {}),
         });
@@ -70,11 +71,11 @@ class WebIMRuntimeImpl {
     }
     /** 使用 Gateway 登录，完整会话验证通过后启动 realtime。 */
     async login(request) {
-        return this.authenticate(() => this.gatewayClient.login({ ...request, device_id: this.deviceID }));
+        return this.authenticate(() => this.gatewayClient.login(request));
     }
     /** 使用 Gateway 注册，并复用登录后的会话、数据库和 realtime 收敛链。 */
     async register(request) {
-        return this.authenticate(() => this.gatewayClient.register({ ...request, device_id: this.deviceID }));
+        return this.authenticate(() => this.gatewayClient.register(request));
     }
     /** 首次设置账号密码成功后保留当前认证会话。 */
     async setAccountPassword(request) {
@@ -348,7 +349,7 @@ class WebIMRuntimeImpl {
     }
     /** 刷新服务端已判定失效的 access token。 */
     async refreshInvalidSession(session) {
-        return refreshWebIMAuthSession(session, this.gatewayClient, this.deviceID, this.options.authSessionStore);
+        return refreshWebIMAuthSession(session, this.gatewayClient, this.options.authSessionStore);
     }
     /** 关闭 realtime client 和事件订阅，不修改认证会话。 */
     stopRealtime() {

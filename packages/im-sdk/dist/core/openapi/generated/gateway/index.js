@@ -2,32 +2,32 @@
 /* eslint-disable */
 // API 更新时间：
 // API 唯一标识：
-import * as apIpingtai from "./apIpingtai.js";
-import * as apIrenzheng from "./apIrenzheng.js";
-import * as apIyonghu from "./apIyonghu.js";
-import * as apItongyong from "./apItongyong.js";
-import * as apIzaixianzhuangtai from "./apIzaixianzhuangtai.js";
-import * as apIshezhi from "./apIshezhi.js";
-import * as apItongxunlu from "./apItongxunlu.js";
-import * as apIhuihua from "./apIhuihua.js";
-import * as apIxiaoxi from "./apIxiaoxi.js";
-import * as apIzidingyibiaoqing from "./apIzidingyibiaoqing.js";
-import * as apItonghua from "./apItonghua.js";
-import * as apIqunliao from "./apIqunliao.js";
-import * as systemjiankangjiancha from "./systemjiankangjiancha.js";
+import * as renzheng from "./renzheng.js";
+import * as tongxunlu from "./tongxunlu.js";
+import * as tonghua from "./tonghua.js";
+import * as tongyong from "./tongyong.js";
+import * as huihua from "./huihua.js";
+import * as zidingyibiaoqing from "./zidingyibiaoqing.js";
+import * as qunliao from "./qunliao.js";
+import * as xiaoxi from "./xiaoxi.js";
+import * as yonghu from "./yonghu.js";
+import * as pingtai from "./pingtai.js";
+import * as zaixianzhuangtai from "./zaixianzhuangtai.js";
+import * as shezhi from "./shezhi.js";
+import * as chaliangtongbu from "./chaliangtongbu.js";
 export default {
-    apIpingtai,
-    apIrenzheng,
-    apIyonghu,
-    apItongyong,
-    apIzaixianzhuangtai,
-    apIshezhi,
-    apItongxunlu,
-    apIhuihua,
-    apIxiaoxi,
-    apIzidingyibiaoqing,
-    apItonghua,
-    apIqunliao,
-    systemjiankangjiancha,
+    renzheng,
+    tongxunlu,
+    tonghua,
+    tongyong,
+    huihua,
+    zidingyibiaoqing,
+    qunliao,
+    xiaoxi,
+    yonghu,
+    pingtai,
+    zaixianzhuangtai,
+    shezhi,
+    chaliangtongbu,
 };
 //# sourceMappingURL=index.js.map

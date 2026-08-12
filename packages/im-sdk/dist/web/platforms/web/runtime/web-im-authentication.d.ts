@@ -13,6 +13,6 @@ export declare function isWebIMUnregisteredAccountError(cause: unknown): boolean
 /** 将 Gateway auth data 收敛为已打开账号库的持久会话。 */
 export declare function establishWebIMAuthSession(options: EstablishWebIMAuthSessionOptions): Promise<WebIMAuthSession>;
 /** 刷新服务端已判定失效的 access token 并保留原 userID。 */
-export declare function refreshWebIMAuthSession(session: WebIMAuthSession, gatewayClient: GatewayHTTPClient, deviceID: string, authSessionStore: WebIMAuthSessionStore): Promise<WebIMAuthSession | null>;
+export declare function refreshWebIMAuthSession(session: WebIMAuthSession, gatewayClient: GatewayHTTPClient, authSessionStore: WebIMAuthSessionStore): Promise<WebIMAuthSession | null>;
 export {};
 //# sourceMappingURL=web-im-authentication.d.ts.map

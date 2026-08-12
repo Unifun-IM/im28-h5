@@ -1,0 +1,69 @@
+.rn-chat-nickname-backdrop {
+  position: fixed;
+  z-index: 70;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--im-bg-overlay);
+}
+
+.rn-chat-nickname-sheet {
+  width: min(100%, 360px);
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--im-bg-card);
+}
+
+.rn-chat-nickname-sheet h2 {
+  margin: 0;
+  padding: 20px 20px 12px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 26px;
+  text-align: center;
+}
+
+.rn-chat-nickname-sheet input {
+  box-sizing: border-box;
+  width: calc(100% - 40px);
+  height: 46px;
+  margin: 0 20px 20px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  outline: none;
+  color: var(--im-text-primary);
+  background: var(--im-bg-input);
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.rn-chat-nickname-sheet > div {
+  display: grid;
+  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rn-chat-nickname-sheet button {
+  min-height: 52px;
+  border: 0;
+  color: var(--im-brand-primary);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.rn-chat-nickname-sheet button + button {
+  border-left: var(--im-hairline-width) solid var(--im-border-subtle);
+  font-weight: 600;
+}
+
+.rn-chat-nickname-sheet button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}

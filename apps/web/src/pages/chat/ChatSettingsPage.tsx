@@ -11,6 +11,8 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
+import minusIconURL from '../../assets/rn/assets/icons/imm28/minus-circle.regular.svg';
+import plusIconURL from '../../assets/rn/assets/icons/imm28/plus-circle.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import {
   getRNAvatarGradient,
@@ -23,6 +25,8 @@ import {
 } from './chat-settings-view.js';
 import { ChatConversationSettingsControls } from './ChatConversationSettingsControls.js';
 import { ChatClearHistorySheet } from './ChatClearHistorySheet.js';
+import { ChatGroupAnnouncementSettingsCard } from './ChatGroupAnnouncementSettingsCard.js';
+import { ChatGroupProfileSettingsCard } from './ChatGroupProfileSettingsCard.js';
 import {
   clearChatHistory,
   type ChatClearHistoryScope,
@@ -173,7 +177,24 @@ export function ChatSettingsPage() {
               ) : (
                 <SingleSettingsCard view={view} />
               )}
-              {view.isGroup ? <GroupIntroductionSettingsCard view={view} /> : null}
+              {view.isGroup && sync ? (
+                <ChatGroupProfileSettingsCard
+                  view={view}
+                  currentUserID={snapshot.userID}
+                  members={members}
+                  sync={sync.groupMembers}
+                  onUpdated={updated => setMembers(current => current.map(member =>
+                    member.userID === updated.userID ? updated : member))}
+                  onError={cause => {
+                    setNotice(null);
+                    setError(readChatSettingsError(cause));
+                  }}
+                  onNotice={message => {
+                    setError(null);
+                    setNotice(message);
+                  }}
+                />
+              ) : null}
               {sync ? (
                 <ChatConversationSettingsControls
                   conversationID={view.conversationID}
@@ -190,7 +211,7 @@ export function ChatSettingsPage() {
                 />
               ) : null}
               {view.canShowAnnouncement ? (
-                <GroupAnnouncementSettingsCard view={view} />
+                <ChatGroupAnnouncementSettingsCard view={view} />
               ) : null}
               <ChatClearHistorySettingsCard
                 clearing={clearing}
@@ -212,50 +233,6 @@ export function ChatSettingsPage() {
         />
       ) : null}
     </main>
-  );
-}
-
-/** 群公告入口只在 RN 同样的 owner/admin 设置区域显示。 */
-function GroupAnnouncementSettingsCard({ view }: { readonly view: ChatSettingsView }) {
-  // announcementURL 使用当前真实会话 ID 构造只读公告子页。
-  const announcementURL =
-    `/conversations/${encodeURIComponent(view.conversationID)}/settings/announcement`;
-  return (
-    <div className="rn-chat-settings-card">
-      <Link
-        className="rn-chat-settings-row rn-chat-settings-stacked-row"
-        to={announcementURL}
-        aria-label="查看群公告"
-      >
-        <span className="rn-chat-settings-row-copy">
-          <strong>群公告</strong>
-          <small>{view.announcement || '未设置'}</small>
-        </span>
-        <RNAssetIcon assetURL={arrowIconURL} />
-      </Link>
-    </div>
-  );
-}
-
-/** 群简介入口保持 RN 第二张设置卡的位置与空值副标题。 */
-function GroupIntroductionSettingsCard({ view }: { readonly view: ChatSettingsView }) {
-  // introductionURL 使用当前真实会话 ID 构造可刷新、可深链的设置子页。
-  const introductionURL =
-    `/conversations/${encodeURIComponent(view.conversationID)}/settings/introduction`;
-  return (
-    <div className="rn-chat-settings-card">
-      <Link
-        className="rn-chat-settings-row rn-chat-settings-stacked-row"
-        to={introductionURL}
-        aria-label="查看群简介"
-      >
-        <span className="rn-chat-settings-row-copy">
-          <strong>群简介</strong>
-          <small>{view.introduction || '请输入群的内容介绍'}</small>
-        </span>
-        <RNAssetIcon assetURL={arrowIconURL} />
-      </Link>
-    </div>
   );
 }
 
@@ -336,15 +313,22 @@ function GroupSettingsCard({
   const visibleMemberCount = view.memberCount || members.length;
   // membersURL 由当前真实会话 ID 构造独立 React Router 子页。
   const membersURL = `/conversations/${encodeURIComponent(view.conversationID)}/settings/members`;
+  // inviteMembersURL 只在 shared capability 允许时公开好友选择入口。
+  const inviteMembersURL = `/conversations/${encodeURIComponent(view.conversationID)}/settings/members/invite`;
+  // removeMembersURL 只在 shared capability 允许时公开选择入口。
+  const removeMembersURL = `/conversations/${encodeURIComponent(view.conversationID)}/settings/members/remove`;
+  // profileURL 让群资料首行进入可刷新 React Router 子页。
+  const profileURL = `/conversations/${encodeURIComponent(view.conversationID)}/settings/profile`;
   return (
     <div className="rn-chat-settings-card">
-      <div className="rn-chat-settings-group-info">
+      <Link className="rn-chat-settings-group-info" to={profileURL} aria-label="编辑群资料">
         <SettingsAvatar identity={view.targetID} name={view.title} avatarURL={view.avatarURL} size={56} />
         <span>
           <strong>{view.title}</strong>
           <small>群ID：{view.targetID}</small>
         </span>
-      </div>
+        <RNAssetIcon assetURL={arrowIconURL} />
+      </Link>
       <div className="rn-chat-settings-members">
         <Link className="rn-chat-settings-members-header" to={membersURL} aria-label="查看全部群成员">
           <h2>群成员（{visibleMemberCount}）</h2>
@@ -360,6 +344,18 @@ function GroupSettingsCard({
               <span>{member.name}</span>
             </Link>
           ))}
+          {view.canInviteMembers ? (
+            <Link className="rn-chat-settings-member-action" to={inviteMembersURL} aria-label="邀请群成员">
+              <span className="rn-chat-settings-member-action-icon"><RNAssetIcon assetURL={plusIconURL} /></span>
+              <span>邀请</span>
+            </Link>
+          ) : null}
+          {view.canRemoveMembers ? (
+            <Link className="rn-chat-settings-member-action" to={removeMembersURL} aria-label="移出群成员">
+              <span className="rn-chat-settings-member-action-icon"><RNAssetIcon assetURL={minusIconURL} /></span>
+              <span>移除</span>
+            </Link>
+          ) : null}
         </div>
       </div>
       <ChatSearchSettingsRow view={view} />

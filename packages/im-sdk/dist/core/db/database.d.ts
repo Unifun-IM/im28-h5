@@ -21,5 +21,7 @@ export interface DatabaseAdapter extends DatabaseExecutor {
     close(): Promise<void>;
     transaction<Result>(run: (tx: DatabaseTransaction) => Promise<Result>): Promise<Result>;
 }
+/** 把现有事务执行器适配为 Repository 可复用的数据库端口，不开启嵌套事务。 */
+export declare function createTransactionDatabaseAdapter(name: string, transaction: DatabaseTransaction): DatabaseAdapter;
 export declare function statement(sql: string, params?: DatabaseParams): DatabaseStatement;
 //# sourceMappingURL=database.d.ts.map

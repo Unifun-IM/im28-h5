@@ -47,6 +47,23 @@
   text-align: center;
 }
 
+.rn-group-text-detail-done {
+  min-width: 48px;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  background: var(--im-brand-primary);
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.rn-group-text-detail-done:disabled {
+  opacity: 0.5;
+}
+
 .rn-group-text-detail-content {
   display: flex;
   min-height: 0;
@@ -58,10 +75,30 @@
 
 .rn-group-text-detail-copy,
 .rn-group-text-detail-error,
+.rn-group-text-detail-notice,
 .rn-group-text-detail-state,
 .rn-group-text-detail-footer {
   margin: 0;
   letter-spacing: 0;
+}
+
+.rn-group-text-detail-input {
+  width: 100%;
+  min-height: 180px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+  color: var(--im-text-primary);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 20px;
+}
+
+.rn-group-text-detail-input::placeholder {
+  color: var(--im-text-muted);
 }
 
 .rn-group-text-detail-copy {
@@ -73,6 +110,12 @@
 
 .rn-group-text-detail-error {
   color: var(--im-status-danger);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.rn-group-text-detail-notice {
+  color: var(--im-text-secondary);
   font-size: 13px;
   line-height: 18px;
 }
@@ -89,4 +132,64 @@
   font-size: 13px;
   line-height: 18px;
   text-align: center;
+}
+
+.rn-group-text-confirm-backdrop {
+  position: absolute;
+  z-index: 8;
+  display: grid;
+  inset: 0;
+  padding: 24px;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.rn-group-text-confirm {
+  width: min(100%, 320px);
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--im-bg-card);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+}
+
+.rn-group-text-confirm h2,
+.rn-group-text-confirm p {
+  margin: 0;
+  padding: 0 20px;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.rn-group-text-confirm h2 {
+  padding-top: 22px;
+  font-size: 17px;
+  line-height: 24px;
+}
+
+.rn-group-text-confirm p {
+  padding-top: 10px;
+  padding-bottom: 20px;
+  color: var(--im-text-secondary);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.rn-group-text-confirm > div {
+  display: grid;
+  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rn-group-text-confirm button {
+  min-height: 48px;
+  border: 0;
+  color: var(--im-text-primary);
+  background: transparent;
+  font: inherit;
+  letter-spacing: 0;
+}
+
+.rn-group-text-confirm button + button {
+  border-left: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: var(--im-brand-primary);
 }

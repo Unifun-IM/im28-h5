@@ -33,7 +33,7 @@ async function convergeConversationUpdates(gatewayClient, context, conversationI
         if (parsed.updateSeq && BigInt(parsed.updateSeq) <= BigInt(storedCursor)) {
             continue;
         }
-        await applyMessageUpdate(repository, context, parsed);
+        await applyIMMessageUpdate(repository, context, parsed);
         if (parsed.updateSeq) {
             await writeMessageUpdateCursor(context.database, conversationID, parsed.updateSeq);
             storedCursor = parsed.updateSeq;
@@ -45,7 +45,7 @@ async function convergeConversationUpdates(gatewayClient, context, conversationI
     }
 }
 /** 应用 edited 或 deleted，未知状态必须拒绝。 */
-async function applyMessageUpdate(repository, context, parsed) {
+export async function applyIMMessageUpdate(repository, context, parsed) {
     // update 已由 parser 归一为 canonical DTO。
     const update = parsed.update;
     if (update.type === 'deleted') {

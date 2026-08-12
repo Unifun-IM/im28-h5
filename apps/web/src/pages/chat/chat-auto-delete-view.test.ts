@@ -1,5 +1,6 @@
 import type { Conversation, WebIMJoinedGroup } from '@im28/im-sdk/web';
 import { describe, expect, it } from 'vitest';
+import { createGroupPermissionsFixture } from '../../test-fixtures/group-permissions.js';
 
 import {
   CHAT_AUTO_DELETE_OPTIONS,
@@ -34,6 +35,7 @@ function createGroup(
     memberCount: 3,
     ownerUserID: 'owner-1',
     currentUserRole,
+    permissions: createGroupPermissionsFixture(currentUserRole),
     canEditAnnouncement: currentUserRole === 'owner',
     canMentionAll: currentUserRole !== 'member',
     isCreatedByCurrentUser: currentUserRole === 'owner',

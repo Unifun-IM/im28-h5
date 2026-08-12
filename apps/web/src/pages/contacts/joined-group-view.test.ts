@@ -1,5 +1,6 @@
 import type { Conversation, WebIMJoinedGroup } from '@im28/im-sdk/web';
 import { describe, expect, it } from 'vitest';
+import { createGroupPermissionsFixture } from '../../test-fixtures/group-permissions.js';
 
 import {
   filterJoinedGroups,
@@ -13,6 +14,8 @@ import {
 function createGroup(
   overrides: Partial<WebIMJoinedGroup> = {},
 ): WebIMJoinedGroup {
+  /** currentUserRole 决定测试默认 capability。 */
+  const currentUserRole = overrides.currentUserRole ?? 'member';
   return {
     groupID: 'g1',
     conversationID: 'sg_g1',
@@ -23,7 +26,8 @@ function createGroup(
     announcementVersion: '',
     memberCount: 12,
     ownerUserID: 'owner',
-    currentUserRole: 'member',
+    currentUserRole,
+    permissions: createGroupPermissionsFixture(currentUserRole),
     canEditAnnouncement: false,
     canMentionAll: false,
     isCreatedByCurrentUser: false,

@@ -6,17 +6,19 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type AcceptGroupApplicationRequest = {
+        /** 要同意的入群申请 ID。 */
         application_id: string;
     };
     type AccountStatus = "active" | "disabled";
     type AccountType = "account" | "email" | "phone";
+    type AccountUpdateState = {
+        pts: Uint64String;
+    };
     type AckConversationRequest = {
         /** 要确认送达的会话 ID。 */
         conversation_id: string;
         /** 当前设备已收到的最大消息序号。 */
         delivered_seq: Uint64String;
-        /** 当前设备 ID，用于区分不同设备的消息送达状态。 */
-        device_id?: string;
     };
     type AddCustomEmojiEnvelope = ResponseBase & {
         data?: {
@@ -78,21 +80,24 @@ export declare namespace GatewayOpenAPI {
         remark?: string;
     };
     type AnswerCallRequest = {
+        /** 要接听的通话 ID。 */
         call_id: string;
-        /** 当前接听设备 ID，可为空。 */
-        device_id?: string;
     };
     type ApiCode = 0 | 100001 | 100002 | 100003 | 100004 | 100005 | 100006 | 100007 | 100008 | 100009 | 100010 | 100011 | 100012 | 100013 | 100014 | 100015 | 100016 | 100017 | 100018 | 100019 | 100020 | 100021 | 100022 | 100023 | 100024 | 100025 | 100026;
     type ApplyFriendRequest = {
+        /** 要添加为好友的目标用户 ID。 */
         target_id: string;
+        /** 好友验证消息，最长 200 个字符；目标用户无需验证时仍作为申请来源信息保留。 */
         message?: string;
         /** 添加来源标记。可传 phone、email、user_id、group、card、qrcode。 */
         source_type?: string;
     };
     type ApplyGroupApplicationRequest = {
+        /** 要申请加入的群 ID。 */
         group_id: string;
         /** 来源类型，前端标记，例如 search/qrcode/card。 */
         source_type?: string;
+        /** 入群申请验证消息。 */
         message?: string;
     };
     type ArchiveConversationRequest = {
@@ -164,6 +169,7 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type BatchDetailUserRequest = {
+        /** 要批量查询的用户 ID 列表。 */
         user_ids: string[];
     };
     type BatchForwardMessageComment = {
@@ -218,12 +224,17 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type BatchPullMessagesItem = {
+        /** 当前拉取项对应的会话 ID。 */
         conversation_id: string;
+        /** 当前会话的起始消息序号。 */
         from_seq: Uint64String;
+        /** 当前会话最多返回的消息数量。 */
         limit?: number;
+        /** 是否按消息序号倒序返回；true=从新到旧，false=从旧到新。 */
         desc?: boolean;
     };
     type BatchPullMessagesRequest = {
+        /** 批量拉取项列表，每项对应一个会话。 */
         items: BatchPullMessagesItem[];
     };
     type BatchPullMessagesResult = {
@@ -272,7 +283,7 @@ export declare namespace GatewayOpenAPI {
         mentions?: MentionTarget[];
     };
     type BindContactRequest = {
-        /** 绑定类型。 */
+        /** 绑定类型。phone=绑定手机号，email=绑定邮箱。 */
         type: "phone" | "email";
         /** 绑定值。`type=phone` 时传 11 位大陆手机号，`type=email` 时传邮箱且网关会校验邮箱格式。 */
         account: string;
@@ -291,6 +302,7 @@ export declare namespace GatewayOpenAPI {
         user?: User;
     };
     type BlacklistRequest = {
+        /** 要加入黑名单或从黑名单移除的目标用户 ID。 */
         blocked_user_id: string;
     };
     type Call = {
@@ -321,6 +333,7 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type CallIDRequest = {
+        /** 要取消或拒绝的通话 ID，具体操作由接口语义决定。 */
         call_id: string;
     };
     type CallParticipant = {
@@ -339,6 +352,14 @@ export declare namespace GatewayOpenAPI {
         nickname?: string;
         avatar_url?: string;
     };
+    type CallRecord = {
+        call?: Call;
+        /** 相对当前用户的通话方向。outgoing=呼出，incoming=呼入。 */
+        direction?: "outgoing" | "incoming";
+        /** answered=已接通；missed=当前用户作为被叫时未接。呼出未接通及进行中的通话返回空字符串。 */
+        answer_status?: "answered" | "missed" | "";
+        peer_user?: CallPeerUser;
+    };
     type CallStatus = "ringing" | "active" | "ended" | "canceled" | "rejected" | "missed" | "failed";
     type CallTokenEnvelope = ResponseBase & {
         data?: {
@@ -351,7 +372,9 @@ export declare namespace GatewayOpenAPI {
     };
     type CallType = "audio" | "video";
     type CancelGroupAdminRequest = {
+        /** 要取消管理员的群 ID。 */
         group_id: string;
+        /** 要取消管理员身份的成员用户 ID 列表，单次最多 100 人。 */
         member_user_ids: string[];
     };
     type CardGroup = {
@@ -413,6 +436,7 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type CheckTokenRequest = {
+        /** 要校验的 access token。 */
         access_token: string;
     };
     type ClearConversationRequest = {
@@ -524,6 +548,10 @@ export declare namespace GatewayOpenAPI {
         auto_delete_updated_at?: RFC3339Time;
     };
     type ConversationType = 1 | 3 | 4;
+    type ConversationUpdateState = {
+        pts: Uint64String;
+        qts: Uint64String;
+    };
     type CreateCustomEmojiEnvelope = ResponseBase & {
         data?: {
             list?: CreateCustomEmojiResponseDataWrap[];
@@ -537,7 +565,9 @@ export declare namespace GatewayOpenAPI {
         emoji?: CustomEmoji;
     };
     type CreateGroupRequest = {
+        /** 群名称。 */
         title: string;
+        /** 群头像 URL；不传表示使用默认头像。 */
         avatar_url?: string;
         /** 群简介。 */
         description?: string;
@@ -588,6 +618,7 @@ export declare namespace GatewayOpenAPI {
         call_ids: string[];
     };
     type DeleteFriendRequest = {
+        /** 要删除的好友用户 ID。 */
         friend_user_id: string;
         /** self 仅清空自己的聊天记录；both 清空双方聊天记录。 */
         clear_scope: "self" | "both";
@@ -597,6 +628,7 @@ export declare namespace GatewayOpenAPI {
     type DeleteMessageOperation = {
         /** self 仅当前用户隐藏，允许删除会话内任意消息；all 对会话相关用户全局删除。单聊双方均可删除任意一方消息；群聊中可删除自己的消息，群主可删除任意成员消息，管理员需具备清理消息权限才能删除其他成员消息。 */
         scope: "self" | "all";
+        /** 可选删除原因，用于服务端记录操作上下文。 */
         reason?: string;
     };
     type DeleteSysPermissionRequest = {
@@ -612,12 +644,6 @@ export declare namespace GatewayOpenAPI {
         data?: {
             call?: Call;
             participants?: CallParticipant[];
-        };
-    };
-    type DetailCallV2Envelope = ResponseBase & {
-        data?: {
-            call?: Call;
-            participants?: CallParticipant[];
             direction?: "outgoing" | "incoming";
             peer_user?: CallPeerUser;
         };
@@ -628,6 +654,7 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type DetailConversationRequest = {
+        /** 要查看详情的会话 ID。 */
         conversation_id: string;
     };
     type DetailConversationSettingEnvelope = ResponseBase & {
@@ -653,6 +680,7 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type DetailFriendRequest = {
+        /** 要查看好友资料的用户 ID。 */
         friend_user_id: string;
     };
     type DetailSysPermissionRequest = {
@@ -674,6 +702,11 @@ export declare namespace GatewayOpenAPI {
     type DetailUserRequest = {
         /** 目标用户 ID。 */
         user_id: string;
+    };
+    type DifferenceUpdate = {
+        type: "conversation_state";
+        pts: Uint64String;
+        state: ConversationCursor;
     };
     type DirectConversation = {
         conversation_id?: string;
@@ -712,6 +745,7 @@ export declare namespace GatewayOpenAPI {
         archived?: boolean;
     };
     type DismissGroupRequest = {
+        /** 要解散的群 ID。 */
         group_id: string;
     };
     type EditMessageOperation = {
@@ -807,6 +841,50 @@ export declare namespace GatewayOpenAPI {
         /** 好友当前权限配置；前端可据此控制直接群邀请等入口，服务端仍会再次校验。 */
         permission?: UserPermissionSetting;
     };
+    type GetConversationDifferenceEnvelope = ResponseBase & {
+        data?: {
+            new_messages: {
+                message?: Message;
+            }[];
+            message_updates: MessageUpdate[];
+            users: User[];
+            state: ConversationUpdateState;
+            message_count?: number;
+            update_count?: number;
+            messages_more?: boolean;
+            updates_more?: boolean;
+            has_more: boolean;
+        };
+    };
+    type GetConversationDifferenceRequest = {
+        /** 要补齐消息和消息变更的会话 ID。 */
+        conversation_id: string;
+        /** 会话内已应用的最大 msg_seq。 */
+        pts?: Uint64String;
+        /** 会话内已应用的最大 update_seq。 */
+        qts?: Uint64String;
+        /** 单次最多返回的普通消息数量，默认 50，最大 100。 */
+        message_limit?: number;
+        /** 单次最多返回的消息编辑、删除等变更数量，默认 50，最大 100。 */
+        update_limit?: number;
+    };
+    type GetDifferenceEnvelope = ResponseBase & {
+        data?: {
+            updates: DifferenceUpdate[];
+            state?: AccountUpdateState;
+            intermediate_state?: AccountUpdateState;
+            next_page_token?: string;
+            has_more: boolean;
+        };
+    };
+    type GetDifferenceRequest = {
+        /** 账号级已应用游标；首次同步传 0 或省略。 */
+        pts?: Uint64String;
+        /** 单页最多返回的账号级变更数量，默认 50，最大 100。 */
+        limit?: number;
+        /** 上一页返回的不透明 token；必须与 intermediate_state.pts 成对使用。 */
+        page_token?: string;
+    };
     type GetGroupAnnouncementReadStatusEnvelope = ResponseBase & {
         data?: {
             announcement_version?: Uint64String;
@@ -815,9 +893,11 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type GetGroupAnnouncementReadStatusRequest = {
+        /** 要查询当前用户公告已读状态的群 ID。 */
         group_id: string;
     };
     type GetGroupRequest = {
+        /** 要查看的群 ID。 */
         group_id: string;
     };
     type GetPlatformTermRequest = {
@@ -983,9 +1063,11 @@ export declare namespace GatewayOpenAPI {
         can_update_profile?: boolean;
     };
     type HandleFriendApplicationRequest = {
+        /** 要接受或拒绝的好友申请 ID。 */
         application_id: string;
     };
     type HangupCallRequest = {
+        /** 要挂断的进行中通话 ID。 */
         call_id: string;
         /** 挂断原因；为空时服务端使用 hangup。 */
         reason?: string;
@@ -1017,18 +1099,23 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type InviteGroupApplicationRequest = {
+        /** 要发起邀请申请的群 ID。 */
         group_id: string;
         /** 被邀请用户 ID 列表。 */
         requester_user_ids: string[];
         /** 来源类型，前端标记。 */
         source_type?: string;
+        /** 邀请入群时附带的验证消息。 */
         message?: string;
     };
     type InviteGroupMemberRequest = {
+        /** 要邀请成员加入的群 ID。 */
         group_id: string;
+        /** 要直接邀请入群的用户 ID 列表。 */
         member_user_ids: string[];
     };
     type LeaveGroupRequest = {
+        /** 当前用户要退出的群 ID。 */
         group_id: string;
         /** 是否全局清除本人退出前在本群发送的历史消息；清除后所有成员均不可见。 */
         clear_history?: boolean;
@@ -1044,7 +1131,9 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type ListAuditGroupApplicationRequest = {
+        /** 页码，从 1 开始。 */
         page?: number;
+        /** 每页数量，最大 100。 */
         page_size?: number;
     };
     type ListBlacklistEnvelope = ResponseBase & {
@@ -1054,12 +1143,14 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type ListBlacklistRequest = {
+        /** 页码，从 1 开始；不传默认 1。 */
         page?: number;
+        /** 每页数量；不传默认 50。 */
         page_size?: number;
     };
     type ListCallEnvelope = ResponseBase & {
         data?: {
-            list?: Call[];
+            list?: CallRecord[];
             total?: number;
         };
     };
@@ -1073,20 +1164,6 @@ export declare namespace GatewayOpenAPI {
         /** 每页数量，最大 50；不传默认 20。 */
         page_size?: number;
     };
-    type ListCallV2Envelope = ResponseBase & {
-        data?: {
-            list?: ListCallV2ResponseDataWrap[];
-            total?: number;
-        };
-    };
-    type ListCallV2ResponseDataWrap = {
-        call?: Call;
-        /** 相对当前用户的通话方向。outgoing=呼出，incoming=呼入。 */
-        direction?: "outgoing" | "incoming";
-        /** answered=已接通；missed=当前用户作为被叫时未接。呼出未接通及进行中的通话返回空字符串。 */
-        answer_status?: "answered" | "missed" | "";
-        peer_user?: CallPeerUser;
-    };
     type ListCommonGroupEnvelope = ResponseBase & {
         data?: {
             list?: {
@@ -1099,7 +1176,9 @@ export declare namespace GatewayOpenAPI {
     type ListCommonGroupRequest = {
         /** 目标用户 ID。 */
         target_user_id: string;
+        /** 单页最多返回的共同群数量，最大 200。 */
         limit?: number;
+        /** 上一页返回的分页游标；首次请求不传。 */
         page_token?: string;
     };
     type ListConversationEnvelope = ResponseBase & {
@@ -1133,7 +1212,9 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type ListFriendApplicationRequest = {
+        /** 页码，从 1 开始；不传默认 1。 */
         page?: number;
+        /** 每页数量；不传默认 20。 */
         page_size?: number;
     };
     type ListFriendEnvelope = ResponseBase & {
@@ -1143,12 +1224,17 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type ListFriendRequest = {
+        /** 页码，从 1 开始；不传默认 1。 */
         page?: number;
+        /** 每页数量；不传默认 50。 */
         page_size?: number;
     };
     type ListGroupAdminRequest = {
+        /** 要查询管理员的群 ID。 */
         group_id: string;
+        /** 单页最多返回的管理员数量，默认 50，最大 100。 */
         limit?: number;
+        /** 上一页返回的分页游标；首次请求不传。 */
         page_token?: string;
     };
     type ListGroupApplicationEnvelope = ResponseBase & {
@@ -1162,10 +1248,15 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type ListGroupApplicationRequest = {
+        /** 要查询入群申请的群 ID。 */
         group_id: string;
+        /** 申请状态筛选。pending=待处理，accepted=已同意，rejected=已拒绝；不传表示全部。 */
         status?: "pending" | "accepted" | "rejected";
+        /** 申请类型筛选。apply=用户主动申请，invite=成员邀请；不传表示全部。 */
         type?: "apply" | "invite";
+        /** 页码，从 1 开始。 */
         page?: number;
+        /** 每页数量，最大 100。 */
         page_size?: number;
     };
     type ListGroupMemberEnvelope = ResponseBase & {
@@ -1178,8 +1269,11 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type ListGroupMemberRequest = {
+        /** 要查询成员的群 ID。 */
         group_id: string;
+        /** 单页最多返回的成员数量；不传时由服务端使用默认值。 */
         limit?: number;
+        /** 上一页返回的分页游标；首次请求不传。 */
         page_token?: string;
         filter?: GroupMemberFilter;
         /** 是否仅查看被单独禁言的成员。 */
@@ -1195,7 +1289,9 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type ListMyGroupRequest = {
+        /** 单页最多返回的群数量，最大 200。 */
         limit?: number;
+        /** 上一页返回的分页游标；首次请求不传。 */
         page_token?: string;
     };
     type ListPresenceEnvelope = ResponseBase & {
@@ -1246,6 +1342,7 @@ export declare namespace GatewayOpenAPI {
         status?: AccountStatus;
     };
     type LogoutRequest = {
+        /** 要注销的 access token；也可通过 Authorization Bearer Header 提交。 */
         access_token?: string;
     };
     type MarkConversationUnreadRequest = {
@@ -1377,6 +1474,7 @@ export declare namespace GatewayOpenAPI {
     type postV1BlacklistRemoveParams = {};
     type postV1CallAnswerParams = {};
     type postV1CallCancelParams = {};
+    type postV1CallDeleteParams = {};
     type postV1CallDetailParams = {};
     type postV1CallHangupParams = {};
     type postV1CallListParams = {};
@@ -1462,6 +1560,8 @@ export declare namespace GatewayOpenAPI {
     type postV1SettingNotificationSwitchParams = {};
     type postV1SettingPermissionDetailParams = {};
     type postV1SettingPermissionSwitchParams = {};
+    type postV1UpdatesGetConversationDifferenceParams = {};
+    type postV1UpdatesGetDifferenceParams = {};
     type postV1UserAccountPasswordSetParams = {};
     type postV1UserBatchDetailParams = {};
     type postV1UserCurrentDetailParams = {};
@@ -1471,9 +1571,6 @@ export declare namespace GatewayOpenAPI {
     type postV1UsersContactBindParams = {};
     type postV1UserSearchParams = {};
     type postV1UsersUpdateProfileParams = {};
-    type postV2CallDeleteParams = {};
-    type postV2CallDetailParams = {};
-    type postV2CallListParams = {};
     type PublicGroup = {
         group_id?: string;
         title?: string;
@@ -1505,8 +1602,11 @@ export declare namespace GatewayOpenAPI {
         data?: PullMessagesData;
     };
     type PullMessagesRequest = {
+        /** 要拉取消息的会话 ID。 */
         conversation_id: string;
+        /** 拉取起始消息序号；首次请求按客户端当前游标传入。 */
         from_seq: Uint64String;
+        /** 单次返回消息数量；不传时由服务端使用默认值。 */
         limit?: number;
         /** 是否倒序拉取。 */
         desc?: boolean;
@@ -1519,8 +1619,11 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type PullMessageUpdatesRequest = {
+        /** 要拉取消息变更的会话 ID。 */
         conversation_id: string;
+        /** 上次同步完成后的消息变更序号；首次同步传 0 或不传。 */
         after_update_seq?: Uint64String;
+        /** 单次最多返回的消息变更数量，最大 100。 */
         limit?: number;
     };
     type QuoteMessage = {
@@ -1534,6 +1637,7 @@ export declare namespace GatewayOpenAPI {
         quote: QuoteMessage;
     };
     type ReadGroupAnnouncementRequest = {
+        /** 要标记公告已读的群 ID。 */
         group_id: string;
         /** 前端实际展示并确认已读的公告版本。 */
         announcement_version: Uint64String;
@@ -1545,8 +1649,8 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type RefreshTokenRequest = {
+        /** 登录或上一次刷新返回的 refresh token；刷新成功后该 token 立即失效。 */
         refresh_token: string;
-        device_id?: string;
     };
     type RegisterUserRequest = {
         type: AccountType;
@@ -1554,23 +1658,25 @@ export declare namespace GatewayOpenAPI {
         account: string;
         /** type=phone 时必填且当前仅允许 +86；非 +86 手机号暂不支持注册。 */
         phone_area_code?: string;
-        /** type=account 时必填，要求 8-24 位且至少包含字母、数字、特殊字符中的两类；type=email 或 type=phone 时不需要。 */
+        /** type=account 时必填，要求 8-24 位，只允许英文和数字且两者必须同时存在；type=email 或 type=phone 时不需要。 */
         password?: string;
         /** type=email 或 type=phone 时必填；当前开发阶段固定传 666666，错误时返回“验证码错误或验证失败”。 */
         verification_code?: string;
-        device_id: string;
     };
     type RejectGroupApplicationRequest = {
+        /** 要拒绝的入群申请 ID。 */
         application_id: string;
     };
     type RemoveGroupMemberRequest = {
+        /** 要移除成员的群 ID。 */
         group_id: string;
+        /** 要移出群聊的成员用户 ID 列表，单次最多 100 人。 */
         member_user_ids: string[];
     };
     type ResetPasswordRequest = {
         /** 当前旧密码。 */
         old_password: string;
-        /** 新密码。 */
+        /** 新密码；只允许英文和数字且两者必须同时存在。 */
         password: string;
     };
     type ResetSysUserPasswordRequest = {
@@ -1618,6 +1724,7 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type SendMessageRequest = {
+        /** 消息目标会话 ID，当前用户必须是该会话的有效成员。 */
         conversation_id: string;
         /** 客户端生成的幂等 ID，重试必须保持不变。 */
         client_msg_id: string;
@@ -1630,13 +1737,15 @@ export declare namespace GatewayOpenAPI {
         entities?: MessageEntity[];
     };
     type SetGroupAdminRequest = {
+        /** 要设置管理员的群 ID。 */
         group_id: string;
+        /** 要设为管理员的成员用户 ID 列表，单次最多 100 人。 */
         member_user_ids: string[];
     };
     type SetUserAccountPasswordRequest = {
         /** 要设置的账号名；要求 8-24 位 ASCII 可打印字符（0x21-0x7E），不允许空格，且未被其他用户占用。 */
         account: string;
-        /** 要设置的登录密码。 */
+        /** 要设置的登录密码；只允许英文和数字且两者必须同时存在。 */
         password: string;
     };
     type ShareCardMessageEnvelope = ResponseBase & {
@@ -1681,6 +1790,7 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type SyncConversationRequest = {
+        /** 单页最多返回的会话数量；不传时由服务端使用默认值。 */
         limit?: number;
         /** 上一页返回的分页游标。 */
         page_token?: string;
@@ -1788,7 +1898,9 @@ export declare namespace GatewayOpenAPI {
         subject_id?: string;
     };
     type TransferGroupOwnerRequest = {
+        /** 要转让群主的群 ID。 */
         group_id: string;
+        /** 新群主用户 ID，必须是当前群内的正常成员。 */
         new_owner_user_id: string;
     };
     type TypingMessage = {
@@ -1801,7 +1913,7 @@ export declare namespace GatewayOpenAPI {
     type UpdateConversationAutoDeleteRequest = {
         /** 要设置自动删除消息的会话 ID。 */
         conversation_id: string;
-        /** 自动删除消息秒数，0 表示关闭；支持 6小时、12小时、1天、3天、7天、15天、1个月、2个月、3个月、6个月。 */
+        /** 自动删除消息秒数。0=关闭，21600=6小时，43200=12小时，86400=1天，259200=3天，604800=7天，1296000=15天，2592000=1个月，5184000=2个月，7776000=3个月，15552000=6个月。 */
         auto_delete_seconds?: 0 | 21600 | 43200 | 86400 | 259200 | 604800 | 1296000 | 2592000 | 5184000 | 7776000 | 15552000;
     };
     type UpdateEmailRequest = {
@@ -1811,6 +1923,7 @@ export declare namespace GatewayOpenAPI {
         verification_code: string;
     };
     type UpdateFriendProfileRequest = {
+        /** 要修改备注资料的好友用户 ID。 */
         friend_user_id: string;
         /** 好友别名；未传不更新，传空字符串表示清空别名。 */
         alias?: string;
@@ -1822,11 +1935,13 @@ export declare namespace GatewayOpenAPI {
         tags?: string[];
     };
     type UpdateFriendStarRequest = {
+        /** 要设置星标状态的好友用户 ID。 */
         friend_user_id: string;
         /** 是否标记为星标好友；false 表示取消星标。 */
         is_starred: boolean;
     };
     type UpdateGroupAdminPermissionRequest = {
+        /** 要修改管理员权限模板的群 ID。 */
         group_id: string;
         /** 全体禁言时管理员是否可以发消息；未开启全体禁言时不限制管理员日常发言。 */
         admin_send_message?: boolean;
@@ -1849,7 +1964,9 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type UpdateGroupMemberMuteRequest = {
+        /** 目标成员所在的群 ID。 */
         group_id: string;
+        /** 要设置或取消单独禁言的成员用户 ID。 */
         member_user_id: string;
         /** 单成员禁言到期时间；不传或空字符串表示取消单独禁言。 */
         mute_until?: RFC3339Time;
@@ -1860,11 +1977,13 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type UpdateGroupMemberNicknameRequest = {
+        /** 要修改本人群昵称的群 ID。 */
         group_id: string;
         /** 当前用户在群内的昵称；空字符串表示清除群昵称。 */
         nickname?: string;
     };
     type UpdateGroupMuteRequest = {
+        /** 要修改禁言或发言频率设置的群 ID。 */
         group_id: string;
         /** 全体禁言开关；未传保持原值。普通成员不能发言，群主仍可发言，管理员由 admin_send_message 控制。 */
         mute_all?: boolean;
@@ -1872,12 +1991,15 @@ export declare namespace GatewayOpenAPI {
         mute_member?: boolean;
         /** 群发言频率开关；未传保持原值，开启后普通成员按 send_frequency_seconds 限制发言间隔。 */
         send_frequency_enabled?: boolean;
-        /** 群发言频率间隔秒数；未传保持原值。 */
+        /** 群发言频率间隔秒数；可选 30、60、180、300、600、1800、3600，分别表示 30 秒、1 分钟、3 分钟、5 分钟、10 分钟、30 分钟、1 小时；未传保持原值。 */
         send_frequency_seconds?: 30 | 60 | 180 | 300 | 600 | 1800 | 3600;
     };
     type UpdateGroupRequest = {
+        /** 要修改资料的群 ID。 */
         group_id: string;
+        /** 新群名称；不传或空字符串表示保持原值。 */
         title?: string;
+        /** 新群头像 URL；不传或空字符串表示保持原值。 */
         avatar_url?: string;
         /** 群简介；不传或空字符串表示保持不变。 */
         description?: string;
@@ -1885,6 +2007,7 @@ export declare namespace GatewayOpenAPI {
         announcement?: string;
     };
     type UpdateGroupSettingRequest = {
+        /** 要修改群设置的群 ID。 */
         group_id: string;
         /** 全体禁言开关；未传保持原值。 */
         mute_all?: boolean;
@@ -1892,7 +2015,7 @@ export declare namespace GatewayOpenAPI {
         mute_member?: boolean;
         /** 群发言频率开关；未传保持原值。 */
         send_frequency_enabled?: boolean;
-        /** 群发言频率间隔秒数；未传保持原值。 */
+        /** 群发言频率间隔秒数；可选 30、60、180、300、600、1800、3600，分别表示 30 秒、1 分钟、3 分钟、5 分钟、10 分钟、30 分钟、1 小时；未传保持原值。 */
         send_frequency_seconds?: 30 | 60 | 180 | 300 | 600 | 1800 | 3600;
         /** 入群是否需要审核；未传保持原值。 */
         join_approval_required?: boolean;
@@ -1910,11 +2033,15 @@ export declare namespace GatewayOpenAPI {
         };
     };
     type UpdateMessageRequest = {
+        /** 目标消息所属的会话 ID。 */
         conversation_id: string;
+        /** 要编辑或删除的目标消息 ID。 */
         target_msg_id: string;
         /** 操作消息的客户端幂等 ID。网络重试必须保持不变，但不能跨目标消息、编辑/删除操作或删除 scope 复用。 */
         client_msg_id: string;
+        /** 编辑消息参数；与 delete 必须且只能传一个。 */
         edit?: EditMessageOperation;
+        /** 删除消息参数；与 edit 必须且只能传一个。 */
         delete?: DeleteMessageOperation;
     };
     type UpdatePhoneRequest = {
@@ -1984,10 +2111,13 @@ export declare namespace GatewayOpenAPI {
     };
     type User = {
         user_id?: string;
+        /** 登录账号，仅完整资料返回。 */
         account?: string;
+        /** 绑定手机号，仅完整资料返回。 */
         phone?: string;
-        /** 手机号区号，仅用于记录和展示，例如 +86。 */
+        /** 手机号区号，仅完整资料返回，例如 +86。 */
         phone_area_code?: string;
+        /** 绑定邮箱，仅完整资料返回。 */
         email?: string;
         nickname?: string;
         avatar_url?: string;
@@ -2022,7 +2152,6 @@ export declare namespace GatewayOpenAPI {
         password?: string;
         /** type=email 或 type=phone 时必填；当前开发阶段固定传 666666，错误时返回“验证码错误或验证失败”。 */
         verification_code?: string;
-        device_id: string;
     };
     type UserNotificationSetting = {
         user_id: string;
@@ -2052,7 +2181,7 @@ export declare namespace GatewayOpenAPI {
         user_id: string;
         /** 加我是否需要验证；true=需要验证，false=允许直接添加。 */
         friend_apply_verify: boolean;
-        /** 是否允许其他用户通过 `/v1/user/search` 搜索到当前用户；不影响本人搜索自己。 */
+        /** 是否允许通过 `/v1/user/search` 搜索到当前用户；本人完整资料统一通过 `/v1/user/current/detail` 获取。 */
         allow_search: boolean;
         /** 是否允许其他用户在创建群或直接邀请时将当前用户加入群；不影响用户主动申请或待审核邀请。 */
         allow_group_invite: boolean;

@@ -1,16 +1,17 @@
 import { IMError } from '../../core/errors.js';
-import * as authOpenAPI from '../../openapi/generated/gateway/apIrenzheng.js';
-import * as callOpenAPI from '../../openapi/generated/gateway/apItonghua.js';
-import * as conversationOpenAPI from '../../openapi/generated/gateway/apIhuihua.js';
-import * as customEmojiOpenAPI from '../../openapi/generated/gateway/apIzidingyibiaoqing.js';
-import * as commonOpenAPI from '../../openapi/generated/gateway/apItongyong.js';
-import * as friendOpenAPI from '../../openapi/generated/gateway/apItongxunlu.js';
-import * as groupOpenAPI from '../../openapi/generated/gateway/apIqunliao.js';
-import * as messageOpenAPI from '../../openapi/generated/gateway/apIxiaoxi.js';
-import * as platformOpenAPI from '../../openapi/generated/gateway/apIpingtai.js';
-import * as presenceOpenAPI from '../../openapi/generated/gateway/apIzaixianzhuangtai.js';
-import * as settingOpenAPI from '../../openapi/generated/gateway/apIshezhi.js';
-import * as userOpenAPI from '../../openapi/generated/gateway/apIyonghu.js';
+import * as authOpenAPI from '../../openapi/generated/gateway/renzheng.js';
+import * as callOpenAPI from '../../openapi/generated/gateway/tonghua.js';
+import * as conversationOpenAPI from '../../openapi/generated/gateway/huihua.js';
+import * as customEmojiOpenAPI from '../../openapi/generated/gateway/zidingyibiaoqing.js';
+import * as commonOpenAPI from '../../openapi/generated/gateway/tongyong.js';
+import * as friendOpenAPI from '../../openapi/generated/gateway/tongxunlu.js';
+import * as groupOpenAPI from '../../openapi/generated/gateway/qunliao.js';
+import * as messageOpenAPI from '../../openapi/generated/gateway/xiaoxi.js';
+import * as platformOpenAPI from '../../openapi/generated/gateway/pingtai.js';
+import * as presenceOpenAPI from '../../openapi/generated/gateway/zaixianzhuangtai.js';
+import * as settingOpenAPI from '../../openapi/generated/gateway/shezhi.js';
+import * as differenceOpenAPI from '../../openapi/generated/gateway/chaliangtongbu.js';
+import * as userOpenAPI from '../../openapi/generated/gateway/yonghu.js';
 import request from '../../openapi/request.js';
 import { createOpenAPIRequestOptionsFactory, unwrapGatewayData as unwrapData, } from './request-support.js';
 export function createGatewayHTTPClient(options) {
@@ -47,9 +48,9 @@ export function createGatewayHTTPClient(options) {
         hangupCall: (params) => unwrapData(callOpenAPI.postV1CallHangup(params, requestOptions())),
         refreshCallToken: (params) => unwrapData(callOpenAPI.postV1CallToken(params, requestOptions())),
         fetchCallDetail: (params) => unwrapData(callOpenAPI.postV1CallDetail(params, requestOptions())),
-        fetchCallList: async (params = {}) => normalizeListCallV2Data(await unwrapData(callOpenAPI.postV2CallList(params, requestOptions()))),
+        fetchCallList: async (params = {}) => normalizeListCallData(await unwrapData(callOpenAPI.postV1CallList(params, requestOptions()))),
         deleteCalls: async (params) => {
-            await unwrapData(callOpenAPI.postV2CallDelete(params, requestOptions()));
+            await unwrapData(callOpenAPI.postV1CallDelete({ call_ids: [...params.call_ids] }, requestOptions()));
         },
         fetchPendingCall: () => unwrapData(request('/v1/call/pending', {
             method: 'POST',
@@ -130,6 +131,8 @@ export function createGatewayHTTPClient(options) {
         getConversation: async (params) => readConversation(await unwrapData(conversationOpenAPI.postV1ConversationDetail(params, requestOptions()))),
         getConversationSetting: (params) => unwrapData(conversationOpenAPI.postV1ConversationSettingDetail(params, requestOptions())),
         syncConversations: async (params = {}) => normalizeSyncConversationsData(await unwrapData(conversationOpenAPI.postV1ConversationSync(params, requestOptions()))),
+        getDifference: (params = {}) => unwrapData(differenceOpenAPI.postV1UpdatesGetDifference(params, requestOptions())),
+        getConversationDifference: (params) => unwrapData(differenceOpenAPI.postV1UpdatesGetConversationDifference(params, requestOptions())),
         pinConversation: (params) => unwrapData(conversationOpenAPI.postV1ConversationPin(params, requestOptions())),
         muteConversation: (params) => unwrapData(conversationOpenAPI.postV1ConversationMute(params, requestOptions())),
         updateConversationAutoDelete: async (params) => readConversation(await unwrapData(conversationOpenAPI.postV1ConversationAutoDeleteUpdate(params, requestOptions()))),
@@ -195,7 +198,7 @@ export function createGatewayHTTPClient(options) {
         updateGroupMemberNickname: async (params) => readGroupMember(await unwrapData(groupOpenAPI.postV1GroupMemberNicknameUpdate(params, requestOptions()))),
         listGroupMembers: async (params) => normalizeListGroupMembersData(await unwrapData(groupOpenAPI.postV1GroupMemberList(params, requestOptions()))),
         applyGroupApplication: async (params) => readGroupApplication(await unwrapData(groupOpenAPI.postV1GroupApplicationApply(params, requestOptions()))),
-        inviteGroupApplication: async (params) => readGroupApplication(await unwrapData(groupOpenAPI.postV1GroupApplicationInvite(params, requestOptions()))),
+        inviteGroupApplication: async (params) => readInvitedGroupApplications(await unwrapData(groupOpenAPI.postV1GroupApplicationInvite(params, requestOptions()))),
         listGroupApplications: async (params) => normalizeListGroupApplicationsData(await unwrapData(groupOpenAPI.postV1GroupApplicationList(params, requestOptions()))),
         listGroupApplicationAudit: async (params) => normalizeListGroupApplicationAuditData(await unwrapData(groupOpenAPI.postV1GroupApplicationAuditList(params, requestOptions()))),
         acceptGroupApplication: async (params) => readGroupApplication(await unwrapData(groupOpenAPI.postV1GroupApplicationAccept(params, requestOptions()))),
@@ -306,7 +309,7 @@ function normalizeListBlacklistData(data) {
         ...(total === undefined ? {} : { total }),
     };
 }
-function normalizeListCallV2Data(data) {
+function normalizeListCallData(data) {
     const list = data.list
         ?.map(item => {
         if (!item.call) {
@@ -620,6 +623,28 @@ function readGroupApplication(data) {
         });
     }
     return data.application;
+}
+/** 读取新版批量邀请申请响应并拒绝缺失的 application 单项。 */
+function readInvitedGroupApplications(data) {
+    if (!Array.isArray(data.list)) {
+        throw new IMError({
+            code: 'GATEWAY_GROUP_APPLICATION_LIST_MISSING',
+            message: 'Gateway response is missing data.list.',
+            source: 'transport',
+            cause: data,
+        });
+    }
+    /** applications 保持请求对应的服务端顺序。 */
+    const applications = data.list.map(item => item.application);
+    if (applications.some(application => !application)) {
+        throw new IMError({
+            code: 'GATEWAY_GROUP_APPLICATION_MISSING',
+            message: 'Gateway response contains an item without application.',
+            source: 'transport',
+            cause: data,
+        });
+    }
+    return applications;
 }
 function readUser(data) {
     if (data.user) {

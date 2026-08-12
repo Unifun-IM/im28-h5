@@ -1,5 +1,7 @@
+import { useRef } from 'react';
 import type { WebIMConversationListItem } from '@im28/im-sdk/web';
 
+import { InteractionModal } from '../../components/interaction/index.js';
 import { getConversationTitle } from './conversation-list-view.js';
 
 /** 会话删除确认层严格区分本端和服务端范围。 */
@@ -21,21 +23,27 @@ export function ConversationDeleteSheet({
   onDeleteSelf,
   onDeleteAll,
 }: ConversationDeleteSheetProps) {
-  if (!target) return null;
+  // retainedTargetRef 保留退出动画期间需要呈现的最后一个会话实体。
+  const retainedTargetRef = useRef<WebIMConversationListItem | null>(target);
+  if (target) retainedTargetRef.current = target;
+  // visibleTarget 在关闭过渡完成前维持确认文案稳定。
+  const visibleTarget = target ?? retainedTargetRef.current;
+  if (!visibleTarget) return null;
   /** conversation 是确认文案和权限范围的共享缓存实体。 */
-  const conversation = target.conversation;
+  const conversation = visibleTarget.conversation;
   /** title 使用列表相同的稳定名称回退。 */
   const title = getConversationTitle(conversation);
   /** isGroup 决定 all 范围文案。 */
   const isGroup = conversation.type === 'group';
   return (
-    <div className="rn-conversation-delete-backdrop" role="presentation" onClick={onClose}>
+    <InteractionModal
+      open={Boolean(target)}
+      ariaLabel="删除聊天记录"
+      className="rn-conversation-delete-backdrop"
+      onRequestClose={onClose}
+    >
       <section
-        className="rn-conversation-delete-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label="删除聊天记录"
-        onClick={event => event.stopPropagation()}
+        className="rn-conversation-delete-sheet im-modal-sheet"
       >
         <div className="rn-conversation-delete-group">
           <p>{isGroup
@@ -50,6 +58,6 @@ export function ConversationDeleteSheet({
         </div>
         <button type="button" disabled={pending} onClick={onClose}>取消</button>
       </section>
-    </div>
+    </InteractionModal>
   );
 }

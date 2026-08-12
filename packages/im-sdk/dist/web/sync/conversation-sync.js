@@ -6,6 +6,7 @@ import { createIMConversationSettingsSync, } from './conversation-settings.js';
 import { createIMConversationListActionsSync, } from './conversation-list-actions.js';
 import { createIMConversationArchiveSync, } from './conversation-archive-sync.js';
 import { readUnreadMentionSnapshot, } from './conversation-unread-mention.js';
+import { syncIMGatewayDifference } from './gateway-difference-sync.js';
 /** 创建认证账号绑定的浏览器会话同步服务。 */
 export function createWebIMConversationSync(dependencies) {
     return new WebIMConversationSyncImpl(dependencies);
@@ -124,6 +125,11 @@ class WebIMConversationSyncImpl {
     async syncDirect(context, options) {
         // pageSize 限制异常调用造成的服务端或内存压力。
         const pageSize = clampPageSize(options.pageSize);
+        if (this.dependencies.useGatewayDifference) {
+            // Difference owner 负责分页、双游标和原子持久化，页面只读取最终 cache。
+            await syncIMGatewayDifference(this.dependencies.gatewayClient, context, pageSize);
+            return new ConversationRepository(context.database).list();
+        }
         // remoteConversations 仅在所有分页成功后进入持久化阶段。
         const remoteConversations = await this.fetchAllPages(pageSize);
         // mappings 在任何写入前完成，字段错误不会替换旧 cache。

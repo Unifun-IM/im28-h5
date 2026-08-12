@@ -10,10 +10,10 @@ import type { WebIMRuntimeState } from './runtime-lifecycle.js';
 import type { WebIMUserSettings } from './web-im-user-settings.js';
 import type { IMIncomingCallSnapshot } from '../../../sync/incoming-call-lifecycle.js';
 import type { IMCallRealtimeSignal } from '../../../sync/call-realtime-signal.js';
-/** Web 登录请求由 runtime 统一注入稳定 device ID。 */
-export type WebIMLoginRequest = Omit<GatewayUserLoginRequest, 'device_id'>;
-/** Web 注册请求由 runtime 统一注入稳定 device ID。 */
-export type WebIMRegisterRequest = Omit<GatewayRegisterUserRequest, 'device_id'>;
+/** Web 登录请求只包含业务字段，设备身份由 runtime Header 统一注入。 */
+export type WebIMLoginRequest = GatewayUserLoginRequest;
+/** Web 注册请求只包含业务字段，设备身份由 runtime Header 统一注入。 */
+export type WebIMRegisterRequest = GatewayRegisterUserRequest;
 /** 首次设置账号密码只接受 Gateway 已支持的两个字段。 */
 export interface WebIMSetAccountPasswordRequest {
     readonly account: string;

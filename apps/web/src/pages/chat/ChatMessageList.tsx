@@ -9,6 +9,7 @@ import {
 } from './chat-quote-view.js';
 import { focusChatMessageRow } from './chat-message-focus.js';
 import { indexChatGroupMembers } from './chat-group-message-view.js';
+import { useTailItemMotion } from '../../components/interaction/index.js';
 
 /** RN 消息列表只消费 Repository 消息和页面加载状态。 */
 interface ChatMessageListProps {
@@ -55,6 +56,12 @@ export function ChatMessageList({
   onDeleteMessage,
   onEditMessage,
 }: ChatMessageListProps) {
+  useTailItemMotion({
+    containerRef: listRef,
+    itemSelector: '.rn-chat-message-row',
+    motionClassName: 'im-message-enter',
+    enabled: !loading,
+  });
   // entries 只在消息窗口或会话类型变化时重新计算。
   const entries = useMemo(
     () => buildChatMessageListEntries(messages, isGroup, currentUserID),

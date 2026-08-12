@@ -18,6 +18,9 @@ export interface ChatSettingsView {
   readonly introduction: string;
   readonly announcement: string;
   readonly canShowAnnouncement: boolean;
+  readonly canEditGroupProfile: boolean;
+  readonly canInviteMembers: boolean;
+  readonly canRemoveMembers: boolean;
   readonly canManageAutoDelete: boolean;
   readonly canClearForAll: boolean;
 }
@@ -58,12 +61,18 @@ export function buildChatSettingsView(
   const announcement = isGroup && group?.groupID === targetID
     ? group.announcement.trim()
     : '';
-  // canShowAnnouncement 对齐 RN 设置页只向群主或管理员展示公告卡。
-  const canShowAnnouncement = isGroup && group?.groupID === targetID &&
-    (group.currentUserRole === 'owner' || group.currentUserRole === 'admin');
-  // canManageGroupMessages 只接受同目标群的 owner/admin 权限快照。
-  const canManageGroupMessages = group?.groupID === targetID &&
-    (group.currentUserRole === 'owner' || group.currentUserRole === 'admin');
+  // canShowAnnouncement 消费 shared 显式 capability，禁止页面按角色复制回退规则。
+  const canShowAnnouncement = Boolean(
+    isGroup && group?.groupID === targetID && group.canEditAnnouncement,
+  );
+  // canEditGroupProfile 对齐 RN 当前 owner/admin 群资料编辑规则。
+  const canEditGroupProfile = Boolean(
+    isGroup && group?.groupID === targetID && group.permissions.canEditGroupInfo,
+  );
+  // canManageGroupMessages 只消费同目标群的 shared capability 快照。
+  const canManageGroupMessages = Boolean(
+    group?.groupID === targetID && group.permissions.canClearMessages,
+  );
   return {
     conversationID: conversation.conversationID,
     targetID,
@@ -76,6 +85,13 @@ export function buildChatSettingsView(
     introduction,
     announcement,
     canShowAnnouncement,
+    canEditGroupProfile,
+    canInviteMembers: Boolean(
+      isGroup && group?.groupID === targetID && group.permissions.canInviteMembers,
+    ),
+    canRemoveMembers: Boolean(
+      isGroup && group?.groupID === targetID && group.permissions.canRemoveMembers,
+    ),
     canManageAutoDelete: !isGroup || canManageGroupMessages,
     canClearForAll: !isGroup || canManageGroupMessages,
   };
@@ -103,4 +119,19 @@ export function buildChatSettingsMemberViews(
     if (views.length >= Math.max(0, limit)) break;
   }
   return views;
+}
+
+/** 从 shared 成员快照读取当前账号群昵称，回退规则与 RN 成员展示一致。 */
+export function getSelfGroupNickname(
+  members: readonly WebIMGroupMember[],
+  currentUserID: string | null | undefined,
+): string {
+  // normalizedUserID 禁止空认证身份误命中异常成员。
+  const normalizedUserID = currentUserID?.trim() ?? '';
+  if (!normalizedUserID) return '';
+  // currentMember 必须使用稳定 userID 精确匹配当前账号。
+  const currentMember = members.find(member => member.userID === normalizedUserID);
+  return currentMember
+    ? resolveIMGroupMemberDisplayName(currentMember, normalizedUserID)
+    : '';
 }

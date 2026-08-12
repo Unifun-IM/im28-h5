@@ -1,6 +1,7 @@
 import { GroupMemberRepository, GroupRepository, } from '@im28/im-sdk/core';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { refreshGroupMemberUserProfiles, resolveGroupMemberDisplayProfiles, } from './group-member-profile.js';
+import { updateSelfGroupNicknameRecord } from './group-member-nickname.js';
 /** 创建当前账号绑定的群成员同步 facade。 */
 export function createWebIMGroupMemberSync(dependencies) {
     /** mutationQueue 与消息、会话写入保持同一顺序 owner。 */
@@ -8,6 +9,24 @@ export function createWebIMGroupMemberSync(dependencies) {
     return {
         listCached: async (groupID) => readCachedMembers(dependencies, groupID),
         sync: async (groupID, options) => executeMemberSync(dependencies, mutationQueue, groupID, options),
+        updateSelfNickname: (groupID, nickname) => {
+            /** operation 与成员全量替换共用队列，避免 nickname 写回被并发 sync 覆盖。 */
+            const operation = async () => {
+                /** normalizedGroupID 是 Gateway 与 Repository 共用群身份。 */
+                const normalizedGroupID = requireGroupID(groupID);
+                /** next 是 Gateway 成功且已原子写回的当前成员。 */
+                const next = await updateSelfGroupNicknameRecord(dependencies, normalizedGroupID, nickname);
+                /** members 复用统一资料关联，避免 mutation 返回另一套展示优先级。 */
+                const members = await mapCachedMembers(requireWebIMSyncContext(dependencies, 'Group member nickname update').database, [next]);
+                /** current 一定来自刚写回的稳定成员身份。 */
+                const current = members[0];
+                if (!current) {
+                    throw createWebIMSyncError('GROUP_MEMBER_NICKNAME_CACHE_MISSING', 'Updated group member cache could not be read.');
+                }
+                return current;
+            };
+            return mutationQueue ? mutationQueue.enqueue(operation) : operation();
+        },
     };
 }
 /** 从当前账号 SQLite 读取群成员快照。 */
@@ -30,16 +49,19 @@ async function executeMemberSync(dependencies, mutationQueue, groupID, options) 
     const operation = async () => {
         /** groupRepository 证明目标群属于当前账号 cache。 */
         const groupRepository = new GroupRepository(context.database);
-        if (!await groupRepository.getByID(normalizedGroupID)) {
+        /** group 是成员快照与群人数共同收敛所需的现有群事实。 */
+        const group = await groupRepository.getByID(normalizedGroupID);
+        if (!group) {
             throw createWebIMSyncError('GROUP_NOT_FOUND', 'Group member sync requires an existing cached group.');
         }
         /** remoteMembers 只有所有页面成功后才会写入。 */
         const remoteMembers = await pullAllMembers(dependencies.gatewayClient, normalizedGroupID, clampPageSize(options?.pageSize));
         /** 用户资料属于非阻断增强，失败时复用既有 cache 或身份兜底。 */
         await refreshGroupMemberUserProfiles(context.database, dependencies.gatewayClient, remoteMembers);
-        /** repository 用一个事务替换该群快照。 */
+        /** repository 只负责权威快照提交后的关联展示读取。 */
         const repository = new GroupMemberRepository(context.database);
-        await repository.replaceGroupMembers(normalizedGroupID, remoteMembers);
+        /** 群成员与群人数在一个事务中提交，避免 mutation 后双表漂移。 */
+        await groupRepository.replaceMemberSnapshot(group, remoteMembers);
         return mapCachedMembers(context.database, await repository.listByGroupID(normalizedGroupID));
     };
     return mutationQueue ? mutationQueue.enqueue(operation) : operation();

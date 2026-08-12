@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite",
+    "dev": "npm run dev:pc",
+    "dev:pc": "vite --mode dev-pc --host 127.0.0.1 --port 5176",
+    "dev:h5": "vite --mode dev-h5 --host 127.0.0.1 --port 5176",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },

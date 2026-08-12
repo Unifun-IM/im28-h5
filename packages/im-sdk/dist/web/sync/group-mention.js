@@ -1,5 +1,7 @@
 import { ConversationRepository, GroupMemberRepository, GroupRepository, normalizeMessageMentions, } from '@im28/im-sdk/core';
 import { createWebIMGroupMemberSync, } from './group-member-sync.js';
+import { inviteIMGroupMembers, } from './group-member-invitation.js';
+import { removeIMGroupMembers, } from './group-member-removal.js';
 import { sendWebIMMentionMessage, } from './message-mention-send.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
@@ -14,8 +16,83 @@ export function createIMGroupMentionSync(dependencies) {
     return {
         listMembers: groupID => memberSync.listCached(groupID),
         syncMembers: (groupID, options) => memberSync.sync(groupID, options),
+        updateSelfNickname: (groupID, nickname) => memberSync.updateSelfNickname(groupID, nickname),
+        inviteMembers: options => inviteGroupMembers(sharedDependencies, memberSync, mutationQueue, options),
+        removeMembers: options => removeGroupMembers(sharedDependencies, memberSync, mutationQueue, options),
         send: options => mutationQueue.enqueue(() => sendGroupMention(sharedDependencies, options)),
     };
+}
+/** 邀请 mutation 只入队一次，直接入群后刷新失败也不会重放远端写入。 */
+async function inviteGroupMembers(dependencies, memberSync, mutationQueue, options) {
+    /** context 在写入前冻结当前认证账号和数据库。 */
+    const context = requireWebIMSyncContext(dependencies, 'Group member invitation');
+    /** committed 只包含一次远端写及 success-only 群缓存更新。 */
+    const committed = await mutationQueue.enqueue(() => inviteIMGroupMembers(context, options, dependencies.gatewayClient));
+    if (committed.mode === 'application') {
+        /** members 待审核申请不会改变当前群成员快照。 */
+        const members = await memberSync.listCached(committed.group.groupID);
+        return {
+            groupID: committed.group.groupID,
+            invitedUserIDs: committed.invitedUserIDs,
+            mode: committed.mode,
+            members,
+            memberCount: committed.group.memberCount ?? members.length,
+            cacheState: committed.cacheState,
+        };
+    }
+    try {
+        /** members 在直接邀请成功后执行权威刷新，不重放 invite mutation。 */
+        const members = await memberSync.sync(committed.group.groupID);
+        return {
+            groupID: committed.group.groupID,
+            invitedUserIDs: committed.invitedUserIDs,
+            mode: committed.mode,
+            members,
+            memberCount: members.length,
+            cacheState: 'authoritative',
+        };
+    }
+    catch {
+        /** members 在刷新失败时退回当前可用快照。 */
+        const members = await memberSync.listCached(committed.group.groupID);
+        return {
+            groupID: committed.group.groupID,
+            invitedUserIDs: committed.invitedUserIDs,
+            mode: committed.mode,
+            members,
+            memberCount: committed.group.memberCount ?? members.length,
+            cacheState: committed.cacheState,
+        };
+    }
+}
+/** 远端移除只入队一次，后置权威刷新失败不会重放 mutation。 */
+async function removeGroupMembers(dependencies, memberSync, mutationQueue, options) {
+    /** context 在写入前冻结当前认证账号和数据库。 */
+    const context = requireWebIMSyncContext(dependencies, 'Group member removal');
+    /** committed 只包含一次远端写和 success-only 本地事务。 */
+    const committed = await mutationQueue.enqueue(() => removeIMGroupMembers(context, options, dependencies.gatewayClient));
+    try {
+        /** members 即使本地提交失败也只做权威全量刷新，不会重放远端删除。 */
+        const members = await memberSync.sync(committed.group.groupID);
+        return {
+            groupID: committed.group.groupID,
+            removedUserIDs: committed.removedUserIDs,
+            members,
+            memberCount: members.length,
+            cacheState: 'authoritative',
+        };
+    }
+    catch {
+        /** members 在刷新失败时读取当前可用快照。 */
+        const members = await memberSync.listCached(committed.group.groupID);
+        return {
+            groupID: committed.group.groupID,
+            removedUserIDs: committed.removedUserIDs,
+            members,
+            memberCount: committed.group.memberCount ?? members.length,
+            cacheState: committed.cacheState === 'remote-only' ? 'remote-only' : 'local',
+        };
+    }
 }
 /** 校验群身份、成员目标与 all 权限后执行共享 type106 状态机。 */
 async function sendGroupMention(dependencies, options) {

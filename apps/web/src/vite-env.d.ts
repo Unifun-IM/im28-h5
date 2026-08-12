@@ -4,6 +4,7 @@
 interface ImportMetaEnv {
   readonly VITE_GATEWAY_HTTP_URL?: string;
   readonly VITE_GATEWAY_WS_URL?: string;
+  readonly VITE_GATEWAY_PLATFORM?: 'h5' | 'pc';
   readonly VITE_IM_PLATFORM_ID?: string;
   readonly VITE_IM_LANGUAGE?: string;
   readonly VITE_APP_VERSION?: string;

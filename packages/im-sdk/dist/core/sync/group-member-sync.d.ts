@@ -22,6 +22,7 @@ export interface WebIMGroupMemberSyncOptions {
 export interface WebIMGroupMemberSync {
     listCached(groupID: string): Promise<readonly WebIMGroupMember[]>;
     sync(groupID: string, options?: WebIMGroupMemberSyncOptions): Promise<readonly WebIMGroupMember[]>;
+    updateSelfNickname(groupID: string, nickname: string): Promise<WebIMGroupMember>;
 }
 /** 群成员同步复用账号库、Gateway 和共享 mutation queue。 */
 export interface WebIMGroupMemberSyncDependencies extends WebIMSyncContextDependencies, WebIMSyncMutationQueueDependencies {

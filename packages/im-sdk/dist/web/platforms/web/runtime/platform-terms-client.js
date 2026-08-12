@@ -38,7 +38,7 @@ export function createWebIMPlatformTermsClient(options) {
                 headers['X-Request-ID'] = requestID;
             }
             // generated operation 是 endpoint/body 的唯一 owner。
-            const payload = await gatewayOpenAPI.apIpingtai.postV1PlatformTermGet({ key }, {
+            const payload = await gatewayOpenAPI.pingtai.postV1PlatformTermGet({ key }, {
                 baseURL: options.gatewayHTTPURL.replace(/\/+$/, ''),
                 fetch: options.fetch,
                 headers,

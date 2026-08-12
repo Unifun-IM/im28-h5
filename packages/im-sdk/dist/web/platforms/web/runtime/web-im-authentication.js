@@ -31,13 +31,12 @@ export async function establishWebIMAuthSession(options) {
     }
 }
 /** 刷新服务端已判定失效的 access token 并保留原 userID。 */
-export async function refreshWebIMAuthSession(session, gatewayClient, deviceID, authSessionStore) {
+export async function refreshWebIMAuthSession(session, gatewayClient, authSessionStore) {
     if (!session.refreshToken)
         return null;
     // authData 复用共享 Gateway refresh operation。
     const authData = await gatewayClient.refreshToken({
         refresh_token: session.refreshToken,
-        device_id: deviceID,
     });
     // refreshedSession 允许 Gateway 不重复返回已验证 user。
     const refreshedSession = normalizeGatewayAuthSession(authData, session.userID);

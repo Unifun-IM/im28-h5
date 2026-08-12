@@ -1,23 +1,38 @@
 # IM28 H5 Foundation Workset
 
-## Current Slice W6.a6.18.3.5
+## Latest Closed Slice W6.a7.1
 
 | field | value |
 | :--- | :--- |
-| status | `done-local/read-only-accepted` |
-| goal | 补齐 shared 群公告资料/权限投影，并按 RN owner/admin 入口和只读详情接入 H5 React Router |
-| shared owner | `../im28-sdk/src/sync/joined-group-sync.ts` owns announcement/version/edit-permission projection；H5 `GroupTextDetailPage` owns shared read-only route presentation |
-| local proof | SDK joined-group 4/4 + all-runtime typecheck/boundary/build:rn/build:web；RN tsc；H5 focused 6/6 + SDK Web 70/272、466 assets/typecheck/build；authenticated owner/admin real entry/detail/back/480px no-overflow |
-| not executed | update/read-mark/send announcement、self group nickname、share group card or any group-management mutation |
-| residual | ordinary-member/non-empty announcement samples、RN mutation convergence、dark/device/Safari/Firefox matrix |
+| status | `done-local/visual-data-gated` |
+| goal | H5 建立轻量 route/bubble/TabBar/modal 交互基础，不改变 RN 视觉层级或共享业务 owner |
+| owner | `apps/web/src/components/interaction/**`；feature 页面只传受控状态与关闭回调 |
+| production consumer | `App -> RouteMotionController`；`ChatMessageList -> useTailItemMotion`；`PrimaryTabBar` selected CSS；`ConversationDeleteSheet -> InteractionModal` |
+| frozen contract | no remount、main-only route entry、history-prepend no animation、native dialog focus/inert/Esc/backdrop、reduced-motion zero animation |
+| verification floor | H5 typecheck/build + 466 assets + authenticated React Router tabs/zero-console + 390x844 zero-overflow |
+| residual | 当前登录账号会话为空，真实会话 delete modal 与 realtime appended bubble 视觉证据 data-gated；不制造/删除真实数据 |
 
-Next bounded slice: freeze self group nickname read/update/cache/realtime contract and compare group-card payload with existing shared card facade；do not infer authorization for edits/shares/group management.
+Next bounded slice remains `W6.a6.18.3.13.4-admin-owner-contract-core`；本次 presentation slice 不改变 shared mutation 队列优先级。
+
+## Previous Closed Slice W6.a6.18.3.13.3
 
 | field | value |
 | :--- | :--- |
-| status | `queued` |
-| active_slice | `W6.a6.18.3.5-shared-group-announcement-readonly` 已本地关闭；继续群内昵称/群名片合同检索 |
-| verification_floor | `npm run verify` plus local browser smoke |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | Web 群成员邀请由 shared owner 按服务端审核开关选择唯一 endpoint；H5 只保留交互，RN 业务保持冻结基线 |
+| shared owner | `../im28-sdk/src/sync/group-member-invitation.ts` + `createIMGroupMentionSync.inviteMembers`；Gateway facade 对齐批量 application response |
+| source anchor | RN 好友权限/成员过滤与反馈；OpenAPI `/group/application/invite`、`/group/member/invite`；shared permission/contact/member DTO |
+| frozen contract | preflight -> exactly one application/direct invite -> strict response -> independent member refresh；远端成功后禁止邀请重放 |
+| verification floor | SDK 17/17 + typecheck/boundary/build:web；RN whole-worktree zero diff；H5 10/10 + typecheck/build + dev-pc smoke |
+| not authorized | final invite、第二账号 application/member realtime/list-back、RN business convergence |
+
+Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理员设置/取消与群主转让的 exactly-once 合同，RN 只读不改；不执行真实 mutation。
+
+| field | value |
+| :--- | :--- |
+| status | `active` |
+| active_slice | `W6.a6.18.3.13.4-admin-owner-contract-core (queued)` |
+| verification_floor | `read-only API/source trace -> shared remote-once/failure/cache tests -> RN/H5 caller/source gates；real admin/owner mutation prohibited` |
 
 ## Workstream Ledger
 
@@ -31,6 +46,7 @@ Next bounded slice: freeze self group nickname read/update/cache/realtime contra
 | `W6` | RN 页面 parity | web feature + sdk facade | RN 样式/资产/行为/API 的 React Router SPA 迁移 | source trace + visual/route/API evidence | `active` |
 | `W6.a6.12.1` | cross-runtime convergence | shared SDK + RN/Web composition | consumer matrix、neutral facade、RN/Web actual-call adoption、compat exit register | shared tests + runtime boundary + RN/Web caller evidence | `done-local/acceptance-gated` |
 | `W6.a6.19-chat-message-presentation-parity` | code/verification | shared SDK display-name resolver + H5 chat projection/layout | sender/mention display、image ratio/OSS decode fallback、voice duration width、forwarded-message hierarchy without duplicating SDK identity rules | H5 focused 5/22 + SDK 59/204 + full verify + authenticated DOM/layout proof | `done-local/acceptance-gated` |
+| `W6.a7.1-lightweight-interaction-foundation` | code/architecture/verification | H5 presentation components | route/message/TabBar motion tokens + native modal lifecycle + reduced-motion without second business owner | H5 typecheck/build、466 assets、authenticated tab route/zero-console、390x844 zero-overflow | `done-local/visual-data-gated` |
 
 ## Active / Pending Slice Queue
 
@@ -172,6 +188,15 @@ Next bounded slice: freeze self group nickname read/update/cache/realtime contra
 | `W6.a6.18.3.3.2-clear-history-consumer-convergence` | architecture/refactor/verification | shared SDK + RN/H5 clear callers | RN action/type2102 and H5 settings action consume one clear facade；remove legacy whole-delete/control business paths | SDK 8 focused + 56/194 sync/Web、all-runtime typecheck/build:rn/build:web + RN tsc/126 + H5 6 focused/typecheck/build/browser sheets；no real mutation | `converged/acceptance-gated` | closed 2026-08-12；all-members uses shared role snapshot/helper；real destructive/list-back acceptance gated；`build:package:desktop:web` unchanged |
 | `W6.a6.18.3.4-h5-group-introduction-readonly` | code/verification | H5 group settings/router + existing shared group facade | RN-ordered introduction row、empty subtitle/read detail、deep-link/back and visible route/data failure without duplicate mutation | H5 focused 5/5 + 54/177；SDK Web 70/272；466 assets/typecheck/build + authenticated 567/390px real-group proof | `done-local/read-only-accepted` | closed 2026-08-12；no SDK/RN source or mutation；non-empty/edit/device/cross-browser remain gated |
 | `W6.a6.18.3.5-shared-group-announcement-readonly` | code/convergence/verification | shared joined-group facade + H5 settings/router | announcement/version/edit-permission DTO、RN owner/admin entry parity and shared text-detail route without raw payload access | SDK 4/4 + all-runtime typecheck/boundary/build:rn/build:web；RN tsc；H5 6/6 + SDK Web 70/272、466 assets/typecheck/build + authenticated owner/admin proof | `done-local/read-only-accepted` | closed 2026-08-12；no update/read-mark/send；ordinary-member/non-empty/device/cross-browser remain gated |
+| `W6.a6.18.3.6-shared-self-group-nickname` | code/convergence/verification | shared group-member facade + H5 settings dialog | current-auth identity、24-char validation、Gateway success-only member upsert and RN-semantic H5 editor | SDK group-member 9/9 + Web 70/274 + all-runtime typecheck/boundary/build:rn/build:web；RN tsc/source boundary；H5 7/7 + 466 assets/typecheck/build/full verify | `done-local/mutation-acceptance-gated` | closed 2026-08-12；no real save/realtime/list-back；browser open/cancel/layout and RN guarded consumer convergence remain gated |
+| `W6.a6.18.3.7-shared-group-card` | code/convergence/verification | shared contact facade + RN composition + H5 group settings/router | friend target filtering、canonical type108 group card、optional type101 note and one shared send/cache state machine | SDK contact-actions 12/12 + RN/Web typecheck/build:rn/build:web；RN tsc + 43 focused；H5 9/9 + typecheck/build；authenticated search/select/cancel/480px proof | `converged/local-send-acceptance-gated` | closed 2026-08-12；no real send/note/partial-failure/list-back；`build:package:desktop:web` unchanged |
+| `W6.a6.18.3.8-shared-group-profile-name` | code/convergence/verification | shared group facade + RN composition + H5 group settings/router | current-account owner/admin permission、name validation、strict Gateway response and success-only group merge with RN name-only caller | SDK joined-group 6/6 + all-runtime typecheck/boundary/build:rn/build:web；RN tsc + 126 service/5 UI；H5 10/10 + full verify 70/278、466 assets/build + authenticated editor cancel/567px proof | `converged/local-mutation-acceptance-gated` | closed 2026-08-12；no real save/copy/type1520/list-back；other group profile fields unchanged；`build:package:desktop:web` untouched |
+| `W6.a6.18.3.9-shared-group-profile-avatar` | code/convergence/verification | shared group facade + RN composition + H5 platform crop | owner/admin preflight、static image/10MB upload、strict Gateway avatar response、success-only group merge and RN avatar-only caller | SDK 73/285 + all-runtime typecheck/boundary/build:rn/build:web；RN 127 service；H5 4 focused + typecheck/build + authenticated local crop/cancel/567px proof | `converged/local-mutation-acceptance-gated` | closed 2026-08-12；no real upload/update/type1502/list-back；introduction later converged in `.18.3.10`，announcement/combined remain registered；`build:package:desktop:web` untouched |
+| `W6.a6.18.3.10-shared-group-introduction` | code/convergence/verification | shared group facade + RN composition + H5 text-detail route | owner/admin、non-empty trim/500、strict Gateway description response、success-only group merge and RN introduction-only caller | SDK 74/287 + all-runtime typecheck/boundary/build:rn/build:web；RN tsc + 128 service；H5 full verify 71/282、466 assets/743 modules + authenticated open/cancel/567px proof | `converged/local-mutation-acceptance-gated` | closed 2026-08-12；no real update/type1521/list-back；announcement/combined path registered；`build:package:desktop:web` untouched |
+| `W6.a6.18.3.11-shared-group-announcement` | code/convergence/verification | shared group facade + RN composition + H5 text-detail/chat banner | non-empty trim/1000、announcement permission、update-before-type101、partial failure、authoritative read version and type1519 cache convergence | SDK Web 73/290 + all-runtime typecheck/boundary/build:rn/build:web；RN tsc + 146 focused；H5 466 assets/full verify/748 modules + authenticated view/editor/confirm/567px proof | `converged/local-mutation-acceptance-gated` | closed 2026-08-12；no real update/send/read-mark/type1519/list-back；combined path remains registered；`build:package:desktop:web` untouched |
+| `W6.a6.18.3.12-group-profile-combined-compat-exit` | architecture/refactor/verification | RN group-profile composition + shared SDK consumer contract | prove zero combined caller、enforce single-field XOR、reject announcement through generic entry and delete Gateway/OpenIM fallback | SDK all-runtime typecheck/boundary + profile/announcement 7/7；RN tsc + service 128/128；H5 typecheck + related view 12/12 | `converged/local` | closed 2026-08-12；no mutation/send/read/list-back；`build:package:desktop:web` untouched |
+| `W6.a6.18.3.13-group-management-mutation-contract-audit` | contract/read-only | RN group-management callers + SDK transport + H5 routes | freeze caller/owner/permission/cache/realtime/destructive boundaries and split max-three-operation slices | source/API/fallback trace + `docs/runtime-contracts/group-management-mutations.md` | `done-read-only` | closed 2026-08-12；SDK shared mutation owner absent、H5 caller 0、RN duplicate-write risks registered；no runtime source or real mutation；`build:package:desktop:web` untouched |
+| `W6.a6.18.3.13.1-shared-group-management-permissions` | code/convergence/read-only | shared permission resolver + RN helper + H5 joined-group/settings | explicit capability precedence、role fallback、fail-closed and zero platform raw permission parser | SDK all-runtime + 11/11；RN tsc + 29/29；H5 full verify SDK Web 74/293、466 assets、749 modules + focused 18/18 | `converged/read-only` | closed 2026-08-12；no mutation/SQLite write；H5 production chat/conversation permissions consume joined-group DTO；`build:package:desktop:web` untouched |
 | `W6.closeout` | verification/docs | RN + web app + sdk + docs | local regression floor、migrated route parity evidence、duplicate-owner audit and residual ledger | SDK all-runtime pass + H5 verify 58/200 + RN tsc + ChatDetail 166/166 + RN full 164/164 suites、1369/1369 tests | `done-local/acceptance-gated` | local P0/P1 zero；external Gateway/destructive/dual-account WS/RTC/cross-browser gates remain explicit |
 | `W6.a6.19-chat-message-presentation-parity` | code/verification | shared SDK group display-name resolver + H5 chat projection/layout | RN sender identity placement、mention display projection、180px image ratio、decode-failure-only OSS JPEG fallback、duration-based voice width and two-line forward origin | H5 focused 5/22 + SDK Web 59/204 + SDK sender 1/4 + 466 assets/all-runtime typecheck/build:rn/build:web + authenticated real DOM geometry | `done-local/acceptance-gated` | closed 2026-08-12；HEIF-mislabeled JPG root cause fixed without converting normal GIF；role-label real sample、signed OSS and cross-browser media remain gated；no mutation/send/download；`build:package:desktop:web` unchanged |
 

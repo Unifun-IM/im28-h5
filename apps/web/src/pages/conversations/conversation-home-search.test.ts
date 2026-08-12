@@ -5,6 +5,7 @@ import type {
   WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
 import { describe, expect, it } from 'vitest';
+import { createGroupPermissionsFixture } from '../../test-fixtures/group-permissions.js';
 
 import {
   buildConversationHomeSearchSections,
@@ -61,6 +62,7 @@ function createGroup(groupID: string, name: string): WebIMJoinedGroup {
     memberCount: 2,
     ownerUserID: 'owner-1',
     currentUserRole: 'member',
+    permissions: createGroupPermissionsFixture('member'),
     canEditAnnouncement: false,
     canMentionAll: false,
     isCreatedByCurrentUser: false,

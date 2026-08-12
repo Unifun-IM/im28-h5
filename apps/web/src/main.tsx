@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app/App.js';
 import { initializeWebThemePreference } from './runtime/theme-preference.js';
 import './app/app.css';
+import './components/interaction/interaction.css';
 
 // React 渲染前恢复 RN 同源主题偏好，避免首屏颜色闪烁。
 initializeWebThemePreference();

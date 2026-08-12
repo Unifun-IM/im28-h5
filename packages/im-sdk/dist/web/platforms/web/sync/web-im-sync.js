@@ -51,6 +51,7 @@ export function createWebIMSync(dependencies) {
         conversations: createWebIMConversationSync({
             ...sharedDependencies,
             canClearAllMembers,
+            useGatewayDifference: true,
         }),
         customEmojis: createWebIMCustomEmojiSync(sharedDependencies),
         friendApplications: createWebIMFriendApplicationSync(dependencies),
@@ -60,6 +61,9 @@ export function createWebIMSync(dependencies) {
         groupMembers: {
             listCached: groupID => groupMentions.listMembers(groupID),
             sync: (groupID, options) => groupMentions.syncMembers(groupID, options),
+            updateSelfNickname: (groupID, nickname) => groupMentions.updateSelfNickname(groupID, nickname),
+            inviteMembers: options => groupMentions.inviteMembers(options),
+            removeMembers: options => groupMentions.removeMembers(options),
         },
         messages,
         peerProfile: createWebIMPeerProfileSync(sharedDependencies),

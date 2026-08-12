@@ -4,10 +4,12 @@ import type {
   WebIMGroupMember,
   WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
+import { createGroupPermissionsFixture } from '../../test-fixtures/group-permissions.js';
 
 import {
   buildChatSettingsMemberViews,
   buildChatSettingsView,
+  getSelfGroupNickname,
 } from './chat-settings-view.js';
 
 /** 构造单聊或群聊设置测试使用的共享会话快照。 */
@@ -25,6 +27,8 @@ function createConversation(overrides: Partial<Conversation> = {}): Conversation
 
 /** 构造群设置投影测试使用的标准化群缓存。 */
 function createGroup(overrides: Partial<WebIMJoinedGroup> = {}): WebIMJoinedGroup {
+  /** currentUserRole 决定测试默认 capability。 */
+  const currentUserRole = overrides.currentUserRole ?? 'member';
   return {
     groupID: 'group-1',
     conversationID: 'conversation-group-1',
@@ -35,7 +39,8 @@ function createGroup(overrides: Partial<WebIMJoinedGroup> = {}): WebIMJoinedGrou
     announcementVersion: '',
     memberCount: 23,
     ownerUserID: 'owner-1',
-    currentUserRole: 'member',
+    currentUserRole,
+    permissions: createGroupPermissionsFixture(currentUserRole),
     canEditAnnouncement: false,
     canMentionAll: false,
     isCreatedByCurrentUser: false,
@@ -58,6 +63,8 @@ describe('chat settings view', () => {
       introduction: '',
       announcement: '',
       canShowAnnouncement: false,
+      canEditGroupProfile: false,
+      canRemoveMembers: false,
       canClearForAll: true,
     });
   });
@@ -73,6 +80,7 @@ describe('chat settings view', () => {
       introduction: '用于同步产品进度',
       announcement: '周五发布',
       currentUserRole: 'admin',
+      canEditAnnouncement: true,
     }));
     expect(view).toMatchObject({
       isGroup: true,
@@ -84,11 +92,13 @@ describe('chat settings view', () => {
       introduction: '用于同步产品进度',
       announcement: '周五发布',
       canShowAnnouncement: true,
+      canEditGroupProfile: true,
+      canRemoveMembers: true,
       canClearForAll: true,
     });
   });
 
-  it('only exposes the announcement row to the matching owner or admin', () => {
+  it('only exposes the announcement row through the matching shared capability', () => {
     /** conversation 是公告权限投影当前绑定的真实群会话。 */
     const conversation = createConversation({
       conversationID: 'conversation-group-1',
@@ -97,9 +107,32 @@ describe('chat settings view', () => {
     });
     expect(buildChatSettingsView(
       conversation,
-      createGroup({ currentUserRole: 'owner', canEditAnnouncement: false }),
+      createGroup({ currentUserRole: 'member', canEditAnnouncement: true }),
     ).canShowAnnouncement).toBe(true);
-    expect(buildChatSettingsView(conversation, createGroup()).canShowAnnouncement).toBe(false);
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ currentUserRole: 'admin', canEditAnnouncement: false }),
+    ).canShowAnnouncement).toBe(false);
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ groupID: 'other-group', canEditAnnouncement: true }),
+    ).canShowAnnouncement).toBe(false);
+  });
+
+  it('only allows the matching owner or admin to edit the group profile', () => {
+    // conversation 是群资料权限投影当前绑定的真实群会话。
+    const conversation = createConversation({
+      conversationID: 'conversation-group-1',
+      type: 'group',
+      targetID: 'group-1',
+    });
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ currentUserRole: 'admin' }),
+    ).canEditGroupProfile).toBe(true);
+    expect(buildChatSettingsView(conversation, createGroup())).toMatchObject({
+      canEditGroupProfile: false,
+    });
   });
 
   it('does not project an unrelated group introduction', () => {
@@ -174,5 +207,22 @@ describe('chat settings view', () => {
       { userID: 'u1', name: '好友备注', avatarURL: '' },
       { userID: 'u2', name: 'u2', avatarURL: '' },
     ]);
+  });
+
+  it('resolves the current account group nickname through the shared display rule', () => {
+    /** members 覆盖备注优先、群昵称和身份未命中。 */
+    const members: WebIMGroupMember[] = [{
+      groupID: 'group-1',
+      userID: 'self',
+      remark: '我的备注',
+      groupNickname: '我的群昵称',
+      nickname: '公开昵称',
+      avatarURL: '',
+      role: 'member',
+      roleLevel: 20,
+    }];
+    expect(getSelfGroupNickname(members, 'self')).toBe('我的备注');
+    expect(getSelfGroupNickname(members, 'missing')).toBe('');
+    expect(getSelfGroupNickname(members, null)).toBe('');
   });
 });

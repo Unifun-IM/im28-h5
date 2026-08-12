@@ -1,6 +1,8 @@
 import { type Message, type GatewayFriend, type GatewayGroup, type GatewayHTTPClient } from '@im28/im-sdk/core';
 import { type WebIMSyncContextDependencies } from './sync-context.js';
 import { type WebIMSyncMutationQueueDependencies } from './sync-mutation-queue.js';
+import { type IMShareGroupCardOptions, type IMShareGroupCardResult } from './group-card-share.js';
+export type { IMShareGroupCardOptions, IMShareGroupCardResult } from './group-card-share.js';
 /** 删除好友时 Gateway 同步清理聊天记录的范围。 */
 export type IMFriendDeleteScope = 'self' | 'both';
 /** 删除好友参数允许 caller 在模糊超时后复用 operation ID。 */
@@ -57,6 +59,8 @@ export interface IMContactActionsSync {
     deleteFriend(options: IMDeleteFriendOptions): Promise<IMDeleteFriendResult>;
     /** 批量分享用户卡片，并按目标复用共享文本发送状态机发送附言。 */
     shareUserCard(options: IMShareUserCardOptions): Promise<IMShareUserCardResult>;
+    /** 逐好友发送群名片，并复用共享单聊和消息状态机。 */
+    shareGroupCard(options: IMShareGroupCardOptions): Promise<IMShareGroupCardResult>;
     /** 更新好友备注并只在 Gateway 成功后合并关系缓存。 */
     updateFriendRemark(friendUserID: string, remark: string): Promise<IMContactFriendProfile>;
     /** 更新星标并只在 Gateway 成功后合并关系缓存。 */

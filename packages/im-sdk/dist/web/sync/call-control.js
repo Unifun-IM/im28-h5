@@ -29,11 +29,10 @@ export function createIMCallControlSync(dependencies) {
             }), dependencies);
         },
         /** 接听通话后统一校验返回的媒体凭证。 */
-        answer: async (callID, deviceID) => {
+        answer: async (callID, _deviceID) => {
             requireWebIMSyncContext(dependencies, 'Call answer');
             return requireCallTokenResult(await dependencies.gatewayClient.answerCall({
                 call_id: requireCallID(callID),
-                ...(deviceID?.trim() ? { device_id: deviceID.trim() } : {}),
             }), dependencies);
         },
         /** 拒绝只返回服务端确认后的通话实体。 */

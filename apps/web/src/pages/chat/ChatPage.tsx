@@ -9,6 +9,7 @@ import { ChatMessageList } from './ChatMessageList.js';
 import { ChatMessageDeleteSheet } from './ChatMessageDeleteSheet.js';
 import { ChatPageFeedback } from './ChatPageFeedback.js';
 import { ChatPageFooter } from './ChatPageFooter.js';
+import { ChatGroupAnnouncementBanner } from './ChatGroupAnnouncementBanner.js';
 import { copyChatMessage } from './chat-message-copy.js';
 import type { ChatMessageView } from './chat-message-view.js';
 import { ChatPageState, readChatPageError, readInitialChatMessageWindow, upsertVisibleMessage } from './chat-page-helpers.js';
@@ -19,6 +20,7 @@ import { useChatForwardFlow } from './useChatForwardFlow.js';
 import { useChatMessageDeleteFlow } from './useChatMessageDeleteFlow.js';
 import { useChatMessageEditFlow } from './useChatMessageEditFlow.js';
 import { useChatMentionMembers } from './useChatMentionMembers.js';
+import { useChatGroupAnnouncement } from './useChatGroupAnnouncement.js';
 import { focusChatMessageRow, readFocusedChatMessageWindow } from './chat-message-focus.js';
 import './chat-page.css';
 /** RN chat detail 页面只编排 Web SDK cache/pull/send/realtime facade。 */
@@ -94,6 +96,13 @@ export function ChatPage() {
   });
   // mentionMembers 只消费 shared 群成员 cache/sync facade。
   const mentionMembers = useChatMentionMembers(conversation, sync, setError);
+  // groupAnnouncement 仅在 shared read-status 判定未读时投影 RN 横幅。
+  const groupAnnouncement = useChatGroupAnnouncement({
+    conversation,
+    messages,
+    sync,
+    onError: setError,
+  });
   useEffect(() => {
     if (!sync || !snapshot.userID || !conversationID) return;
     // active 阻止路由切换后的旧请求回写。
@@ -230,6 +239,17 @@ export function ChatPage() {
       <section className="rn-chat-surface">
         <ChatHeader conversation={conversation} />
         <ChatPageFeedback error={error} notice={notice} />
+        {groupAnnouncement.announcement ? (
+          <ChatGroupAnnouncementBanner
+            text={groupAnnouncement.announcement.text}
+            onOpen={() => {
+              groupAnnouncement.markRead();
+              navigate(
+                `/conversations/${encodeURIComponent(conversationID)}/settings/announcement?mode=view`,
+              );
+            }}
+          />
+        ) : null}
         <ChatMediaInteractionProvider>
           <ChatMessageList
             messages={messages}

@@ -351,8 +351,7 @@
   background: var(--im-status-danger);
 }
 
-.rn-conversation-action-backdrop,
-.rn-conversation-delete-backdrop {
+.rn-conversation-action-backdrop {
   position: fixed;
   z-index: 40;
   inset: 0;
@@ -415,11 +414,23 @@
 }
 
 .rn-conversation-delete-backdrop {
-  display: flex;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
   align-items: flex-end;
   justify-content: center;
+  margin: 0;
   padding: 0 8px calc(var(--im-safe-bottom) + 8px);
-  background: var(--im-bg-overlay);
+  background: transparent;
+}
+
+.rn-conversation-delete-backdrop[open] {
+  display: flex;
+}
+
+.rn-conversation-delete-backdrop:not([open]) {
+  display: none;
 }
 
 .rn-conversation-delete-sheet {

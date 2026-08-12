@@ -13,10 +13,8 @@ export function canDeleteChatMessagesForAll(
 ): boolean {
   if (!conversation || !messages.length) return false;
   if (conversation.type !== 'group') return true;
-  // canClearMessages 用已缓存 owner/admin 角色映射 RN 群管理权限。
-  const canClearMessages =
-    joinedGroup?.currentUserRole === 'owner' ||
-    joinedGroup?.currentUserRole === 'admin';
+  // canClearMessages 直接消费 shared 群管理 capability。
+  const canClearMessages = joinedGroup?.permissions.canClearMessages === true;
   return canClearMessages || messages.every(message => message.direction === 'outgoing');
 }
 
