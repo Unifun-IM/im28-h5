@@ -1,11 +1,11 @@
-.rn-group-introduction-page {
+.rn-group-text-detail-page {
   min-height: 100vh;
   min-height: 100dvh;
   color: var(--im-text-primary);
   background: var(--im-bg-page);
 }
 
-.rn-group-introduction-surface {
+.rn-group-text-detail-surface {
   display: flex;
   width: min(100%, 480px);
   min-height: 100vh;
@@ -16,7 +16,7 @@
   flex-direction: column;
 }
 
-.rn-group-introduction-header {
+.rn-group-text-detail-header {
   display: grid;
   min-height: 52px;
   grid-template-columns: 48px minmax(0, 1fr) 48px;
@@ -24,7 +24,7 @@
   padding: calc(var(--im-safe-top) + 8px) 8px 8px;
 }
 
-.rn-group-introduction-header a {
+.rn-group-text-detail-header a {
   display: grid;
   width: 48px;
   height: 36px;
@@ -32,12 +32,12 @@
   color: var(--im-icon-primary);
 }
 
-.rn-group-introduction-header .rn-asset-icon {
+.rn-group-text-detail-header .rn-asset-icon {
   width: 24px;
   height: 24px;
 }
 
-.rn-group-introduction-header h1 {
+.rn-group-text-detail-header h1 {
   min-width: 0;
   margin: 0;
   font-size: 18px;
@@ -47,7 +47,7 @@
   text-align: center;
 }
 
-.rn-group-introduction-content {
+.rn-group-text-detail-content {
   display: flex;
   min-height: 0;
   padding: 16px 16px 32px;
@@ -56,34 +56,34 @@
   gap: 12px;
 }
 
-.rn-group-introduction-copy,
-.rn-group-introduction-error,
-.rn-group-introduction-state,
-.rn-group-introduction-footer {
+.rn-group-text-detail-copy,
+.rn-group-text-detail-error,
+.rn-group-text-detail-state,
+.rn-group-text-detail-footer {
   margin: 0;
   letter-spacing: 0;
 }
 
-.rn-group-introduction-copy {
+.rn-group-text-detail-copy {
   overflow-wrap: anywhere;
   font-size: 14px;
   line-height: 20px;
   white-space: pre-wrap;
 }
 
-.rn-group-introduction-error {
+.rn-group-text-detail-error {
   color: var(--im-status-danger);
   font-size: 13px;
   line-height: 18px;
 }
 
-.rn-group-introduction-state {
+.rn-group-text-detail-state {
   color: var(--im-text-secondary);
   font-size: 14px;
   line-height: 20px;
 }
 
-.rn-group-introduction-footer {
+.rn-group-text-detail-footer {
   padding: 24px 16px calc(var(--im-safe-bottom) + 24px);
   color: var(--im-text-muted);
   font-size: 13px;

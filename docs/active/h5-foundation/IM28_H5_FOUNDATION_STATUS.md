@@ -1,11 +1,22 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a6.18.3.4 群简介只读入口与 React Router 子页已完成本地闭环`
-- next_step: `继续 W6 群设置功能检索；先追踪群公告、我在本群的昵称与分享群名片的 shared contract/owner，所有编辑、分享和群管理 mutation 保留显式授权门`
+- current_step: `W6.a6.18.3.5 shared 群公告投影、权限入口与只读 React Router 子页已完成本地闭环`
+- next_step: `继续 W6 群设置功能检索；优先冻结“我在本群的昵称”read/update/cache/realtime shared contract，再评估群名片类型是否可复用既有卡片 facade；真实编辑和分享保留显式授权门`
 - blockers: `W5.a3 browser matrix remains blocked-environment；destructive/send/edit/delete/clear and real dual-account RTC flows require explicit authorization`
-- gate_state: `W6 group-introduction slice green/read-only-accepted；clear-history、archive and incoming-call prior gates remain unchanged`
-- latest_evidence: `2026-08-12 group-introduction closeout: H5 54 files/177 tests；SDK Web 70 files/272 tests；466 assets、typecheck、runtime boundary、build:web package sync and production build；authenticated Chromium real group entry/detail/back plus 390x844 zero-overflow/zero-console proof；no SDK/RN source or mutation`
+- gate_state: `W6 group-announcement slice green/read-only-accepted；group introduction remains closed；clear-history、archive and incoming-call prior gates remain unchanged`
+- latest_evidence: `2026-08-12 group-announcement closeout: SDK joined-group real sql.js 4/4、all-runtime typecheck/boundary、build:rn/build:web；RN tsc；H5 focused 6/6、SDK Web 70/272、466 assets/typecheck/production build；authenticated owner/admin group showed entry + “暂无群公告” detail/back/480px no-overflow；no update/read-mark/send mutation；desktop:web script untouched`
+
+## W6 Shared Group Announcement Readonly Parity
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared DTO | `shared-core-ready/web-consumed` | `WebIMJoinedGroup` 从同一 Gateway/SQLite payload 投影公告、版本和显式编辑权限，旧快照按群主规则回退 | RN consumer convergence for update/read status |
+| RN visibility parity | `pass-auth-readonly` | H5 仅对匹配群的 owner/admin 显示公告卡，位置在置顶/免打扰之后、清空记录之前；空副标题“未设置” | ordinary-member authenticated sample |
+| detail owner | `pass` | 简介/公告共用 `GroupTextDetailPage` 的会话校验、cache-first 群同步、失败与布局；公告页只配置字段/标题/空值 | non-empty real announcement sample |
+| runtime/layout | `pass-chromium` | 真实 owner/admin 群进入 `/settings/announcement` 显示“暂无群公告”，返回群设置且 480px surface 无横向溢出 | dark/device/Safari/Firefox；dev HMR history logs not used as zero-console evidence |
+
+本切片未执行 `/v1/group/update`、公告已读标记、公告文本发送或其他群管理 mutation。SDK 使用普通 `build:rn/build:web` 同步应用包；`build:package:desktop:web` 未修改或执行。
 
 ## W6 Group Introduction Readonly Parity
 

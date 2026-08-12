@@ -1,22 +1,22 @@
 # IM28 H5 Foundation Workset
 
-## Current Slice W6.a6.18.3.4
+## Current Slice W6.a6.18.3.5
 
 | field | value |
 | :--- | :--- |
 | status | `done-local/read-only-accepted` |
-| goal | 将 RN 群设置的群简介入口、空值规则和只读详情迁入可深链 React Router 子页 |
-| shared owner | existing `WebIMSync.conversations/groups` + `WebIMJoinedGroup.introduction`；H5 只拥有 route/presentation |
-| local proof | H5 focused 5/5 + 54 files/177 tests；SDK Web 70 files/272 tests；466 assets/typecheck/build；authenticated Chromium real entry/detail/back、567/390px zero-overflow/zero-console |
-| not executed | update group introduction、share group card、nickname/group announcement or any group-management mutation |
-| residual | non-empty remote sample、owner/admin edit contract、dark/device/Safari/Firefox matrix |
+| goal | 补齐 shared 群公告资料/权限投影，并按 RN owner/admin 入口和只读详情接入 H5 React Router |
+| shared owner | `../im28-sdk/src/sync/joined-group-sync.ts` owns announcement/version/edit-permission projection；H5 `GroupTextDetailPage` owns shared read-only route presentation |
+| local proof | SDK joined-group 4/4 + all-runtime typecheck/boundary/build:rn/build:web；RN tsc；H5 focused 6/6 + SDK Web 70/272、466 assets/typecheck/build；authenticated owner/admin real entry/detail/back/480px no-overflow |
+| not executed | update/read-mark/send announcement、self group nickname、share group card or any group-management mutation |
+| residual | ordinary-member/non-empty announcement samples、RN mutation convergence、dark/device/Safari/Firefox matrix |
 
-Next bounded slice: continue RN/H5 group-settings inventory；trace group announcement、self group nickname and group-card sharing contracts before choosing a read-only implementation；do not infer authorization for edits/shares/group management.
+Next bounded slice: freeze self group nickname read/update/cache/realtime contract and compare group-card payload with existing shared card facade；do not infer authorization for edits/shares/group management.
 
 | field | value |
 | :--- | :--- |
 | status | `queued` |
-| active_slice | `W6.a6.18.3.4-h5-group-introduction-readonly` 已本地关闭；继续群设置功能检索 |
+| active_slice | `W6.a6.18.3.5-shared-group-announcement-readonly` 已本地关闭；继续群内昵称/群名片合同检索 |
 | verification_floor | `npm run verify` plus local browser smoke |
 
 ## Workstream Ledger
@@ -171,6 +171,7 @@ Next bounded slice: continue RN/H5 group-settings inventory；trace group announ
 | `W6.a6.18.3.3.1-shared-clear-history-core` | code/verification | shared conversation/message sync + schema/repository/realtime | schema v12 cursor/list-hidden、stable operation ID、boundary-safe success-only clear and type2102 control convergence | clear 4/4 + sync 36/130 real sql.js、all-runtime typecheck/boundary、build:rn/build:web、RN tsc、H5 typecheck/build | `done-local/shared-core-ready` | closed 2026-08-12；uint64 max、failure、concurrency、idempotency and late-message guards passed；no real destructive request |
 | `W6.a6.18.3.3.2-clear-history-consumer-convergence` | architecture/refactor/verification | shared SDK + RN/H5 clear callers | RN action/type2102 and H5 settings action consume one clear facade；remove legacy whole-delete/control business paths | SDK 8 focused + 56/194 sync/Web、all-runtime typecheck/build:rn/build:web + RN tsc/126 + H5 6 focused/typecheck/build/browser sheets；no real mutation | `converged/acceptance-gated` | closed 2026-08-12；all-members uses shared role snapshot/helper；real destructive/list-back acceptance gated；`build:package:desktop:web` unchanged |
 | `W6.a6.18.3.4-h5-group-introduction-readonly` | code/verification | H5 group settings/router + existing shared group facade | RN-ordered introduction row、empty subtitle/read detail、deep-link/back and visible route/data failure without duplicate mutation | H5 focused 5/5 + 54/177；SDK Web 70/272；466 assets/typecheck/build + authenticated 567/390px real-group proof | `done-local/read-only-accepted` | closed 2026-08-12；no SDK/RN source or mutation；non-empty/edit/device/cross-browser remain gated |
+| `W6.a6.18.3.5-shared-group-announcement-readonly` | code/convergence/verification | shared joined-group facade + H5 settings/router | announcement/version/edit-permission DTO、RN owner/admin entry parity and shared text-detail route without raw payload access | SDK 4/4 + all-runtime typecheck/boundary/build:rn/build:web；RN tsc；H5 6/6 + SDK Web 70/272、466 assets/typecheck/build + authenticated owner/admin proof | `done-local/read-only-accepted` | closed 2026-08-12；no update/read-mark/send；ordinary-member/non-empty/device/cross-browser remain gated |
 | `W6.closeout` | verification/docs | RN + web app + sdk + docs | local regression floor、migrated route parity evidence、duplicate-owner audit and residual ledger | SDK all-runtime pass + H5 verify 58/200 + RN tsc + ChatDetail 166/166 + RN full 164/164 suites、1369/1369 tests | `done-local/acceptance-gated` | local P0/P1 zero；external Gateway/destructive/dual-account WS/RTC/cross-browser gates remain explicit |
 | `W6.a6.19-chat-message-presentation-parity` | code/verification | shared SDK group display-name resolver + H5 chat projection/layout | RN sender identity placement、mention display projection、180px image ratio、decode-failure-only OSS JPEG fallback、duration-based voice width and two-line forward origin | H5 focused 5/22 + SDK Web 59/204 + SDK sender 1/4 + 466 assets/all-runtime typecheck/build:rn/build:web + authenticated real DOM geometry | `done-local/acceptance-gated` | closed 2026-08-12；HEIF-mislabeled JPG root cause fixed without converting normal GIF；role-label real sample、signed OSS and cross-browser media remain gated；no mutation/send/download；`build:package:desktop:web` unchanged |
 

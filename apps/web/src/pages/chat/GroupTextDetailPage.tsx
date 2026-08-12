@@ -101,27 +101,27 @@ export function GroupTextDetailPage({
   const content = state.group ? selectText(state.group).trim() || emptyText : emptyText;
 
   return (
-    <main className="rn-group-introduction-page">
-      <section className="rn-group-introduction-surface" aria-busy={state.loading}>
-        <header className="rn-group-introduction-header">
+    <main className="rn-group-text-detail-page">
+      <section className="rn-group-text-detail-surface" aria-busy={state.loading}>
+        <header className="rn-group-text-detail-header">
           <Link to={settingsURL} aria-label="返回群设置">
             <RNAssetIcon assetURL={backIconURL} />
           </Link>
           <h1>{title}</h1>
           <span />
         </header>
-        <div className="rn-group-introduction-content">
+        <div className="rn-group-text-detail-content">
           {state.error ? (
-            <p className="rn-group-introduction-error" role="status">{state.error}</p>
+            <p className="rn-group-text-detail-error" role="status">{state.error}</p>
           ) : null}
           {state.group ? (
-            <p className="rn-group-introduction-copy">{content}</p>
+            <p className="rn-group-text-detail-copy">{content}</p>
           ) : state.loading ? (
-            <p className="rn-group-introduction-state">{loadingText}</p>
+            <p className="rn-group-text-detail-state">{loadingText}</p>
           ) : null}
         </div>
         {state.group && footerText ? (
-          <p className="rn-group-introduction-footer">{footerText}</p>
+          <p className="rn-group-text-detail-footer">{footerText}</p>
         ) : null}
       </section>
     </main>

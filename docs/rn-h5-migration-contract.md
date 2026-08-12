@@ -1091,6 +1091,19 @@ Local closeout: `.18.2.3` is `done-local/acceptance-gated`. React Router remains
 
 Contract-freeze verdict: operation scope 为 setting detail、mute、pin 三项；状态分别为 `🟡 infra-only`、`🟡 runtime-chain-partial`、`🟡 runtime-chain-partial`。未发现 mock shortcut 或 fake-success；清空、退群、解散保持 `🔴 authorization-blocked`，其余群设置保持 `🟡 separately-bounded`。
 
+### W6.a6.18.3.4/.3.5 Group Text Detail Parity
+
+| dimension | frozen contract |
+| :--- | :--- |
+| shared data owner | `WebIMSync.groups -> WebIMJoinedGroup` 显式投影 `introduction/announcement/announcementVersion/canEditAnnouncement`；页面不得读取 raw Gateway payload |
+| introduction | 群设置第二卡显示“群简介”，空副标题“请输入群的内容介绍”，详情空值“暂无群简介”，React Router 子页只读 |
+| announcement visibility | 对齐 RN，仅当前角色为 owner/admin 时在置顶/免打扰与清空记录之间显示“群公告”；空副标题“未设置” |
+| announcement detail | `/conversations/:conversationID/settings/announcement` 只读真实 shared facade，空值“暂无群公告”，无编辑/发布按钮 |
+| convergence | 简介与公告共用 `GroupTextDetailPage` 的会话校验、cache-first 群同步、错误和布局；字段/标题/空值由薄 page 配置 |
+| authorization gate | 本切片不调用 `/v1/group/update`、不标记公告已读、不发送公告文本消息；编辑、发布和第二账号通知均需独立合同与授权 |
+
+Local verdict: `.18.3.4/.18.3.5` 为 `done-local/read-only-accepted`；SDK 公告投影已由 Web 消费，RN 保持既有 service 兼容，后续 shared mutation consumer convergence 单独推进。
+
 `.18.3.1` reviewer verdict: setting detail 已达到 `✅ implemented-local/read-verified`；mute 与 pin 达到 `🟡 implemented-local/mutation-acceptance-gated`。Shared SDK 通过 4 个真实 sql.js 用例证明详情读取、成功写入、Gateway 失败保留 cache 和响应目标不匹配 fail-closed；SDK Web 53 files/169 tests、all-runtime typecheck、boundary、`build:web` 与 H5 generated package sync 均通过。H5 40 files/132 tests、typecheck、466 assets、生产构建与 full verify 通过；认证态 458px 单聊/群聊 settings 均从真实 cache/Gateway detail 显示两个 enabled switches，无溢出和 console error。浏览器验收未点击开关，因此不声称真实 mute/pin 写入；无 mock、fake-success、页面 Gateway/Repository/SQLite caller 或第二 WebSocket listener。
 
 ### W6.a6.18.3.2 Auto-delete Contract Freeze

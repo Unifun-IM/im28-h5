@@ -100,6 +100,18 @@ Incremental P0/P1 is zero. Pending friend、non-empty owner/admin group、unread
 
 Incremental P0/P1 is zero. Non-empty remote content、owner/admin editing、dark/device/Safari/Firefox and all group mutations remain explicit acceptance gates.
 
+## 11. W6.a6.18.3.5 Incremental Cleanup
+
+| check | result | evidence |
+| :--- | :--- | :--- |
+| canonical data owner | `pass` | announcement/version/edit permission are explicit shared DTO fields from joined-group raw cache；H5 contains no raw-payload parser or role fallback |
+| consumer boundary | `pass` | Web settings/detail consume shared fields；RN business screens remain unchanged and compile against rebuilt `/rn` package；matrix registers RN mutation convergence as residual |
+| duplicate convergence | `pass` | introduction and announcement use one `GroupTextDetailPage` for route validation/cache/sync/errors/layout；two thin pages only select field and RN strings |
+| package/runtime safety | `pass` | all-runtime typecheck/boundary and ordinary build:rn/build:web passed；generated app packages synced；`build:package:desktop:web` untouched |
+| debug/dead/size | `pass` | shared detail TSX 150 lines、thin pages 18/17 lines；no TODO/FIXME/HACK/console/platform-cross import；old introduction-specific CSS owner renamed to neutral text-detail owner |
+
+Incremental P0/P1 is zero. Real update/read-mark/send、ordinary-member/non-empty samples、dark/device/Safari/Firefox remain explicit gates. Vite HMR transient provider/removed-CSS reload history is excluded from zero-console claims; stable production build and functional runtime proof are green.
+
 ## 9. W6.a5.2.15 Incremental Cleanup
 
 | check | result | evidence |

@@ -1,5 +1,5 @@
 import { GroupTextDetailPage } from './GroupTextDetailPage.js';
-import './group-introduction-page.css';
+import './group-text-detail-page.css';
 
 /** RN 群公告页的 H5 只读实现，公告只来自 shared joined-group facade。 */
 export function GroupAnnouncementPage() {
