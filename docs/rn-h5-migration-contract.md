@@ -1582,3 +1582,207 @@ Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-empty-data-
 | fail-closed | 非 HTTP(S) 打开地址拒绝；clipboard 失败保留菜单并显示真实错误；不得产生 Gateway、SQLite 或消息 mutation |
 | convergence | H5 production caller 已消费 shared owner；RN 等价 helper 按冻结矩阵登记，独立 RN 授权前状态为 `shared-core-ready/web-consumed/rn-frozen` |
 | acceptance | shared/H5 聚焦测试与类型检查通过；412px 已登录真实群聊健康、无溢出/console error，但 cache 无链接消息，真实点击/长按/复制视觉 data-gated，未发送测试消息 |
+
+## 73. W6.a6.20.17 Chat Message Action Modal Contract
+
+> OWNER AXIOM: 普通消息动作层只重现 RN presentation；动作能力、状态校验与 mutation owner 保持既有主链，modal 不得成为第二业务编排器。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `500ms` 长按打开 `MessageActionBubbleModal`；全屏 blur/backdrop、原消息预览、200px 纵向 Telegram menu、40px action row、180ms reveal；RN source 只读冻结 |
+| gesture | H5 `ChatMessageAction` 只持有 `500ms` timer、`8px` pointer move cancel、右键/Enter/Space 入口和长按 click suppression |
+| modal | `ChatMessageActionModal` 必须通过 body portal 使用全局 `InteractionModal`；预览 `inert + aria-hidden`，Esc/backdrop 请求关闭且不得触发气泡媒体动作 |
+| layout | 收到消息靠 16px 左边距，发出消息靠 16px 右边距；菜单固定 200px，极窄屏收窄；动作数量决定高度，预览与整栈必须 clamp 在 viewport 内 |
+| actions | 引用/复制/编辑/多选/转发/添加到表情/删除的可见性、disabled、success-only close 与回调维持现有实现；本片不读取 DTO/角色/缓存，不调用 SDK/Gateway/SQLite |
+| failure | copy/add 失败保持 modal 与错误反馈；其他动作只关闭 modal 后交给既有 owner；不得制造成功态或重放 mutation |
+| acceptance | pure layout/H5 focused/full verify 已通过；412px 已登录页面真实右键打开发出消息 modal，200px/6 动作、仅删除危险色，遮罩关闭后 URL 稳定且零横向溢出；触屏实机仍 gated |
+
+## 74. W6.a6.20.18 Chat Link Action Surface Convergence Contract
+
+> OWNER AXIOM: 消息和消息内链接可以有不同动作集合，但必须消费同一个 H5 top-layer presentation owner；链接不得恢复气泡内绝对定位菜单。
+
+| layer | contract |
+| :--- | :--- |
+| primary path | `ChatActionModalSurface` 唯一持有 body portal、全局 InteractionModal、锚点冻结、收发方向和 viewport clamp；不持有 URL、clipboard 或消息 mutation |
+| ordinary message | `ChatMessageActionModal` 只组装引用/复制/编辑/多选/转发/表情收藏/删除；显式 `.is-danger` 仅标记删除；既有回调和 success-only 规则不变 |
+| link | `ChatMessageLinkAction` 普通点击继续复用 browser open port；`500ms` 长按、`8px` move cancel 与右键进入两项 top-layer，只提供打开/复制动作 |
+| event boundary | 链接 pointer/context 继续隔离外层消息手势；portal 菜单事件不得被原消息 click-capture 吞掉或重新打开外层菜单 |
+| delete-or-register | 旧 `.rn-chat-text-link-menu` JSX/CSS 完全删除，无 compat caller；不得保留 hidden inline menu 或第二套 layout helper |
+| fail-closed | URL 非 HTTP(S) 继续拒绝；clipboard reject 保留 modal 并显示真实错误；不得以 modal 关闭制造成功态 |
+| acceptance | focused 5 files/16 tests、H5/SDK Web typecheck、SDK Web 86 files/360 tests、1114-module build 已通过；412px 普通消息共用层回归通过；真实 cache 无链接消息，链接视觉 data-gated且未发送测试消息 |
+
+## 75. W6.a6.20.19 Friend Profile Presence Contract
+
+> OWNER AXIOM: 在线状态查询、realtime 先后顺序和账号生命周期属于 shared SDK；H5 资料页只投影当前好友状态，不得建立第二套 WebSocket 或持久化缓存。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `UserProfileScreen` 仅对好友查询/订阅在线状态，导航栏显示在线或离线；黑名单状态优先；RN source 只读冻结 |
+| shared SDK | `createIMUserPresenceSync` 按 100 人分批、稳定去重并兼容 Gateway wrapper/aliases；缺失 userID 不推导离线；订阅 revision 阻止迟到 HTTP 覆盖实时状态 |
+| realtime/lifecycle | runtime 只路由 `user_status`；账号不匹配和目标外 userID 忽略；退出、切号、token 失效、被踢和 dispose 清 subscriber；不写 SQLite、不推进 dataVersion |
+| H5 | `useContactProfilePresence` 只在 authenticated friend profile 建立 observation；navbar view 固定 `blacklisted > online/offline > none`，页面不 import Gateway/WebSocket/Repository |
+| failure | 初始 HTTP 失败保持未知；若 realtime 已先到达，随后 HTTP 失败不得撤销已知状态；listener/report error 不制造离线或成功态 |
+| convergence | Web production caller 已消费 shared owner；RN 现有 OpenIM presence caller 登记为 frozen，单独 RN 授权前不得声明 `converged` |
+| acceptance | SDK focused/runtime 7 tests、full Web 87 files/366 tests、H5 view 7 tests、typecheck/full build 通过；真实好友资料在 412px/390x844 显示在线且零 overflow/console error；离线转换、重连和第二账号事件仍 sample-gated |
+
+## 76. W6.a6.20.20 Group Member Presence Contract
+
+> OWNER AXIOM: 群模式和 presence 语义属于 shared SDK；H5 群成员页只决定何时观察和如何画绿点，不得复制数字模式、HTTP、WebSocket 或缓存规则。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `GroupMembersScreen/useGroupMemberOnlineStatus` 仅在 `mode=1` 普通群批量读取/订阅完整成员；在线头像显示 14px 外层和 8px 绿点；RN source 只读冻结 |
+| shared mode | `normalizeIMGroupMode` 统一 `1|2|normal|large`，`isIMNormalGroupMode` 是唯一可见性判定；`WebIMJoinedGroup.mode` 来自 Gateway/cache payload，缺失/未知 fail-closed |
+| shared presence | 完整成员稳定 ID 交给 `.20.19` `presence.observe`；HTTP 100 人分批、realtime revision、账号过滤和 lifecycle clear 不建立群专属分支 |
+| H5 | `useGroupMemberPresence` 只维护当前页面 online map；初始/实时回包只合并出现的身份；离页/换群释放 observation；成员 DTO、SQLite 和 dataVersion 不变 |
+| presentation | 仅明确在线且普通群显示绿点；large/unknown 不查询、不展示；昵称优先级、角色标签、ID、资料 route、搜索/索引/下拉刷新保持既有 owner |
+| convergence | Web production caller 已消费 shared mode/presence；RN 现有 hook 冻结，单独 RN 授权前状态为 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | SDK focused 3 files/16 tests、H5 view 1/4、full Web 88/368、typecheck/build 通过；真实普通群 3 人中 1 人在线，412px/390x844 零 overflow/页面错误；large 群、上下线转换和 RN convergence 仍 gated |
+
+## 77. W6.a6.20.21 Group Settings Preview Presence Contract
+
+> OWNER AXIOM: 群设置预览与完整成员页只能按各自可见成员消费同一个 shared presence owner；不得为设置页复制查询、订阅或群模式规则。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `GroupSettingsScreen` 将 `getSettingsPreviewMembers` 结果交给 `useGroupMemberOnlineStatus`；仅普通群的明确在线成员显示 14/8px 绿点；RN source 只读冻结 |
+| observation scope | H5 只观察 `buildChatSettingsMemberViews` 实际渲染的最多 10 个稳定 userID，不因设置页已加载完整成员快照而扩大订阅 |
+| shared owner | 可见性复用 `.20.20` `isIMNormalGroupMode`；HTTP/realtime/revision/lifecycle 复用 `.20.19` `presence.observe`；不改 SDK business source |
+| H5 | `ChatSettingsPage` 只连接 group、preview IDs 与 online map；`SettingsMemberAvatar` 只在圆形图片裁剪层外投影状态点；资料 route、昵称和成员动作保持既有 owner |
+| fail-closed | large/unknown 群、缺失账号、空预览或未知状态均不展示；query/realtime 失败不制造离线 UI、持久化事实或 fake-success |
+| convergence | Web production settings caller 已消费 shared owner；RN caller 保持冻结，状态为 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | H5 focused 2 files/13 tests、full Web 88/368、466 assets、runtime boundary、typecheck/build 通过；真实普通群 3 人预览中 2 人在线，412px/390x844 零 overflow/console error、绿点 14/8px；large 群与 realtime 切换仍 gated |
+
+## 78. W6.a6.20.22 Group Member Restricted Profile Context Contract
+
+> OWNER AXIOM: 群成员资料限制必须由当前账号的真实会话、群和成员事实恢复；Router state 只能定位候选上下文，不得携带可授予权限的结果。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `UserProfileScreen` 在 `groupAddFriendAllowed === false && !isSelf` 时隐藏更多、性别、昵称、ID、简介、快捷动作和全部关系动作，并显示群成员说明；RN source 只读冻结 |
+| route | 群设置预览和完整成员列表只传稳定 `groupConversationID` 与白名单 `backHref`；目标用户身份仍只来自 `/contacts/users/:userID` |
+| validation | H5 必须从当前认证 runtime 依次校验 group Conversation、`targetID` 对应 joined group 和目标 group member；任一缺失、异常或跨群不匹配均 fail-closed |
+| shared display name | 校验成功后只使用 SDK `resolveIMGroupMemberDisplayName`，保持备注名 > 群内昵称 > 好友昵称/成员昵称 > userID 的共享优先级；页面不得复制 nickname mapper |
+| restriction | 只有 authoritative/cached 明确 `allowMemberAddFriend=false` 才显示“已是群成员”；加载期间先隐藏动作，刷新失败显示“群成员资料暂不可用”；self 永不进入受限投影 |
+| ownership | H5 hook 只编排 shared facades 和页面内存状态；不得新增 SDK/Gateway/OpenIM/SQLite 分支。群消息头像的 mute context 与成员管理 mutation 不在本片 |
+| convergence | Web production caller 已消费 shared DTO/display-name owner；RN caller 保持冻结，状态为 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | H5 focused 3 files/22 tests、full Web 88/368、466 assets、runtime boundary、typecheck 与 1120-module build 通过；真实允许互加群入口昵称/完整动作/412px 零 overflow 已证；禁止互加真实样本仍 gated |
+
+## 79. W6.a6.20.23 Chat Sender Avatar Profile Entry Contract
+
+> OWNER AXIOM: 聊天气泡头像只能提供稳定 SPA 定位；群成员资料、显示名和互加限制必须继续由已有 shared/context owner 恢复，消息组件不得复制权限判断。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 收到的群消息只在连续分组末尾显示可点击头像；点击打开发送人资料并携带群上下文；RN source 只读冻结 |
+| visibility | H5 仅把现有 `showSenderAvatar` 的 incoming group avatar 变为 Link；outgoing、单聊、系统消息和连续分组 placeholder 不新增入口 |
+| route | helper 只接受非空 conversationID/senderID，构造编码 `/contacts/users/:userID`、当前聊天 backHref 和 `groupConversationID`；不携带昵称、角色、权限或消息 payload |
+| profile owner | 资料 route 必须复用 `.22` 当前账号会话/群/成员重新校验、shared 显示名和 fail-closed 限制；消息组件不得读取 `allowMemberAddFriend` |
+| interaction | 24px 头像、图片 fallback、占位、消息长按、媒体点击、链接动作和多选 DOM 保持不变；RN 头像长按 @ 成员与群禁言资料动作不在本片 |
+| convergence | 这是 H5 presentation/route 接线，不新增 SDK business；RN caller 保持冻结，双端共享业务 owner 无变化 |
+| acceptance | focused 2 files/15 tests、full Web 88/368、466 assets、runtime boundary、typecheck 与 1120-module build 通过；真实 412px 群聊零 overflow，但当前群没有 incoming sender avatar，点击/history 仍 data-gated且未发送测试消息 |
+
+## 80. W6.a6.20.24 Chat Sender Avatar Mention Gesture Contract
+
+> OWNER AXIOM: 头像长按只产生 Composer 输入意图；提及显示名、草稿文档、目标 selection 与最终发送必须继续经过现有 shared/Composer owner，头像组件不得建立第二消息链。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 收到的群消息在可见发送人头像长按时把真实群成员加入草稿提及；自身不提及；普通点击仍打开成员资料；RN source 只读冻结 |
+| visibility | H5 仅在 `incoming + group + showSenderAvatar + membersByID hit` 时提供长按；未知成员保留资料点击但不生成 mention，outgoing/单聊/系统/placeholder 不新增动作 |
+| gesture | 500ms 长按和 8px 移动取消对齐既有 RN/H5 消息手势；触发后抑制同次 click；desktop contextmenu 进入相同 callback，不复制业务分支 |
+| composer | 页面传一次性递增 request；Composer 用 shared `resolveIMGroupMemberDisplayName` 建立稳定 user mention，复用 `useChatComposerMentions`；末尾有 active query 时替换，否则按需加分隔并追加 `@昵称 ` |
+| identity/document | mention selection 保存 userID 与当前 displayName；草稿文字变化继续经过既有 preset-emoji entity reconcile，提交仍由原 mention collect/send owner 完成 |
+| fail-closed | self、空身份、非群聊、编辑态、引用态和缺失成员不插入；头像手势不调用 Gateway、OpenIM、SQLite 或 send，不产生 optimistic success |
+| structure | `ChatGroupSenderAvatar` 持有头像呈现/资料 Link，`ChatSenderAvatarAction` 只持有手势，`ChatMessageBubble` 只编排可见性；无第二资料、草稿或发送 owner |
+| convergence | 本片只改 H5 UI/Composer 接线并消费已有 SDK 显示名；SDK business 与冻结 RN caller 均不改，双轨边界不扩大 |
+| acceptance | focused 2 files/10 tests、full Web 88/368、466 assets、runtime boundary、typecheck 与 1122-module build 通过；匿名 dev/守卫/零 overflow 已证，真实 incoming avatar 长按和草稿投影仍因 session/data 样本 gated |
+
+## 81. W6.a6.20.25 Chat Audio Played And Auto-next Contract
+
+> OWNER AXIOM: 语音是否本地播放和下一条候选属于共享纯规则；浏览器只拥有偏好存储与媒体实例，且本地 played 不得冒充服务端 read。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 播放尝试即记录账号/会话已播放状态，兼容 `localEx.im28SoundMessagePlayed`；自然结束选择后续 incoming 未播放语音，手动停止不推进；RN source/caller 只读冻结 |
+| shared rule | SDK 统一 `serverMsgID > clientMsgID` 身份、localEx 解析和阅读顺序扫描；候选必须是稳定身份、incoming、type103、未播放且平台确认可播放 |
+| Web adapter | `ChatMediaInteractionProvider` 持有 chat route 唯一 HTMLAudio；localStorage key 为 `im28.voicePlayed.<user>.<conversation>`；消息列表从 newest-first 转为阅读顺序后调用 shared selector |
+| UI | 只有 incoming 且本地未播放的语音显示红点；开始真实播放尝试后消失；播放状态、错误和既有按时长气泡宽度继续由原媒体 owner 投影 |
+| fail-closed | 空/损坏偏好、缺失当前消息、非法 URL、outgoing、非语音、已播放、手动停止和播放失败均不自动推进；账号/路由切换停止并释放资源 |
+| boundary | 不修改消息 DTO、SQLite 或 Gateway，不发 read receipt，不提供跨设备 played；服务端 read 是独立 capability |
+| convergence | Web production caller 消费 shared 规则；RN caller 冻结，状态 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | SDK focused 1 file/3 tests、H5 focused 3 files/12 tests、full Web 89/371、466 assets、runtime boundary、typecheck 与 1124-module build 通过；真实账号会话/当前群聊 412px 零 overflow/console error、唯一 audio runtime 已证，当前群无语音，播放链 data-gated |
+
+## 82. W6.a6.20.26 Chat Custom Emoji Bubble Preview Contract
+
+> OWNER AXIOM: type115 身份、URL 快照和发送状态继续属于 shared SDK；H5 只能从既有消息投影尺寸并接入既有媒体预览 owner，不得复制表情业务链。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 自定义表情气泡最大宽度 180，不放大小图并保持真实比例；历史消息缺少宽高时先探测自然尺寸；点击进入无工具栏纯图片预览，点击任意区域关闭；RN source 只读冻结 |
+| message projection | H5 type115 继续保留 `emoji_id/url`，仅在 payload 明确提供有限正数时附加 `width/height`；旧消息不猜测固定比例 |
+| bubble | 独立 `ChatCustomEmojiMessageContent` 优先快照尺寸，其次复用当前运行期 URL 自然尺寸缓存；未知尺寸使用 1px 隐形探测，解码后复用 `getChatImageDisplaySize`；非法 URL 显示不支持态，解码失败显示稳定失败文案而非 broken image |
+| preview | `getChatMediaPreview` 对 type115 只接受 HTTP(S) 快照并投影 `emoji` kind；route-scoped `ChatMediaInteractionProvider` 仍是唯一 overlay owner；预览黑底、无关闭/保存工具栏，图片不阻断整层点击关闭 |
+| isolation | 普通图片继续保留关闭/保存与 OSS fallback；文件/视频/音频、收藏、发送、recent 和 manager mutation 均不改变；不新增 Gateway/OpenIM/SQLite/SDK 分支 |
+| acceptance | H5 focused 3 files/15 tests、full Web SDK 89 files/371 tests、466 assets、runtime boundary、typecheck 与 1125-module build 通过；真实群聊 412px 零 overflow/console error/破图，当前会话无 type115，真实气泡点击与预览视觉仍 data-gated |
+
+## 83. W6.a6.20.27 Chat Initial Unread Navigation Contract
+
+> OWNER AXIOM: 未读区间和稳定身份属于 shared 纯规则；H5 只拥有当前窗口的滚动与可见度，服务端已读是独立 mutation，不能由滚动结果伪造。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 按 `lastReadSeq` 找 incoming 未读，使用精确 seq 文本比较；首条 type1201 好友建立通知不作为普通未读分割线；最后已读锚点贴近视口底部，用户离开最新端后新消息不强拉到底；RN source/caller 冻结 |
+| shared rule | `getIMInitialUnreadNavigation` 接收旧到新消息，统一 uint64、incoming、`serverMsgID > clientMsgID`、首未读与最后已读锚点；非法边界 fail-closed，无 Repository/Gateway I/O |
+| Web adapter | `useChatUnreadNavigation` 只在当前路由 50 条窗口完成后冻结边界，按 80% 可见度减少本地剩余数，40px 内才跟随新增消息；普通气泡和系统消息共用双身份 DOM 标识 |
+| UI | 首未读前展示“未读消息”分割线；未读尚未达到可见阈值时展示 `N条未读/99+` 浮层；显式点击只滚动当前消息容器，不移动页面 |
+| arbitration | 带稳定消息 ID 的搜索结果定位优先，不启动初始未读锚定；路由切换清空前一路由的边界、已看集合和跟随状态 |
+| boundary | 本片不调用 `markRead`、不写 `lastReadSeq/unreadCount`、不发 read receipt；当前 50 条之外的未读分页和服务端收敛另立 capability |
+| convergence | Web production caller 消费 shared 规则；RN caller 冻结，状态 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | SDK focused 1 file/3 tests、H5 focused 2 files/8 tests、full Web SDK 90 files/374 tests、466 assets、runtime boundary、SDK RN/Web/Desktop 与 H5 typecheck、1127-module build通过；真实 412px 无未读样本时零误画/零 overflow/零 console error且停在最新端，非零未读视觉与滚动仍 data-gated |
+
+## 84. W6.a6.20.28 Chat Visible Unread Read Convergence Contract
+
+> OWNER AXIOM: 可提交 seq 的业务筛选和已读缓存收敛属于 shared SDK；平台只能报告真实可见身份和明确交互许可，不能把程序化定位冒充阅读。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 80% 可见度取最高 incoming unread seq；短列表真实测量完成后可消费全部可见未读；长列表初始锚定禁止提交，只有用户拖动或明确到最新动作放行；RN business caller 不改 |
+| shared rule | `getIMVisibleUnreadReadSeq` 按稳定身份过滤可见消息，拒绝 outgoing/已读/非法 seq，用 uint64 文本比较返回最高序列 |
+| mutation | H5 只调用既有 converged `conversations.markRead(conversationID, readSeq)`；Gateway 成功且目标匹配后才写 SQLite，失败清除本页去重边界以允许重试 |
+| partial count | shared markRead 优先使用回包 `unread_count`；回包缺失时仅 `confirmedReadSeq >= cached lastMsgSeq` 清零，部分游标保留原计数，禁止提前清会话角标 |
+| Web gate | `unreadCount > 0` 才允许 mutation；短列表需完成初始定位和真实尺寸；长列表需 wheel/touchmove、显式未读入口，或原先处于最新端的新消息跟随；许可在当前布局帧后清除 |
+| identity/visibility | 普通气泡和系统消息共用 server/client 双身份；DOM 达到 80% 才进入可见集合；搜索目标模式不启动未读导航或自动已读 |
+| convergence | RN/H5 实际调用同一 shared markRead；新增最高 seq 规则由 SDK 单一持有，平台门禁按 native/DOM 差异分离 |
+| acceptance | SDK focused 2 files/8 tests、H5 focused 2 files/4 tests、full Web SDK 90 files/376 tests、466 assets、runtime boundary、SDK RN/Web/Desktop 与 H5 typecheck、1128-module build通过；真实 412px 无未读 route 零误画/零 overflow，干净 reload 后零 console error；真实非零 partial read、Gateway count 与 list-back 仍 data-gated |
+
+## 85. W6.a6.20.29 Chat History Pagination And Sticky Date Contract
+
+> OWNER AXIOM: 历史页游标、窗口合并和服务端分页事实属于 shared SDK；平台只能拥有到顶手势、原生/DOM 位置补偿和悬浮日期展示。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 用户真实滚到最早端才拉取更早消息；前插后保持当前可见消息位置；滚动时短显当前日期；初始程序定位不视为用户滚动；RN source/caller 只读冻结 |
+| shared rule | `getIMPreviousMessageHistoryCursor` 用 uint64 十进制精确减一；`mergeIMMessageHistoryWindow` 按稳定消息身份去重更新并以 seq 新到旧稳定排序 |
+| shared sync | `pullHistoryPage` 统一请求、clear boundary、DTO 映射、SQLite upsert 与 `has_more/next_seq`；`has_more=true` 时缺失、非法或重复 next cursor 必须拒绝，禁止无限循环 |
+| compatibility | 已发布 `pullHistory` 继续返回完整缓存数组，但内部调用同一 page owner；compat 只保留返回形状，不复制 Gateway/Repository 状态机 |
+| Web gesture | H5 只有 wheel/touchmove/pointer 等真实用户手势后到达 48px 顶部阈值才加载；初始未读、搜索定位、恢复路由和程序滚动不得触发 |
+| Web position/UI | 请求前记录 scrollTop/scrollHeight，React 提交后用新增高度恢复位置；滚动期间从已有日期分隔读取文案并在 1.2 秒后隐藏；短列表不展示悬浮日期 |
+| failure | 无 sync/会话/游标、并发请求、路由切换和 Gateway/SQLite 错误不推进 cursor 或伪装完成；错误继续进入页面既有可见反馈 |
+| convergence | Web production caller 消费 shared owner；RN 现有 `useChatLoadMore/chatDetailHistoryHelpers` 冻结，状态 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | SDK focused 4 files/21 tests、full Web 91 files/381 tests、H5 focused 4 files/8 tests、466 assets、runtime boundary、SDK/H5 typecheck、build:web sync 与 1131-module build通过；真实 412px 短会话 list 665/665、零误分页/loading/sticky/overflow；长历史 Network、位置补偿和日期视觉仍 data-gated |
+
+## 86. W6.a6.20.30 Chat Quote Source Local Resolution And Focus Contract
+
+> OWNER AXIOM: 引用来源身份和本地缓存读取属于 shared SDK；平台只能拥有当前窗口复用、原生/DOM 定位、高亮和导航，不得为缺失来源增加未定义的远端查询。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 引用来源先查当前列表，再按稳定消息 ID 查本地 SQLite；命中后定位并高亮，确认缺失显示“引用的内容已删除”；RN source/caller 只读冻结 |
+| shared sync | `getCachedByStableMsgIDs` 对每个身份先查 client ID、再查 server ID，按请求保序，以 canonical client ID 去重；只读当前账号 `MessageRepository` |
+| group identity | 群引用发送人复用 `resolveIMGroupMemberDisplayName` 的 `备注 > 群内昵称 > 公开昵称 > userID`；H5 不读取 raw nickname 重算 |
+| Web cache | 当前消息窗口命中优先；缺失来源一次批量读取，只接受同会话结果；读取错误保持未确认态，不冒充已删除 |
+| Web focus | 当前 DOM 命中时居中并短时高亮；仅在本地库命中且不在窗口时，通过 React Router 同会话 `?messageID=<clientID>` 读取目标窗口再复用同一 DOM focus |
+| failure | 空身份、跨会话结果、本地读取失败和确认缺失均不导航；只有确认缺失显示删除文案并禁用动作；不新增 Gateway、WebSocket、retry 或 cache write |
+| convergence | Web production caller 消费 shared 本地查询；RN 现有 `fetchMessageByID -> localIMStore` 与 FlatList caller 冻结，状态 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | SDK focused 2 files/12 tests、full Web 91 files/381 tests、H5 focused 4 files/15 tests、466 assets、runtime boundary、SDK/H5 typecheck、build:web sync 与 1132-module build通过；真实三个会话均无引用消息，路由/overflow/console 健康，点击定位仍 data-gated |

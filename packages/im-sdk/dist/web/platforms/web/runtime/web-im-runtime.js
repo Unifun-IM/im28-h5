@@ -56,6 +56,7 @@ class WebIMRuntimeImpl {
             mediaUploadPort: createBrowserOSSUploadPort({ gatewayClient: this.gatewayClient }),
             accountDatabase: this.options.accountDatabase,
             getCurrentUserID: () => this.currentSession?.userID ?? null,
+            reportBackgroundError: options.reportBackgroundError,
             ...(options.createRequestID
                 ? { createClientMessageID: options.createRequestID }
                 : {}),
@@ -94,6 +95,7 @@ class WebIMRuntimeImpl {
     /** 将登录和注册返回的认证数据收敛为同一浏览器 runtime 状态。 */
     async authenticate(requestAuthData) {
         this.stopRealtime();
+        this.sync.presence.clear();
         this.currentSession = null;
         this.pendingCallRefresh = null;
         this.incomingCallState = resetIMIncomingCallLifecycleState(this.incomingCallState);
@@ -233,6 +235,7 @@ class WebIMRuntimeImpl {
     /** 释放 socket 与监听器但保留可恢复的 tab session。 */
     dispose() {
         this.stopRealtime();
+        this.sync.presence.clear();
         this.listeners.clear();
         this.callSignalListeners.clear();
     }
@@ -279,6 +282,10 @@ class WebIMRuntimeImpl {
             }
             return;
         }
+        if (event.type === 'user_status') {
+            this.sync.presence.handleRealtimeEvent(event);
+            return;
+        }
         if (event.type === 'message' || event.type === 'conversation' || event.type === 'message.update') {
             // eventUserID 阻止旧账号队列完成后发布新账号的数据版本。
             const eventUserID = this.currentSession?.userID;
@@ -289,6 +296,7 @@ class WebIMRuntimeImpl {
         }
         if (event.type === 'token_expired' || event.type === 'kicked') {
             this.stopRealtime();
+            this.sync.presence.clear();
             this.currentSession = null;
             this.incomingCallState = resetIMIncomingCallLifecycleState(this.incomingCallState);
             this.options.authSessionStore.clear();
@@ -362,6 +370,7 @@ class WebIMRuntimeImpl {
     /** 清除已被服务端判定无效的本地认证会话。 */
     clearLocalSession() {
         this.stopRealtime();
+        this.sync.presence.clear();
         this.currentSession = null;
         this.incomingCallState = resetIMIncomingCallLifecycleState(this.incomingCallState);
         this.options.authSessionStore.clear();
@@ -375,6 +384,7 @@ class WebIMRuntimeImpl {
     /** 清除本地认证、realtime 与账号数据库，不额外请求远端 logout。 */
     async invalidateLocalSession() {
         this.stopRealtime();
+        this.sync.presence.clear();
         this.currentSession = null;
         this.incomingCallState = resetIMIncomingCallLifecycleState(this.incomingCallState);
         this.options.authSessionStore.clear();

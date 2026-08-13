@@ -118,6 +118,24 @@ export function insertChatMention(
   };
 }
 
+/** 对齐 RN 头像长按：替换末尾未完成查询，否则把提及追加到草稿。 */
+export function appendChatMention(
+  document: PresetEmojiDocument,
+  item: ChatMentionPickerItem,
+): ChatMentionInsertResult {
+  /** query 只识别草稿末尾尚未完成的 @ 查询。 */
+  const query = getActiveChatMentionQuery(document.text, document.text.length);
+  if (query) return insertChatMention(document, query, item);
+  /** separator 避免提及与已有正文粘连。 */
+  const separator = document.text && !document.text.endsWith(' ') ? ' ' : '';
+  /** text 与 RN 一致在昵称后补空格。 */
+  const text = `${document.text}${separator}@${item.label} `;
+  return {
+    document: reconcilePresetEmojiEntitiesAfterTextChange(document, text),
+    cursor: text.length,
+  };
+}
+
 /** 只返回正文仍包含可见标签的提及目标。 */
 export function collectVisibleChatMentions(
   text: string,

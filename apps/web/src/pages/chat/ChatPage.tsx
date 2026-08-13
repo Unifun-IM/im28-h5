@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Conversation, IMMessageCard, Message, WebIMSync } from '@im28/im-sdk/web';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Conversation, IMMessageCard, Message, WebIMGroupMember, WebIMSync } from '@im28/im-sdk/web';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CallTypeActionSheet } from '../../components/call/CallTypeActionSheet.js';
 import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
@@ -22,7 +22,12 @@ import { useChatMessageEditFlow } from './useChatMessageEditFlow.js';
 import { useChatMentionMembers } from './useChatMentionMembers.js';
 import { useChatGroupAnnouncement } from './useChatGroupAnnouncement.js';
 import { useChatMessageClipboard } from './useChatMessageClipboard.js';
-import { focusChatMessageRow, readFocusedChatMessageWindow } from './chat-message-focus.js';
+import { useChatUnreadNavigation } from './useChatUnreadNavigation.js';
+import { useChatHistoryPagination } from './useChatHistoryPagination.js';
+import { useChatQuoteSources } from './useChatQuoteSources.js';
+import { useChatMessageDeleteExit } from './useChatMessageDeleteExit.js';
+import type { ChatComposerMentionRequest } from './chat-composer-types.js';
+import { buildChatMessageFocusURL, focusChatMessageRow, readFocusedChatMessageWindow } from './chat-message-focus.js';
 import './chat-page.css';
 /** RN chat detail 页面只编排 Web SDK cache/pull/send/realtime facade。 */
 export function ChatPage() {
@@ -62,8 +67,64 @@ export function ChatPage() {
   const [callPickerVisible, setCallPickerVisible] = useState(false);
   // callStarting 防止二次点击重复创建通话生命周期。
   const [callStarting, setCallStarting] = useState(false);
+  // mentionRequest 将头像长按翻译为 Composer 内部的一次性成员输入。
+  const [mentionRequest, setMentionRequest] = useState<ChatComposerMentionRequest | null>(null);
+  // mentionRequestSequenceRef 为连续提及生成稳定递增请求身份。
+  const mentionRequestSequenceRef = useRef(0);
   // messageListRef 持有唯一消息滚动容器。
   const messageListRef = useRef<HTMLElement>(null);
+  // messageWindowSizeRef 保留已展开窗口大小，realtime 重读不会裁回首屏 50 条。
+  const messageWindowSizeRef = useRef(50);
+  // historyPage 保存首拉后由 Gateway 确认的上一页状态与精确游标。
+  const [historyPage, setHistoryPage] = useState<{
+    readonly hasMore: boolean;
+    readonly nextCursor?: string;
+  }>({ hasMore: false });
+  /** handleMarkConversationRead 只把可见边界交给现有 shared success-only facade。 */
+  const handleMarkConversationRead = useCallback(async (readSeq: string) => {
+    if (!sync) throw new Error('聊天服务尚未就绪');
+    /** nextConversation 是 Gateway 成功并完成 SQLite 收敛后的真实快照。 */
+    const nextConversation = await sync.conversations.markRead(conversationID, readSeq);
+    setConversation(current => current?.conversationID === conversationID
+      ? nextConversation
+      : current);
+  }, [conversationID, sync]);
+  // unreadNavigation 管理初始边界、DOM 定位和 RN 门禁下的 shared 已读提交。
+  const unreadNavigation = useChatUnreadNavigation({
+    conversationID,
+    ...(conversation?.lastReadSeq || (conversation?.unreadCount ?? 0) > 0
+      ? { lastReadSeq: conversation?.lastReadSeq ?? '0' }
+      : {}),
+    messages,
+    hasUnreadMessages: (conversation?.unreadCount ?? 0) > 0,
+    ready: !focusedMessageID && !loading &&
+      conversation?.conversationID === conversationID,
+    listRef: messageListRef,
+    onMarkRead: handleMarkConversationRead,
+  });
+  // historyPagination 只拥有 Web 顶部触发、位置补偿和悬浮日期投影。
+  const historyPagination = useChatHistoryPagination({
+    conversationID,
+    enabled: Boolean(sync && !focusedMessageID && !loading),
+    initialHasMore: historyPage.hasMore,
+    ...(historyPage.nextCursor ? { initialNextCursor: historyPage.nextCursor } : {}),
+    messages,
+    sync,
+    listRef: messageListRef,
+    setMessages,
+    onError: setError,
+  });
+  // quoteSources 只从当前账号 SQLite 补齐窗口外引用来源，不请求 Gateway。
+  const quoteSources = useChatQuoteSources({
+    conversationID,
+    messages,
+    sync: sync?.messages ?? null,
+  });
+  // deleteExit 仅冻结 SDK 已确认成功消息的短期展示窗口。
+  const deleteExit = useChatMessageDeleteExit(conversationID, messages);
+  useEffect(() => {
+    messageWindowSizeRef.current = Math.max(50, messages.length);
+  }, [messages.length]);
   // outgoingActions 统一复用 SDK message facade 和页面 operation owner。
   const outgoingActions = useChatOutgoingMessageActions({
     conversationID,
@@ -100,6 +161,7 @@ export function ChatPage() {
   const deleteFlow = useChatMessageDeleteFlow({
     conversation, messages, sync, runMessageOperation,
     onError: setError, onNotice: setNotice,
+    onDeleteSucceeded: deleteExit.begin,
   });
   // editFlow 只持有瞬时编辑目标，mutation 仍由 shared facade 完成。
   const editFlow = useChatMessageEditFlow({
@@ -122,6 +184,7 @@ export function ChatPage() {
     setError(null);
     setConversation(null);
     setMessages([]);
+    setHistoryPage({ hasMore: false });
     setQuoteMessage(null);
     setCardPickerVisible(false);
     setCallPickerVisible(false);
@@ -138,13 +201,21 @@ export function ChatPage() {
         if (!target) throw new Error('会话不存在或尚未同步');
         if (active) setConversation(target);
         // refreshedMessages 按普通或搜索目标模式读取当前账号 SQLite 窗口。
-        const refreshedMessages = await readInitialChatMessageWindow(sync.messages, {
+        const refreshedWindow = await readInitialChatMessageWindow(sync.messages, {
           conversationID,
           fromSeq: target.lastMsgSeq ?? '0',
           focusedMessageID,
           limit: 50,
         }, cached => { if (active) setMessages(cached); });
-        if (active) setMessages(refreshedMessages);
+        if (active) {
+          setMessages(refreshedWindow.messages);
+          setHistoryPage({
+            hasMore: refreshedWindow.hasMore,
+            ...(refreshedWindow.nextCursor
+              ? { nextCursor: refreshedWindow.nextCursor }
+              : {}),
+          });
+        }
       } catch (cause) {
         if (active) setError(readChatPageError(cause));
       } finally {
@@ -170,7 +241,10 @@ export function ChatPage() {
       sync.conversations.listCached({ limit: 500 }),
       focusedMessageID
         ? readFocusedChatMessageWindow(sync.messages, conversationID, focusedMessageID)
-        : sync.messages.getCachedHistory({ conversationID, limit: 50 }),
+        : sync.messages.getCachedHistory({
+            conversationID,
+            limit: messageWindowSizeRef.current,
+          }),
     ])
       .then(([cachedConversations, cachedMessages]) => {
         if (!active) return;
@@ -189,13 +263,10 @@ export function ChatPage() {
     };
   }, [conversationID, focusedMessageID, snapshot.dataVersion, snapshot.userID, sync]);
   useEffect(() => {
-    // frame 等待新消息 DOM 完成布局后再保持列表底部可见。
+    if (!focusedMessageID) return;
+    // frame 等待搜索目标 DOM 完成布局后覆盖普通初始未读锚点。
     const frame = requestAnimationFrame(() => {
-      // list 是页面唯一滚动 owner，避免 scrollIntoView 推动整个 viewport。
-      const list = messageListRef.current;
-      if (!focusChatMessageRow(list, focusedMessageID)) {
-        list?.scrollTo({ top: list.scrollHeight });
-      }
+      focusChatMessageRow(messageListRef.current, focusedMessageID);
     });
     return () => cancelAnimationFrame(frame);
   }, [focusedMessageID, messages.length]);
@@ -219,7 +290,7 @@ export function ChatPage() {
         // cached 包含 facade 持久化的 sent 或 failed 消息状态。
         const cached = await sync.messages.getCachedHistory({
           conversationID,
-          limit: 50,
+          limit: messageWindowSizeRef.current,
         });
         setMessages(cached);
       } catch (cause) {
@@ -267,6 +338,12 @@ export function ChatPage() {
   if (!snapshot.userID) return <Navigate to="/login" replace />;
   // isGroup 只由真实 Conversation type 决定群消息排列。
   const isGroup = conversation?.type === 'group';
+  /** 将当前群真实成员交给唯一 Composer 草稿 owner。 */
+  function handleMentionGroupMember(member: WebIMGroupMember): void {
+    if (!isGroup || !member.userID || member.userID === snapshot.userID) return;
+    mentionRequestSequenceRef.current += 1;
+    setMentionRequest({ id: mentionRequestSequenceRef.current, member });
+  }
   return (
     <main className="rn-chat-page">
       <section className="rn-chat-surface">
@@ -283,13 +360,23 @@ export function ChatPage() {
             }}
           />
         ) : null}
-        <ChatMediaInteractionProvider>
+        <ChatMediaInteractionProvider
+          userID={snapshot.userID}
+          conversationID={conversationID}
+          messages={messages}
+          isGroup={isGroup}
+        >
           <ChatMessageList
-            messages={messages}
+            conversationID={conversationID}
+            messages={deleteExit.displayMessages}
+            quoteSourceMessages={quoteSources.messages}
+            unavailableQuoteSourceIDs={quoteSources.unavailableIDs}
             isGroup={isGroup}
             currentUserID={snapshot.userID}
             groupMembers={mentionMembers.members}
             loading={loading}
+            historyLoading={historyPagination.loadingMore}
+            stickyDateLabel={historyPagination.stickyDateLabel}
             listRef={messageListRef}
             customEmojiActionDisabled={customEmojiActions.mutating}
             onAddCustomEmoji={customEmojiActions.add}
@@ -311,6 +398,20 @@ export function ChatPage() {
               setQuoteMessage(null);
               editFlow.beginEdit(message);
             }}
+            onMentionGroupMember={handleMentionGroupMember}
+            unreadNavigation={unreadNavigation.navigation}
+            remainingUnreadCount={unreadNavigation.remainingUnreadCount}
+            onScrollToNextUnread={unreadNavigation.scrollToNextUnread}
+            onOpenQuotedMessage={message => {
+              /** targetURL 只使用当前路由会话和 canonical client identity。 */
+              const targetURL = buildChatMessageFocusURL(
+                conversationID,
+                message.clientMsgID,
+              );
+              if (targetURL) navigate(targetURL);
+            }}
+            exitingMessageIDs={deleteExit.exitingMessageIDs}
+            onMessageExitComplete={deleteExit.finish}
           />
         </ChatMediaInteractionProvider>
         <ChatPageFooter
@@ -333,6 +434,7 @@ export function ChatPage() {
             mentionMembers={mentionMembers.members}
             canMentionAll={mentionMembers.canMentionAll}
             currentUserID={snapshot.userID}
+            mentionRequest={mentionRequest}
             editingMessage={editFlow.editingMessage}
             onCancelEdit={editFlow.cancelEdit}
             onEditText={editFlow.submitEdit}

@@ -20,8 +20,10 @@ import { useWebIMRuntime } from '../../runtime/index.js';
 import {
   buildGroupMemberListEntries,
   getGroupMemberIndexes,
+  shouldShowGroupMemberPresence,
 } from './group-members-view.js';
 import { GroupMemberRow } from './GroupMemberRow.js';
+import { useGroupMemberPresence } from './useGroupMemberPresence.js';
 import './group-members-page.css';
 
 /** RN 群成员完整列表只消费共享 groupMembers facade。 */
@@ -155,6 +157,17 @@ export function GroupMembersPage() {
   const settingsURL = `/conversations/${encodeURIComponent(conversationID)}/settings`;
   // memberCount 优先使用群事实，冷 cache 时回退完整成员数。
   const memberCount = group?.memberCount || members.length;
+  // showOnlineStatus 只接受 shared mode=normal 判定。
+  const showOnlineStatus = shouldShowGroupMemberPresence(group);
+  // memberUserIDs 为当前完整成员快照建立一个批量 presence observation。
+  const memberUserIDs = useMemo(() => members.map(member => member.userID), [members]);
+  // onlineByID 仅保存当前页面内存状态，不进入成员 DTO 或 SQLite。
+  const onlineByID = useGroupMemberPresence({
+    runtime,
+    accountUserID: snapshot.userID,
+    userIDs: memberUserIDs,
+    visible: showOnlineStatus,
+  });
 
   useEffect(() => {
     setActiveIndex(indexes[0] ?? '');
@@ -233,7 +246,14 @@ export function GroupMembersPage() {
               {entry.title}
             </div>
           ) : (
-            <GroupMemberRow key={entry.key} entry={entry} backHref={location.pathname} />
+            <GroupMemberRow
+              key={entry.key}
+              entry={entry}
+              backHref={location.pathname}
+              groupConversationID={conversationID}
+              online={Boolean(onlineByID[entry.member.userID])}
+              showOnlineStatus={showOnlineStatus}
+            />
           ))}
           {loading && members.length === 0 ? (
             <div className="rn-group-members-loading" aria-label="正在加载群成员"><span /></div>

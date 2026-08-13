@@ -1,5 +1,6 @@
 import {} from '@im28/im-sdk/core';
 import { resolveIMGroupManagementPermissions } from './group-management-permissions.js';
+import { normalizeIMGroupMode } from './group-mode.js';
 /** 缓存 payload 中保存服务端顺序的私有字段。 */
 const JOINED_GROUP_ORDER_KEY = '__joinedGroupOrder';
 /** 将 Gateway group 转成共享 Group Repository 记录。 */
@@ -51,6 +52,7 @@ export function mapCoreGroupToWeb(group, currentUserID) {
         announcement: readString(payload.announcement),
         announcementVersion: readString(payload.announcement_version),
         memberCount: normalizeMemberCount(group.memberCount),
+        mode: normalizeIMGroupMode(payload.mode ?? payload.group_mode ?? payload.group_type),
         ownerUserID,
         currentUserRole,
         joinApprovalRequired: payload.join_approval_required === true,

@@ -7,6 +7,7 @@ import { type WebIMGroupApplicationSync } from '../../../sync/group-application-
 import { type WebIMJoinedGroupSync } from '../../../sync/joined-group-sync.js';
 import { type IMGroupMentionSync } from '../../../sync/group-mention.js';
 import { type WebIMPeerProfileSync } from '../../../sync/peer-profile-sync.js';
+import { type IMUserPresenceSync } from '../../../sync/user-presence.js';
 import { type WebIMConversationSync } from '../../../sync/conversation-sync.js';
 import { type WebIMMessageSync } from '../../../sync/message-sync.js';
 import { type IMMessageBroadcastSync } from '../../../sync/message-broadcast.js';
@@ -46,6 +47,8 @@ export interface WebIMSync {
     /** 文本群发使用 shared batch-send 与逐目标收敛 owner。 */
     readonly messageBroadcast: IMMessageBroadcastSync;
     readonly peerProfile: WebIMPeerProfileSync;
+    /** Presence 只持有当前 runtime 内存订阅，不写账号数据库。 */
+    readonly presence: IMUserPresenceSync;
     readonly profile: WebIMProfileSync;
     readonly realtime: WebIMRealtimeSync;
 }
@@ -55,6 +58,8 @@ export interface WebIMSyncDependencies extends WebIMSyncContextDependencies {
     readonly mediaUploadPort?: IMMediaUploadPort;
     readonly createClientMessageID?: () => string;
     readonly now?: () => number;
+    /** Runtime reporter 隔离页面 listener 异常，避免中断后续 realtime 分发。 */
+    readonly reportBackgroundError?: (cause: unknown) => void;
 }
 /** 创建联系人、会话与消息共享认证上下文的同步 facade。 */
 export declare function createWebIMSync(dependencies: WebIMSyncDependencies): WebIMSync;

@@ -1,0 +1,85 @@
+.rn-chat-message-row.is-shattering,
+.rn-chat-system-message.is-shattering {
+  position: relative;
+  isolation: isolate;
+  pointer-events: none;
+  animation: rn-chat-message-shatter-anchor 620ms ease-out both;
+}
+
+.rn-chat-message-row.is-shattering > :not(.rn-chat-shatter-particles),
+.rn-chat-system-message.is-shattering > :not(.rn-chat-shatter-particles) {
+  animation: rn-chat-message-shatter-content 620ms ease-out both;
+}
+
+.rn-chat-shatter-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: visible;
+  color: var(--im-bg-card);
+  pointer-events: none;
+}
+
+.rn-chat-message-row.is-outgoing > .rn-chat-shatter-particles {
+  color: var(--im-brand-primary);
+}
+
+.rn-chat-shatter-particles > i {
+  position: absolute;
+  left: var(--shatter-left, 50%);
+  top: var(--shatter-top, 50%);
+  width: var(--shatter-size, 4px);
+  height: var(--shatter-size, 4px);
+  border-radius: 1px;
+  background: currentColor;
+  animation: rn-chat-message-shatter-particle 620ms ease-out both;
+  animation-delay: var(--shatter-delay, 0ms);
+}
+
+.rn-chat-shatter-particles > i:nth-child(1) { --shatter-left: 12%; --shatter-top: 22%; --shatter-x: -26px; --shatter-y: 42px; --shatter-size: 5px; }
+.rn-chat-shatter-particles > i:nth-child(2) { --shatter-left: 22%; --shatter-top: 58%; --shatter-x: -18px; --shatter-y: 55px; --shatter-delay: 18ms; }
+.rn-chat-shatter-particles > i:nth-child(3) { --shatter-left: 31%; --shatter-top: 36%; --shatter-x: -12px; --shatter-y: 38px; --shatter-size: 3px; }
+.rn-chat-shatter-particles > i:nth-child(4) { --shatter-left: 40%; --shatter-top: 70%; --shatter-x: -8px; --shatter-y: 62px; --shatter-delay: 24ms; }
+.rn-chat-shatter-particles > i:nth-child(5) { --shatter-left: 48%; --shatter-top: 18%; --shatter-x: 2px; --shatter-y: 46px; --shatter-size: 5px; }
+.rn-chat-shatter-particles > i:nth-child(6) { --shatter-left: 56%; --shatter-top: 48%; --shatter-x: 8px; --shatter-y: 58px; --shatter-delay: 32ms; }
+.rn-chat-shatter-particles > i:nth-child(7) { --shatter-left: 65%; --shatter-top: 26%; --shatter-x: 15px; --shatter-y: 40px; --shatter-size: 3px; }
+.rn-chat-shatter-particles > i:nth-child(8) { --shatter-left: 74%; --shatter-top: 62%; --shatter-x: 21px; --shatter-y: 64px; --shatter-delay: 14ms; }
+.rn-chat-shatter-particles > i:nth-child(9) { --shatter-left: 84%; --shatter-top: 34%; --shatter-x: 29px; --shatter-y: 49px; --shatter-size: 5px; }
+.rn-chat-shatter-particles > i:nth-child(10) { --shatter-left: 18%; --shatter-top: 44%; --shatter-x: -31px; --shatter-y: 25px; --shatter-delay: 36ms; }
+.rn-chat-shatter-particles > i:nth-child(11) { --shatter-left: 27%; --shatter-top: 76%; --shatter-x: -20px; --shatter-y: 48px; --shatter-size: 3px; }
+.rn-chat-shatter-particles > i:nth-child(12) { --shatter-left: 36%; --shatter-top: 12%; --shatter-x: -9px; --shatter-y: 31px; --shatter-delay: 20ms; }
+.rn-chat-shatter-particles > i:nth-child(13) { --shatter-left: 52%; --shatter-top: 80%; --shatter-x: 4px; --shatter-y: 68px; --shatter-size: 5px; }
+.rn-chat-shatter-particles > i:nth-child(14) { --shatter-left: 61%; --shatter-top: 40%; --shatter-x: 13px; --shatter-y: 34px; --shatter-delay: 28ms; }
+.rn-chat-shatter-particles > i:nth-child(15) { --shatter-left: 70%; --shatter-top: 14%; --shatter-x: 22px; --shatter-y: 29px; --shatter-size: 3px; }
+.rn-chat-shatter-particles > i:nth-child(16) { --shatter-left: 80%; --shatter-top: 74%; --shatter-x: 32px; --shatter-y: 57px; --shatter-delay: 40ms; }
+.rn-chat-shatter-particles > i:nth-child(17) { --shatter-left: 44%; --shatter-top: 52%; --shatter-x: -2px; --shatter-y: 51px; --shatter-size: 3px; }
+.rn-chat-shatter-particles > i:nth-child(18) { --shatter-left: 90%; --shatter-top: 50%; --shatter-x: 36px; --shatter-y: 43px; --shatter-delay: 12ms; }
+
+@keyframes rn-chat-message-shatter-anchor {
+  from { transform: translateZ(0); }
+  to { transform: translateZ(0); }
+}
+
+@keyframes rn-chat-message-shatter-content {
+  0% { opacity: 1; transform: scale(1); }
+  28% { opacity: 0; transform: scale(0.96); }
+  100% { opacity: 0; transform: scale(0.96); }
+}
+
+@keyframes rn-chat-message-shatter-particle {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(1); }
+  18% { opacity: 1; }
+  48% { opacity: 0.9; transform: translate(0, -18px) rotate(70deg) scale(0.88); }
+  100% { opacity: 0; transform: translate(var(--shatter-x), var(--shatter-y)) rotate(190deg) scale(0.42); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rn-chat-message-row.is-shattering,
+  .rn-chat-system-message.is-shattering,
+  .rn-chat-message-row.is-shattering > :not(.rn-chat-shatter-particles),
+  .rn-chat-system-message.is-shattering > :not(.rn-chat-shatter-particles),
+  .rn-chat-shatter-particles > i {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+}

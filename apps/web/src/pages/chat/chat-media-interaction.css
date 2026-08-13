@@ -167,6 +167,27 @@
   background: #000000;
 }
 
+.rn-chat-custom-emoji-preview {
+  display: grid;
+  width: 100%;
+  min-height: 100%;
+  flex: 1;
+  place-items: center;
+  padding: max(56px, var(--im-safe-top)) 24px max(56px, var(--im-safe-bottom));
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rn-chat-custom-emoji-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  animation: rn-chat-preview-open 180ms ease-out;
+}
+
 .rn-chat-file-preview-body {
   display: flex;
   min-height: 0;

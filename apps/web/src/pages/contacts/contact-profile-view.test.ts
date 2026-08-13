@@ -5,8 +5,11 @@ import {
   buildContactProfileRoute,
   formatContactProfileAddedAt,
   getContactProfileGenderLabel,
+  getContactProfileGroupPresentation,
+  getContactProfileNavbarState,
   getContactProfilePrimaryAction,
   resolveContactProfileBackHref,
+  readContactProfileGroupConversationID,
 } from './contact-profile-view.js';
 import type { WebIMPeerProfile } from '@im28/im-sdk/web';
 
@@ -26,6 +29,19 @@ describe('contact profile view', () => {
     expect(getContactProfilePrimaryAction('friend')).toBe('message');
     expect(getContactProfilePrimaryAction('stranger')).toBe('add-friend');
     expect(getContactProfilePrimaryAction('self')).toBeNull();
+  });
+
+  it('导航栏按黑名单、好友在线状态和空态优先投影', () => {
+    expect(getContactProfileNavbarState('friend', true, true))
+      .toEqual({ kind: 'blacklist' });
+    expect(getContactProfileNavbarState('friend', false, true))
+      .toEqual({ kind: 'presence', online: true });
+    expect(getContactProfileNavbarState('friend', false, false))
+      .toEqual({ kind: 'presence', online: false });
+    expect(getContactProfileNavbarState('stranger', false, true))
+      .toEqual({ kind: 'none' });
+    expect(getContactProfileNavbarState('friend', false, null))
+      .toEqual({ kind: 'none' });
   });
 
   it('只为明确性别值显示标签', () => {
@@ -50,11 +66,42 @@ describe('contact profile view', () => {
     expect(resolveContactProfileBackHref({
       backHref: '/conversations/group%2F1/settings/members',
     })).toBe('/conversations/group%2F1/settings/members');
+    expect(resolveContactProfileBackHref({
+      backHref: '/conversations/group%2F1/settings',
+    })).toBe('/conversations/group%2F1/settings');
+    expect(resolveContactProfileBackHref({
+      backHref: '/conversations/group%2F1',
+    })).toBe('/conversations/group%2F1');
     expect(resolveContactProfileBackHref({ backHref: '/contacts/search' }))
       .toBe('/contacts/search');
     expect(resolveContactProfileBackHref({ backHref: '/scan' })).toBe('/scan');
     expect(resolveContactProfileBackHref({ backHref: 'https://example.test' }))
       .toBe('/contacts');
     expect(resolveContactProfileBackHref(null)).toBe('/contacts');
+  });
+
+  it('只把群会话 ID 作为后续 shared facade 校验候选', () => {
+    expect(readContactProfileGroupConversationID({ groupConversationID: ' group-1 ' }))
+      .toBe('group-1');
+    expect(readContactProfileGroupConversationID({ groupConversationID: 1 })).toBe('');
+    expect(readContactProfileGroupConversationID(null)).toBe('');
+  });
+
+  it('群上下文校验期间和失败时 fail-closed，只有明确关闭互加才限制已校验成员', () => {
+    expect(getContactProfileGroupPresentation('friend', {
+      status: 'loading', displayName: '',
+    })).toEqual({ restricted: true, notice: '' });
+    expect(getContactProfileGroupPresentation('stranger', {
+      status: 'error', displayName: '',
+    })).toEqual({ restricted: true, notice: '群成员资料暂不可用' });
+    expect(getContactProfileGroupPresentation('friend', {
+      status: 'ready', displayName: '群昵称', allowMemberAddFriend: false,
+    })).toEqual({ restricted: true, notice: '已是群成员' });
+    expect(getContactProfileGroupPresentation('friend', {
+      status: 'ready', displayName: '群昵称', allowMemberAddFriend: true,
+    })).toEqual({ restricted: false, notice: '' });
+    expect(getContactProfileGroupPresentation('self', {
+      status: 'error', displayName: '',
+    })).toEqual({ restricted: false, notice: '' });
   });
 });

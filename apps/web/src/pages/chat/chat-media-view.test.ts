@@ -111,4 +111,25 @@ describe('chat media view', () => {
       }),
     ).toBeNull();
   });
+
+  it('自定义表情进入无下载语义的独立纯图片预览', () => {
+    expect(
+      getChatMediaPreview({
+        kind: 'emoji',
+        text: '[表情]',
+        mediaURL: 'https://media.example.com/emoji.webp',
+      }),
+    ).toEqual({
+      kind: 'emoji',
+      url: 'https://media.example.com/emoji.webp',
+      title: '自定义表情预览',
+    });
+    expect(
+      getChatMediaPreview({
+        kind: 'emoji',
+        text: '[表情]',
+        mediaURL: 'data:image/png;base64,unsafe',
+      }),
+    ).toBeNull();
+  });
 });

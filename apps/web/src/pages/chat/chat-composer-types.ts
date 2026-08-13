@@ -10,6 +10,12 @@ import type {
 import type { ChatAlbumSelectionItem } from './chat-attachment-selection.js';
 import type { ChatVoiceRecordingStatus } from './useChatVoiceRecorder.js';
 
+/** 聊天页请求 Composer 插入一次稳定群成员提及。 */
+export interface ChatComposerMentionRequest {
+  readonly id: number;
+  readonly member: WebIMGroupMember;
+}
+
 /** RN composer 对外只暴露页面编排所需的文档、媒体与提及 actions。 */
 export interface ChatComposerProps {
   readonly sending: boolean;
@@ -23,6 +29,7 @@ export interface ChatComposerProps {
   readonly mentionMembers: readonly WebIMGroupMember[];
   readonly canMentionAll: boolean;
   readonly currentUserID: string;
+  readonly mentionRequest: ChatComposerMentionRequest | null;
   readonly editingMessage: Message | null;
   readonly onCancelEdit: () => void;
   readonly onEditText: (

@@ -2,6 +2,7 @@ import type { Message, WebIMGroupMember } from '@im28/im-sdk/web';
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildChatGroupMemberProfileLocation,
   getChatGroupSenderView,
   indexChatGroupMembers,
   resolveChatMentionDisplayText,
@@ -41,6 +42,19 @@ function createMessage(overrides: Partial<Message> = {}): Message {
 }
 
 describe('chat group message view', () => {
+  it('群消息头像只携带稳定会话和发送人身份进入资料 route', () => {
+    expect(buildChatGroupMemberProfileLocation(' conversation/1 ', ' user/2 '))
+      .toEqual({
+        pathname: '/contacts/users/user%2F2',
+        state: {
+          backHref: '/conversations/conversation%2F1',
+          groupConversationID: 'conversation/1',
+        },
+      });
+    expect(buildChatGroupMemberProfileLocation('', 'user-2')).toBeNull();
+    expect(buildChatGroupMemberProfileLocation('conversation-1', ' ')).toBeNull();
+  });
+
   it('发送人直接消费 SDK 已解析昵称并保留头像与角色', () => {
     /** membersByID 模拟当前群成员 cache。 */
     const membersByID = indexChatGroupMembers([createMember()]);

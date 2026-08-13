@@ -6,6 +6,41 @@ import type {
 /** 联系人资料页主操作。 */
 export type ContactProfilePrimaryAction = 'message' | 'add-friend' | null;
 
+/** 联系人资料导航栏中心状态。 */
+export type ContactProfileNavbarState =
+  | { readonly kind: 'blacklist' }
+  | { readonly kind: 'presence'; readonly online: boolean }
+  | { readonly kind: 'none' };
+
+/** 群成员资料上下文的异步校验状态。 */
+export type ContactProfileGroupContextStatus = 'absent' | 'loading' | 'ready' | 'error';
+
+/** 群成员资料页只消费已校验的群展示事实。 */
+export interface ContactProfileGroupContextView {
+  readonly status: ContactProfileGroupContextStatus;
+  readonly displayName: string;
+  readonly allowMemberAddFriend?: boolean;
+}
+
+/** 群成员资料限制投影同时控制动作和可见说明。 */
+export interface ContactProfileGroupPresentation {
+  readonly restricted: boolean;
+  readonly notice: string;
+}
+
+/** 对齐 RN 黑名单优先、好友 presence 次之的导航栏投影。 */
+export function getContactProfileNavbarState(
+  relationship: WebIMPeerProfileRelationship | null,
+  blockedByMe: boolean,
+  peerOnline: boolean | null,
+): ContactProfileNavbarState {
+  if (blockedByMe) return { kind: 'blacklist' };
+  if (relationship === 'friend' && peerOnline !== null) {
+    return { kind: 'presence', online: peerOnline };
+  }
+  return { kind: 'none' };
+}
+
 /** 按关系状态选择唯一可用主操作。 */
 export function getContactProfilePrimaryAction(
   relationship: WebIMPeerProfileRelationship,
@@ -13,6 +48,26 @@ export function getContactProfilePrimaryAction(
   if (relationship === 'friend') return 'message';
   if (relationship === 'stranger') return 'add-friend';
   return null;
+}
+
+/** 校验完成前 fail-closed，避免群限制读取期间短暂暴露关系动作。 */
+export function getContactProfileGroupPresentation(
+  relationship: WebIMPeerProfileRelationship,
+  context: ContactProfileGroupContextView,
+): ContactProfileGroupPresentation {
+  if (relationship === 'self' || context.status === 'absent') {
+    return { restricted: false, notice: '' };
+  }
+  if (context.status === 'loading') {
+    return { restricted: true, notice: '' };
+  }
+  if (context.status === 'error') {
+    return { restricted: true, notice: '群成员资料暂不可用' };
+  }
+  if (context.allowMemberAddFriend === false) {
+    return { restricted: true, notice: '已是群成员' };
+  }
+  return { restricted: false, notice: '' };
 }
 
 /** 将 Gateway 性别值转换为 RN 可见标签。 */
@@ -62,7 +117,21 @@ export function resolveContactProfileBackHref(state: unknown): string {
   if (/^\/conversations\/[^/]+\/settings\/members$/.test(normalizedHref)) {
     return normalizedHref;
   }
+  if (/^\/conversations\/[^/]+\/settings$/.test(normalizedHref)) {
+    return normalizedHref;
+  }
+  if (/^\/conversations\/[^/]+$/.test(normalizedHref)) {
+    return normalizedHref;
+  }
   if (normalizedHref === '/scan') return normalizedHref;
   if (normalizedHref.startsWith('/contacts')) return normalizedHref;
   return '/contacts';
+}
+
+/** 只读取群成员入口提供的稳定会话身份候选。 */
+export function readContactProfileGroupConversationID(state: unknown): string {
+  if (!state || typeof state !== 'object') return '';
+  /** value 只作为后续 shared facade 校验候选，不直接授予权限。 */
+  const value = Reflect.get(state, 'groupConversationID');
+  return typeof value === 'string' ? value.trim() : '';
 }

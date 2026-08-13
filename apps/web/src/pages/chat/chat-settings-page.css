@@ -216,6 +216,33 @@
   gap: 6px;
 }
 
+.rn-chat-settings-member-avatar {
+  position: relative;
+  display: block;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+}
+
+.rn-chat-settings-member-online-border {
+  position: absolute;
+  right: -2px;
+  bottom: -1px;
+  display: grid;
+  width: 14px;
+  height: 14px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--im-bg-card);
+}
+
+.rn-chat-settings-member-online-border > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--im-status-success);
+}
+
 .rn-chat-settings-member-action-icon {
   display: grid;
   width: 40px;

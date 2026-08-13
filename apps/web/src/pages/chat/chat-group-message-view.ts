@@ -12,6 +12,36 @@ export interface ChatGroupSenderView {
   readonly roleLabel: '群主' | '管理员' | '';
 }
 
+/** 群消息头像进入成员资料页所需的稳定 SPA 位置。 */
+export interface ChatGroupMemberProfileLocation {
+  readonly pathname: string;
+  readonly state: {
+    readonly backHref: string;
+    readonly groupConversationID: string;
+  };
+}
+
+/** 只用真实会话与发送人身份构造群成员资料入口。 */
+export function buildChatGroupMemberProfileLocation(
+  conversationID: string,
+  userID: string,
+): ChatGroupMemberProfileLocation | null {
+  /** normalizedConversationID 拒绝空会话候选。 */
+  const normalizedConversationID = conversationID.trim();
+  /** normalizedUserID 拒绝无发送人身份的历史消息。 */
+  const normalizedUserID = userID.trim();
+  if (!normalizedConversationID || !normalizedUserID) return null;
+  /** backHref 保持返回当前聊天详情页，不携带消息或权限事实。 */
+  const backHref = `/conversations/${encodeURIComponent(normalizedConversationID)}`;
+  return {
+    pathname: `/contacts/users/${encodeURIComponent(normalizedUserID)}`,
+    state: {
+      backHref,
+      groupConversationID: normalizedConversationID,
+    },
+  };
+}
+
 /** 将群成员列表建立为稳定用户身份索引。 */
 export function indexChatGroupMembers(
   members: readonly WebIMGroupMember[],

@@ -114,6 +114,27 @@
   gap: 14px;
 }
 
+.rn-chat-audio-message-row {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.rn-chat-audio-message-row > .rn-chat-audio-action {
+  width: 100%;
+}
+
+.rn-chat-audio-unread-dot {
+  position: absolute;
+  top: 50%;
+  right: -20px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--im-status-danger);
+  transform: translateY(-50%);
+}
+
 .rn-chat-audio-content .rn-asset-icon {
   width: 22px;
   height: 22px;
@@ -229,7 +250,50 @@
 
 .rn-chat-emoji-content {
   display: block;
-  width: 96px;
-  height: 96px;
+  max-width: 180px;
   object-fit: contain;
+}
+
+.rn-chat-custom-emoji-action {
+  position: relative;
+}
+
+.rn-chat-custom-emoji-action.is-probing {
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.rn-chat-custom-emoji-action.is-probing .rn-chat-emoji-content {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+}
+
+.rn-chat-custom-emoji-load-error {
+  display: none;
+  width: 96px;
+  height: 72px;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--im-text-muted);
+  background: var(--im-bg-input);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.rn-chat-custom-emoji-action.is-load-error {
+  width: auto;
+  height: auto;
+  overflow: visible;
+  opacity: 1;
+}
+
+.rn-chat-custom-emoji-action.is-load-error .rn-chat-emoji-content {
+  display: none;
+}
+
+.rn-chat-custom-emoji-action.is-load-error .rn-chat-custom-emoji-load-error {
+  display: grid;
 }

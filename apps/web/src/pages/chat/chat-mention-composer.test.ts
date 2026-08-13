@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  appendChatMention,
   buildChatMentionPickerItems,
   collectVisibleChatMentions,
   getActiveChatMentionQuery,
@@ -9,6 +10,28 @@ import {
 
 // 群聊提及 helper 对齐 RN 的查询、候选和可见身份规则。
 describe('chat mention composer', () => {
+  it('头像长按追加成员并替换草稿末尾未完成查询', () => {
+    /** item 模拟当前群成员的稳定提及身份。 */
+    const item = {
+      key: 'user:u2',
+      label: '用户B',
+      description: 'u2',
+      avatarURL: '',
+      mention: { key: 'user:u2', type: 'user' as const, userID: 'u2', nickname: '用户B' },
+    };
+    /** appended 是头像长按后的可见草稿与光标。 */
+    const appended = appendChatMention({ text: '请看', entities: [] }, item);
+    expect(appended)
+      .toMatchObject({ document: { text: '请看 @用户B ' }, cursor: 8 });
+    expect(appendChatMention({ text: '请看 @用', entities: [] }, item))
+      .toMatchObject({ document: { text: '请看 @用户B ' }, cursor: 8 });
+    expect(collectVisibleChatMentions(
+      appended.document.text,
+      [item.mention],
+      false,
+    )).toEqual([{ type: 'user', userID: 'u2', nickname: '用户B' }]);
+  });
+
   it('只识别光标前最后一个无空白 @ 查询', () => {
     expect(getActiveChatMentionQuery('你好 @张', 5)).toEqual({ start: 3, end: 5, query: '张' });
     expect(getActiveChatMentionQuery('你好 @张 三', 7)).toBeNull();

@@ -8,14 +8,9 @@ import {
   type ReactNode,
 } from 'react';
 
-import heartIconURL from '../../assets/rn/assets/icons/imm28/heart.dynamic.svg';
-import editIconURL from '../../assets/rn/assets/icons/imm28/edit.dynamic.svg';
-import copyIconURL from '../../assets/rn/assets/icons/imm28/copy.regular.svg';
-import quoteIconURL from '../../assets/rn/assets/icons/imm28/quote.dynamic.svg';
-import multiSelectIconURL from '../../assets/rn/assets/icons/imm28/check-circle.regular.svg';
-import forwardIconURL from '../../assets/rn/assets/icons/imm28/share.dynamic.svg';
-import trashIconURL from '../../assets/rn/assets/icons/imm28/trash.dynamic.svg';
-import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import type { ChatMessageActionAnchor } from './chat-message-action-layout.js';
+import { captureChatActionAnchor } from './ChatActionModalSurface.js';
+import { ChatMessageActionModal } from './ChatMessageActionModal.js';
 import './chat-custom-emoji-message-action.css';
 
 /** 普通消息动作统一承载引用及 type115 收藏入口。 */
@@ -51,12 +46,18 @@ export function ChatMessageAction({
   onBeginMultiSelect,
   onDelete,
 }: ChatMessageActionProps) {
-  // rootRef 用于识别菜单外 pointer 事件。
+  // rootRef 用于冻结长按消息在视口内的真实位置。
   const rootRef = useRef<HTMLSpanElement>(null);
   // holdTimerRef 保存唯一 500ms 长按计时器。
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // pointerStartRef 用于滚动时按 RN 8px 门槛取消长按。
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  // longPressedRef 阻止长按松手后触发气泡原动作。
+  const longPressedRef = useRef(false);
   // open 只控制菜单可见性，不隐式触发 mutation。
   const [open, setOpen] = useState(false);
+  // anchor 冻结长按瞬间的消息矩形和收发方向。
+  const [anchor, setAnchor] = useState<ChatMessageActionAnchor | null>(null);
   // copying 锁定同一消息的重复 clipboard 写入。
   const [copying, setCopying] = useState(false);
   // adding 锁定重复收藏请求。
@@ -64,40 +65,64 @@ export function ChatMessageAction({
   // added 只在 shared mutation 成功后成立。
   const [added, setAdded] = useState(false);
 
-  useEffect(() => {
-    /** 点击动作容器外时关闭菜单。 */
-    function closeFromOutside(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    }
-    document.addEventListener('pointerdown', closeFromOutside);
-    return () => {
-      clearHoldTimer(holdTimerRef);
-      document.removeEventListener('pointerdown', closeFromOutside);
-    };
-  }, []);
+  useEffect(() => () => clearHoldTimer(holdTimerRef), []);
+
+  /** 冻结消息位置并打开 RN 全屏动作层。 */
+  function openActionModal(): void {
+    /** root 是当前被操作消息的稳定 DOM 根。 */
+    const root = rootRef.current;
+    if (!root) return;
+    setAnchor(captureChatActionAnchor(root));
+    setOpen(true);
+  }
+
+  /** 关闭 modal 并清理长按手势状态。 */
+  function closeActionModal(): void {
+    setOpen(false);
+    longPressedRef.current = false;
+    pointerStartRef.current = null;
+  }
 
   /** 启动 RN 对应的长按门槛。 */
   function handlePointerDown(event: ReactPointerEvent<HTMLSpanElement>) {
     if (event.button !== 0) return;
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    longPressedRef.current = false;
     clearHoldTimer(holdTimerRef);
-    holdTimerRef.current = setTimeout(() => setOpen(true), 500);
+    holdTimerRef.current = setTimeout(() => {
+      longPressedRef.current = true;
+      openActionModal();
+    }, 500);
+  }
+
+  /** pointer 移动超过 RN 手势门槛时判定为列表滚动。 */
+  function handlePointerMove(event: ReactPointerEvent<HTMLSpanElement>): void {
+    /** start 是本次 pointer 序列的初始位置。 */
+    const start = pointerStartRef.current;
+    if (!start) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8) {
+      clearHoldTimer(holdTimerRef);
+      pointerStartRef.current = null;
+    }
   }
 
   /** 结束未达到门槛的长按。 */
   function handlePointerEnd() {
     clearHoldTimer(holdTimerRef);
+    pointerStartRef.current = null;
   }
 
   /** 右键只打开动作菜单，不执行动作。 */
   function handleContextMenu(event: ReactMouseEvent<HTMLSpanElement>) {
     event.preventDefault();
-    setOpen(true);
+    longPressedRef.current = true;
+    openActionModal();
   }
 
   /** 选择引用后关闭菜单并把消息交给页面 composer。 */
   function handleQuote() {
     if (quoteDisabled) return;
-    setOpen(false);
+    closeActionModal();
     onQuote();
   }
 
@@ -108,7 +133,7 @@ export function ChatMessageAction({
     try {
       // succeeded 阻止 clipboard 拒绝时制造成功状态。
       const succeeded = await onCopy();
-      if (succeeded) setOpen(false);
+      if (succeeded) closeActionModal();
     } finally {
       setCopying(false);
     }
@@ -123,7 +148,7 @@ export function ChatMessageAction({
       const succeeded = await onAddCustomEmoji(emojiID);
       if (succeeded) {
         setAdded(true);
-        setOpen(false);
+        closeActionModal();
       }
     } finally {
       setAdding(false);
@@ -133,27 +158,27 @@ export function ChatMessageAction({
   /** 选择单条转发后关闭菜单并进入 React Router 目标页。 */
   function handleForward() {
     if (forwardDisabled) return;
-    setOpen(false);
+    closeActionModal();
     onForward();
   }
 
   /** 选择编辑后关闭菜单并交给页面 composer。 */
   function handleEdit() {
     if (!editAllowed) return;
-    setOpen(false);
+    closeActionModal();
     onEdit();
   }
 
   /** 选择多选后关闭菜单并由聊天页持有选择身份。 */
   function handleBeginMultiSelect() {
     if (forwardDisabled) return;
-    setOpen(false);
+    closeActionModal();
     onBeginMultiSelect();
   }
 
   /** 选择删除后关闭动作菜单并交给页面确认层。 */
   function handleDelete() {
-    setOpen(false);
+    closeActionModal();
     onDelete();
   }
 
@@ -166,51 +191,47 @@ export function ChatMessageAction({
       aria-haspopup="menu"
       aria-expanded={open}
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
       onPointerUp={handlePointerEnd}
       onPointerCancel={handlePointerEnd}
       onPointerLeave={handlePointerEnd}
       onContextMenu={handleContextMenu}
+      onClickCapture={event => {
+        if (!event.currentTarget.contains(event.target as Node)) return;
+        if (!longPressedRef.current) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
       onKeyDown={event => {
-        if (event.key === 'Enter' || event.key === ' ') setOpen(true);
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openActionModal();
+        }
       }}
     >
       {children}
-      {open ? (
-        <span className="rn-chat-message-action-menu" role="menu" aria-label="消息操作">
-          <button type="button" role="menuitem" disabled={quoteDisabled} onClick={handleQuote}>
-            <RNAssetIcon assetURL={quoteIconURL} />
-            <span>引用</span>
-          </button>
-          <button type="button" role="menuitem" disabled={copying} onClick={() => void handleCopy()}>
-            <RNAssetIcon assetURL={copyIconURL} />
-            <span>{copying ? '复制中' : '复制'}</span>
-          </button>
-          {editAllowed ? (
-            <button type="button" role="menuitem" onClick={handleEdit}>
-              <RNAssetIcon assetURL={editIconURL} />
-              <span>编辑</span>
-            </button>
-          ) : null}
-          <button type="button" role="menuitem" disabled={forwardDisabled} onClick={handleBeginMultiSelect}>
-            <RNAssetIcon assetURL={multiSelectIconURL} />
-            <span>多选</span>
-          </button>
-          <button type="button" role="menuitem" disabled={forwardDisabled} onClick={handleForward}>
-            <RNAssetIcon assetURL={forwardIconURL} />
-            <span>转发</span>
-          </button>
-          {emojiID ? (
-            <button type="button" role="menuitem" disabled={addDisabled || adding || added} onClick={() => void handleAdd()}>
-              <RNAssetIcon assetURL={heartIconURL} />
-              <span>{added ? '已添加' : adding ? '添加中' : '添加到表情'}</span>
-            </button>
-          ) : null}
-          <button type="button" role="menuitem" onClick={handleDelete}>
-            <RNAssetIcon assetURL={trashIconURL} />
-            <span>删除</span>
-          </button>
-        </span>
-      ) : null}
+      <ChatMessageActionModal
+        open={open}
+        anchor={anchor}
+        quoteDisabled={quoteDisabled}
+        copying={copying}
+        editAllowed={editAllowed}
+        forwardDisabled={forwardDisabled}
+        emojiID={emojiID}
+        addDisabled={addDisabled}
+        adding={adding}
+        added={added}
+        onClose={closeActionModal}
+        onQuote={handleQuote}
+        onCopy={() => void handleCopy()}
+        onEdit={handleEdit}
+        onBeginMultiSelect={handleBeginMultiSelect}
+        onForward={handleForward}
+        onAdd={() => void handleAdd()}
+        onDelete={handleDelete}
+      >
+        {children}
+      </ChatMessageActionModal>
     </span>
   );
 }

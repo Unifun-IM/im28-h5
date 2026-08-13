@@ -1,7 +1,10 @@
 import type { Message, WebIMSync } from '@im28/im-sdk/web';
 import { describe, expect, it, vi } from 'vitest';
 
-import { readFocusedChatMessageWindow } from './chat-message-focus.js';
+import {
+  buildChatMessageFocusURL,
+  readFocusedChatMessageWindow,
+} from './chat-message-focus.js';
 
 /** 构造搜索定位所需的最小缓存消息。 */
 function createFocusedMessage(overrides: Partial<Message> = {}): Message {
@@ -20,6 +23,14 @@ function createFocusedMessage(overrides: Partial<Message> = {}): Message {
 
 // 搜索结果定位回归锁定当前账号读取、会话隔离和时间窗口。
 describe('chat message focus', () => {
+  it('builds a same-conversation SPA URL from stable identities', () => {
+    expect(buildChatMessageFocusURL('conversation/1', 'client 1')).toBe(
+      '/conversations/conversation%2F1?messageID=client%201',
+    );
+    expect(buildChatMessageFocusURL('', 'client-1')).toBeNull();
+    expect(buildChatMessageFocusURL('conversation-1', ' ')).toBeNull();
+  });
+
   it('按目标时间恢复同会话缓存窗口', async () => {
     /** target 是搜索结果对应的真实缓存消息。 */
     const target = createFocusedMessage();

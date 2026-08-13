@@ -22,12 +22,20 @@ export interface WebIMPullMessageHistoryOptions {
     readonly limit?: number;
     readonly desc?: boolean;
 }
+/** 单页历史拉取结果保留服务端分页事实与本次已持久化消息。 */
+export interface WebIMPullMessageHistoryResult {
+    readonly messages: readonly Message[];
+    readonly hasMore: boolean;
+    readonly nextSeq?: string;
+}
 /** 页面可消费的消息 cache、pull 与 send 能力。 */
 export interface WebIMMessageSync {
     getCachedHistory(options: MessageHistoryOptions): Promise<readonly Message[]>;
     searchCached(options: MessageSearchOptions): Promise<readonly Message[]>;
     getCachedByClientMsgIDs(clientMsgIDs: readonly string[]): Promise<readonly Message[]>;
+    getCachedByStableMsgIDs(messageIDs: readonly string[]): Promise<readonly Message[]>;
     pullHistory(options: WebIMPullMessageHistoryOptions): Promise<readonly Message[]>;
+    pullHistoryPage(options: WebIMPullMessageHistoryOptions): Promise<WebIMPullMessageHistoryResult>;
     sendText(options: WebIMSendTextMessageOptions): Promise<Message>;
     sendMention(options: WebIMSendMentionMessageOptions): Promise<Message>;
     sendQuote(options: WebIMSendQuoteMessageOptions): Promise<Message>;

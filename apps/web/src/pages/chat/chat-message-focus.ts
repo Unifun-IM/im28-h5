@@ -52,3 +52,17 @@ export function focusChatMessageRow(
   );
   return true;
 }
+
+/** 构造引用来源的当前会话 SPA 定位地址，不携带消息正文。 */
+export function buildChatMessageFocusURL(
+  conversationID: string,
+  clientMsgID: string,
+): string | null {
+  /** normalizedConversationID 限制定位继续停留在当前聊天。 */
+  const normalizedConversationID = conversationID.trim();
+  /** normalizedClientMsgID 只使用 SQLite canonical client identity。 */
+  const normalizedClientMsgID = clientMsgID.trim();
+  if (!normalizedConversationID || !normalizedClientMsgID) return null;
+  return `/conversations/${encodeURIComponent(normalizedConversationID)}` +
+    `?messageID=${encodeURIComponent(normalizedClientMsgID)}`;
+}

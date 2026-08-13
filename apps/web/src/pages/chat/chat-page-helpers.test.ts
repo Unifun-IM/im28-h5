@@ -12,9 +12,9 @@ describe('chat page history refresh', () => {
     const cachedMessage = { clientMsgID: 'concurrent-message' } as Message;
     // sync 使用最小可控 facade 验证编排，不模拟 Gateway 成功。
     const sync = {
-      async pullHistory() {
+      async pullHistoryPage() {
         calls.push('pull');
-        return [];
+        return { messages: [], hasMore: true, nextSeq: '9' };
       },
       async getCachedHistory() {
         calls.push('cache');
@@ -26,7 +26,11 @@ describe('chat page history refresh', () => {
       conversationID: 'conversation-1',
       fromSeq: '10',
       limit: 50,
-    })).resolves.toEqual([cachedMessage]);
+    })).resolves.toEqual({
+      messages: [cachedMessage],
+      hasMore: true,
+      nextCursor: '9',
+    });
     expect(calls).toEqual(['pull', 'cache']);
   });
 });

@@ -14,10 +14,19 @@ import {
 interface GroupMemberRowProps {
   readonly entry: Extract<GroupMemberListEntry, { readonly type: 'member' }>;
   readonly backHref: string;
+  readonly groupConversationID: string;
+  readonly online: boolean;
+  readonly showOnlineStatus: boolean;
 }
 
 /** 群成员行只投影共享成员 DTO 和资料路由。 */
-export function GroupMemberRow({ entry, backHref }: GroupMemberRowProps) {
+export function GroupMemberRow({
+  entry,
+  backHref,
+  groupConversationID,
+  online,
+  showOnlineStatus,
+}: GroupMemberRowProps) {
   // roleLabel 只展示 RN 已定义的群主和管理员标签。
   const roleLabel = getGroupMemberRoleLabel(entry.member.role);
   // avatarStyle 复用 RN 稳定 fallback 渐变。
@@ -27,7 +36,11 @@ export function GroupMemberRow({ entry, backHref }: GroupMemberRowProps) {
   // profileURL 只携带稳定用户 ID。
   const profileURL = `/contacts/users/${encodeURIComponent(entry.member.userID)}`;
   return (
-    <Link className="rn-group-member-row" to={profileURL} state={{ backHref }}>
+    <Link
+      className="rn-group-member-row"
+      to={profileURL}
+      state={{ backHref, groupConversationID }}
+    >
       <span className="rn-group-member-avatar" style={avatarStyle}>
         <span>{getRNAvatarInitial(entry.displayName, '群')}</span>
         {entry.member.avatarURL ? (
@@ -37,6 +50,11 @@ export function GroupMemberRow({ entry, backHref }: GroupMemberRowProps) {
             loading="lazy"
             onError={event => { event.currentTarget.hidden = true; }}
           />
+        ) : null}
+        {showOnlineStatus && online ? (
+          <span className="rn-group-member-online-border" aria-label="在线">
+            <span />
+          </span>
         ) : null}
       </span>
       <span className="rn-group-member-row-content">

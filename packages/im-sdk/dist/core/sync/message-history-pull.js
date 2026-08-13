@@ -3,6 +3,17 @@ import { isConversationMessageAfterClearBoundary } from './conversation-clear-st
 import { createWebIMSyncError } from './sync-context.js';
 /** 从 Gateway 拉取历史并持久化后返回当前本地窗口。 */
 export async function pullWebIMMessageHistory(context, options, gatewayClient) {
+    /** page 复用唯一 Gateway 请求和持久化实现。 */
+    await pullWebIMMessageHistoryPage(context, options, gatewayClient, false);
+    /** repository 保留旧 facade 的 newest-first 当前缓存窗口合同。 */
+    const repository = new MessageRepository(context.database);
+    return repository.getHistory({
+        conversationID: options.conversationID.trim(),
+        limit: clampHistoryLimit(options.limit),
+    });
+}
+/** 从 Gateway 拉取并持久化单页历史，同时保留服务端分页事实。 */
+export async function pullWebIMMessageHistoryPage(context, options, gatewayClient, validatePaginationCursor = true) {
     /** conversationID 是远端和本地分区共同主键。 */
     const conversationID = options.conversationID.trim();
     /** fromSeq 保留 uint64 string，禁止经过 JS number 截断。 */
@@ -33,12 +44,42 @@ export async function pullWebIMMessageHistory(context, options, gatewayClient) {
     for (const message of messages) {
         await repository.upsert(message);
     }
-    return repository.getHistory({ conversationID, limit });
+    /** hasMore 只接受 Gateway 明确声明，缺失时不猜测仍有远端历史。 */
+    const hasMore = response.has_more === true;
+    /** nextSeq 在仍有下一页时必须是有效且前进的 uint64 游标。 */
+    const nextSeq = normalizeHistoryCursor(response.next_seq);
+    if (validatePaginationCursor && hasMore && (!nextSeq || nextSeq === fromSeq)) {
+        throw createWebIMSyncError('INVALID_HISTORY_NEXT_CURSOR', 'Message history returned an invalid next cursor.');
+    }
+    return {
+        messages,
+        hasMore,
+        ...(hasMore && nextSeq && nextSeq !== fromSeq ? { nextSeq } : {}),
+    };
 }
 /** 将 history window 限制在 Gateway 可控范围。 */
 function clampHistoryLimit(value) {
     if (!Number.isFinite(value))
         return 30;
     return Math.min(100, Math.max(1, Math.trunc(value ?? 30)));
+}
+/** 将 Gateway 历史游标规范为无前导零的 uint64 十进制字符串。 */
+function normalizeHistoryCursor(value) {
+    /** candidate 只接受协议声明的字符串或安全非负整数。 */
+    const candidate = typeof value === 'string'
+        ? value.trim()
+        : Number.isSafeInteger(value) && Number(value) >= 0
+            ? String(value)
+            : '';
+    if (!/^\d+$/.test(candidate))
+        return '';
+    try {
+        /** cursor 用 BigInt 校验 uint64 上界，避免 JavaScript number 截断。 */
+        const cursor = BigInt(candidate);
+        return cursor <= 18446744073709551615n ? cursor.toString() : '';
+    }
+    catch {
+        return '';
+    }
 }
 //# sourceMappingURL=message-history-pull.js.map

@@ -1,7 +1,7 @@
 import type { ChatMessageView } from './chat-message-view.js';
 
-/** 聊天媒体预览覆盖图片、视频和文件三类真实 payload。 */
-export type ChatMediaPreviewKind = 'image' | 'video' | 'file';
+/** 聊天媒体预览覆盖图片、视频、文件和纯自定义表情四类真实 payload。 */
+export type ChatMediaPreviewKind = 'image' | 'video' | 'file' | 'emoji';
 
 /** 全屏媒体层消费的最小安全投影。 */
 export interface ChatMediaPreview {
@@ -72,7 +72,7 @@ export function getChatImageDisplayURL(
   return `${parsed.origin}${parsed.pathname}${parsed.search}${separator}x-oss-process=image/resize,w_${width}/format,jpg${parsed.hash}`;
 }
 
-/** 从图片或视频消息构造全屏预览动作，非法地址时 fail-closed。 */
+/** 从可交互媒体消息构造全屏预览动作，非法地址时 fail-closed。 */
 export function getChatMediaPreview(
   view: ChatMessageView,
 ): ChatMediaPreview | null {
@@ -108,6 +108,11 @@ export function getChatMediaPreview(
           ...(view.detail ? { detail: view.detail } : {}),
         }
       : null;
+  }
+  if (view.kind === 'emoji') {
+    /** url 使用 type115 消息持久化的原始资源快照。 */
+    const url = normalizeChatMediaURL(view.mediaURL);
+    return url ? { kind: 'emoji', url, title: '自定义表情预览' } : null;
   }
   return null;
 }

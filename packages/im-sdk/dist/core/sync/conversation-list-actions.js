@@ -28,10 +28,12 @@ export function createIMConversationListActionsSync(dependencies) {
             validateConversationActionState(response.state, targetID);
             /** confirmedReadSeq 只在服务端或缓存提供非空游标时进入实体。 */
             const confirmedReadSeq = response.state?.last_read_seq?.trim() || readSeq;
+            /** confirmedUnreadCount 优先采用服务端事实，部分游标无事实时保留原值。 */
+            const confirmedUnreadCount = resolveConversationUnreadCountAfterRead(existing.unreadCount, existing.lastMsgSeq, confirmedReadSeq, response.state?.unread_count);
             /** next 只使用请求语义和服务端返回的稳定游标收敛本地状态。 */
             const next = {
                 ...existing,
-                unreadCount: 0,
+                unreadCount: confirmedUnreadCount,
                 manualUnread: false,
                 ...(confirmedReadSeq ? { lastReadSeq: confirmedReadSeq } : {}),
             };
@@ -81,6 +83,26 @@ export function createIMConversationListActionsSync(dependencies) {
             return next;
         }),
     };
+}
+/** 只在服务端确认或已读游标覆盖最后消息时清零本地未读数。 */
+function resolveConversationUnreadCountAfterRead(currentUnreadCount, lastMsgSeq, confirmedReadSeq, responseUnreadCount) {
+    if (responseUnreadCount !== undefined) {
+        /** numericCount 接受 Gateway uint64 文本并钳制到安全整数。 */
+        const numericCount = Number(responseUnreadCount);
+        if (Number.isFinite(numericCount) && numericCount >= 0) {
+            return Math.min(Number.MAX_SAFE_INTEGER, Math.floor(numericCount));
+        }
+    }
+    /** normalizedLastSeq 和 readSeq 都必须是合法十进制文本才可比较。 */
+    const normalizedLastSeq = lastMsgSeq?.trim();
+    const normalizedReadSeq = confirmedReadSeq?.trim();
+    if (normalizedLastSeq &&
+        normalizedReadSeq &&
+        /^\d+$/.test(normalizedLastSeq) &&
+        /^\d+$/.test(normalizedReadSeq) &&
+        BigInt(normalizedReadSeq) >= BigInt(normalizedLastSeq))
+        return 0;
+    return currentUnreadCount;
 }
 /** 归一化可选已读游标，拒绝负数、小数和非十进制输入。 */
 function normalizeConversationReadSeq(value) {

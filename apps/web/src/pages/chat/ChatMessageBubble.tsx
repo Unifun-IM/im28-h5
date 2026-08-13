@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import {
   canEditWebIMTextMessage,
   canForwardWebIMMessage,
@@ -14,12 +13,10 @@ import outgoingTailURL from '../../assets/rn/assets/icons/chat/bubbletail-right.
 import checkIconURL from '../../assets/rn/assets/icons/imm28/check-circle.solid.svg';
 import circleIconURL from '../../assets/rn/assets/icons/imm28/circle.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
-import {
-  getRNAvatarGradient,
-  getRNAvatarInitial,
-} from '../../components/rn-avatar-view.js';
 import { ChatMessageContent } from './ChatMessageContent.js';
 import { ChatForwardOrigin } from './ChatForwardOrigin.js';
+import { ChatGroupSenderAvatar } from './ChatGroupSenderAvatar.js';
+import { ChatMessageShatterParticles } from './ChatMessageShatterParticles.js';
 import { ChatMessageAction } from './ChatMessageAction.js';
 import type { ChatMessageListEntry } from './chat-message-list-view.js';
 import type { ChatMessageView } from './chat-message-view.js';
@@ -36,6 +33,7 @@ import { getChatAudioBubbleWidth } from './chat-media-layout.js';
 interface ChatMessageBubbleProps {
   readonly entry: Extract<ChatMessageListEntry, { readonly kind: 'message' }>;
   readonly isGroup: boolean;
+  readonly conversationID: string;
   readonly membersByID: ReadonlyMap<string, WebIMGroupMember>;
   readonly customEmojiActionDisabled: boolean;
   readonly onAddCustomEmoji: (emojiID: string) => Promise<boolean>;
@@ -53,12 +51,16 @@ interface ChatMessageBubbleProps {
   readonly onBeginMultiSelect: (message: Message) => void;
   readonly onDeleteMessage: (message: Message) => void;
   readonly onEditMessage: (message: Message) => void;
+  readonly onMentionGroupMember: (member: WebIMGroupMember) => void;
+  readonly exiting: boolean;
+  readonly onExitComplete: (clientMsgID: string) => void;
 }
 
 /** 按 RN direction/group/status 结构呈现单条消息。 */
 export function ChatMessageBubble({
   entry,
   isGroup,
+  conversationID,
   membersByID,
   customEmojiActionDisabled,
   onAddCustomEmoji,
@@ -76,24 +78,37 @@ export function ChatMessageBubble({
   onBeginMultiSelect,
   onDeleteMessage,
   onEditMessage,
+  onMentionGroupMember,
+  exiting,
+  onExitComplete,
 }: ChatMessageBubbleProps) {
   // message 缩短模板内领域字段访问路径。
   const { message, view } = entry;
   if (view.kind === 'system') {
-    return <p className="rn-chat-system-message">{view.text}</p>;
+    return (
+      <p
+        className={`rn-chat-system-message${exiting ? ' is-shattering' : ''}`}
+        data-client-message-id={message.clientMsgID}
+        data-server-message-id={message.serverMsgID ?? ''}
+        onAnimationEnd={event => {
+          if (event.currentTarget === event.target) onExitComplete(message.clientMsgID);
+        }}
+      >
+        <span>{view.text}</span>
+        {exiting ? <ChatMessageShatterParticles /> : null}
+      </p>
+    );
   }
   // mine 决定气泡方向、主题色与发送状态位置。
   const mine = message.direction === 'outgoing';
   // rowClassName 固定 RN 四态连续圆角类。
   const rowClassName = `rn-chat-message-row is-${message.direction} group-${entry.groupPosition}`;
-  // avatarStyle 为群成员 senderID 生成 RN fallback 颜色。
-  const avatarStyle = {
-    '--chat-sender-avatar-gradient': getRNAvatarGradient(message.senderID),
-  } as CSSProperties;
   // forwardAllowed 复用 shared 来源 guard 控制动作和多选按钮。
   const forwardAllowed = canForwardWebIMMessage(message);
   // senderView 复用 SDK 群成员名称、头像和角色投影。
   const senderView = getChatGroupSenderView(message, membersByID);
+  // senderMember 是允许长按提及的当前群真实成员。
+  const senderMember = membersByID.get(senderView.userID);
   // senderInsideBubble 对齐 RN：普通媒体名称在上方，其余名称属于气泡内容。
   const senderInsideBubble = !mine && isGroup && entry.showSenderName &&
     (Boolean(message.forwardOrigin) || (view.kind !== 'image' && view.kind !== 'video'));
@@ -140,7 +155,7 @@ export function ChatMessageBubble({
       ) : null}
       <ChatMessageContent
         view={displayView}
-        messageID={message.clientMsgID}
+        message={message}
         mine={mine}
         quoteSource={quoteSource}
         onOpenQuotedMessage={onOpenQuotedMessage}
@@ -155,9 +170,12 @@ export function ChatMessageBubble({
 
   return (
     <article
-      className={`${rowClassName}${multiSelecting ? ' is-multi-selecting' : ''}`}
+      className={`${rowClassName}${multiSelecting ? ' is-multi-selecting' : ''}${exiting ? ' is-shattering' : ''}`}
       data-client-message-id={message.clientMsgID}
       data-server-message-id={message.serverMsgID ?? ''}
+      onAnimationEnd={event => {
+        if (event.currentTarget === event.target) onExitComplete(message.clientMsgID);
+      }}
     >
       {multiSelecting ? (
         <button
@@ -172,16 +190,12 @@ export function ChatMessageBubble({
       ) : null}
       {!mine && isGroup ? (
         entry.showSenderAvatar ? (
-          <span className="rn-chat-sender-avatar" style={avatarStyle}>
-            {getRNAvatarInitial(senderView.displayName)}
-            {senderView.avatarURL ? (
-              <img
-                src={senderView.avatarURL}
-                alt=""
-                onError={event => { event.currentTarget.hidden = true; }}
-              />
-            ) : null}
-          </span>
+          <ChatGroupSenderAvatar
+            conversationID={conversationID}
+            senderView={senderView}
+            {...(senderMember ? { senderMember } : {})}
+            onMention={onMentionGroupMember}
+          />
         ) : (
           <span className="rn-chat-sender-avatar-placeholder" />
         )
@@ -219,6 +233,7 @@ export function ChatMessageBubble({
           )}
         </span>
       </span>
+      {exiting ? <ChatMessageShatterParticles /> : null}
     </article>
   );
 }

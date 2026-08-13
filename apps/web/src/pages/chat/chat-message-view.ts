@@ -149,11 +149,17 @@ export function getChatMessageView(
   if (message.contentType === 115) {
     // emoji URL 是 Gateway 消息快照，可直接作为只读内容展示。
     const emoji = asRecord(body.emoji);
+    /** width 保留新消息可能携带的真实表情宽度。 */
+    const width = readPositiveNumber(emoji.width);
+    /** height 保留新消息可能携带的真实表情高度。 */
+    const height = readPositiveNumber(emoji.height);
     return {
       kind: 'emoji',
       text: '[表情]',
       emojiID: readString(emoji.emoji_id),
       mediaURL: readString(emoji.url),
+      ...(width === undefined ? {} : { width }),
+      ...(height === undefined ? {} : { height }),
     };
   }
   if (message.contentType === 114) {

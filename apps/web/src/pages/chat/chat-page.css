@@ -205,6 +205,14 @@
   -webkit-line-clamp: 2;
 }
 
+.rn-chat-message-stage {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+}
+
 .rn-chat-message-list {
   position: relative;
   min-height: 0;
@@ -215,6 +223,76 @@
   background: var(--im-chat-content-background);
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+}
+
+.rn-chat-history-loading {
+  display: block;
+  margin: 0 auto 8px;
+  color: var(--im-text-muted);
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 18px;
+  text-align: center;
+}
+
+.rn-chat-sticky-date {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 2;
+  max-width: calc(100% - 32px);
+  padding: 4px 10px;
+  overflow: hidden;
+  border-radius: 4px;
+  color: var(--im-text-inverse);
+  background: color-mix(in srgb, var(--im-text-low) 88%, transparent);
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.rn-chat-unread-divider {
+  display: flex;
+  margin: 8px 0 12px;
+  align-items: center;
+  gap: 10px;
+}
+
+.rn-chat-unread-divider span {
+  height: var(--im-hairline-width);
+  flex: 1;
+  background: var(--im-border-subtle);
+}
+
+.rn-chat-unread-divider strong {
+  color: var(--im-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 16px;
+}
+
+.rn-chat-unread-indicator {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  min-width: 76px;
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  color: var(--im-brand-primary);
+  background: var(--im-bg-card);
+  box-shadow: 0 4px 16px rgba(31, 38, 46, 0.14);
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0;
+  cursor: pointer;
 }
 
 .rn-chat-date-separator {
@@ -279,6 +357,10 @@
   font-weight: 600;
   letter-spacing: 0;
   line-height: 12px;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .rn-chat-sender-avatar img {

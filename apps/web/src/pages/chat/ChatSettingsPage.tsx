@@ -23,6 +23,8 @@ import {
   buildChatSettingsMemberViews,
   buildChatSettingsView,
 } from './chat-settings-view.js';
+import { shouldShowGroupMemberPresence } from './group-members-view.js';
+import { useGroupMemberPresence } from './useGroupMemberPresence.js';
 import { ChatConversationSettingsControls } from './ChatConversationSettingsControls.js';
 import { ChatClearHistorySheet } from './ChatClearHistorySheet.js';
 import { ChatGroupAnnouncementSettingsCard } from './ChatGroupAnnouncementSettingsCard.js';
@@ -75,6 +77,19 @@ export function ChatSettingsPage() {
   const [lifecycleSubmitting, setLifecycleSubmitting] = useState(false);
   // lifecycleBlocked 在远端已成功但本地未收敛时阻止当前页面重放动作。
   const [lifecycleBlocked, setLifecycleBlocked] = useState(false);
+  // memberViews 只投影 shared facade 的设置页预览成员。
+  const memberViews = useMemo(() => buildChatSettingsMemberViews(members), [members]);
+  // memberUserIDs 只观察设置页实际渲染的首屏成员，和 RN 预览范围一致。
+  const memberUserIDs = useMemo(() => memberViews.map(member => member.userID), [memberViews]);
+  // showOnlineStatus 只接受 shared mode=normal 判定，large/unknown fail-closed。
+  const showOnlineStatus = shouldShowGroupMemberPresence(group);
+  // onlineByID 复用群成员页相同的 shared presence observation。
+  const onlineByID = useGroupMemberPresence({
+    runtime,
+    accountUserID: snapshot.userID,
+    userIDs: memberUserIDs,
+    visible: showOnlineStatus,
+  });
 
   useEffect(() => {
     if (!sync || !snapshot.userID || !conversationID) return;
@@ -193,8 +208,6 @@ export function ChatSettingsPage() {
   const chatURL = `/conversations/${encodeURIComponent(conversationID)}`;
   // view 仅在真实会话存在时生成，避免用路由 ID 伪造主体。
   const view = conversation ? buildChatSettingsView(conversation, group) : null;
-  // memberViews 只投影 shared facade 的首屏成员。
-  const memberViews = buildChatSettingsMemberViews(members);
 
   return (
     <main className="rn-chat-settings-page">
@@ -212,7 +225,12 @@ export function ChatSettingsPage() {
           {view ? (
             <>
               {view.isGroup ? (
-                <GroupSettingsCard view={view} members={memberViews} />
+                <GroupSettingsCard
+                  view={view}
+                  members={memberViews}
+                  onlineByID={onlineByID}
+                  showOnlineStatus={showOnlineStatus}
+                />
               ) : (
                 <SingleSettingsCard view={view} />
               )}
@@ -375,9 +393,13 @@ function SingleSettingsCard({ view }: { readonly view: ChatSettingsView }) {
 function GroupSettingsCard({
   view,
   members,
+  onlineByID,
+  showOnlineStatus,
 }: {
   readonly view: ChatSettingsView;
   readonly members: readonly ChatSettingsMemberView[];
+  readonly onlineByID: Readonly<Record<string, boolean>>;
+  readonly showOnlineStatus: boolean;
 }) {
   // visibleMemberCount 优先使用群事实，并在冷 cache 时回退已读成员数。
   const visibleMemberCount = view.memberCount || members.length;
@@ -409,8 +431,20 @@ function GroupSettingsCard({
         </Link>
         <div className="rn-chat-settings-member-grid">
           {members.map(member => (
-            <Link key={member.userID} to={`/contacts/users/${encodeURIComponent(member.userID)}`} aria-label={`查看${member.name}的资料`}>
-              <SettingsAvatar identity={member.userID} name={member.name} avatarURL={member.avatarURL} size={40} />
+            <Link
+              key={member.userID}
+              to={`/contacts/users/${encodeURIComponent(member.userID)}`}
+              state={{
+                backHref: `/conversations/${encodeURIComponent(view.conversationID)}/settings`,
+                groupConversationID: view.conversationID,
+              }}
+              aria-label={`查看${member.name}的资料`}
+            >
+              <SettingsMemberAvatar
+                member={member}
+                online={Boolean(onlineByID[member.userID])}
+                showOnlineStatus={showOnlineStatus}
+              />
               <span>{member.name}</span>
             </Link>
           ))}
@@ -430,6 +464,33 @@ function GroupSettingsCard({
       </div>
       <ChatSearchSettingsRow view={view} />
     </div>
+  );
+}
+
+/** 群设置预览头像在圆形裁剪层外投影 RN 在线状态点。 */
+function SettingsMemberAvatar({
+  member,
+  online,
+  showOnlineStatus,
+}: {
+  readonly member: ChatSettingsMemberView;
+  readonly online: boolean;
+  readonly showOnlineStatus: boolean;
+}) {
+  return (
+    <span className="rn-chat-settings-member-avatar">
+      <SettingsAvatar
+        identity={member.userID}
+        name={member.name}
+        avatarURL={member.avatarURL}
+        size={40}
+      />
+      {showOnlineStatus && online ? (
+        <span className="rn-chat-settings-member-online-border" aria-label="在线">
+          <span />
+        </span>
+      ) : null}
+    </span>
   );
 }
 

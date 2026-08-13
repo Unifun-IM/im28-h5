@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { Message } from '@im28/im-sdk/web';
+import { getIMAudioMessageIdentity, type Message } from '@im28/im-sdk/web';
 
 import fileIconURL from '../../assets/rn/assets/icons/imm28/doc.svg';
 import playIconURL from '../../assets/rn/assets/icons/imm28/play.solid.svg';
@@ -9,6 +9,7 @@ import {
   getRNAvatarGradient,
   getRNAvatarInitial,
 } from '../../components/rn-avatar-view.js';
+import { ChatCustomEmojiMessageContent } from './ChatCustomEmojiMessageContent.js';
 import { useChatMediaInteraction } from './ChatMediaInteractionProvider.js';
 import type { ChatMessageView } from './chat-message-view.js';
 import type { ChatQuoteSourceView } from './chat-quote-view.js';
@@ -26,7 +27,7 @@ import './chat-message-content.css';
 /** 消息正文接收已收窄的展示模型和显式动作。 */
 interface ChatMessageContentProps {
   readonly view: ChatMessageView;
-  readonly messageID: string;
+  readonly message: Message;
   readonly mine: boolean;
   readonly quoteSource: ChatQuoteSourceView | null;
   readonly onOpenQuotedMessage: (message: Message) => void;
@@ -36,7 +37,7 @@ interface ChatMessageContentProps {
 /** 根据展示模型呈现文本、媒体、文件、名片和表情内容。 */
 export function ChatMessageContent({
   view,
-  messageID,
+  message,
   mine,
   quoteSource,
   onOpenQuotedMessage,
@@ -132,24 +133,31 @@ export function ChatMessageContent({
     // playable 标记当前语音是否具有真实安全地址。
     const playable = Boolean(normalizeChatMediaURL(view.mediaURL));
     // active 标记唯一正在处理本条消息的音频实例。
-    const active = media.activeAudioMessageID === messageID;
+    const active = media.activeAudioMessageID === getIMAudioMessageIdentity(message);
+    // played 复用 Provider 的账号会话偏好与 RN localEx 兼容判断。
+    const played = media.isAudioPlayed(message);
     // audioLabel 向辅助技术同步真实加载、播放和失败状态。
     const audioLabel = getAudioActionLabel(playable, active, media.audioState);
     return (
-      <button
+      <span className="rn-chat-audio-message-row">
+        <button
         className={`rn-chat-media-action rn-chat-audio-action${active && media.audioState === 'playing' ? ' is-playing' : ''}${active && media.audioState === 'error' ? ' is-error' : ''}`}
         type="button"
         aria-label={audioLabel}
         aria-pressed={active && media.audioState === 'playing'}
         disabled={!playable}
-        onClick={() => media.toggleAudio(messageID, view)}
+        onClick={() => media.toggleAudio(message, view)}
       >
         <span className="rn-chat-audio-content">
           <RNAssetIcon assetURL={speakIconURL} />
           <span className="rn-chat-audio-duration">{view.detail || '0:00'}</span>
           {active && media.audioState === 'error' ? <span className="rn-chat-audio-error">播放失败</span> : null}
         </span>
-      </button>
+        </button>
+        {!mine && !played ? (
+          <span className="rn-chat-audio-unread-dot" aria-label="未播放语音" />
+        ) : null}
+      </span>
     );
   }
   if (view.kind === 'file') {
@@ -172,9 +180,7 @@ export function ChatMessageContent({
     );
   }
   if (view.kind === 'card') return <ChatCardContent view={view} />;
-  if (view.kind === 'emoji' && view.mediaURL) {
-    return <img className="rn-chat-emoji-content" src={view.mediaURL} alt="表情" />;
-  }
+  if (view.kind === 'emoji') return <ChatCustomEmojiMessageContent view={view} />;
   if (view.kind === 'quote') {
     // sourceText 优先显示当前缓存来源，窗口外回退发送时快照。
     const sourceText = quoteSource?.text || view.detail || '引用消息';
@@ -185,9 +191,9 @@ export function ChatMessageContent({
         <button
           className={`rn-chat-quote${mine ? ' is-mine' : ''}`}
           type="button"
-          disabled={!quoteSource || quoteSource.deleted}
+          disabled={!quoteSource?.message || quoteSource.deleted}
           onClick={() => {
-            if (quoteSource && !quoteSource.deleted) {
+            if (quoteSource?.message && !quoteSource.deleted) {
               onOpenQuotedMessage(quoteSource.message);
             }
           }}

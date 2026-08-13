@@ -84,7 +84,7 @@ export interface GatewayGroup {
     /** 群公告版本；公告内容变化时递增。 */
     readonly announcement_version?: string;
     readonly owner_user_id?: string;
-    readonly mode?: 'normal' | 'large' | string;
+    readonly mode?: 1 | 2 | 'normal' | 'large' | string;
     readonly status?: 0 | 1 | 2 | 3 | 'active' | 'disabled' | 'banned' | 'dismissed' | 'muted' | string;
     readonly member_count?: number;
     readonly mute_all?: boolean;

@@ -198,6 +198,25 @@
   object-fit: cover;
 }
 
+.rn-group-member-online-border {
+  position: absolute;
+  right: -2px;
+  bottom: -1px;
+  display: grid;
+  width: 14px;
+  height: 14px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--im-bg-app);
+}
+
+.rn-group-member-online-border > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--im-status-success);
+}
+
 .rn-group-member-row-content {
   display: flex;
   min-width: 0;

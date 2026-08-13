@@ -1,4 +1,4 @@
-import { useMemo, useState, type RefObject } from 'react';
+import { useCallback, useMemo, useState, type RefObject } from 'react';
 import type {
   MessageMention,
   PresetEmojiDocument,
@@ -6,6 +6,7 @@ import type {
 } from '@im28/im-sdk/web';
 
 import {
+  appendChatMention,
   buildChatMentionPickerItems,
   collectVisibleChatMentions,
   getActiveChatMentionQuery,
@@ -29,6 +30,7 @@ interface UseChatComposerMentionsOptions {
 interface ChatComposerMentions {
   readonly items: readonly ChatMentionPickerItem[];
   readonly select: (item: ChatMentionPickerItem) => void;
+  readonly append: (item: ChatMentionPickerItem) => void;
   readonly collect: (text: string) => readonly MessageMention[];
   readonly clear: () => void;
 }
@@ -67,6 +69,23 @@ export function useChatComposerMentions(options: UseChatComposerMentionsOptions)
     });
   }
 
+  /** 从消息头像追加成员提及并恢复输入焦点。 */
+  const append = useCallback((item: ChatMentionPickerItem): void => {
+    /** result 按 RN 规则追加或替换草稿末尾查询。 */
+    const result = appendChatMention(options.document, item);
+    options.onChangeDocument(result.document);
+    setSelections(current => [
+      ...current.filter(selection => selection.key !== item.mention.key),
+      item.mention,
+    ]);
+    requestAnimationFrame(() => {
+      /** textarea 可能已随路由卸载。 */
+      const textarea = options.textareaRef.current;
+      textarea?.setSelectionRange(result.cursor, result.cursor);
+      textarea?.focus();
+    });
+  }, [options.document, options.onChangeDocument, options.textareaRef]);
+
   /** 提交时过滤正文已删除的目标。 */
   function collect(text: string): readonly MessageMention[] {
     return collectVisibleChatMentions(text, selections, options.canMentionAll);
@@ -77,5 +96,5 @@ export function useChatComposerMentions(options: UseChatComposerMentionsOptions)
     setSelections([]);
   }
 
-  return { items, select, collect, clear };
+  return { items, select, append, collect, clear };
 }

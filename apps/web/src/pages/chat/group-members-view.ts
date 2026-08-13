@@ -1,6 +1,8 @@
 import {
+  isIMNormalGroupMode,
   resolveIMGroupMemberDisplayName,
   type WebIMGroupMember,
+  type WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
 
 import {
@@ -89,4 +91,11 @@ export function getGroupMemberRoleLabel(role: WebIMGroupMember['role']): string 
   if (role === 'owner') return '群主';
   if (role === 'admin') return '管理员';
   return '';
+}
+
+/** 严格复用 shared 群模式判定控制成员在线绿点。 */
+export function shouldShowGroupMemberPresence(
+  group: Pick<WebIMJoinedGroup, 'mode'> | null,
+): boolean {
+  return isIMNormalGroupMode(group?.mode);
 }

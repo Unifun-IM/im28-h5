@@ -1,4 +1,4 @@
-import type { Message } from '@im28/im-sdk/web';
+import type { IMInitialUnreadNavigation, Message } from '@im28/im-sdk/web';
 
 import {
   getChatMessageView,
@@ -11,6 +11,7 @@ export type ChatBubbleGroupPosition = 'single' | 'first' | 'middle' | 'last';
 /** 消息列表插入日期行后的稳定条目。 */
 export type ChatMessageListEntry =
   | { readonly kind: 'date'; readonly key: string; readonly label: string }
+  | { readonly kind: 'unread'; readonly key: string }
   | {
       readonly kind: 'message';
       readonly key: string;
@@ -26,6 +27,7 @@ export function buildChatMessageListEntries(
   messages: readonly Message[],
   isGroup: boolean,
   currentUserID = '',
+  unreadNavigation?: IMInitialUnreadNavigation,
 ): readonly ChatMessageListEntry[] {
   // ordered 保持页面从旧到新的自然文档流。
   const ordered = [...messages].reverse();
@@ -51,10 +53,22 @@ export function buildChatMessageListEntries(
         label: formatMessageDate(message.sendTime),
       });
     }
+    /** startsUnreadBoundary 使分割线同时切断上下连续气泡关系。 */
+    const startsUnreadBoundary = matchesMessageIdentity(
+      message,
+      unreadNavigation?.firstUnreadMessageID,
+    );
+    if (startsUnreadBoundary) {
+      entries.push({ kind: 'unread', key: `unread-${message.clientMsgID}` });
+    }
     // samePrevious 表示当前气泡与视觉上方连续。
-    const samePrevious = isSameSenderMessage(previous, message, isGroup);
+    const samePrevious = !startsUnreadBoundary &&
+      isSameSenderMessage(previous, message, isGroup);
     // sameNext 表示当前气泡与视觉下方连续。
-    const sameNext = isSameSenderMessage(next, message, isGroup);
+    const sameNext = !matchesMessageIdentity(
+      next,
+      unreadNavigation?.firstUnreadMessageID,
+    ) && isSameSenderMessage(next, message, isGroup);
     entries.push({
       kind: 'message',
       key: message.clientMsgID,
@@ -68,6 +82,20 @@ export function buildChatMessageListEntries(
     });
   });
   return entries;
+}
+
+/** 同时兼容消息客户端和服务端稳定身份。 */
+function matchesMessageIdentity(
+  message: Message | undefined,
+  identity: string | undefined,
+): boolean {
+  /** target 拒绝空身份，防止意外命中空 client ID。 */
+  const target = identity?.trim() ?? '';
+  return Boolean(
+    message &&
+    target &&
+    (message.clientMsgID.trim() === target || message.serverMsgID?.trim() === target),
+  );
 }
 
 /** 判断相邻消息是否属于 RN 同发送者连续气泡。 */

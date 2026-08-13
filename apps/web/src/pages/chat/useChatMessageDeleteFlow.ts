@@ -24,6 +24,7 @@ interface UseChatMessageDeleteFlowOptions {
   ) => Promise<void>;
   readonly onError: (message: string | null) => void;
   readonly onNotice: (message: string | null) => void;
+  readonly onDeleteSucceeded: (deletedClientMsgIDs: readonly string[]) => void;
 }
 
 /** 管理 RN 删除确认层、群权限读取和 shared facade 提交。 */
@@ -34,6 +35,7 @@ export function useChatMessageDeleteFlow({
   runMessageOperation,
   onError,
   onNotice,
+  onDeleteSucceeded,
 }: UseChatMessageDeleteFlowOptions) {
   // pendingMessages 只保存当前页面真实缓存实体，不跨路由持久化。
   const [pendingMessages, setPendingMessages] = useState<readonly Message[]>([]);
@@ -111,6 +113,9 @@ export function useChatMessageDeleteFlow({
         clientMsgIDs: pendingMessages.map(message => message.clientMsgID),
         scope,
       });
+      if (result.deletedClientMsgIDs.length) {
+        onDeleteSucceeded(result.deletedClientMsgIDs);
+      }
     });
     setConfirming(false);
     if (!result) return;

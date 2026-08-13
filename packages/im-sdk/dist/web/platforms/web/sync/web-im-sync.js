@@ -6,6 +6,7 @@ import { createWebIMGroupApplicationSync, } from '../../../sync/group-applicatio
 import { createWebIMJoinedGroupSync, } from '../../../sync/joined-group-sync.js';
 import { createIMGroupMentionSync, } from '../../../sync/group-mention.js';
 import { createWebIMPeerProfileSync, } from '../../../sync/peer-profile-sync.js';
+import { createIMUserPresenceSync, } from '../../../sync/user-presence.js';
 import { createWebIMConversationSync, } from '../../../sync/conversation-sync.js';
 import { canIMGroupMemberClearAllMessages } from '../../../sync/conversation-clear-sync.js';
 import { createWebIMMessageSync, } from '../../../sync/message-sync.js';
@@ -81,6 +82,13 @@ export function createWebIMSync(dependencies) {
         messages,
         messageBroadcast: createIMMessageBroadcastSync(sharedDependencies),
         peerProfile: createWebIMPeerProfileSync(sharedDependencies),
+        presence: createIMUserPresenceSync({
+            gatewayClient: dependencies.gatewayClient,
+            getCurrentUserID: dependencies.getCurrentUserID,
+            ...(dependencies.reportBackgroundError
+                ? { reportListenerError: dependencies.reportBackgroundError }
+                : {}),
+        }),
         profile: createWebIMProfileSync(dependencies),
         realtime: createWebIMRealtimeSync(sharedDependencies),
     };

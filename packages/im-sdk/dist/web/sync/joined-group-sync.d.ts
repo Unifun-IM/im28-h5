@@ -6,6 +6,7 @@ import type { IMMediaUploadInput, IMMediaUploadPort } from './message-media-send
 import type { WebIMMessageSendDependencies } from './message-send-state.js';
 import { type IMGroupAnnouncementReadStatus } from './group-announcement.js';
 import type { IMGroupManagementPermissions } from './group-management-permissions.js';
+import type { IMGroupMode } from './group-mode.js';
 /** 页面消费的当前用户群角色。 */
 export type WebIMJoinedGroupRole = 'owner' | 'admin' | 'member';
 /** 页面消费的群状态，未知服务端值保持显式 unknown。 */
@@ -20,6 +21,7 @@ export interface WebIMJoinedGroup {
     readonly announcement: string;
     readonly announcementVersion: string;
     readonly memberCount: number;
+    readonly mode?: IMGroupMode;
     readonly ownerUserID: string;
     readonly currentUserRole: WebIMJoinedGroupRole;
     readonly joinApprovalRequired?: boolean;

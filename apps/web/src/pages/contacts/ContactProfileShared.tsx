@@ -13,6 +13,7 @@ import './contact-profile-shared.css';
 interface ContactProfileHeaderProps {
   readonly backHref: string;
   readonly title?: string;
+  readonly titleNode?: ReactNode;
   readonly trailing?: ReactNode;
 }
 
@@ -20,6 +21,7 @@ interface ContactProfileHeaderProps {
 export function ContactProfileHeader({
   backHref,
   title = '',
+  titleNode,
   trailing,
 }: ContactProfileHeaderProps) {
   return (
@@ -27,10 +29,34 @@ export function ContactProfileHeader({
       <Link className="rn-contact-profile-back" to={backHref} aria-label="返回">
         <RNAssetIcon assetURL={backIconURL} />
       </Link>
-      <h1>{title}</h1>
+      <span className="rn-contact-profile-header-center">
+        {titleNode ?? <h1>{title}</h1>}
+      </span>
       <span>{trailing}</span>
     </header>
   );
+}
+
+/** 联系人资料页在线状态参数。 */
+interface ContactProfileOnlineStatusProps {
+  readonly online: boolean;
+}
+
+/** 对齐 RN 导航栏的在线圆点与文本。 */
+export function ContactProfileOnlineStatus({
+  online,
+}: ContactProfileOnlineStatusProps) {
+  return (
+    <span className="rn-contact-profile-online" aria-label="导航栏在线状态">
+      <span className={online ? 'is-online' : 'is-offline'} />
+      <span>{online ? '在线' : '离线'}</span>
+    </span>
+  );
+}
+
+/** 对齐 RN 导航栏优先展示的黑名单标签。 */
+export function ContactProfileBlacklistStatus() {
+  return <span className="rn-contact-profile-blacklist" aria-label="黑名单状态">黑名单</span>;
 }
 
 /** 联系人资料头像参数。 */

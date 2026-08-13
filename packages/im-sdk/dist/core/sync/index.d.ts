@@ -41,6 +41,10 @@ export type { IMGroupManagementPermissions, IMResolveGroupManagementPermissionsI
 export type { IMGroupAdminChangeCommit, IMGroupAdminChangeOptions, IMGroupOwnerTransferCommit, IMGroupOwnerTransferOptions, IMGroupRoleCandidate, IMGroupRoleMutationCacheState, } from './group-admin-owner.js';
 /** 创建认证账号绑定的 cache-first 我的群聊 service。 */
 export { createWebIMJoinedGroupSync } from './joined-group-sync.js';
+/** 导出跨端统一的群模式归一化与普通群判定。 */
+export { isIMNormalGroupMode, normalizeIMGroupMode } from './group-mode.js';
+/** 导出标准群模式契约。 */
+export type { IMGroupMode } from './group-mode.js';
 /** 导出跨端共用的群公告发布、已读版本和权限合同。 */
 export { buildIMGroupAnnouncementMessageText, canUpdateIMGroupAnnouncement, getIMGroupAnnouncementReadStatus, IM_GROUP_ANNOUNCEMENT_MAX_LENGTH, markIMGroupAnnouncementRead, publishIMGroupAnnouncement, } from './group-announcement.js';
 /** 导出 type1519 跨端公告缓存收敛 helper。 */
@@ -67,6 +71,12 @@ export type { IMGroupMemberInvitationCacheState, IMGroupMemberInvitationCommit, 
 export type { IMGroupMemberRemovalCacheState, IMGroupMemberRemovalCommit, IMRemoveGroupMembersOptions, IMRemovableGroupMember, } from './group-member-removal.js';
 /** 创建认证账号绑定的联系人资料与关系 action service。 */
 export { createWebIMPeerProfileSync } from './peer-profile-sync.js';
+/** 创建 RN、Web 与 Desktop 共用的用户在线状态 facade。 */
+export { createIMUserPresenceSync, } from './user-presence.js';
+/** 导出跨端共用的用户在线状态协议归一化规则。 */
+export { normalizeIMUserPresence, normalizeIMUserPresenceIDs, normalizeIMUserPresencePayload, } from './user-presence-normalization.js';
+/** 导出跨端统一的用户在线状态与观察契约。 */
+export type { IMUserPresence, IMUserPresenceListener, IMUserPresenceObservation, IMUserPresenceSync, IMUserPresenceSyncDependencies, } from './user-presence.js';
 /** 创建受认证账号约束的会话 cache/sync 服务。 */
 export { createWebIMConversationSync } from './conversation-sync.js';
 /** 导出按群身份打开规范会话的共享能力。 */
@@ -174,7 +184,7 @@ export type { WebIMUnreadMentionSnapshot } from './conversation-unread-mention.j
 /** 导出自定义表情同步 contract。 */
 export type { WebIMCustomEmojiSync, WebIMCustomEmojiSyncDependencies, } from './custom-emoji-sync.js';
 /** 导出消息同步 contract。 */
-export type { WebIMMessageSync, WebIMMessageSyncDependencies, WebIMPullMessageHistoryOptions, } from './message-sync.js';
+export type { WebIMMessageSync, WebIMMessageSyncDependencies, WebIMPullMessageHistoryOptions, WebIMPullMessageHistoryResult, } from './message-sync.js';
 /** 导出文本发送 contract。 */
 export type { WebIMSendTextMessageOptions } from './message-text-send.js';
 /** 导出平台中立消息名片与当前会话发送 contract。 */

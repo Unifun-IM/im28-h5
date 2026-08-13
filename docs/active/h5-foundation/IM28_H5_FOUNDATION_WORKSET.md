@@ -1,5 +1,88 @@
 # IM28 H5 Foundation Workset
 
+## Current Workset W6.a6.20.30 Chat Quote Source Local Resolution And Focus
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen; browser-quote-data-gated` |
+| owner | `SDK messages.getCachedByStableMsgIDs -> MessageRepository -> H5 useChatQuoteSources -> ChatMessageList/React Router` |
+| completed | 当前窗口优先、client/server 稳定身份本地恢复、群昵称 shared resolver、当前 DOM 居中高亮、本地来源目标窗口路由、确认缺失文案 |
+| fail-closed | SQLite 读取失败不冒充已删除；跨会话结果、空 identity 和确认缺失来源不跳转；不新增 Gateway 查询或 cache mutation |
+| verification | SDK focused 2/12、full Web 91/381；H5 focused 4/15、466 assets、runtime boundary、SDK/H5 typecheck、1132-module build；cleanup P0/P1 zero |
+| browser gate | 真实 412px 三个会话均无引用消息且零横向溢出；路由与 console 健康，真实引用点击/高亮仍 sample-gated |
+| protected | `im28-phone` business clean；只发布 `build:web/sync:web`；未执行/修改 `build:package:desktop:web`，未同步 RN package |
+| next | `W6-rn-parity-residual-inventory-refresh` |
+
+## Latest Closed Slice W6.a6.20.21
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pass` |
+| goal | 对齐 RN 群设置首屏预览成员在线绿点，不建立设置页专属 presence 分支 |
+| shared owner | 既有 `isIMNormalGroupMode` 与 `createIMUserPresenceSync/WebIMSync.presence` 保持唯一业务 owner |
+| H5 owner | `ChatSettingsPage` 只选择预览身份；`useGroupMemberPresence` 持有唯一页面内存 observation；CSS 投影 14/8px 绿点 |
+| verification floor | H5 focused 2/13、full Web 88/368、466 assets、runtime boundary、SDK/H5 typecheck、1119-module build、真实普通群响应式 smoke |
+| browser gate | 真实 3 人预览中 2 人在线，412px/390x844 零 overflow/console error；large 群和实时切换仍 sample-gated |
+| not authorized | SDK/RN business、群/成员 mutation、RN/desktop builds、build:all、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择可复用 shared owner、真实 API/样本齐备且不改 RN business 的独立缺口。
+
+## Latest Closed Slice W6.a6.20.20
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pass` |
+| goal | 对齐 RN 普通群成员列表的在线绿点，并消除页面群模式判断双轨 |
+| shared owner | `normalizeIMGroupMode/isIMNormalGroupMode` 持有群模式；既有 `createIMUserPresenceSync` 持有 HTTP/realtime/lifecycle |
+| H5 owner | `useGroupMemberPresence` 只持有页面内存映射；`GroupMemberRow` 只投影 14/8px 在线绿点 |
+| verification floor | SDK focused 3/16、H5 view 1/4、full Web 88/368、466 assets、SDK/H5 typecheck、1119-module build、真实 3 人普通群响应式 smoke |
+| browser gate | 真实普通群显示 1 个在线成员，412px/390x844 零 overflow/页面错误；large 群和实时状态切换仍 sample-gated |
+| not authorized | RN business/caller、群/成员 mutation、RN/desktop builds、build:all、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已有真实 API/样本且不修改 RN business 的独立缺口。
+
+## Latest Closed Slice W6.a6.20.19
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pass` |
+| goal | 对齐 RN 好友资料页在线/离线状态，同时把 HTTP/realtime/lifecycle 语义放入 shared SDK |
+| business owner | `createIMUserPresenceSync` 持有 OpenAPI 分批、状态归一化、revision 和账号生命周期；presence 不写 SQLite |
+| H5 owner | `useContactProfilePresence` 只连接当前好友与 runtime；navbar view 只投影黑名单/presence 优先级 |
+| verification floor | SDK focused 2 files/7 tests、full Web 87 files/366 tests、SDK/H5 typecheck、H5 view 1/7、466 assets、1115-module build、真实好友资料响应式只读 smoke |
+| browser gate | 当前好友真实显示在线且无 overflow/console error；离线转换、重连和第二账号事件仍需样本 |
+| not authorized | RN business/caller 改动、资料 mutation、RN/desktop builds、build:all、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续区分真实功能缺口与仅缺授权/样本的 acceptance gate。
+
+## Latest Closed Slice W6.a6.20.18
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass/link-data-gated` |
+| goal | 将文本链接“打开/复制”从气泡内绝对定位菜单收敛到普通消息已验证的全局 top-layer，消除聊天动作展示双轨 |
+| business owner | 链接解析仍由 shared SDK 持有；浏览器打开端口、clipboard success-only 回调和普通消息动作回调均保持不变 |
+| H5 owner | `ChatActionModalSurface` 唯一持有 body portal/InteractionModal/锚点定位；普通消息与链接分别只提供自己的预览和动作项 |
+| verification floor | focused H5 5 files/16 tests；full verify：466 assets、runtime boundary、SDK/H5 typecheck、SDK Web 86 files/360 tests、1114-module build；412px authenticated ordinary-message regression pass |
+| browser gate | 普通消息共用层、关闭、路由稳定、零横向溢出已证；真实 cache 无链接消息，链接 top-layer 视觉保持 data-gated，未发送测试消息 |
+| not authorized | 打开外链、复制、编辑、转发、删除或消息发送 mutation；修改 RN business/caller；RN/desktop builds；`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续区分真实功能缺口与只缺授权/样本的 acceptance gate。
+
+## Latest Closed Slice W6.a6.20.17
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass` |
+| goal | 将普通消息长按从气泡内绝对定位菜单对齐为 RN 全屏遮罩、原消息预览和纵向动作 modal |
+| business owner | 引用/复制/编辑/多选/转发/添加表情/删除继续调用既有 H5 -> shared SDK 主链；本片不新增业务 owner |
+| H5 owner | `ChatMessageAction` 持有 `500ms/8px` gesture；`ChatMessageActionModal` 通过 body portal/InteractionModal 呈现；纯 layout helper 持有收发靠边与 viewport clamp |
+| verification floor | focused H5 4 files/13 tests；full verify：466 assets、runtime boundary、SDK/H5 typecheck、SDK Web 86 files/360 tests、1113-module build |
+| browser gate | 当前已登录 412px 页面右键打开真实 modal：发出消息靠右、200px/6 动作、只有删除为危险色；遮罩关闭后 dialog 清除、URL 不变、零横向溢出；触屏实机仍 gated |
+| not authorized | 任何消息发送/复制/编辑/转发/删除 mutation、修改 RN business/caller、RN/desktop builds、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续区分真实功能缺口与只缺授权/样本的 acceptance gate。
+
 ## Latest Closed Slice W6.a6.20.16
 
 | field | value |
@@ -751,3 +834,70 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 | Verification-code send | shared Gateway OpenAPI 无 operation；不得用 countdown/fake success 替代 | shared SDK/Gateway contract owner | backend contract available or product explicitly accepts fixed-code environment |
 | Account-security final acceptance | account set/reset 本地链路已闭合，但真实 mutation 与 dark 证据未执行；contact mutation 缺 send-code contract | `apps/web/src/pages/me/security` + Web runtime | approved real set/reset Network/result/session cleanup + dark matrix；contact waits for real code-send contract |
 | upstream raw WS log | `resolved 2026-08-09`: canonical owner 已清除原始 payload 日志 | `im28-sdk` | shared SDK test + H5 `npm run verify` passed |
+# Current Workset
+
+## W6.a6.20.24 Chat Sender Avatar Mention Gesture
+
+- status: `closed-local/browser-data-gated`
+- owner chain: `ChatMessageList -> ChatGroupSenderAvatar -> one-shot mention request -> ChatComposer -> useChatComposerMentions -> existing mention send flow`。
+- completed: 可见 incoming 群头像按 RN 500ms/8px 长按提及，桌面右键同义；普通点击继续走资料 SPA；提及复用 shared 显示名，追加 `@昵称 ` 或替换末尾查询，并登记稳定 member selection。
+- fail-closed: outgoing/单聊/系统消息、缺失成员、自身、编辑态和引用态都不产生提及；动作不直接发送、不写 SQLite、不新增 Gateway/OpenIM 分支。
+- structure: 新增 64 行头像展示 owner 与 111 行手势 owner；`ChatMessageBubble` 收敛至 281 行，避免资料/手势逻辑继续膨胀。
+- verification: focused 2 files/10 tests；full Web 88 files/368 tests、466 assets、runtime boundary、SDK/H5 typecheck、1122-module build；cleanup P0/P1 zero。
+- browser gate: 匿名标签验证 dev/登录守卫/1280px 零 overflow；未伪造 sessionStorage，真实 incoming 群头像长按与草稿结果仍待已登录样本。
+- protected: `im28-phone` clean；SDK source 未因本片调整；未运行 RN/Desktop/build:all 或 `build:package:desktop:web`。
+- next: `W6-rn-parity-residual-inventory-refresh`，按 RN 页面、动作、状态重新生成剩余缺口清单。
+
+## W6.a6.20.26 Chat Custom Emoji Bubble Preview
+
+- status: `closed-local/browser-data-gated`。
+- owner chain: `Message -> getChatMessageView -> ChatCustomEmojiMessageContent -> existing ChatMediaInteractionProvider -> ChatMediaPreviewOverlay`。
+- completed: type115 快照尺寸映射、旧消息自然尺寸探测、180px 比例气泡、非法 URL/解码失败 fail-closed、无工具栏纯图片预览。
+- preserved: 普通图片保存、表情发送/收藏/manager/recent、SDK/Gateway/SQLite 和 RN business 均未改变。
+- verification: focused 3 files/15 tests；full Web SDK 89 files/371 tests；466 assets；runtime boundary、SDK/H5 typecheck、1125-module build；真实 412px group route zero overflow/error/broken image。
+- browser gate: 当前真实群聊无 type115，未注入假消息或发送测试消息；横/竖资源与点击关闭仍待自然样本。
+- protected: `im28-phone` clean；仅执行 `build:web/sync:web`；未运行 RN/Desktop/build:all 或 `build:package:desktop:web`。
+- next: `W6-rn-parity-residual-inventory-refresh`，继续选择不需 RN 业务改动的确定性缺口。
+
+## W6.a6.20.27 Chat Initial Unread Navigation
+
+- status: `closed-local/browser-data-gated`。
+- owner chain: `Conversation.lastReadSeq + Message[] -> SDK getIMInitialUnreadNavigation -> H5 useChatUnreadNavigation -> ChatMessageList`。
+- completed: 精确 uint64 incoming 未读、type1201 边界、server/client 双身份、最后已读锚点、未读分割线/浮层、80% 可见度和用户离开最新端后的滚动保护。
+- fail-closed: 非法/缺失边界不制造未读；搜索定位不与首入页定位竞争；只读滚动不写 SQLite/Gateway，不调用 markRead/read receipt。
+- verification: SDK focused 1/3、H5 focused 2/8、full Web SDK 90/374、466 assets、runtime boundary、SDK RN/Web/Desktop 与 H5 typecheck、1127-module build；cleanup P0/P1 zero。
+- browser gate: 当前真实三个会话均无未读角标；412px 证实零误画、latest edge=0、bodyWidth=viewportWidth=412、系统消息稳定身份和零 console error；非零样本不得伪造。
+- protected: `im28-phone` worktree clean；仅执行 `build:web/sync:web`；未执行 RN/Desktop/build:all 或 `build:package:desktop:web`。
+- next: `W6-rn-parity-residual-inventory-refresh`，继续按 RN page/action/state 选择不需 RN 业务改动的确定性残余。
+
+## W6.a6.20.28 Chat Visible Unread Read Convergence
+
+- status: `closed-local/browser-data-gated`。
+- owner chain: `DOM/native visible stable IDs -> SDK getIMVisibleUnreadReadSeq -> converged conversations.markRead -> Gateway -> success-only ConversationRepository`。
+- completed: 80% 可见 incoming 最高 seq、短列表测量放行、长列表用户滚动/显式入口/最新端 realtime 放行、单调去重与失败重试；partial read 不再无条件清零缓存角标。
+- fail-closed: 无会话 unread 事实、未定位/未测量、初始长列表程序化滚动、outgoing、非法 seq 和搜索定位均不提交；Gateway 失败不更新会话。
+- verification: SDK focused 2/8、H5 focused 2/4、full Web SDK 90/376、466 assets、runtime boundary、SDK RN/Web/Desktop 与 H5 typecheck、1128-module build；cleanup P0/P1 zero。
+- browser gate: 当前真实三个会话无未读；412px route 零误画/overflow，clean reload 后零 error；browser 隔离环境无 resource timing，未声称 Network 零请求证据。
+- protected: `im28-phone` worktree clean，RN business/caller 未改；仅 `build:web/sync:web`；未执行 RN/Desktop/build:all 或 `build:package:desktop:web`。
+- next: `W6-rn-parity-residual-inventory-refresh`，从剩余 chat history pagination/sticky date 或其他无 RN 改动缺口继续。
+
+## W6.a6.20.23 Chat Sender Avatar Profile Entry
+
+- status: `closed-local/browser-data-gated`
+- owner chain: `ChatMessageList -> ChatMessageBubble avatar Link -> ContactProfilePage -> W6.a6.20.22 validated group context`。
+- completed: incoming group message 的可见分组头像改为 React Router Link；只携带 stable user/conversation IDs 与当前聊天 backHref；空身份 fail-closed；资料页新增当前聊天返回白名单。
+- verification: focused 2 files/15 tests；full Web 88 files/368 tests、466 assets、runtime boundary、SDK/H5 typecheck、1120-module build；cleanup P0/P1 zero。
+- browser gate: 真实 412px 群聊仅含系统创建消息，无 incoming sender avatar 样本；页面零 overflow，未发送测试消息。
+- accepted debt: 仓库无 `scripts/check-convergence.sh`；真实头像点击/history 和群消息 mute profile context 待后续样本/授权。
+- protected: `im28-phone` business clean；SDK source 未改；未运行 RN/Desktop/build:all 或 `build:package:desktop:web`。
+- next: `W6-rn-parity-residual-inventory-refresh`，继续选择不需要 RN 业务改动、非破坏且有真实样本的缺口。
+
+## W6.a6.20.22 Group Member Restricted Profile Context
+
+- status: `closed-local/browser-readonly-pass/data-gated`
+- owner chain: `React Router candidate -> WebIMSync.conversations -> WebIMSync.groups -> WebIMSync.groupMembers -> resolveIMGroupMemberDisplayName -> ContactProfilePage`
+- completed: 群设置预览和完整成员列表传递稳定会话上下文；资料页重新校验真实群/成员；明确禁止互加时隐藏关系动作与敏感字段；加载/失败 fail-closed；本人保持完整资料。
+- verification: focused 3 files/22 tests；full Web 88 files/368 tests、466 assets、runtime boundary、SDK/H5 typecheck、1120-module build；真实允许互加群 412px 只读 smoke 通过。
+- gated: 真实禁止互加群样本、Safari/Firefox history state、群消息头像携带的禁言上下文；不制造群配置 mutation。
+- protected: `im28-phone` business clean；未运行 RN/Desktop/build:all 或 `build:package:desktop:web`。
+- next: `W6-rn-parity-residual-inventory-refresh`，重新按 RN page/action/state 对 H5 route/owner 做残余检索。

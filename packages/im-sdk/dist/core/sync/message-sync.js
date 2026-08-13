@@ -11,7 +11,7 @@ import { retryWebIMMessage, } from './message-retry.js';
 import { createIMMessageMutationSync, } from './message-mutations.js';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
-import { pullWebIMMessageHistory } from './message-history-pull.js';
+import { pullWebIMMessageHistory, pullWebIMMessageHistoryPage, } from './message-history-pull.js';
 import { createIMMessageSearchSync, } from './message-search.js';
 /** 创建认证账号绑定的浏览器消息同步服务。 */
 export function createWebIMMessageSync(dependencies) {
@@ -62,11 +62,37 @@ class WebIMMessageSyncImpl {
         const records = await Promise.all(normalizedIDs.map(clientMsgID => repository.getByClientMsgID(clientMsgID)));
         return records.filter((message) => message !== null);
     }
+    /** 按 client/server 稳定消息 ID 读取当前账号 SQLite，供引用来源恢复。 */
+    async getCachedByStableMsgIDs(messageIDs) {
+        /** context 阻止匿名页面或旧账号读取当前数据库。 */
+        const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
+        /** normalizedIDs 丢弃空身份并保持首次出现顺序。 */
+        const normalizedIDs = Array.from(new Set(messageIDs.map(item => item.trim()).filter(Boolean)));
+        /** repository 只绑定本次认证账号数据库。 */
+        const repository = new MessageRepository(context.database);
+        /** records 先匹配 client ID，再按 Gateway quote 使用的 server ID 回退。 */
+        const records = await Promise.all(normalizedIDs.map(async (messageID) => await repository.getByClientMsgID(messageID) ??
+            repository.getByServerMsgID(messageID)));
+        /** seenClientIDs 防止 caller 同时传 client/server ID 时重复返回同一消息。 */
+        const seenClientIDs = new Set();
+        return records.filter((message) => {
+            if (!message || seenClientIDs.has(message.clientMsgID))
+                return false;
+            seenClientIDs.add(message.clientMsgID);
+            return true;
+        });
+    }
     /** 从 Gateway 拉取历史并持久化后返回本地窗口。 */
     async pullHistory(options) {
         // context 固定本轮账号与 database owner。
         const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
         return this.mutationQueue.enqueue(() => pullWebIMMessageHistory(context, options, this.dependencies.gatewayClient));
+    }
+    /** 拉取单页历史并保留 Gateway 的下一页游标与结束事实。 */
+    async pullHistoryPage(options) {
+        /** context 固定本轮账号与 database owner。 */
+        const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
+        return this.mutationQueue.enqueue(() => pullWebIMMessageHistoryPage(context, options, this.dependencies.gatewayClient));
     }
     /** 先落 sending 文本，再按 Gateway 结果收敛为 sent/failed。 */
     async sendText(options) {

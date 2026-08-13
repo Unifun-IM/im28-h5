@@ -1,8 +1,135 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a6.20.16 聊天文本链接投影与打开/复制交互已对齐 RN`
+- current_step: `W6.a6.20.30 引用来源本地恢复与定位已完成本地闭环`
 - next_step: `执行 W6-rn-parity-residual-inventory-refresh；按 RN page/action/state 与 H5 route/owner 重新检索剩余缺口`
+
+## W6.a6.20.30 Chat Quote Source Local Resolution And Focus Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN parity | `done-local` | 对齐当前窗口/本地库恢复、点击引用定位与短时高亮、确认缺失文案；RN `fetchMessageByID/FlatList` caller 只读冻结 | 真实引用消息点击样本 |
+| shared owner | `shared-core-ready/web-consumed/rn-frozen` | `getCachedByStableMsgIDs` 按 client/server ID 查询当前账号 SQLite、按请求保序并以 canonical client ID 去重；无 Gateway 和 cache mutation | RN 需独立授权后才能切换 caller |
+| Web adapter | `done-local/browser-readonly-pass` | `useChatQuoteSources` 批量补当前会话来源；当前 DOM 直接居中高亮，本地库来源通过同会话 `?messageID=` 目标窗口定位；群名称复用 shared resolver | 当前三个真实会话引用数均为 0 |
+| fail-closed | `pass` | 仅确认本地缺失才显示“引用的内容已删除”；读取失败不伪装删除，跨会话结果拒绝，空身份禁用跳转 | none |
+| verification | `pass` | SDK focused 2 files/12 tests、full Web 91 files/381 tests、boundary/typecheck/build:web；H5 focused 4 files/15 tests、466 assets、typecheck 与 1132-module build | 既有 >500kB chunk warning |
+| protection | `pass` | `im28-phone` business clean；SDK scripts 未改；只执行 `build:web/sync:web` | 未执行 RN/Desktop/build:all/`build:package:desktop:web` |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-quote-data-gated`。引用来源恢复只有 SDK 本地查询一个业务 owner，H5 仅持有当前窗口、React Router 与 DOM 定位差异。
+
+## W6.a6.20.29 Chat History Pagination And Sticky Date Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN parity | `done-local` | 对齐最早端加载、更早窗口前插不跳动、滚动日期悬浮和程序定位不误触发；RN `useChatLoadMore/useChatMessageListScroll` caller 冻结 | 真实长历史滚动样本 |
+| shared owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 统一精确 uint64 previous cursor、稳定身份去重排序、clear boundary、SQLite upsert、`has_more/next_seq` 与重复/缺失游标拒绝；旧 `pullHistory` 仅保留数组返回兼容 | RN 需独立授权后才能切换 caller |
+| Web adapter | `done-local/browser-readonly-pass` | `useChatHistoryPagination` 只持有用户手势、顶部阈值、DOM 高度补偿和 1.2s 悬浮日期；初始未读/搜索定位不触发分页 | 当前真实会话只有 2 条消息，无 `has_more` 样本 |
+| verification | `pass` | SDK focused 4 files/21 tests、full Web 91 files/381 tests；H5 focused 4 files/8 tests、466 assets、SDK boundary/Web typecheck/build:web、H5 typecheck 与 1131-module build | 既有 >500kB chunk warning |
+| browser | `pass-readonly/data-gated` | 412px 真实聊天页 2 条消息，list client/scroll height 均 665、零 loading/sticky/overflow；干净重载后无新增 error | 长列表的 Network、位置补偿和日期视觉待自然样本 |
+| protection | `pass` | `im28-phone` business worktree clean；SDK/H5 package scripts 未改；最终发布只执行 `build:web/sync:web` | 一次误用根 `npm test` 触发 compile-only core/RN/Web/Desktop，未 sync RN、未改 RN package，且未执行 `build:package:desktop:web` |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-long-history-data-gated`。分页业务事实只有 SDK 一个 owner，H5 没有建立第二套 DTO、缓存或 Gateway 状态机。
+
+## W6.a6.20.25 Chat Audio Played And Auto-next Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN parity | `done-local` | 播放尝试即记录账号/会话本地 played，兼容 `localEx.im28SoundMessagePlayed`；自然结束才选择下一条 incoming 语音，手动停止不连播；RN caller 冻结 | 真实浏览器媒体样本 |
+| shared owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 统一 `serverMsgID > clientMsgID`、localEx 判定与后续 type103 候选；不持有媒体、存储、SQLite 或 Gateway I/O | RN 生产 caller 需独立授权才能收敛 |
+| Web adapter | `done-local/browser-readonly-pass` | route-scoped Provider 持有唯一 HTMLAudio、账号/会话 localStorage 和结束回调；incoming 未播放语音显示红点；真实 412px 群聊确认页面只有一个 audio runtime | 跨设备 played/read 明确不在本片 |
+| fail-closed | `pass` | 空身份、无当前消息、outgoing、非语音、已播放、非法 URL、手动停止和播放失败均不推进；不伪装服务端 read | none |
+| verification | `pass` | SDK focused 1/3、H5 focused 3/12；full verify 通过 466 assets、runtime boundary、SDK Web 89 files/371 tests、SDK/H5 typecheck 与 1124-module build | 既有 >500kB chunk warning |
+| protection | `pass` | `im28-phone` clean；仅执行 `build:web/sync:web` | 未运行 RN/Desktop/build:all/`build:package:desktop:web` |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-media-data-gated`。本地播放状态与服务端消息已读严格分离，Web 未建立第二套候选选择规则。
+
+## W6.a6.20.24 Chat Sender Avatar Mention Gesture Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN parity | `done-local` | incoming 群消息仅在分组头像实际可见且成员快照存在时启用 500ms/8px 长按；桌面右键复用同一动作；本人、单聊、系统消息和未知成员 fail-closed | 编辑/引用态明确不消费提及；真实触屏手势样本 |
+| composer owner | `clean/reused` | 头像只产生一次性 member request；Composer 复用 shared 显示名和既有 mention selection/document owner，追加 `@昵称 ` 或替换末尾未完成查询；不直接发送消息 | none |
+| presentation | `done-local` | `ChatGroupSenderAvatar` 单独持有头像、资料 Link 和 fallback；长按后抑制点击导航，普通点击仍进入 `.23` 资料链；气泡、媒体、消息动作和多选结构不变 | Safari/Firefox/物理触屏 |
+| verification | `pass` | focused 2 files/10 tests；full verify 为 SDK Web 88 files/368 tests、466 assets、runtime boundary、SDK/H5 typecheck、1122-module build；cleanup P0/P1 zero | 保留既有 >500kB chunk warning；仓库无 `scripts/check-convergence.sh` |
+| browser | `pass-anonymous/data-gated` | dev 服务可访问，匿名 `/conversations` 正确回到手机号登录，1280px 零横向溢出 | 当前浏览器标签未继承 sessionStorage；真实 incoming 群头像长按与草稿投影未验收 |
+| protected scope | `pass` | SDK business source 未因本片改动；RN worktree clean；只执行 `build:web/sync:web` | RN/Desktop/build:all/`build:package:desktop:web` 均未执行 |
+
+## W6.a6.20.22 Group Member Restricted Profile Context Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN parity | `done-local` | 群设置预览与完整成员列表都只把稳定 `groupConversationID/backHref` 交给资料 route；资料页按 `allowMemberAddFriend === false && !self` 隐藏更多、资料字段、快捷动作、主操作和好友详情 | RN caller 继续冻结；群消息头像入口的禁言上下文另片处理 |
+| identity/security | `pass/fail-closed` | Router state 不携带权限或昵称；页面必须从当前账号 `conversations -> groups -> groupMembers` 重新确认真实群会话、群和成员，并用 SDK `resolveIMGroupMemberDisplayName` 投影昵称 | 真实禁止互加群样本当前不存在 |
+| presentation | `done-local` | 禁止互加显示“已是群成员”；加载期间不闪现动作，校验失败显示“群成员资料暂不可用”；本人和无群入口资料不受限制 | Safari/Firefox history-state 矩阵 |
+| verification | `pass` | H5 focused 3 files/22 tests；full verify 为 SDK Web 88 files/368 tests、466 assets、runtime boundary、SDK/H5 typecheck、1120-module build | 保留既有 >500kB chunk warning |
+| browser | `pass-readonly/data-gated` | 真实允许互加群从设置预览进入 `donk二大爷` 资料，显示正确昵称与完整动作；412px 零横向溢出 | 禁止互加真实 UI、校验失败态和刷新/history 恢复仍 data-gated |
+| protected scope | `pass` | SDK business source 未改；RN worktree clean；仅执行 `build:web/sync:web` | RN/Desktop/build:all/`build:package:desktop:web` 均未执行 |
+
+## W6.a6.20.23 Chat Sender Avatar Profile Entry Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN parity | `done-local` | 只有收到的群消息且连续分组实际显示头像时提供资料入口；头像尺寸、图片 fallback、分组占位和气泡动作不变 | RN 长按头像 @ 成员是另一交互，不在本片 |
+| route/owner | `clean/reused` | `buildChatGroupMemberProfileLocation` 只构造编码 user route、当前聊天 backHref 和稳定 groupConversationID；资料页继续唯一持有 `.22` 的群/成员/权限校验 | 群消息 profile 的 mute management context 另片且需 mutation 授权 |
+| security | `pass` | 消息正文、昵称、角色、权限和群设置均不写入 Router state；空 conversation/sender identity 不生成链接 | none |
+| verification | `pass` | focused 2 files/15 tests；full verify 为 SDK Web 88 files/368 tests、466 assets、runtime boundary、SDK/H5 typecheck、1120-module build；cleanup P0/P1 zero | 仓库没有 `scripts/check-convergence.sh` |
+| browser | `pass-readonly/data-gated` | 真实群聊 412px 页面、路由和布局健康，零横向溢出；当前群只有系统创建消息，头像点击样本不可得 | 不发送测试消息；真实 incoming group message click/history 仍 data-gated |
+| protected scope | `pass` | SDK source 未改；RN worktree clean；仅执行 `build:web/sync:web` | RN/Desktop/build:all/`build:package:desktop:web` 均未执行 |
+
+## W6.a6.20.21 Group Settings Preview Presence Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN parity | `done-local` | 设置页只观察 `buildChatSettingsMemberViews` 实际渲染的最多 10 名预览成员；完整成员页行为不变 | RN caller 继续冻结 |
+| single owner | `shared-core-ready/web-consumed/rn-frozen` | `shouldShowGroupMemberPresence` 复用 SDK normal-mode helper，`useGroupMemberPresence` 复用 `.20.19` presence facade；无第二 service/listener/cache | large/unknown 真实群样本 |
+| presentation | `done-local/browser-pass` | 头像裁剪层外投影 RN 14px 底色边框与 8px success 绿点；名称、资料 route、邀请/移除入口不变 | Safari/Firefox 与实时上下线转换 |
+| verification | `pass` | H5 focused 2 files/13 tests；full verify 为 SDK Web 88 files/368 tests、466 assets、runtime boundary、SDK/H5 typecheck、1119-module build | 保留既有 >500kB chunk warning |
+| browser | `pass-readonly` | 真实普通群设置页 3 名预览成员中 2 名明确在线；412px/390x844 均无横向溢出、绿点 14/8px、console warning/error 为 0 | 未制造状态变化或执行 mutation |
+| protected scope | `pass` | SDK business source 未改；RN worktree clean；仅执行 `build:web/sync:web` | RN/Desktop/build:all/`build:package:desktop:web` 均未执行 |
+
+## W6.a6.20.20 Group Member Presence Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| shared group mode | `done-local` | `normalizeIMGroupMode/isIMNormalGroupMode` 统一 `1|2|normal|large`；joined-group Gateway/cache DTO 投影标准 mode，缺失/未知 fail-closed | RN caller 未切换 shared helper |
+| H5 presence | `shared-core-ready/web-consumed/rn-frozen` | `useGroupMemberPresence` 为普通群完整成员建立单一 observation；只合并返回身份，离页释放，不写成员 DTO/SQLite | large 群真实样本、realtime 在线/离线转换 |
+| presentation | `done-local/browser-pass` | 头像右下角 14px 底色边框 + 8px success 绿点；角色、昵称、ID、资料 route 保持原样 | Safari/Firefox 和物理触屏下拉 |
+| verification | `pass` | SDK focused 3 files/16 tests；H5 view 1 file/4 tests；full verify 为 SDK Web 88 files/368 tests、466 assets、SDK/H5 typecheck、1119-module build | 保留既有 >500kB chunk warning |
+| browser | `pass-readonly` | 真实普通群 3 名成员中 1 个在线；412px/390x844 均零横向溢出、无页面错误，绿点 14x14 | 未制造上下线或执行 mutation |
+| protected scope | `pass` | RN worktree clean；仅执行 `build:web/sync:web`；未运行 RN/Desktop/build:all/`build:package:desktop:web` | none |
+
+## W6.a6.20.19 Friend Profile Presence Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| shared owner | `shared-core-ready/web-consumed/rn-frozen` | `createIMUserPresenceSync` 持有 100 人分批、字段归一化、订阅 revision、账号过滤和 lifecycle clear；H5 只消费 `presence.observe` | RN `UserProfileScreen` 现有 OpenIM caller 保持冻结 |
+| H5 parity | `done-local` | 好友资料导航栏显示在线/离线；黑名单文案优先；陌生人、自身和未知状态不伪造 presence | group-member restricted/mute context 不在本片 |
+| persistence/lifecycle | `clean` | presence 仅在 runtime 内存；退出、切号、token 失效、被踢和 dispose 清除 subscriber；不推进 dataVersion、不写 SQLite | 断线重连真实事件仍需多账号样本 |
+| verification | `pass` | SDK focused 2 files/7 tests、SDK Web full 87 files/366 tests、runtime boundary、SDK/H5 typecheck、H5 view 1 file/7 tests、466 assets、1115-module production build | 保留既有 >500kB chunk warning |
+| browser | `pass-readonly` | 已登录真实好友资料页展示“在线”；412px 与 390x844 均无横向溢出、导航栏居中，console warning/error 为 0 | 离线切换、断线重连与第二账号事件样本仍 gated |
+| protected scope | `pass` | RN worktree clean；只执行 `build:web/sync:web`；未运行 RN/Desktop/build:all/`build:package:desktop:web` | none |
+
+## W6.a6.20.18 Chat Link Action Surface Convergence Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| primary path | `clean/single-owner` | `ChatActionModalSurface` 唯一持有 body portal、InteractionModal、收发方向与 viewport clamp；普通消息和链接只提供预览/动作项 | none |
+| link behavior | `done-local` | 普通点击仍复用 `_blank` browser port；500ms 长按/右键进入“打开/复制”两项共用层；新增 8px move cancel；copy success-only close 不变 | 真实链接样本、移动端触屏、Safari/Firefox |
+| delete-or-register | `delete` | 旧 `.rn-chat-text-link-menu` JSX/CSS 全部删除；危险色从 `last-child` 改为显式 `.is-danger`，链接“复制”不会被误标红 | 无 compat path 需要登记 |
+| verification | `pass` | focused H5 5 files/16 tests；full verify：466 assets、runtime boundary、SDK/H5 typecheck、SDK Web 86 files/360 tests、1114-module Vite build | 保留既有 >500kB chunk warning |
+| browser | `pass-readonly/data-gated` | 412px 已登录聊天页普通消息共用层真实打开/关闭；200px/6 动作、URL 稳定、`scrollWidth=clientWidth=412` | cache 无链接消息；未发送测试链接或执行动作 |
+| protected scope | `pass` | RN worktree clean；仅执行 SDK `build:web/sync:web`；未运行 RN/Desktop/build:all/`build:package:desktop:web` | none |
+
+## W6.a6.20.17 Chat Message Action Modal Closeout (2026-08-13)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN interaction parity | `done-local/browser-pass` | `500ms` 长按、`8px` 移动取消、右键/键盘入口；全屏 24% blur 遮罩、原气泡预览、200px/40px 纵向动作菜单和 180ms 展开；已登录 412px 真实右键打开 | 触屏实机仍未取得 |
+| layout/accessibility | `pass` | 收到靠左/发出靠右；动作数驱动 bottom clamp；超高预览截断；portal 挂到 body，预览 inert；Esc/backdrop 复用全局 InteractionModal | Safari backdrop-filter 仍属于浏览器矩阵 |
+| business ownership | `unchanged/clean` | 引用/复制/编辑/多选/转发/表情收藏/删除回调原样复用；无 SDK、Gateway、SQLite、DTO 或 mutation 分支新增 | 所有真实 mutation 均未执行 |
+| verification | `pass` | focused H5 4 files/13 tests；full verify：466 assets、runtime boundary、SDK/H5 typecheck、SDK Web 86 files/360 tests、1113-module Vite build | 保留既有 >500kB chunk warning |
+| browser | `pass-readonly` | 发出消息靠右，6 动作顺序正确且仅删除为危险色；遮罩关闭后 dialog=0、URL 不变、`scrollWidth=clientWidth=412` | 未执行任何菜单 mutation |
+| protected scope | `pass` | RN worktree clean；未运行 RN/Desktop/build:all/`build:package:desktop:web` | none |
 
 ## W6.a6.20.16 Chat Text Link Actions Closeout (2026-08-13)
 
@@ -996,3 +1123,48 @@ Local closeout: shared `message-send-state` now owns conversation guard、stable
 | gate_verdict | `SDK 58/184、all-runtime boundary/typecheck/build、RN tsc、8 search-service + 28 search-page tests、H5 55/179 verify/build passed` |
 | debt_or_drift | `RN direct local-store Repository search、duplicated visible-body filtering and legacy search result types removed；search remains cache-only with no Gateway mutation；RN Jest requires forceExit because of pre-existing open handles` |
 | next_activation_decision | `activate RN/Web realtime-message consumer convergence；do not modify build:package:desktop:web` |
+
+## Closed Slice W6.a6.20.26
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.26-chat-custom-emoji-bubble-preview` |
+| goal | 对齐 RN type115 自定义表情气泡真实比例、历史消息尺寸探测和无工具栏纯图片预览 |
+| source_anchor | RN `CustomEmojiMessageContent`、`CustomEmojiPreviewModal`、`imageMediaSizeFromDimensions` |
+| target_owner | H5 `ChatCustomEmojiMessageContent` + existing `ChatMediaInteractionProvider/getChatMediaPreview` |
+| deliverable_verdict | `implemented-local/acceptance-gated` |
+| verification | focused 3 files/15 tests；full Web SDK 89/371；466 assets；boundary/typecheck；1125-module production build；真实群聊 412px 零 overflow/error/broken image |
+| preserved_boundaries | RN source clean；SDK source未改；仅执行 `build:web/sync:web`；普通图片保存、type115 收藏/发送/管理逻辑不变；`build:package:desktop:web` 未修改或执行 |
+| acceptance_gate | 当前真实会话没有 type115 样本，未注入假消息，气泡比例与纯预览真实点击仍待自然样本只读验收 |
+
+Residual ledger addition: `Chat custom emoji bubble preview` is implemented-local；真实 type115 气泡、横/竖资源视觉和点击关闭仍 sample-gated，且不得为验收伪造或发送消息。
+
+## Closed Slice W6.a6.20.27
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.27-chat-initial-unread-navigation` |
+| goal | 对齐 RN 聊天首入页未读边界、未读计数入口和用户滚动保护，不扩张为服务端已读 mutation |
+| source_anchor | RN `chatDetailScrollHelpers`、FlatList `viewabilityConfig=80%`、last-read/first-unread scroll flow |
+| target_owner | SDK `initial-unread-navigation.ts` + H5 `useChatUnreadNavigation/ChatMessageList` |
+| deliverable_verdict | `shared-core-ready/web-consumed/rn-frozen/acceptance-gated` |
+| verification | SDK focused 1 file/3 tests；H5 focused 2 files/8 tests；full Web SDK 90/374；466 assets；boundary、SDK RN/Web/Desktop + H5 typecheck；1127-module build；真实 412px zero false-positive/overflow/error and at-latest |
+| preserved_boundaries | RN worktree clean；仅 `build:web/sync:web` 生成 H5 包；没有 markRead/read receipt/Repository/Gateway mutation；`build:package:desktop:web` 未修改或执行 |
+| acceptance_gate | 当前真实会话没有非零 unread 样本；当前 50 条之外分页、非零分割线/浮层滚动和服务端已读收敛待独立切片/联调 |
+
+Residual ledger addition: `Chat initial unread navigation` 已完成 shared 只读规则与 H5 当前窗口 UI；非零未读真实样本、跨窗口分页和 mark-read/read receipt 不在本片完成声明内。
+
+## Closed Slice W6.a6.20.28
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.28-chat-visible-unread-read-convergence` |
+| goal | 对齐 RN 可见未读提交门禁，并修复 shared partial read 提前清零问题 |
+| source_anchor | RN `getViewableMessageListUpdate/reportUnreadReadSeq/useChatMessageListScroll` |
+| target_owner | SDK `getIMVisibleUnreadReadSeq + conversations.markRead`；H5 `chat-unread-read-gate/useChatUnreadNavigation` |
+| deliverable_verdict | `converged/local-verified/runtime-data-gated` |
+| verification | SDK focused 2/8；H5 focused 2/4；full Web SDK 90/376；466 assets；boundary、SDK RN/Web/Desktop + H5 typecheck；1128-module build；真实 412px clean-reload zero false-positive/overflow/error |
+| preserved_boundaries | `im28-phone` worktree clean；RN caller 签名/业务门禁不改；仅 `build:web/sync:web`；`build:package:desktop:web` 未修改或执行 |
+| acceptance_gate | 当前真实会话无 unread 样本；非零 partial read、Gateway unread_count、Realtime 最新端 read 和 list-back 仍需双账号/自然数据联调；dev HMR 曾产生一次 Provider 顺序 error，干净 reload 不复现，登记为 HMR 债务 |
+
+Residual ledger addition: `Chat visible unread read convergence` 已闭合 shared 规则、partial cache 安全和 H5 调用链；真实非零网络结果与跨窗口未读分页仍 acceptance-gated。

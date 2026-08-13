@@ -1,4 +1,10 @@
 export { MessageRepository } from './repository.js';
+/** 导出跨端一致的语音本地已播放与自动连播选择规则。 */
+export { findNextIMUnplayedIncomingAudioMessage, getIMAudioMessageIdentity, isIMAudioMessagePlayedLocally, } from './audio-playback.js';
+/** 导出跨端一致的初始未读边界规则。 */
+export { getIMInitialUnreadNavigation, getIMVisibleUnreadReadSeq, } from './initial-unread-navigation.js';
+/** 导出跨端一致的聊天历史游标与窗口合并规则。 */
+export { getIMPreviousMessageHistoryCursor, mergeIMMessageHistoryWindow, } from './history-pagination.js';
 /** 导出跨端 Composer 附件与文本的提交顺序。 */
 export { createIMComposerSubmissionPlan, shouldStageIMComposerMedia, } from './composer-submission.js';
 /** 导出未读 mention 的共享 SQLite 查询。 */

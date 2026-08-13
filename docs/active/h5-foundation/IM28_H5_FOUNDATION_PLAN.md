@@ -22,6 +22,61 @@
 - 页面切换统一由 React Router 管理，页面组件不自行操作 History API。
 - 跨页面动效与 modal 生命周期统一归 `apps/web/src/components/interaction/**`；只操作瞬时 presentation state，不持有业务状态、SDK 调用或路由决策。
 - RN 样式、静态资产、页面状态与 API 能力只做浏览器适配，不另行设计。
+
+### W6.a6.20.17 Chat Message Action Modal
+
+| field | value |
+| :--- | :--- |
+| source | RN `useChatMessageActionMenu -> MessageActionBubbleModal -> ActionBubbleMenu` |
+| target | H5 `ChatMessageAction -> ChatMessageActionModal -> InteractionModal` |
+| behavior | `500ms/8px` gesture、context/keyboard entry、full-screen blur、message preview、incoming-left/outgoing-right、viewport clamp、vertical reveal |
+| invariant | 动作回调与 shared business owner 不变；preview inert；modal portal 必须位于 body；不得复制 Gateway/SQLite/消息状态机 |
+| gate | pure layout tests + H5 typecheck/full verify + authenticated non-mutating browser smoke |
+| stop | 不执行复制、编辑、转发、收藏、删除或消息发送；不改 RN/SDK business |
+
+### W6.a6.20.18 Chat Link Action Surface Convergence
+
+| field | value |
+| :--- | :--- |
+| source | RN 链接动作继续使用 `MessageActionBubbleModal` presentation；H5 `W6.a6.20.16` 旧链接菜单与 `W6.a6.20.17` 普通消息 modal |
+| target | H5 `ChatMessageLinkAction/ChatMessageActionModal -> ChatActionModalSurface -> InteractionModal` |
+| behavior | 链接普通点击不变；`500ms/8px` 长按、右键、打开/复制两项、收发靠边、viewport clamp 与全局遮罩统一 |
+| invariant | shared URL projection、browser open port、clipboard success-only、普通消息动作业务均不变；旧 inline menu 必须退出生产链 |
+| gate | anchor/layout behavior tests + existing link contracts + H5 typecheck/full verify + authenticated non-mutating ordinary-message regression |
+| stop | 不制造链接消息、不打开外链、不复制或执行消息 mutation；不改 RN business；不运行 RN/desktop builds 或 `build:package:desktop:web` |
+
+### W6.a6.20.19 Friend Profile Presence
+
+| field | value |
+| :--- | :--- |
+| source | RN `UserProfileScreen` 的好友 presence 初始查询、订阅和导航栏在线/离线投影 |
+| target | SDK `createIMUserPresenceSync/WebIMSync.presence` + H5 `useContactProfilePresence` |
+| behavior | 先订阅再查询；OpenAPI 100 人分批；realtime 胜过迟到 HTTP；未知状态保持未知；黑名单展示优先 |
+| invariant | presence 只存当前账号 runtime 内存，不写 SQLite；退出、切号、token 失效、被踢和 dispose 清订阅；页面不得直调 Gateway/WebSocket |
+| gate | SDK behavior/runtime tests + SDK/H5 typecheck/full verify + 真实好友资料只读浏览器 smoke |
+| stop | 不修改 RN caller/business，不执行资料 mutation，不运行 RN/desktop builds 或 `build:package:desktop:web` |
+
+### W6.a6.20.20 Group Member Presence
+
+| field | value |
+| :--- | :--- |
+| source | RN `GroupMembersScreen -> useGroupMemberOnlineStatus` 的普通群判定、批量查询与在线绿点 |
+| target | SDK `normalizeIMGroupMode/isIMNormalGroupMode` + H5 `useGroupMemberPresence` |
+| behavior | `1|normal` 标准化为普通群；仅普通群批量观察完整成员；只显示明确在线成员；large/unknown fail-closed |
+| invariant | 复用 `.20.19` shared presence HTTP/realtime/lifecycle；页面不持有 Gateway/WebSocket/SQLite 或群模式 magic number |
+| gate | SDK group-mode/joined-group/presence tests + H5 view/typecheck/full verify + 真实普通群成员页只读 smoke |
+| stop | 不改 RN caller/business，不执行群/成员 mutation，不运行 RN/desktop builds 或 `build:package:desktop:web` |
+
+### W6.a6.20.21 Group Settings Preview Presence
+
+| field | value |
+| :--- | :--- |
+| source | RN `GroupSettingsScreen -> useGroupMemberOnlineStatus` 只观察设置页预览成员并显示在线绿点 |
+| target | H5 `ChatSettingsPage -> useGroupMemberPresence`，复用 `.20.20` shared mode/presence owner |
+| behavior | 仅普通群观察实际渲染的最多 10 名预览成员；只给明确在线成员显示 RN 14/8px 状态点 |
+| invariant | 不新增设置页 presence service、HTTP/WebSocket/SQLite、群模式数字判断或完整成员订阅 |
+| gate | H5 settings/group-member focused tests + H5/SDK Web typecheck/full verify + 真实普通群设置页响应式只读 smoke |
+| stop | 不改 SDK/RN business，不执行群/成员 mutation，不运行 RN/desktop builds 或 `build:package:desktop:web` |
 - `../im28-sdk/src/platforms/web/**`：浏览器 SDK、存储适配和后续 Gateway runtime。
 - `docs/active/h5-foundation/**`：当前阶段的 plan/status/workset 真相源。
 - `architecture.md`、`README.md`、`docs/web-im-storage.md`：稳定边界和已实现事实。
@@ -187,6 +242,7 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实
   - `W6.a6.20.14-group-owner-transfer-route` 已完成本地闭环：H5 将 RN 群主转让对齐为 `/settings/manage/owner-transfer` 独立 route，删除管理页旧 picker、成员加载与 mutation action；管理员/群主页面共用 cache-first route data adapter，SDK 继续唯一持有候选、权限、exactly-once 与角色缓存事务。focused 10/10 和 full verify 通过；浏览器复验受真实 SQLite 多标签互斥锁阻塞，未执行角色 mutation，RN 业务未改。
   - `W6.a6.20.15-joined-group-row-actions` 已完成本地闭环：H5 我的群聊行复用 RN `300ms/8px` 长按合同，按 shared capability 展示分享群名片、退出群聊和修改群名称；分享/改名先由 shared `openGroup` 解析 canonical Conversation，再进入既有 SPA route，普通成员退出只调用 `groupLifecycle.leave(clearHistory)`。群主不复制 RN 客户端挑管理员并隐式退出的双轨编排，而是显式进入现有群主转让 route，转让后回我的群聊并由用户再次确认退出。focused 10/10 和 full verify 通过；当前账号群列表为空，非空气泡视觉与所有 destructive mutation 仍 data-gated/未授权，RN 业务未改。
   - `W6.a6.20.16-chat-text-link-actions` 已完成本地闭环：SDK shared core 对齐 RN HTTP(S)/www 链接边界、尾随标点和 www->HTTPS；H5 富文本气泡实际消费 shared 片段，普通点击开隔离新标签，500ms 长按/右键只显示打开/复制，复制保留原文并阻断外层消息菜单。当前真实群聊无链接消息，只完成 412px 健康/零溢出/零 console 证明；未发送测试消息，RN business/caller 均未改。
+  - `W6.a6.20.25-chat-audio-played-auto-next` 已完成本地闭环：SDK 纯规则统一语音稳定身份、RN localEx 已播放兼容和下一条 incoming type103 选择；H5 chat route 只持有账号/会话 localStorage、未播放红点和唯一 HTMLAudio，自然结束连播、手动停止/失败不推进。RN caller 冻结，真实认证媒体播放仍 data-gated。
   - `W6.a5.2.1.1-contact-pinyin-index-parity` 已完成本地闭环：H5 联系人展示层复用 RN `pinyin-pro@3.28.1` 和同一姓氏优先参数，中文索引、数字/符号 fallback 与分组顺序均有纯函数回归和真实 7 行只读证明；SDK/RN runtime 未改动。
   - `W6.a5.2.1.2-contact-route-code-split` 已完成本地闭环：`/contacts` 经 React Router `React.lazy + Suspense` 按路由加载，搜索过滤从拼音分组模块拆出；生产 main chunk 从 1,088.14 kB/366.35 kB gzip 降至 793.79 kB/222.24 kB gzip，联系人 chunk 为 294.92 kB/145.52 kB gzip。
   - `W6.a5.2.1.4-contact-list-interaction-contract-freeze` 已完成本地闭环：联系人页面先读账号 SQLite cache 再远端刷新，触屏下拉与会话列表共用单一浏览器 hook；右侧索引补齐 RN 顶部图标和活动态。RN 长按菜单四动作已冻结，但 H5 不在联系人 shared facade 缺失时创建部分菜单或 Web-only mutation。
@@ -247,3 +303,44 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实
 - RN 页面没有稳定视觉/行为源，或所需 API 在 shared Web entry 中无可验证等价能力。
 - 生产数据或凭据成为唯一验证前提，但当前环境未提供。
 - 新需求属于媒体、RTC、通知等独立能力族，应建立新的执行包。
+
+## Completed W6.a6.20.26
+
+- 对齐 type115 气泡：快照尺寸优先、旧消息自然尺寸探测、180px 最大宽度、保持比例且不放大小图。
+- 复用 route-scoped media owner 增加 `emoji` 纯图片预览；普通图片保存工具栏保持不变。
+- 非 HTTP(S) URL fail-closed，解码失败显示稳定失败态；未增加 SDK、Gateway、SQLite 或发送分支。
+- focused 15 tests、full SDK Web 89/371、466 assets、typecheck、1125-module build 和真实 412px 路由只读检查通过。
+- 当前真实会话无 type115，真实横/竖资源与预览点击保留为 sample gate。
+
+## Completed W6.a6.20.27
+
+- 新增 SDK shared 初始未读导航规则，统一精确 uint64、incoming、稳定消息身份和 RN type1201 边界。
+- H5 增加最后已读锚点、未读分割线、剩余未读浮层、80% 可见度统计和 40px 最新端跟随保护；系统消息进入同一身份链。
+- 搜索稳定消息定位优先；路由切换重置只读状态；不执行 mark-read/read receipt 或缓存 mutation。
+- SDK focused 3 tests、H5 focused 8 tests、full Web 90/374、466 assets、RN/Web/Desktop SDK typecheck、H5 typecheck 与 1127-module build 通过。
+- 真实 412px 当前账号无未读样本：验证零误画、最新端、零 overflow/error；非零未读视觉和滚动保留 data gate。
+
+## Completed W6.a6.20.28
+
+- SDK 同一未读模块增加可见身份到最高 incoming uint64 seq 的纯规则，H5 不复制序列或方向筛选。
+- H5 复用 converged `conversations.markRead`，对齐 RN 的短列表真实测量、长列表用户交互、显式未读入口和最新端 realtime 放行门禁。
+- 修复 shared partial read 收敛：服务端 `unread_count` 优先；无回包事实且未读到 `lastMsgSeq` 时保留原 unreadCount，避免 RN/H5 提前清角标。
+- focused SDK 8 tests、H5 4 tests、full SDK Web 90/376、466 assets、runtime boundary、RN/Web/Desktop SDK 与 H5 typecheck、1128-module build 通过。
+- 真实 412px 无未读会话零误画/overflow，干净 reload 零 error；真实非零 partial read、回包计数与 list-back 保留 data gate。
+
+## Completed W6.a6.20.29
+
+- SDK 新增历史窗口纯规则和 strict page facade，统一精确 uint64 previous cursor、稳定身份去重排序、clear boundary、SQLite upsert 与 `has_more/next_seq`；旧 `pullHistory` 数组返回保持兼容。
+- H5 只持有用户 wheel/touchmove/pointer 手势、顶部阈值、DOM 前插高度补偿和 1.2 秒滚动日期悬浮；初始未读与搜索定位的程序滚动不得误拉历史。
+- focused SDK 4/21、full SDK Web 91/381、H5 focused 4/8、466 assets、runtime boundary、SDK/H5 typecheck、build:web package sync 与 1131-module build 通过。
+- 真实 412px 短会话验证零误分页、loading/sticky/overflow；当前无长历史和 `has_more/next_seq` 样本，真实位置补偿与悬浮日期保留 data gate。
+- RN `useChatLoadMore` caller 保持冻结，状态为 `shared-core-ready/web-consumed/rn-frozen`；未修改 RN business 或同步 RN package，未执行 `build:package:desktop:web`。
+
+## Completed W6.a6.20.30
+
+- SDK `getCachedByStableMsgIDs` 按 client/server 稳定身份批量读取当前账号 SQLite，保序并以 canonical client ID 去重；不新增 Gateway operation 或 cache mutation。
+- H5 当前消息窗口优先，缺失来源才批量读取本地库；当前 DOM 直接居中高亮，本地来源用 React Router 同会话 `messageID` 目标窗口恢复。
+- 只有确认当前账号本地缺失才显示“引用的内容已删除”；群引用发送人复用 shared `resolveIMGroupMemberDisplayName`，未复制名称规则。
+- SDK focused 2/12、full Web 91/381、H5 focused 4/15、466 assets、runtime boundary、SDK/H5 typecheck、build:web package sync 与 1132-module build 通过。
+- 当前真实账号三个会话均无引用消息，页面路由、零 overflow 与零新增 console error 已证；真实引用点击、目标窗口与高亮保留 data gate。
+- RN `fetchMessageByID/FlatList` caller 保持冻结；未修改 RN business 或同步 RN package，未执行 RN/Desktop/build:all/`build:package:desktop:web`。

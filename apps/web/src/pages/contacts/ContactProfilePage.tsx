@@ -32,11 +32,21 @@ import {
   buildContactFriendApplicationRoute,
   formatContactProfileAddedAt,
   getContactProfileGenderLabel,
+  getContactProfileGroupPresentation,
+  getContactProfileNavbarState,
   getContactProfilePrimaryAction,
   resolveContactProfileBackHref,
+  readContactProfileGroupConversationID,
 } from './contact-profile-view.js';
 import { createContactCardShareLocationState } from './contact-action-view.js';
-import { ContactProfileAvatar, ContactProfileHeader } from './ContactProfileShared.js';
+import {
+  ContactProfileAvatar,
+  ContactProfileBlacklistStatus,
+  ContactProfileHeader,
+  ContactProfileOnlineStatus,
+} from './ContactProfileShared.js';
+import { useContactProfilePresence } from './useContactProfilePresence.js';
+import { useContactProfileGroupContext } from './useContactProfileGroupContext.js';
 import './contact-profile-page.css';
 
 /** RN 联系人资料核心页只调用 Web SDK peerProfile facade。 */
@@ -53,6 +63,8 @@ export function ContactProfilePage() {
   const userID = routeParams.userID?.trim() ?? '';
   // backHref 拒绝外部或任意 Router state，默认回通讯录。
   const backHref = resolveContactProfileBackHref(location.state);
+  // groupConversationID 只是候选，权限和成员关系仍由 shared facades 校验。
+  const groupConversationID = readContactProfileGroupConversationID(location.state);
   // navigate 仅负责真实 operation 成功后的 SPA 切换。
   const navigate = useNavigate();
   // profile 保存 Gateway 归一化的资料和关系状态。
@@ -108,6 +120,21 @@ export function ContactProfilePage() {
   }, [runtime, snapshot.userID, userID]);
 
   useEffect(() => { void loadProfile(); }, [loadProfile]);
+
+  /** peerOnline 通过独立 hook 消费 SDK 首值与 WS 增量。 */
+  const peerOnline = useContactProfilePresence(
+    runtime,
+    snapshot.userID,
+    userID,
+    profile?.relationship,
+  );
+  /** groupContext 以 fail-closed 方式恢复群入口昵称和互加好友限制。 */
+  const groupContext = useContactProfileGroupContext({
+    runtime,
+    accountUserID: snapshot.userID,
+    conversationID: groupConversationID,
+    targetUserID: userID,
+  });
 
   /** 创建并持久化真实单聊后进入现有聊天 route。 */
   const openConversation = useCallback(async (): Promise<void> => {
@@ -238,6 +265,16 @@ export function ContactProfilePage() {
     () => profile ? getContactProfilePrimaryAction(profile.relationship) : null,
     [profile],
   );
+  /** navbarState 复用 RN 黑名单和 presence 的显示优先级。 */
+  const navbarState = getContactProfileNavbarState(
+    profile?.relationship ?? null,
+    blockedByMe,
+    peerOnline,
+  );
+  /** groupPresentation 对齐 RN 受限群资料页并阻止校验期间动作闪现。 */
+  const groupPresentation = profile
+    ? getContactProfileGroupPresentation(profile.relationship, groupContext)
+    : { restricted: Boolean(groupConversationID), notice: '' };
 
   if (restoring) return <ContactProfilePageState label="正在恢复联系人资料" />;
   if (!runtime) {
@@ -250,12 +287,21 @@ export function ContactProfilePage() {
   const genderLabel = profile ? getContactProfileGenderLabel(profile.gender) : '';
   // addedAt 只为好友关系展示。
   const addedAt = profile ? formatContactProfileAddedAt(profile.addedAt) : '';
+  // displayName 在群入口校验成功后复用 SDK 群成员显示名优先级。
+  const displayName = groupContext.status === 'ready' && groupContext.displayName
+    ? groupContext.displayName
+    : profile?.displayName ?? '';
   return (
     <main className="rn-contact-profile-page" aria-busy={loading || actionPending}>
       <section className="rn-contact-profile-surface">
         <ContactProfileHeader
           backHref={backHref}
-          trailing={profile?.relationship === 'friend' ? (
+          titleNode={navbarState.kind === 'blacklist' ? (
+            <ContactProfileBlacklistStatus />
+          ) : navbarState.kind === 'presence' ? (
+            <ContactProfileOnlineStatus online={navbarState.online} />
+          ) : null}
+          trailing={profile?.relationship === 'friend' && !groupPresentation.restricted ? (
             <button
               type="button"
               className="rn-contact-profile-more"
@@ -272,10 +318,10 @@ export function ContactProfilePage() {
           <div className="rn-contact-profile-content">
             {error ? <ContactProfileError error={error} onRetry={loadProfile} /> : null}
             <div className="rn-contact-profile-hero">
-              <ContactProfileAvatar {...profile} />
+              <ContactProfileAvatar {...profile} displayName={displayName} />
               <div className="rn-contact-profile-name-row">
-                <h2>{profile.displayName}</h2>
-                {genderLabel ? (
+                <h2>{displayName}</h2>
+                {genderLabel && !groupPresentation.restricted ? (
                   <span
                     className={genderLabel === '男' ? 'is-male' : 'is-female'}
                     aria-label={`性别${genderLabel}`}
@@ -284,19 +330,25 @@ export function ContactProfilePage() {
                   </span>
                 ) : null}
               </div>
-              {profile.nickname && profile.nickname !== profile.displayName ? (
+              {!groupPresentation.restricted && profile.nickname && profile.nickname !== displayName ? (
                 <p className="rn-contact-profile-nickname">昵称：{profile.nickname}</p>
               ) : null}
-              <button type="button" className="rn-contact-profile-id" onClick={() => void copyUserID()}>
-                <span>ID：{profile.userID}</span>
-                <RNAssetIcon assetURL={copyIconURL} />
-              </button>
-              {profile.relationship === 'stranger' && profile.bio ? (
+              {!groupPresentation.restricted ? (
+                <button type="button" className="rn-contact-profile-id" onClick={() => void copyUserID()}>
+                  <span>ID：{profile.userID}</span>
+                  <RNAssetIcon assetURL={copyIconURL} />
+                </button>
+              ) : null}
+              {!groupPresentation.restricted && profile.relationship === 'stranger' && profile.bio ? (
                 <p className="rn-contact-profile-bio">{profile.bio}</p>
               ) : null}
             </div>
 
-            {profile.relationship === 'friend' ? (
+            {groupPresentation.notice ? (
+              <p className="rn-contact-profile-group-notice">{groupPresentation.notice}</p>
+            ) : null}
+
+            {profile.relationship === 'friend' && !groupPresentation.restricted ? (
               <div className="rn-contact-profile-quick-actions" aria-label="联系人快捷操作">
                 <ProfileQuickAction iconURL={phoneIconURL} label="语音通话" disabled={actionPending} onClick={() => void startCall('audio')} />
                 <ProfileQuickAction iconURL={videoIconURL} label="视频通话" disabled={actionPending} onClick={() => void startCall('video')} />
@@ -310,7 +362,7 @@ export function ContactProfilePage() {
               </div>
             ) : null}
 
-            {primaryAction === 'message' ? (
+            {!groupPresentation.restricted && primaryAction === 'message' ? (
               <button
                 type="button"
                 className="rn-contact-profile-primary"
@@ -319,7 +371,7 @@ export function ContactProfilePage() {
               >
                 {actionPending ? '正在打开' : '发消息'}
               </button>
-            ) : primaryAction === 'add-friend' ? (
+            ) : !groupPresentation.restricted && primaryAction === 'add-friend' ? (
               <Link
                 className="rn-contact-profile-primary"
                 to={buildContactFriendApplicationRoute(profile.userID)}
@@ -331,7 +383,7 @@ export function ContactProfilePage() {
               </Link>
             ) : null}
 
-            {profile.relationship === 'friend' ? (
+            {profile.relationship === 'friend' && !groupPresentation.restricted ? (
               <>
                 <div className="rn-contact-profile-card">
                   <ContactProfileRow label="备注名" value={profile.remark} onClick={() => setRemarkOpen(true)} />

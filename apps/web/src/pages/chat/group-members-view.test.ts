@@ -7,6 +7,7 @@ import {
   getGroupMemberDisplayName,
   getGroupMemberIndexes,
   getGroupMemberRoleLabel,
+  shouldShowGroupMemberPresence,
 } from './group-members-view.js';
 
 /** 构造群成员投影测试使用的共享 DTO。 */
@@ -51,5 +52,11 @@ describe('group members view', () => {
     expect(getGroupMemberRoleLabel('owner')).toBe('群主');
     expect(getGroupMemberRoleLabel('admin')).toBe('管理员');
     expect(getGroupMemberRoleLabel('member')).toBe('');
+  });
+
+  it('仅普通群展示成员在线状态', () => {
+    expect(shouldShowGroupMemberPresence({ mode: 'normal' })).toBe(true);
+    expect(shouldShowGroupMemberPresence({ mode: 'large' })).toBe(false);
+    expect(shouldShowGroupMemberPresence(null)).toBe(false);
   });
 });

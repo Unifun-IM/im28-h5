@@ -1,6 +1,7 @@
-import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import {
   createIMComposerSubmissionPlan,
+  resolveIMGroupMemberDisplayName,
   trimPresetEmojiDocument,
   type IMComposerSubmissionPlan,
   type PresetEmojiDocument,
@@ -38,6 +39,7 @@ export function ChatComposer({
   mentionMembers,
   canMentionAll,
   currentUserID,
+  mentionRequest,
   editingMessage,
   onCancelEdit,
   onEditText,
@@ -90,6 +92,32 @@ export function ChatComposer({
     selfID: currentUserID,
     canMentionAll,
   });
+  // handledMentionRequestRef 防止 hook 函数重建时重复消费同一头像长按。
+  const handledMentionRequestRef = useRef(0);
+
+  useEffect(() => {
+    if (!mentionRequest || handledMentionRequestRef.current === mentionRequest.id) return;
+    handledMentionRequestRef.current = mentionRequest.id;
+    if (!isGroup || editingMessage || quoteMessage) return;
+    /** member 只来自当前聊天已同步的群成员快照。 */
+    const member = mentionRequest.member;
+    /** displayName 复用 SDK 的群成员名称优先级。 */
+    const displayName = resolveIMGroupMemberDisplayName(member, member.userID);
+    mentions.append({
+      key: `user:${member.userID}`,
+      label: displayName,
+      description: member.userID,
+      avatarURL: member.avatarURL,
+      mention: {
+        key: `user:${member.userID}`,
+        type: 'user',
+        userID: member.userID,
+        nickname: displayName,
+      },
+    });
+    setVoiceMode(false);
+    setActivePanel(null);
+  }, [editingMessage, isGroup, mentionRequest, mentions.append, quoteMessage]);
   // canSend 统一控制键盘提交与可见发送按钮。
   const canSend = Boolean(
     draftDocument.text.trim() ||

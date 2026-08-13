@@ -17,7 +17,7 @@ interface ChatMediaPreviewOverlayProps {
   readonly onClose: () => void;
 }
 
-/** 按 RN 图片、视频和文件预览结构呈现短生命周期全屏层。 */
+/** 按 RN 图片、视频、文件和自定义表情预览结构呈现短生命周期全屏层。 */
 export function ChatMediaPreviewOverlay({
   preview,
   onClose,
@@ -29,7 +29,6 @@ export function ChatMediaPreviewOverlay({
     readonly kind: 'success' | 'error';
     readonly text: string;
   } | null>(null);
-  // downloadName 优先使用文件 payload 名称，其次使用 URL path。
   // downloadName 优先使用文件 payload 名称，其次使用原始 URL path。
   const downloadName = getChatMediaDownloadName(
     preview.url,
@@ -60,6 +59,26 @@ export function ChatMediaPreviewOverlay({
     } catch (cause) {
       setFeedback({ kind: 'error', text: readMediaActionError(cause) });
     }
+  }
+
+  if (preview.kind === 'emoji') {
+    return (
+      <section
+        className="rn-chat-media-preview is-emoji"
+        role="dialog"
+        aria-modal="true"
+        aria-label={preview.title}
+      >
+        <button
+          className="rn-chat-custom-emoji-preview"
+          type="button"
+          aria-label="关闭自定义表情预览"
+          onClick={onClose}
+        >
+          <img src={preview.url} alt="自定义表情预览" />
+        </button>
+      </section>
+    );
   }
 
   return (

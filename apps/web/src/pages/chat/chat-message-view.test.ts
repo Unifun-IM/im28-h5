@@ -133,6 +133,8 @@ describe('chat message view media mapping', () => {
           emoji: {
             emoji_id: 'emoji-115',
             url: 'https://media.example.com/emoji.webp',
+            width: 400,
+            height: 240,
           },
         }),
         false,
@@ -142,6 +144,8 @@ describe('chat message view media mapping', () => {
       text: '[表情]',
       emojiID: 'emoji-115',
       mediaURL: 'https://media.example.com/emoji.webp',
+      width: 400,
+      height: 240,
     });
   });
 

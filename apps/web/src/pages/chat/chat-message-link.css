@@ -30,49 +30,24 @@
   outline-offset: 2px;
 }
 
-.rn-chat-text-link-menu {
-  position: absolute;
-  z-index: 14;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  display: flex;
-  min-width: 132px;
-  transform: translateX(-50%);
-  padding: 5px;
+.rn-chat-text-link-modal-preview {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 9px 12px;
   border: 1px solid var(--im-border-subtle);
-  border-radius: 6px;
+  border-radius: 10px;
+  color: var(--im-text-link, #276ef1);
   background: var(--im-bg-card);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
-}
-
-.rn-chat-text-link-menu button {
-  display: flex;
-  min-width: 58px;
-  min-height: 38px;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 4px;
-  color: var(--im-text-primary);
-  background: transparent;
   font: inherit;
-  font-size: 13px;
-  letter-spacing: 0;
+  line-height: 1.45;
+  text-decoration: underline;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.rn-chat-text-link-menu button:hover,
-.rn-chat-text-link-menu button:focus-visible {
-  background: var(--im-bg-pressed);
-}
-
-.rn-chat-text-link-menu button:disabled {
-  color: var(--im-text-muted);
-}
-
-.rn-chat-text-link-menu .rn-asset-icon {
-  width: 17px;
-  height: 17px;
+.rn-chat-message-action-stack.is-mine .rn-chat-text-link-modal-preview {
+  border-color: transparent;
+  color: #ffffff;
+  background: var(--im-brand-primary);
 }
