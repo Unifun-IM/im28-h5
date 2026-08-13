@@ -3,6 +3,7 @@ import {} from '@im28/im-sdk/core';
 import { prepareWebIMFileUpload, prepareWebIMImageUpload, } from './message-media-send.js';
 import { uploadIMBroadcastMedia } from './message-broadcast-media.js';
 import { prepareWebIMVideoUpload, } from './message-video-send.js';
+import { createWebIMCardBody } from './message-card-send.js';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { resolveIMBroadcastTargetResults, } from './message-broadcast-result.js';
 /** Gateway 批量发送允许的最大目标数。 */
@@ -21,7 +22,20 @@ export function createIMMessageBroadcastSync(dependencies) {
         sendVideo: options => sendBroadcastMedia(dependencies, options, prepareWebIMVideoUpload(options), operationQueue),
         sendFile: options => sendBroadcastMedia(dependencies, options, prepareWebIMFileUpload(options), operationQueue),
         sendAudio: options => sendBroadcastMedia(dependencies, options, prepareWebIMAudioUpload(options), operationQueue),
+        sendCard: options => {
+            /** operation 复用同一 batch-send 与逐目标缓存收敛 owner。 */
+            const operation = () => sendBroadcastCardDirect(dependencies, options);
+            return operationQueue ? operationQueue.enqueue(operation) : operation();
+        },
     };
+}
+/** 构造一次规范 type108 body 并批量发送到好友或群聊。 */
+async function sendBroadcastCardDirect(dependencies, options) {
+    /** prepared 在 body 和 Gateway 前冻结账号、目标与批次身份。 */
+    const prepared = prepareBroadcastRequest(dependencies, options);
+    /** body 与普通名片发送共用唯一校验和 DTO 映射。 */
+    const body = createWebIMCardBody(options.card);
+    return sendBroadcastBodyDirect(dependencies, prepared, body);
 }
 /** 执行一次 Gateway batch-send 并逐目标收敛明确成功消息。 */
 async function sendBroadcastTextDirect(dependencies, options) {

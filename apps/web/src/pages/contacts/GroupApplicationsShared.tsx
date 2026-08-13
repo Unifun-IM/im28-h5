@@ -2,13 +2,14 @@ import { Link } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 
 /** 群申请页面共享导航栏参数。 */
 interface GroupApplicationsHeaderProps { readonly title: string; readonly backTo: string }
 
 /** 群申请页面共享 RN 导航栏。 */
 export function GroupApplicationsHeader({ title, backTo }: GroupApplicationsHeaderProps) {
-  return <header className="rn-group-applications-header"><Link to={backTo} aria-label="返回"><RNAssetIcon assetURL={backIconURL} /></Link><h1>{title}</h1><span /></header>;
+  return <PageNavbar className="rn-group-applications-header"><Link to={backTo} aria-label="返回"><RNAssetIcon assetURL={backIconURL} /></Link><h1>{title}</h1><span /></PageNavbar>;
 }
 
 /** 群申请错误状态参数。 */

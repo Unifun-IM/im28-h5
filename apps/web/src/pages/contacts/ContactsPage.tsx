@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { WebIMContact } from '@im28/im-sdk/web';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 
@@ -7,15 +7,16 @@ import groupsIconURL from '../../assets/rn/assets/icons/imm28/contact-groups.svg
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import starIconURL from '../../assets/rn/assets/icons/imm28/star.solid.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { usePrimaryTabBadges } from '../../components/primary-tabs/index.js';
 import { CallTypeActionSheet } from '../../components/call/CallTypeActionSheet.js';
 import { HomeActionMenu } from '../../components/home-actions/HomeActionMenu.js';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
 import { ContactActionMenu } from './ContactActionMenu.js';
 import { ContactDeleteSheet } from './ContactActionSheets.js';
 import { ContactRow } from './ContactRow.js';
 import { VerificationCountBadge } from './VerificationCountBadge.js';
-import { useVerificationUnreadCounts } from './use-verification-unread.js';
 import {
   createContactCardShareLocationState,
   getContactActionMenuState,
@@ -33,6 +34,8 @@ import './contacts-page.css';
 
 /** RN 通讯录核心页通过 Web SDK facade 读取真实 Gateway 好友列表。 */
 export function ContactsPage() {
+  /** pageRef 用于在保留式主场景内定位独立滚动容器。 */
+  const pageRef = useRef<HTMLElement | null>(null);
   /** navigate 只处理用户明确选择后的 SPA 路由切换。 */
   const navigate = useNavigate();
   // runtime context 是页面唯一允许消费的 SDK owner。
@@ -61,11 +64,11 @@ export function ContactsPage() {
   const [actionPending, setActionPending] = useState(false);
   /** actionError 呈现真实 facade 或通话启动失败。 */
   const [actionError, setActionError] = useState<string | null>(null);
-  // verificationCounts 复用验证页相同的 SDK 未读规则。
+  // verificationCounts 读取主导航壳的唯一计数快照，避免通讯录重复请求两个 facade。
   const {
-    counts: verificationCounts,
-    refresh: refreshVerificationCounts,
-  } = useVerificationUnreadCounts();
+    verificationUnreadCounts: verificationCounts,
+    refreshVerificationUnreadCounts: refreshVerificationCounts,
+  } = usePrimaryTabBadges();
 
   /** 先读账号 SQLite cache，再调用唯一 contacts facade 完成远端刷新。 */
   const loadContacts = useCallback(async () => {
@@ -117,6 +120,10 @@ export function ContactsPage() {
     void loadContacts();
   }, [loadContacts]);
 
+  useEffect(() => {
+    void refreshVerificationCounts();
+  }, [refreshVerificationCounts]);
+
   // entries 聚合星标和普通联系人分组，搜索由独立 RN 全屏路由负责。
   const entries = useMemo(
     () => buildContactListEntries(contacts, ''),
@@ -132,7 +139,10 @@ export function ContactsPage() {
   /** scrollToTop 对齐 RN 索引栏顶部搜索图标的真实行为。 */
   const scrollToTop = useCallback(() => {
     setActiveIndex(indexes[0] ?? '');
-    globalThis.scrollTo({ top: 0, behavior: 'smooth' });
+    /** scene 是通讯录所属的 Activity 独立滚动视口。 */
+    const scene = pageRef.current?.closest<HTMLElement>('[data-primary-tab-scene]');
+    if (scene) scene.scrollTo({ top: 0, behavior: 'smooth' });
+    else globalThis.scrollTo({ top: 0, behavior: 'smooth' });
   }, [indexes]);
 
   /** scrollToIndex 更新活动态并把目标分组滚到 sticky header 下方。 */
@@ -252,6 +262,7 @@ export function ContactsPage() {
 
   return (
     <main
+      ref={pageRef}
       className="rn-contacts-page"
       onTouchStart={pullRefresh.onTouchStart}
       onTouchMove={pullRefresh.onTouchMove}
@@ -271,13 +282,11 @@ export function ContactsPage() {
           </Link>
         </header>
 
-        <div
-          className={`rn-contacts-pull${pullRefresh.armed ? ' is-armed' : ''}`}
-          style={{ height: refreshing ? 36 : pullRefresh.pullDistance }}
-          aria-hidden={!refreshing && pullRefresh.pullDistance === 0}
-        >
-          <span>{refreshing ? '正在刷新' : pullRefresh.armed ? '松开刷新' : '下拉刷新'}</span>
-        </div>
+        <PullRefreshIndicator
+          refreshing={refreshing}
+          armed={pullRefresh.armed}
+          pullDistance={pullRefresh.pullDistance}
+        />
 
         {error ? (
           <div className="rn-contacts-error" role="alert">

@@ -13,6 +13,7 @@ function createSnapshot(userID: string): WebIMRuntimeSnapshot {
     state: 'connecting',
     userID,
     dataVersion: 0,
+    relationshipVersion: 0,
     incomingCall: { phase: 'idle', call: null, revision: 0 },
   };
 }

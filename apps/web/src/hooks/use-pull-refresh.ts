@@ -49,9 +49,14 @@ export function usePullRefresh({
 
   /** onTouchStart 只在文档或内层列表顶部且未刷新时接管单指下拉。 */
   const onTouchStart = useCallback<TouchEventHandler<HTMLElement>>(event => {
+    /** sceneScrollTop 读取保留式主场景的独立滚动位置。 */
+    const sceneScrollTop = event.currentTarget
+      .closest<HTMLElement>('[data-primary-tab-scene]')
+      ?.scrollTop ?? 0;
     if (
       refreshing
       || globalThis.scrollY > 0
+      || sceneScrollTop > 0
       || event.currentTarget.scrollTop > 0
       || event.touches.length !== 1
     ) return;

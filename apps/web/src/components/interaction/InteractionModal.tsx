@@ -68,6 +68,14 @@ export function InteractionModal({
     if (open) onRequestClose();
   }
 
+  /** 兼容未稳定派发 dialog cancel 的 WebView，由受控状态统一处理 Escape。 */
+  function handleKeyDown(event: React.KeyboardEvent<HTMLDialogElement>) {
+    if (event.key !== 'Escape' || !open) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onRequestClose();
+  }
+
   /** 仅点击 dialog 自身遮罩区域时请求关闭，内容点击不冒泡关闭。 */
   function handleBackdropClick(event: React.MouseEvent<HTMLDialogElement>) {
     if (closeOnBackdrop && event.target === event.currentTarget && open) {
@@ -82,6 +90,7 @@ export function InteractionModal({
       aria-label={ariaLabel}
       onCancel={handleCancel}
       onClick={handleBackdropClick}
+      onKeyDown={handleKeyDown}
     >
       {children}
     </dialog>

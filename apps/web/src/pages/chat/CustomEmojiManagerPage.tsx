@@ -6,6 +6,7 @@ import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regul
 import checkIconURL from '../../assets/rn/assets/icons/imm28/check.regular.svg';
 import plusIconURL from '../../assets/rn/assets/icons/imm28/plus.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import {
   buildCustomEmojiUploadInputs,
@@ -184,13 +185,13 @@ export function CustomEmojiManagerPage() {
   return (
     <main className="rn-custom-emoji-manager-page" aria-busy={loading || mutating}>
       <section className="rn-custom-emoji-manager-surface">
-        <header className="rn-custom-emoji-manager-header">
+        <PageNavbar className="rn-custom-emoji-manager-header">
           <Link to={backHref} aria-label="返回聊天"><RNAssetIcon assetURL={backIconURL} /></Link>
           <h1>我的表情</h1>
           <button type="button" disabled={mutating || !emojis.length || mode === 'move'} onClick={() => { setMode(current => current === 'view' ? 'organize' : 'view'); setSelectedIDs([]); }}>
             {mode === 'view' ? '整理' : '取消'}
           </button>
-        </header>
+        </PageNavbar>
         {error ? <p className="rn-custom-emoji-manager-feedback is-error" role="status">{error}</p> : null}
         {notice ? <p className="rn-custom-emoji-manager-feedback is-success" role="status">{notice}</p> : null}
         <div className="rn-custom-emoji-manager-grid" role="list" aria-label="自定义表情" ref={gridRef}>

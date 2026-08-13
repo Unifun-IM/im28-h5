@@ -2,6 +2,7 @@ import type { GatewayHTTPClient, Message } from '@im28/im-sdk/core';
 import { type WebIMDeleteMessagesOptions, type WebIMDeleteMessagesResult, type WebIMMessageDeleteScope } from './message-delete.js';
 import { type WebIMEditTextMessageOptions } from './message-edit.js';
 import { type WebIMForwardMessagesOptions, type WebIMForwardMessagesResult } from './message-forward.js';
+import { type WebIMForwardMessagesToTargetsOptions, type WebIMForwardMessagesToTargetsResult } from './message-forward-targets.js';
 import type { WebIMMessageSendDependencies } from './message-send-state.js';
 import { type WebIMSyncContextDependencies } from './sync-context.js';
 import { type WebIMSyncMutationQueueDependencies } from './sync-mutation-queue.js';
@@ -21,6 +22,8 @@ export type IMForwardMessagesResult = WebIMForwardMessagesResult;
 export interface IMMessageMutationSync {
     /** 从当前账号缓存重读来源并执行真实转发。 */
     forward(options: IMForwardMessagesOptions): Promise<IMForwardMessagesResult>;
+    /** 复用同一来源状态机向最多 50 个真实会话转发。 */
+    forwardToTargets(options: WebIMForwardMessagesToTargetsOptions): Promise<WebIMForwardMessagesToTargetsResult>;
     /** 从当前账号缓存重读目标并执行 self/all 删除。 */
     delete(options: IMDeleteMessagesOptions): Promise<IMDeleteMessagesResult>;
     /** 从当前账号缓存重读目标并编辑同一条文本消息。 */

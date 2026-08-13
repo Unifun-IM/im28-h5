@@ -14,6 +14,138 @@
 - 在独立 `im28-sdk` Git 仓库建立浏览器平台 owner，以 `@im28/im-sdk/core` 复用公共逻辑，并通过 `@im28/im-sdk/web` 交付 SQLite/IndexedDB、Gateway 和同步运行时适配。
 - 以纵向切片逐步交付认证、会话和消息能力，每个切片都有明确验证和残留项。
 - 以 `im28-phone` 为视觉、资产、页面行为和能力源，按 React Router SPA 路由逐页完成可追踪 parity 迁移。
+
+## W6.a6.20.57 Primary Contacts Tab Verification Badge
+
+| field | value |
+| :--- | :--- |
+| source | RN `HomeTabBar` 的通讯录角标、`ChatHomeScreen` 好友/群申请计数和联系人刷新入口 |
+| capability | 全局通讯录 Tab 展示好友申请未读与群申请总数之和；TabBar 与通讯录 shortcut 共用一个主布局快照；进入/下拉后刷新 |
+| boundary | H5 只持有 Tab 生命周期与展示；计数读取继续调用既有 SDK `friendApplications.getUnreadCount/groupApplications.getUnreadCount`；RN business/source 冻结 |
+| implementation | `PrimaryTabsLayout` 组合 hook；Provider 暴露只读计数/刷新端口；同账号并发读取合并并阻止旧账号结果回写；删除主 Tab 禁用遗留 |
+| verification | focused 3/7、full 111/344、H5 typecheck、1165-module build、diff check；真实 2 联系人、四 Tab SPA 往返、零值隐藏 browser proof |
+| status | `completed/done-local/presentation-owner-converged; non-zero-data-gated` |
+
+## W6.a6.20.56 Legacy Chat Forward Route Compatibility Convergence
+
+| field | value |
+| :--- | :--- |
+| source | `.54` 删除独立转发目标页后遗留的旧 React Router 地址、浏览器历史和进程内稳定 ID state |
+| capability | 旧 `/conversations/:conversationID/forward` 安全 replace 回当前聊天；有效同源稳定 ID 只触发现有聊天内目标弹窗一次；刷新/后退不重放 |
+| boundary | H5 只持有 route/state compatibility；目标 presentation 继续唯一归 `ChatTargetPickerModal`，转发业务继续归 shared SDK；RN business/source 冻结 |
+| implementation | 新增无 UI 的 `ChatForwardCompatibilityRedirect`；复用严格 route reader，校验路由、来源与加载后当前会话一致，并立即清除一次性 state |
+| verification | focused 1/4、full 110/341、typecheck、1165-module build、diff check；旧 URL、reload、back 与零日志 browser proof |
+| status | `completed/done-local/compatibility-only; browser-readonly-pass` |
+
+## W6.a6.20.55 Chat Initial Message Skeleton Parity
+
+| field | value |
+| :--- | :--- |
+| source | RN `ChatMessageSkeleton.tsx` 的固定 incoming 气泡、群头像、骨架尾巴、shimmer 与底部裁切行为 |
+| capability | 聊天冷首屏使用 12 条 RN 同构骨架；群/单聊头像差异明确；加载内容锁定消息视口并从底部排列 |
+| boundary | H5 只持有 loading presentation 和 CSS；history/cache/loading 状态继续由既有 ChatPage/SDK owner 提供；RN business/source 冻结 |
+| implementation | 新增独立 `ChatMessageSkeleton` 与专属 CSS；删除 `ChatMessageList` 内旧 4 条交替占位；复用 RN skeleton tail 资产和主题变量 |
+| verification | H5 focused 1/3、full 110/339、466 assets、typecheck、1164-module build；第二账号真实短群聊底部几何/稳定 reload；自然冷帧因 cache 过快 gated |
+| status | `completed/done-local/presentation-only; cold-frame-timing-gated` |
+
+## W6.a6.20.54 Unified Chat Target Picker And Short-List Bottom Alignment
+
+| field | value |
+| :--- | :--- |
+| source | RN 二维码分享目标弹层、转发/群发/名片选择流程与聊天 FlatList 底部对齐行为 |
+| capability | 好友/群聊目标统一封装为可配置单选/多选弹窗；多选提供当前筛选范围 ALL；一次确认可发送多个目标；短消息列表贴近输入区底部 |
+| boundary | H5 只持有 modal/search/tab/selection/route source 与 CSS；SDK 持有多目标转发、type108 名片 batch-send 和部分结果；RN business source 冻结 |
+| implementation | 新增 `ChatTargetPickerModal`；聊天转发留在当前页；群发、二维码、用户/群名片复用同一弹窗；删除独立转发目标页；消息列表增加内部 bottom-aligned stack |
+| verification | SDK focused 3/13 + all-runtime boundary/typecheck；H5 full 109/337、typecheck、1161-module build；登录态弹窗跨 Tab/ALL、URL 不跳转和短列表底对齐 browser proof |
+| status | `completed/shared-core-ready/web-consumed/rn-frozen; mutation-acceptance-gated` |
+
+## W6.a6.20.53 Pull Refresh Indicator Owner Convergence
+
+| field | value |
+| :--- | :--- |
+| source | 已完成的 RN `RefreshControl` 页面与 H5 全部 `usePullRefresh` 生产消费者 |
+| capability | 跨页面下拉、松开、刷新三态只由一个全局展示 owner 投影，页面刷新 facade 和状态机不变 |
+| boundary | H5 仅收敛 JSX/CSS；不修改 refresh callback、Gateway、SQLite、DTO、mutation、SDK 或 RN business |
+| implementation | Calls、Contacts、JoinedGroups、CreateGroup、会话/归档/搜索、群成员、添加管理员、转让群主共 10 页改用 `PullRefreshIndicator`；删除 9 个 CSS 文件中的局部提示选择器 |
+| verification | 20/20 consumer contract、legacy selector zero、focused/full H5、assets、typecheck、build、真实登录态四路由只读 browser smoke |
+| status | `completed/done-local/presentation-owner-converged; physical-touch-gated` |
+
+## W6.a6.20.52 Forward Target Pull Refresh
+
+| field | value |
+| :--- | :--- |
+| source | RN `ForwardTargetSelector.tsx` 普通转发选择页的 `RefreshControl` 与既有 H5 转发目标主链 |
+| capability | 最近聊天、好友、群聊三类目标顶部单指下拉、统一三态反馈、失败保留当前目标/Tab/搜索词 |
+| boundary | H5 只负责手势和提示；三类事实继续复用 `loadChatForwardTargets -> WebIMSync`；不打开目标或提交真实转发 |
+| implementation | `ChatForwardTargetPage` 复用全局 `usePullRefresh/PullRefreshIndicator`；手动刷新全部成功后才替换三类快照 |
+| verification | pull/shared-owner contract、既有 source/view tests、full H5、assets、typecheck、build、真实登录态只读浏览器 smoke |
+| status | `completed/done-local/presentation-only; physical-touch-gated` |
+
+## W6.a6.20.51 Blacklist Pull Refresh And Indicator Convergence
+
+| field | value |
+| :--- | :--- |
+| source | RN `ProfileScreen.tsx` 黑名单 FlatList 的 `refreshing/onRefresh` 与既有 H5 黑名单主链 |
+| capability | 黑名单顶部单指下拉、三态反馈、失败保留旧列表与搜索词；跨页面刷新提示单 owner |
+| boundary | H5 只负责手势和提示；读取与解除继续复用 shared `blacklist`；不执行真实解除 mutation |
+| implementation | `MeBlacklistPage` 复用全局 `usePullRefresh`；七个页面收敛到 `PullRefreshIndicator`，删除两套旧组件与重复 CSS |
+| verification | pull/shared-owner contract、黑名单筛选、全局提示消费者、full H5、assets、typecheck、build、真实登录态只读浏览器 smoke |
+| status | `completed/done-local/presentation-only; empty-data-and-physical-touch-gated` |
+
+## W6.a6.20.50 Group Applications Pull Refresh
+
+| field | value |
+| :--- | :--- |
+| source | RN `GroupApplicationListView.tsx` 的 `RefreshControl` 与既有 H5 指定群申请处理主链 |
+| capability | 指定群申请列表顶部单指下拉、统一三态反馈、失败保留旧列表与搜索词 |
+| boundary | H5 只负责手势和提示；读取与 accept/reject 继续复用 shared `groupApplications`；不执行真实申请 mutation |
+| implementation | `GroupApplicationsPage` 复用全局 `usePullRefresh` 与既有 `VerificationPullIndicator`；刷新成功后才替换页面事实 |
+| verification | pull/shared-owner contract、既有申请 view、full H5、assets、typecheck、build、真实登录态只读浏览器 smoke |
+| status | `completed/done-local/presentation-only; physical-touch-and-action-data-gated` |
+
+## W6.a6.20.49 Group Mute Pull Refresh
+
+| field | value |
+| :--- | :--- |
+| source | RN `GroupMuteScreen.tsx` 手动禁言列表 `RefreshControl` 与既有 H5 群禁言主链 |
+| capability | 群禁言页顶部单指下拉、统一三态反馈、失败保留禁言范围与成员快照 |
+| boundary | H5 只负责手势和提示；刷新继续复用 shared `groups/groupMembers`，mutation 继续复用 `groupManagement`；不执行真实禁言 |
+| implementation | `GroupMutePage` 复用全局 `usePullRefresh`；提示收敛为三个群页面共用 `GroupPullRefreshIndicator` |
+| verification | mute/pull/shared-owner contract、full H5、assets、typecheck、build、真实登录态只读浏览器 smoke |
+| status | `completed/done-local/presentation-only; physical-touch-gated` |
+
+## W6.a6.20.48 Group Member Selection Pull Refresh
+
+| field | value |
+| :--- | :--- |
+| source | RN 群邀请与移除成员选择页的 `RefreshControl`，以及既有 H5 群成员选择主链 |
+| capability | 两页顶部单指下拉、统一三态反馈、失败保留旧候选与选择 |
+| boundary | H5 只负责手势和提示；同步继续复用 shared `groups/groupMembers/contacts`；不执行邀请或移除 mutation |
+| implementation | 两页复用全局 `usePullRefresh` 与 `GroupMemberSelectionPullIndicator`；所有 facade 成功后才一次替换候选事实 |
+| verification | shared-owner/pull contract、既有页面 view、full H5、assets、typecheck、build、真实登录态只读浏览器 smoke |
+| status | `completed/done-local/presentation-only; physical-touch-gated` |
+
+## W6.a6.20.47 Joined Groups Pull Refresh
+
+| field | value |
+| :--- | :--- |
+| source | RN `ContactGroupListScreen.tsx` 的 `RefreshControl` 与既有 H5 `/contacts/groups` 主链 |
+| capability | 群列表顶部单指下拉、刷新反馈、失败保留旧快照 |
+| boundary | H5 只负责手势与提示；列表同步继续复用 shared `groups.sync`；不执行群生命周期 mutation |
+| implementation | `JoinedGroupsPage` 复用全局 `usePullRefresh`，页面 CSS 投影统一三态提示 |
+| verification | pull/shared-owner contract、群列表 view、full H5、assets、typecheck、build、真实登录态只读浏览器 smoke |
+| status | `completed/done-local/presentation-only; physical-touch-gated` |
+
+## W6.a6.20.46 Create Group Selection Review And Pull Refresh
+
+| field | value |
+| :--- | :--- |
+| source | RN `CreateGroupScreen.tsx` 普通建群选中态、已选好友复核层与 `RefreshControl` |
+| capability | 选中头像预览、清空、逐个移除、搜索返回和联系人下拉刷新 |
+| boundary | H5 只负责 UI/手势；创建与联系人读取继续复用 shared SDK 既有 owners；不执行真实建群 mutation |
+| implementation | `CreateGroupSelectedFriends` + 纯候选投影 helper + `usePullRefresh`；复用全局 `InteractionModal` |
+| verification | helper/component/pull focused、full H5、assets、typecheck、build、真实登录态只读浏览器 smoke |
+| status | `completed/done-local/presentation-only; physical-touch-gated` |
 - 防止 Web 自建业务分支：共享能力先在 `im28-sdk` 收敛为平台中性实现，再由 H5/Web production caller 消费。RN 当前业务冻结；未获独立授权前不改 RN caller，状态标记 `shared-core-ready/web-consumed/rn-frozen`，不得伪报跨端完成。
 
 ## Scope
@@ -344,3 +476,203 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实
 - SDK focused 2/12、full Web 91/381、H5 focused 4/15、466 assets、runtime boundary、SDK/H5 typecheck、build:web package sync 与 1132-module build 通过。
 - 当前真实账号三个会话均无引用消息，页面路由、零 overflow 与零新增 console error 已证；真实引用点击、目标窗口与高亮保留 data gate。
 - RN `fetchMessageByID/FlatList` caller 保持冻结；未修改 RN business 或同步 RN package，未执行 RN/Desktop/build:all/`build:package:desktop:web`。
+
+## Completed W6.a6.20.31
+
+- H5 删除 flow 只消费既有 shared `messages.delete` 的 `deletedClientMsgIDs`；在 operation 内、SQLite 窗口重读前冻结成功行，partial result 的失败项不进入动画。
+- `useChatMessageDeleteExit` 保留删除前窗口 620ms，合并期间新到 cache 行；逐行动画结束或 700ms 兜底后释放，不改变 SDK、Gateway、SQLite 或通知语义。
+- `ChatMessageBubble` 为普通/系统消息复用固定 18 粒子的 RN 碎裂退场；独立 CSS 支持 reduced-motion，未继续扩大已接近上限的聊天主样式。
+- H5 focused 4 files/13 tests、Web typecheck、1136-module production build 和 diff check 通过；412px 已登录真实聊天页零 overflow/error，CSS 620ms 规则真实加载。
+- 真实单条/批量 `self/all` 删除、partial Gateway 结果与肉眼动画仍为破坏性验收门；本片未改 SDK/RN，也未执行 SDK/RN/Desktop build/sync 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.32
+
+- SDK 单一维护 RN 同优先级的群生命周期、权限、角色、禁言和频率限制规则，并由 joined-group DTO 投影不可用原因。
+- H5 cache-first 恢复群与成员，独立收敛两类刷新失败；footer 固定多选、不可用、待转发和普通输入优先级。
+- 恢复中、权威群缺失和无缓存读取失败均 fail-closed；有缓存弱网不清空已知限制。
+- RN caller 冻结，受限群真实样本和群权限 realtime contract 保留验收门；下一片冻结单聊黑名单/陌生人关系提示。
+
+## Completed W6.a6.20.33
+
+- 冻结真实 contract：Gateway 只有 `is_friend` 与我方 blacklist，没有反向黑名单；RN `blockedByPeer` 历史字段按 stranger 兼容语义处理。
+- SDK 单一维护 `blocked-by-me/stranger/friend` 投影、RN 文案与发送关系错误分类；组合 facade 复用 peer profile 和 blacklist owner。
+- H5 route hook 只消费 SDK facade；我方拉黑替换 composer，陌生人保留 composer 并在消息底部进入 React Router 好友申请页；未知状态 fail-closed。
+- SDK 96/395、全 target typecheck、boundary、build:web/sync:web，H5 focused 2/6、typecheck、1143-module build通过；真实群聊和两条好友单聊零回归。
+- RN caller/业务零改动；下一片建立好友关系 domain revision，避免用通用消息 `dataVersion` 反复请求资料/blacklist。
+
+## Completed W6.a6.20.34
+
+- SDK 新增关系 realtime 共享判定，好友/我方 blacklist 事实变化推进独立 `relationshipVersion`；普通消息不再承担关系刷新信号。
+- 仅申请列表变化被明确排除，好友申请接受保留为关系事实变化；Web runtime 不新增第二个 socket、transport 或 cache owner。
+- H5 `useChatDirectRelationship` 仅把 runtime revision 加入既有 facade 重读依赖，继续沿用 W33 的 fail-closed 和错误可见规则。
+- SDK Web 93/387、boundary、Web typecheck/build:web/sync:web，H5 typecheck、1144-module build通过；412px 真实好友单聊刷新、composer 和宽度通过。
+- RN 业务、caller 和生成包零改动；真实双账号好友/blacklist realtime 仍为数据验收门。
+
+## Completed W6.a6.20.35
+
+- 单聊设置页成员加号进入独立 React Router SPA route，返回保持原会话设置；普通 `/groups/create` 入口不变。
+- 页面从当前账号 conversations cache-first source 严格解析单聊对象，将其固定计入建群成员并从候选中隐藏，用户必须至少再选择一位好友。
+- 两个入口都复用既有 SDK `groups.create`；H5 不复制 2–998、去重、本人拒绝、Gateway、`remote-only` 或群/会话原子缓存语义。
+- H5 focused 2 files/13 tests、typecheck 与 1144-module production build 通过；412px 真实入口、候选排除、总数/按钮状态、返回和零 overflow 只读验收通过。
+- 未执行真实创建；SDK source/package scripts 和 `im28-phone` 零改动，未执行 RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.36
+
+- 唯一全局 `PrimaryTabBar` 对齐 RN 320ms 消息 Tab 双击窗口；只有消息页已选且存在非静音未读时才请求当前页面动作，离开消息路由清空时间窗。
+- `PrimaryTabsLayout` 只持有当前会话页注册的短生命周期函数；`ConversationsPage` 按 `unreadCount > 0 || manualUnread`、首个可见行之后和上次目标循环规则选择稳定会话 ID。
+- 目标行通过稳定 `data-conversation-id` 解析并只执行 `scrollIntoView`；不触发 markRead、read receipt、Gateway、Repository 或 SQLite mutation。
+- H5 focused 2 files/10 tests、typecheck 与 1145-module production build 通过；既有 >500kB chunk warning 不变。
+- 5176 dev 服务正常，但当前工具不能控制应用内登录态浏览器，Chrome 旧 5177 账号存储也未恢复；真实登录态双击滚动如实保留 manual gate，不注入假数据或伪造证据。
+- SDK/RN source/package 零改动，未执行任何 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.37
+
+- SDK `modules/message/call-message.ts` 成为历史通话消息唯一新增解析 owner，统一 core/Gateway/RN 包装、audio/video、七种状态、时长和 RN 文案。
+- 实时 `rtc.call.invite/accept` 明确 fail-closed；历史摘要与终态才进入气泡，避免和既有来电 lifecycle 双轨。
+- H5 消息 view 消费 shared 投影，气泡复用 RN 镜像图标；单聊点击进入既有 `handleStartCall -> WebIMCallProvider`，群聊只读。
+- SDK focused 1/4、full Web 94/391、H5 focused 1/9、boundary、SDK Web/H5 typecheck 与 1147-module build通过。
+- 5176 真实目标会话和 console 健康，但缓存无历史通话样本；视觉保持 data-gated，不注入假消息或发起真实呼叫。
+- `im28-phone` clean；只执行 `build:web/sync:web`，未执行 RN/Desktop/build:all/`build:package:desktop:web`。
+
+## Completed W6.a6.20.38
+
+- SDK 新增会话草稿 facade 和只读文档 parser，统一当前账号会话校验、trim、预设表情 entities 与本地 SQLite 写入；草稿不调用 Gateway。
+- schema v13 用 `draft_entities_json` 分列保存实体；全量/未归档会话远端替换前先快照本地草稿并合并，避免同步刷新清空尚未发送的输入。
+- H5 `ChatPage/ChatComposer` 完成输入保存、列表 `[草稿]`、重进恢复、成功发送/显式清空移除；发送失败不清空草稿，列表不再自行解析 SDK payload。
+- SDK focused 3 files/12 tests、Web full 95/394，H5 focused 2 files/12 tests、full 97/304，SDK Web/H5 typecheck、build:web/sync:web 与 1149-module build通过。
+- 5176 登录态实际完成 `W38草稿😎` 输入、列表预览、重进恢复和清空回退最新消息，console 0 error；未发送消息或执行远端 mutation。
+- `im28-phone` clean；RN caller/业务零改动，未执行 RN/Desktop/build:all/`build:package:desktop:web`。
+
+## Completed W6.a6.20.39
+
+- H5 `/calls` 复用全局 `usePullRefresh`，只在页面顶部单指释放后触发；编辑态禁用手势，避免和批量选择冲突。
+- 刷新链严格复用既有 SDK `calls.sync -> listCached`，并保留当前 all/missed 筛选、搜索词与第一页大小；页面不新增 Gateway、SQLite、DTO 或通话状态 owner。
+- 同步失败不会继续读取或替换 cache，旧列表保留并展示真实错误；成功才原子替换当前筛选列表与总数。
+- H5 focused 1 file/4 tests、full 97 files/306 tests、typecheck、1149-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 在 412px 下完成所有/未接筛选、编辑/完成、空态和 TabBar 只读验收，宽度 412/412、console 0 warning/error；物理触摸下拉保留显式验收门。
+- 本片 SDK 零改动，`im28-phone` clean；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.40
+
+- 好友验证与群聊验证索引复用全局 `usePullRefresh`，只在页面顶部单指释放后触发；首次 loading 和 refreshing 均禁用重复手势。
+- 两侧列表分别只调用既有 `friendApplications.list` 与 `groupApplications.list`；父层角标继续使用原 `getUnreadCount` owners，H5 不新增申请 DTO、Gateway、计数或 mutation owner。
+- 列表与角标通过独立结果并行刷新：角标失败不阻断成功列表，列表失败保留旧快照并显示真实错误，不用计数成功伪造空列表。
+- focused 3 files/12 tests、H5 full 98 files/308 tests、466 assets、typecheck、1151-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 在 412px 下证明好友 Tab 真实 2 条记录、群 Tab 空态、Router tab 切换、刷新占位收起、412/412 宽度，干净 reload 后 console 0 warning/error；物理触摸释放保留显式验收门。
+- 本片 SDK source/generated package 零改动，`im28-phone` clean；未执行 accept/reject/mark-read 或任何 SDK/RN/Desktop build/sync，`build:package:desktop:web` 未修改或执行。
+
+## Completed W6.a6.20.41
+
+- H5 通话列表的删除确认层拆为独立 `CallDeleteSheet`，复用全局 `InteractionModal` 的原生 dialog top-layer、Esc、焦点、背景 inert、退出动画和 reduced-motion；页面不再持有第二套遮罩生命周期。
+- 删除期间遮罩、Esc、取消和重复确认均 fail-closed；确认仍只调用既有 `WebIMCallSync.delete`，成功清理/重读和失败错误路径保持不变。
+- 空列表按 RN 优先级投影搜索“暂无搜索结果”、未接“暂无未接来电”和默认“暂无通话记录”，不引入新的同步或筛选状态。
+- focused 2 files/7 tests、H5 full 99 files/311 tests、466 assets、typecheck、1152-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 在 412px 下完成三类空态、编辑/完成、筛选与 TabBar 只读验收，宽度 412/412、console 0 warning/error；当前账号无通话记录，真实 modal 打开/Esc/取消保持 data-gated，未制造记录或执行删除。
+- SDK source/generated package 与 `im28-phone` 零改动；未执行任何 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.42
+
+- 通用设置退出确认拆为独立 `MeLogoutDialog`，复用全局 `InteractionModal`；精确保留 RN 标题、说明、取消与退出动作顺序。
+- `InteractionModal` 增加受控 Escape 键兜底，修复部分 WebView 未稳定派发原生 `cancel` 的关闭缺口；遮罩、焦点、退出动画和 reduced-motion owner 不变。
+- `signingOut` 期间遮罩、Escape、取消和重复确认全部 fail-closed；页面仍只调用既有 `runtime.signOut()`，不复制 token、WebSocket、媒体或账号数据库清理。
+- focused 1 file/2 tests、H5 full 100 files/313 tests、466 assets、typecheck、1153-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 在 412px 下完成打开、Escape、遮罩、取消和 412/412 零溢出验收；路由与登录态保持，未点击最终退出。
+- SDK source/generated package 与 `im28-phone` 零改动；未执行任何 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.43
+
+- `app.css` 建立按钮 reset 单一 owner，清除浏览器 appearance、margin、padding、border、radius 和 background；键盘 `:focus-visible` 可访问性焦点保持。
+- 新增 `PageNavbar + page-navbar.css`，35 个可寻址详情/选择页统一 safe-area、56px、三列、24px 图标、居中标题和左右动作；页面 class 只保留背景与业务差异。
+- 主 Tab 标题、聊天复合资料头、认证品牌、媒体/来电全屏头和 Dialog/裁剪标题按 contract 排除，避免把不同语义强行同构。
+- 页面切换继续复用既有 `RouteMotionController + interaction.css`：pathname 变化只动画当前 `#root main`，跳过首屏、固定 TabBar 不闪动并尊重 reduced-motion；未引入 UI/motion 库。
+- focused 1 file/2 tests、H5 full 101 files/315 tests、466 assets、typecheck、1155-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 在 412px 下确认通用设置、个人资料、聊天设置使用同一 Navbar 几何；按钮 appearance none/border 0，页面显式按钮样式保留，宽度 412/412。
+- SDK source/generated package 与 RN business 零改动；未执行任何 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.44
+
+- SDK 新增 `parseIMGroupSystemMessagePresentation`，统一 core `payload`、Gateway `body.system/payload.body.system` 与 RN wrapper 的群系统消息读取；只有 `event_type + extra` 可以生成结构化文案，不信任 `system.text`。
+- 群简介更新按当前账号与操作者昵称输出 RN 同款文案；发言频率按显式 enabled/seconds 输出分钟或秒，缺失事实、未知事件和坏 JSON 均 fail-closed。
+- Gateway WebSocket classifier 仅补 OpenAPI 已明示的 `1521/group_description_changed -> message`；发言频率没有公开 numeric type，不猜测注册。
+- H5 聊天气泡和会话列表摘要共同消费 shared presentation，删除继续演化页面级 raw `system.extra` 解析的可能；RN production caller 保持冻结。
+- SDK focused 2 files/9、Web full 96 files/398 tests、全 target typecheck/boundary；H5 focused 2 files/18、full 101 files/317 tests、466 assets、1156-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 登录态 reload、账号恢复和设置路由通过，console 0 warning/error；当前缓存无可确认的 1521/频率通知，真实列表/气泡视觉与双账号 realtime 保持 natural-data gate。
+- `im28-phone` clean；仅执行 `build:web/sync:web`，未执行 RN/Desktop/build:all/`build:package:desktop:web`，RN generated package 未重写。
+
+## Completed W6.a6.20.45
+
+- SDK `friend-added-message.ts` 统一 type1201、RN 已发布中文文案和 unknown fail-closed pure helper；既有 `initial-unread-navigation` 删除私有 1201 常量并复用 shared owner。
+- H5 聊天气泡和会话摘要共同调用 `getIMFriendAddedMessageText`；聊天页固定表、列表 label 均不再保存第二份 1201 文案。
+- SDK focused 2 files/6、Web full 97 files/400 tests、全 target typecheck/boundary；H5 focused 2 files/20、full 101 files/319 tests、466 assets、1157-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 真实 `donk二大爷` 会话摘要已从 `[contentType=1201]` 变为“你们已经成为好友，可以开始聊天了”，稳定期 reload 后 raw fallback 消失且日志条数/时间戳未增长。
+- `build:web` 同步生成包期间旧标签曾产生一次 Provider HMR 顺序错误；页面自动恢复，新标签冷启动登录页零错误，登记为 dev HMR 噪声而非生产构建回归。
+- `im28-phone` clean；仅执行 `build:web/sync:web`，未执行 RN/Desktop/build:all/`build:package:desktop:web`，RN generated package未重写。
+
+## Completed W6.a6.20.46
+
+- 普通建群选中态新增 RN 同构的搜索入口、最多五个头像预览、超出计数和一键清空；“已选好友”底部复核层支持逐人移除，失效身份 fail-closed。
+- 页面复用全局 `usePullRefresh`；仅普通建群启用，刷新只调用既有 `contacts.list`，失败保留当前快照并显示真实错误。
+- 创建主链保持 `CreateGroupPage -> WebIMSync.groups.create`，未新增页面 Gateway、SQLite、DTO、Repository、校验或创建状态机。
+- focused 3 files/8、full 102 files/321 tests、466 assets、typecheck、1158-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 真实两位好友完成全选、复核、逐个移除和清空，提交按钮状态随选中数切换；412/412 无横向溢出，console 0 warning/error；物理触摸释放保留显式验收门。
+- SDK source/generated package 与 `im28-phone` 均零改动；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.47
+
+- `/contacts/groups` 复用全局 `usePullRefresh`，对齐 RN `ContactGroupListScreen` 的顶部单指下拉；搜索、长按菜单、分享/资料路由和退出确认均保持原主链。
+- 刷新只调用既有 `groups.sync({ pageSize: 50 })`；成功才替换群列表，失败保留当前快照并显示真实错误，不新增页面 Gateway、SQLite、DTO、Repository 或重试状态机。
+- focused 3 files/8、full 103 files/323 tests、466 assets、typecheck、1158-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 真实 `donk的群聊`、群主标签、无结果搜索与恢复搜索通过；412/412 无横向溢出，console 0 warning/error；物理触摸释放保留显式验收门。
+- `JoinedGroupsPage.tsx` 323 行低于页面 400 行上限；无第二 owner、孤立文件、compat wrapper、TODO/FIXME/HACK 或调试日志。仓库无 `scripts/check-convergence.sh`，保持已登记 gate。
+- SDK source/generated package 与 `im28-phone` 本片零改动；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.48
+
+- 邀请与移出群成员页复用全局 `usePullRefresh` 和同一个三态提示组件，对齐 RN 两个选择页的顶部下拉反馈。
+- 邀请刷新只调用既有 `groups/groupMembers/contacts`，移除刷新只调用既有 `groups/groupMembers`；所有 facade 成功后才替换候选，失败保留旧快照、搜索词和选择态。
+- 邀请、移除确认与提交主链保持不变；未执行真实群成员 mutation，也未新增 Gateway、SQLite、DTO、Repository 或重试状态机。
+- focused 4 files/8、full 104 files/325 tests、466 assets、typecheck、1158-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 真实群完成邀请空态、两位可移除成员、搜索过滤和未选择禁用提交验收；412px 宽度正常，console 0 warning/error；物理触摸释放保留显式验收门。
+- 两个页面分别为 282/268 行，共用提示组件 23 行且有两个生产消费者；无第二 owner、孤立文件、compat wrapper、TODO/FIXME/HACK 或调试日志。
+- 本片未修改 SDK source/generated package 或 `im28-phone`；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.49
+
+- 群禁言页复用全局 `usePullRefresh`，对齐 RN `GroupMuteScreen` 手动禁言列表的顶部下拉反馈；首次加载、刷新或提交期间拒绝新手势。
+- 刷新只调用既有 `groups/groupMembers`；两者都成功后才替换禁言范围和成员事实，失败保留当前页面快照并显示真实错误。
+- 禁言范围、时长选择、二次确认和 `groupManagement.updateMute/updateMemberMute` 主链保持不变；未执行真实禁言 mutation。
+- 旧 `GroupMemberSelectionPullIndicator` 已删除，收敛为邀请、移除、禁言三个生产页面共同消费的 `GroupPullRefreshIndicator`，不持有任何数据逻辑。
+- focused 3 files/8、full 104 files/326 tests、466 assets、typecheck、1158-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 真实群显示关闭范围和两位可禁言成员；刷新提示折叠、412/412 无横向溢出，稳定 reload 未新增 warning/error；物理触摸释放保留显式验收门。
+- `GroupMutePage.tsx` 237 行、共用提示 25 行；无第二 owner、孤立文件、compat wrapper、TODO/FIXME/HACK、fake-success 或调试日志。
+- 本片未修改 SDK source/generated package 或 `im28-phone`；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.50
+
+- 指定群入群申请页复用全局 `usePullRefresh` 与既有 `VerificationPullIndicator`，对齐 RN `GroupApplicationListView` 的顶部下拉反馈。
+- 刷新只调用既有 `groupApplications.list`；成功后才替换申请事实，失败保留当前列表和搜索词，加载、刷新或 accept/reject 期间拒绝新手势。
+- 搜索、操作弹层和 `groupApplications.accept/reject` 主链保持不变；未执行真实申请 mutation，也未新增 Gateway、SQLite、DTO、Repository 或重试状态机。
+- focused 4 files/11、full 105 files/328 tests、466 assets、typecheck、1158-module production build 和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 真实群路由完成搜索/清除、空态、折叠提示、412/412 和稳定 reload 零 warning/error 验收；当前无申请样本，物理触摸和申请操作保留显式 gate。
+- `GroupApplicationsPage.tsx` 126 行、测试 20 行；提示组件有三个生产消费者，无第二 owner、孤立文件、compat wrapper、TODO/FIXME/HACK、fake-success 或调试日志。
+- 本片未修改 SDK source/generated package 或 `im28-phone`；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.51
+
+- 黑名单页复用全局 `usePullRefresh`，对齐 RN `ProfileScreen` 黑名单 FlatList 的顶部下拉反馈；首次加载、刷新或解除处理中拒绝新手势。
+- 刷新只调用既有 `blacklist.list`；成功后才替换用户事实，失败保留当前列表和搜索词；`blacklist.remove` 解除主链保持不变。
+- 七个生产页面统一消费 `components/interaction/PullRefreshIndicator`；旧验证/群页面提示组件和两套重复 CSS 已删除，不保留 compat。
+- focused 6 files/16、full 106 files/330 tests、466 assets、typecheck、1158-module production build 和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 真实空黑名单完成搜索、无结果、清除、空态、折叠提示和 412/412 验收；稳定 reload 日志数量未增长。无列表样本，物理触摸和解除保持显式 gate。
+- `MeBlacklistPage.tsx` 176 行、全局提示 23 行、测试 20 行；无第二 owner、孤立文件、compat wrapper、TODO/FIXME/HACK、fake-success 或调试日志。
+- 本片未修改 SDK source/generated package 或 `im28-phone`；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.52
+
+- 转发目标页复用全局 `usePullRefresh/PullRefreshIndicator`，对齐 RN 普通转发选择器的顶部下拉反馈；首次加载、刷新或目标打开期间拒绝新的下拉手势。
+- 刷新继续调用既有 `loadChatForwardTargets({ sync })`，由 `conversations.sync/contacts.list/groups.sync` 三个 canonical facade 提供事实；三个请求全部成功后才替换页面快照，失败保留当前目标、Tab 和搜索词。
+- 目标会话解析、React Router `location.state`、单条/多选来源和 shared forward 提交主链保持不变；未执行目标打开或真实转发 mutation。
+- focused 4 files/8、full 107 files/332 tests、466 assets、typecheck、1158-module production build和 diff check 通过；既有 >500kB chunk warning 不变。
+- 5176 真实数据完成 3 条最近会话、2 位好友、1 个群聊、搜索/清除、三 Tab、折叠提示和 412/412 验收；warning/error 为零，物理触摸释放保持显式 gate。
+- `ChatForwardTargetPage.tsx` 228 行、新 contract test 22 行；无第二 owner、孤立文件、compat wrapper、TODO/FIXME/HACK、fake-success 或调试日志。
+- 本片未修改 SDK source/generated package 或 `im28-phone`；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。

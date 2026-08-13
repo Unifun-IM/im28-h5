@@ -9,6 +9,7 @@ import phoneIconURL from '../../assets/rn/assets/icons/imm28/phone.solid.svg';
 import videoIconURL from '../../assets/rn/assets/icons/imm28/video-camera.solid.svg';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { useWebIMCall } from '../../runtime/WebIMCallProvider.js';
 import {
@@ -169,13 +170,13 @@ export function CallDetailPage() {
   return (
     <main className="rn-call-detail-page">
       <section className="rn-call-detail-surface" aria-busy={loading}>
-        <header className="rn-call-detail-header">
+        <PageNavbar className="rn-call-detail-header">
           <button type="button" aria-label="返回通话列表" onClick={() => navigate(-1)}>
             <RNAssetIcon assetURL={backIconURL} />
           </button>
           <h1>通话详情</h1>
           <span />
-        </header>
+        </PageNavbar>
         {detailCall ? (
           <>
             <section className="rn-call-detail-profile">

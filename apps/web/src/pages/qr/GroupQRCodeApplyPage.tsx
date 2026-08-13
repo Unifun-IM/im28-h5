@@ -4,6 +4,7 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { readGroupApplyRouteState } from '../groups/group-search-route.js';
 import './qr-code-page.css';
@@ -105,10 +106,10 @@ export default function GroupQRCodeApplyPage() {
   return (
     <main className="rn-group-qr-apply-page" aria-busy={loading || submitting}>
       <section className="rn-group-qr-apply-surface">
-        <header className="rn-group-qr-apply-header">
+        <PageNavbar className="rn-group-qr-apply-header">
           <button type="button" aria-label={routeState.sourceType === 'search' ? '返回查找群聊' : '返回扫码'} onClick={() => navigate(routeState.backHref, { state: routeState.sourceType === 'search' ? { ...routeState.createState, searchKeyword: routeState.searchKeyword } : undefined })}><RNAssetIcon assetURL={backIconURL} /></button>
           <h1>申请加入群聊</h1><span aria-hidden="true" />
-        </header>
+        </PageNavbar>
         {error ? <p className="rn-group-qr-error" role="alert">{error}<button type="button" onClick={() => void loadGroup()}>重试</button></p> : null}
         {loading && !group ? <div className="rn-group-qr-loading"><span /></div> : group ? (
           <div className="rn-group-qr-content">

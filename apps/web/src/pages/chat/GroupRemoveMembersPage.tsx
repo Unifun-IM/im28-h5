@@ -5,7 +5,10 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
+import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { GroupRemoveMemberTile } from './GroupRemoveMemberTile.js';
 import {
@@ -36,6 +39,8 @@ export function GroupRemoveMembersPage() {
   const [keyword, setKeyword] = useState('');
   // loading 覆盖首次 cache-first 读取。
   const [loading, setLoading] = useState(true);
+  /** refreshing 区分用户下拉刷新和首次页面恢复。 */
+  const [refreshing, setRefreshing] = useState(false);
   // submitting 阻止危险 action 重复提交。
   const [submitting, setSubmitting] = useState(false);
   // confirmOpen 要求真实移除前二次确认。
@@ -85,6 +90,35 @@ export function GroupRemoveMembersPage() {
   }, [conversationID, snapshot.userID, sync]);
 
   useEffect(() => { void load(); }, [load]);
+
+  /** 下拉刷新只重读 shared 群与成员 facade，失败保留旧候选和选择。 */
+  const refreshMembers = useCallback(async (): Promise<void> => {
+    if (!sync || !conversation || refreshing) return;
+    /** groupID 只来自已经验证的当前群会话。 */
+    const groupID = conversation.targetID.trim();
+    if (!groupID) return;
+    setRefreshing(true);
+    setError(null);
+    try {
+      /** refreshedValues 全部成功后才一次替换页面事实。 */
+      const refreshedValues = await Promise.all([
+        sync.groups.sync({ pageSize: 100 }),
+        sync.groupMembers.sync(groupID, { pageSize: 100 }),
+      ]);
+      setGroup(refreshedValues[0].find(item => item.groupID === groupID) ?? null);
+      setMembers(refreshedValues[1]);
+    } catch (cause) {
+      setError(readGroupRemoveError(cause));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [conversation, refreshing, sync]);
+
+  /** pullRefresh 把 RN RefreshControl 投影为浏览器顶部单指下拉。 */
+  const pullRefresh = usePullRefresh({
+    refreshing,
+    onRefresh: refreshMembers,
+  });
 
   // candidates 复用 SDK 唯一角色规则，只叠加页面搜索。
   const candidates = useMemo(() => buildGroupRemoveMemberCandidates(
@@ -158,18 +192,30 @@ export function GroupRemoveMembersPage() {
   }
 
   return (
-    <main className="rn-group-remove-page" aria-busy={loading || submitting}>
+    <main
+      className="rn-group-remove-page"
+      aria-busy={loading || refreshing || submitting}
+      onTouchStart={pullRefresh.onTouchStart}
+      onTouchMove={pullRefresh.onTouchMove}
+      onTouchEnd={pullRefresh.onTouchEnd}
+      onTouchCancel={pullRefresh.onTouchCancel}
+    >
       <section className="rn-group-remove-surface">
-        <header className="rn-group-remove-header">
+        <PageNavbar className="rn-group-remove-header">
           <Link to={settingsURL} aria-label="返回群设置"><RNAssetIcon assetURL={backIconURL} /></Link>
           <h1>移除群成员{selectedCount ? `（${selectedCount}）` : ''}</h1>
           <span aria-hidden="true" />
-        </header>
+        </PageNavbar>
         <label className="rn-group-remove-search">
           <RNAssetIcon assetURL={searchIconURL} />
           <input type="search" value={keyword} placeholder="搜索" aria-label="搜索群成员" onChange={event => setKeyword(event.target.value)} />
           {keyword ? <button type="button" aria-label="清除搜索" onClick={() => setKeyword('')}><RNAssetIcon assetURL={clearIconURL} /></button> : null}
         </label>
+        <PullRefreshIndicator
+          refreshing={refreshing}
+          armed={pullRefresh.armed}
+          pullDistance={pullRefresh.pullDistance}
+        />
         {error ? <p className="rn-group-remove-error" role="alert">{error}</p> : null}
         <section className="rn-group-remove-grid" aria-label="可移出群成员">
           {candidates.map(candidate => (

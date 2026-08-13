@@ -16,6 +16,7 @@ export interface WebIMBlacklistListOptions {
 /** 页面可消费的认证黑名单能力。 */
 export interface WebIMBlacklistSync {
     list(options?: WebIMBlacklistListOptions): Promise<readonly WebIMBlacklistUser[]>;
+    has(userID: string): Promise<boolean>;
     remove(userID: string): Promise<void>;
 }
 /** 黑名单 facade 复用 shared Gateway 与既有联系人 owner。 */

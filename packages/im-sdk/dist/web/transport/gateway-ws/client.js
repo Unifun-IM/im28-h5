@@ -351,6 +351,7 @@ function normalizeGatewayRealtimeEventType(type) {
         case '1514':
         case '1515':
         case '1520':
+        case '1521':
         case '1601':
         case '1602':
         case '1603':

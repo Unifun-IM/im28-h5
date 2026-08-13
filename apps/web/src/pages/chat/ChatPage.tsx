@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Conversation, IMMessageCard, Message, WebIMGroupMember, WebIMSync } from '@im28/im-sdk/web';
+import type { Conversation, IMMessageCard, Message, PresetEmojiDocument, WebIMGroupMember, WebIMSync } from '@im28/im-sdk/web';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CallTypeActionSheet } from '../../components/call/CallTypeActionSheet.js';
+import { ChatTargetPickerModal } from '../../components/chat-target-picker/index.js';
 import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
 import { ChatComposer } from './ChatComposer.js';
 import { ChatCardPickerDialog } from './ChatCardPickerDialog.js';
@@ -26,6 +27,7 @@ import { useChatUnreadNavigation } from './useChatUnreadNavigation.js';
 import { useChatHistoryPagination } from './useChatHistoryPagination.js';
 import { useChatQuoteSources } from './useChatQuoteSources.js';
 import { useChatMessageDeleteExit } from './useChatMessageDeleteExit.js';
+import { useChatDirectRelationship } from './useChatDirectRelationship.js';
 import type { ChatComposerMentionRequest } from './chat-composer-types.js';
 import { buildChatMessageFocusURL, focusChatMessageRow, readFocusedChatMessageWindow } from './chat-message-focus.js';
 import './chat-page.css';
@@ -47,6 +49,11 @@ export function ChatPage() {
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
   // conversation 为 RN header 提供会话缓存身份。
   const [conversation, setConversation] = useState<Conversation | null>(null);
+  // draftDocument 是当前会话已从 SDK SQLite 恢复的规范未发送文档。
+  const [draftDocument, setDraftDocument] = useState<PresetEmojiDocument>({
+    text: '',
+    entities: [],
+  });
   // messages 保持 Repository newest-first 结果。
   const [messages, setMessages] = useState<readonly Message[]>([]);
   // quoteMessage 保存当前 composer 唯一引用来源，不复制到浏览器存储。
@@ -122,6 +129,17 @@ export function ChatPage() {
   });
   // deleteExit 仅冻结 SDK 已确认成功消息的短期展示窗口。
   const deleteExit = useChatMessageDeleteExit(conversationID, messages);
+  /** handleDirectRelationshipError 统一使用页面现有错误归一化。 */
+  const handleDirectRelationshipError = useCallback((cause: unknown) => {
+    setError(readChatPageError(cause));
+  }, []);
+  // directRelationship 只消费 SDK 聚合事实，不解释 Gateway 或黑名单 payload。
+  const directRelationship = useChatDirectRelationship(
+    conversation,
+    sync,
+    snapshot.relationshipVersion,
+    handleDirectRelationshipError,
+  );
   useEffect(() => {
     messageWindowSizeRef.current = Math.max(50, messages.length);
   }, [messages.length]);
@@ -130,7 +148,7 @@ export function ChatPage() {
     conversationID,
     groupID: conversation?.type === 'group' ? conversation.targetID : '',
     onSending: handleLocalSendingMessage,
-    runMessageOperation,
+    runMessageOperation: runComposerMessageOperation,
   });
   // voiceRecorder 管理浏览器麦克风会话，页面只接收最终 File。
   const voiceRecorder = useChatVoiceRecorder({
@@ -183,6 +201,7 @@ export function ChatPage() {
     setLoading(true);
     setError(null);
     setConversation(null);
+    setDraftDocument({ text: '', entities: [] });
     setMessages([]);
     setHistoryPage({ hasMore: false });
     setQuoteMessage(null);
@@ -199,7 +218,12 @@ export function ChatPage() {
           item => item.conversationID === conversationID,
         );
         if (!target) throw new Error('会话不存在或尚未同步');
-        if (active) setConversation(target);
+        // cachedDraft 由 shared owner 从 draft 索引与专用 entity 列恢复。
+        const cachedDraft = await sync.conversations.getDraft(conversationID);
+        if (active) {
+          setConversation(target);
+          setDraftDocument(cachedDraft);
+        }
         // refreshedMessages 按普通或搜索目标模式读取当前账号 SQLite 窗口。
         const refreshedWindow = await readInitialChatMessageWindow(sync.messages, {
           conversationID,
@@ -277,13 +301,14 @@ export function ChatPage() {
   /** 统一管理 text/image/video/file operation 的 busy、error 与 cache 重读。 */
   async function runMessageOperation(
     operation: (activeSync: WebIMSync) => Promise<void>,
-  ) {
+  ): Promise<void> {
     if (!sync || sending) return;
     setSending(true);
     setError(null);
     try {
       await operation(sync);
     } catch (cause) {
+      directRelationship.markStrangerFromSendError(cause);
       setError(readChatPageError(cause));
     } finally {
       try {
@@ -299,6 +324,30 @@ export function ChatPage() {
         setSending(false);
       }
     }
+  }
+  /** 为 Composer 发送提供明确成功结果，不扩大其他页面 hooks 的旧返回契约。 */
+  async function runComposerMessageOperation(
+    operation: (activeSync: WebIMSync) => Promise<void>,
+  ): Promise<boolean> {
+    /** completed 只在 shared operation 没有抛错时置为真。 */
+    let completed = false;
+    await runMessageOperation(async activeSync => {
+      await operation(activeSync);
+      completed = true;
+    });
+    return completed;
+  }
+  /** 将普通 Composer 文档保存到当前账号 SDK SQLite。 */
+  function handleDraftDocumentChange(document: PresetEmojiDocument): void {
+    setDraftDocument(document);
+    if (!sync || !conversation) return;
+    void sync.conversations.saveDraft(conversationID, document)
+      .then(nextConversation => {
+        setConversation(current => current?.conversationID === nextConversation.conversationID
+          ? nextConversation
+          : current);
+      })
+      .catch(cause => setError(readChatPageError(cause)));
   }
   /** 通过 shared message facade 发送当前选择的 type108 名片。 */
   async function handleSendCard(card: IMMessageCard): Promise<boolean> {
@@ -338,6 +387,13 @@ export function ChatPage() {
   if (!snapshot.userID) return <Navigate to="/login" replace />;
   // isGroup 只由真实 Conversation type 决定群消息排列。
   const isGroup = conversation?.type === 'group';
+  /** composerUnavailableText 在会话身份未知时保持 fail-closed，否则组合各 SDK 投影。 */
+  const composerUnavailableText = !conversation
+    ? loading
+      ? '正在恢复会话'
+      : '会话暂不可用，无法发消息'
+    : mentionMembers.composerUnavailableReason ||
+      directRelationship.presentation.composerUnavailableReason;
   /** 将当前群真实成员交给唯一 Composer 草稿 owner。 */
   function handleMentionGroupMember(member: WebIMGroupMember): void {
     if (!isGroup || !member.userID || member.userID === snapshot.userID) return;
@@ -388,6 +444,9 @@ export function ChatPage() {
             }}
             onCopyMessage={clipboardActions.copyMessage}
             onCopyLink={clipboardActions.copyLink}
+            {...(conversation?.type === 'single'
+              ? { onStartCall: (mediaType: 'audio' | 'video') => { void handleStartCall(mediaType); } }
+              : {})}
             multiSelecting={forwardFlow.multiSelecting}
             selectedMessageIDs={forwardFlow.selectedIDs}
             onToggleSelectedMessage={forwardFlow.toggleSelectedMessage}
@@ -412,16 +471,26 @@ export function ChatPage() {
             }}
             exitingMessageIDs={deleteExit.exitingMessageIDs}
             onMessageExitComplete={deleteExit.finish}
+            bottomNoticeText={directRelationship.presentation.noticeText}
+            bottomNoticeActionLabel={directRelationship.presentation.noticeActionLabel}
+            onBottomNoticeAction={() => {
+              if (conversation?.type !== 'single' || !conversation.targetID) return;
+              navigate(`/contacts/users/${encodeURIComponent(conversation.targetID)}/add`);
+            }}
           />
         </ChatMediaInteractionProvider>
         <ChatPageFooter
           forwardFlow={forwardFlow}
           sending={sending}
+          unavailableText={composerUnavailableText}
           onDeleteSelected={() => deleteFlow.requestDelete(
             [...forwardFlow.selectedIDs], forwardFlow.cancelMultiSelect,
           )}
         >
           <ChatComposer
+            key={conversationID}
+            initialDraftDocument={draftDocument}
+            onDraftDocumentChange={handleDraftDocumentChange}
             sending={sending}
             quoteMessage={quoteMessage}
             isGroup={isGroup}
@@ -462,6 +531,18 @@ export function ChatPage() {
           />
         </ChatPageFooter>
         <ChatMessageDeleteSheet flow={deleteFlow} />
+        <ChatTargetPickerModal
+          open={forwardFlow.targetPickerOpen}
+          sync={sync}
+          selectionMode="multiple"
+          excludeUserIDs={[snapshot.userID]}
+          maxSelected={50}
+          actionLabel="转发"
+          pending={forwardFlow.targetSubmitting}
+          operationError={error}
+          onClose={forwardFlow.closeTargetPicker}
+          onConfirm={targets => { void forwardFlow.forwardToTargets(targets); }}
+        />
         <CallTypeActionSheet
           open={callPickerVisible && conversation?.type === 'single'}
           peerName={conversation?.name?.trim() || conversation?.targetID || ''}

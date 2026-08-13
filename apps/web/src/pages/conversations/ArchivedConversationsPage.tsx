@@ -6,7 +6,9 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import emptyChatIconURL from '../../assets/rn/assets/icons/empty-chat.svg';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { ConversationActionMenu } from './ConversationActionMenu.js';
@@ -177,14 +179,14 @@ export function ArchivedConversationsPage() {
         onTouchEnd={pullRefresh.onTouchEnd}
         onTouchCancel={pullRefresh.onTouchCancel}
       >
-        <header className="rn-conversation-header">
-          <div className="rn-conversation-header-top">
+        <section className="rn-conversation-header is-archive">
+          <PageNavbar className="rn-conversation-header-top">
             <Link className="rn-conversation-archive-back" to="/conversations" aria-label="返回">
               <RNAssetIcon assetURL={backIconURL} />
             </Link>
             <h1>归档会话</h1>
             <span className="rn-conversation-header-side" aria-hidden="true" />
-          </div>
+          </PageNavbar>
           <label className="rn-conversation-search">
             <RNAssetIcon assetURL={searchIconURL} />
             <input
@@ -194,14 +196,12 @@ export function ArchivedConversationsPage() {
               onChange={event => setKeyword(event.target.value)}
             />
           </label>
-        </header>
-        <div
-          className={`rn-conversation-pull${pullRefresh.armed ? ' is-armed' : ''}`}
-          style={{ height: refreshing ? 36 : pullRefresh.pullDistance }}
-          aria-hidden={!refreshing && pullRefresh.pullDistance === 0}
-        >
-          <span>{refreshing ? '正在刷新' : pullRefresh.armed ? '松开刷新' : '下拉刷新'}</span>
-        </div>
+        </section>
+        <PullRefreshIndicator
+          refreshing={refreshing}
+          armed={pullRefresh.armed}
+          pullDistance={pullRefresh.pullDistance}
+        />
         {error ? <p className="rn-conversation-error" role="status">{error}</p> : null}
         <section className="rn-conversation-list" aria-label="归档会话列表">
           {loading && items.length === 0 ? (

@@ -1,6 +1,7 @@
 import { deleteWebIMMessages, } from './message-delete.js';
 import { editWebIMTextMessage, } from './message-edit.js';
 import { forwardWebIMMessages, } from './message-forward.js';
+import { forwardWebIMMessagesToTargets, } from './message-forward-targets.js';
 import { requireWebIMSyncContext, } from './sync-context.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
 /** 创建 RN、Web 与 Desktop 共用的消息 mutation facade。 */
@@ -25,6 +26,12 @@ class IMMessageMutationSyncImpl {
         /** context 在来源读取和 optimistic 写入前固定账号数据库。 */
         const context = requireWebIMSyncContext(this.dependencies, 'Message forward');
         return this.mutationQueue.enqueue(() => forwardWebIMMessages(context, options, this.dependencies));
+    }
+    /** 在唯一 mutation queue 内逐目标复用既有转发状态机。 */
+    async forwardToTargets(options) {
+        /** context 在全部目标开始前固定当前账号数据库。 */
+        const context = requireWebIMSyncContext(this.dependencies, 'Message forward to targets');
+        return this.mutationQueue.enqueue(() => forwardWebIMMessagesToTargets(context, options, this.dependencies));
     }
     /** 从当前账号 cache 重读目标并执行 self/all 单删或批删。 */
     async delete(options) {

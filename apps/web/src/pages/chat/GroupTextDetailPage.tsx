@@ -4,6 +4,7 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 
 /** 群文本详情页的字段与 RN 文案配置。 */
@@ -202,7 +203,7 @@ export function GroupTextDetailPage({
   return (
     <main className="rn-group-text-detail-page">
       <section className="rn-group-text-detail-surface" aria-busy={state.loading}>
-        <header className="rn-group-text-detail-header">
+        <PageNavbar className="rn-group-text-detail-header">
           <Link to={settingsURL} aria-label={canEdit ? `取消编辑${title}` : '返回群设置'}>
             <RNAssetIcon assetURL={backIconURL} />
           </Link>
@@ -217,7 +218,7 @@ export function GroupTextDetailPage({
               {saving ? '保存中' : '完成'}
             </button>
           ) : <span />}
-        </header>
+        </PageNavbar>
         <div className="rn-group-text-detail-content">
           {state.error ? (
             <p className="rn-group-text-detail-error" role="status">{state.error}</p>

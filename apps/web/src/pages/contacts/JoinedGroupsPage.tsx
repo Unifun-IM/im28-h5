@@ -5,7 +5,10 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
+import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { buildGroupCardShareRoute } from '../chat/group-card-share-route.js';
 import { JoinedGroupActionMenu, JoinedGroupQuitModal } from './JoinedGroupActionMenu.js';
@@ -37,6 +40,8 @@ export function JoinedGroupsPage() {
   const [keyword, setKeyword] = useState('');
   // loading 覆盖首次缓存读取和远端刷新。
   const [loading, setLoading] = useState(false);
+  /** refreshing 区分用户下拉刷新和首次 cache-first 恢复。 */
+  const [refreshing, setRefreshing] = useState(false);
   // openingGroupID 阻止重复打开群会话。
   const [openingGroupID, setOpeningGroupID] = useState('');
   // actionMenu 保存当前长按群和 RN 气泡位置。
@@ -74,6 +79,26 @@ export function JoinedGroupsPage() {
   }, [runtime, snapshot.userID]);
 
   useEffect(() => { void loadGroups(); }, [loadGroups]);
+
+  /** 下拉刷新只执行 shared groups 全量同步，失败时保留当前列表。 */
+  const refreshGroups = useCallback(async (): Promise<void> => {
+    if (!runtime || !snapshot.userID || refreshing) return;
+    setRefreshing(true);
+    setError(null);
+    try {
+      setGroups(await runtime.getSync().groups.sync({ pageSize: 50 }));
+    } catch (cause) {
+      setError(readJoinedGroupError(cause));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing, runtime, snapshot.userID]);
+
+  /** pullRefresh 把 RN RefreshControl 投影为浏览器顶部单指下拉。 */
+  const pullRefresh = usePullRefresh({
+    refreshing,
+    onRefresh: refreshGroups,
+  });
 
   /** 通过 shared 会话 facade 解析规范群会话身份。 */
   const resolveGroupConversation = useCallback(async (
@@ -182,15 +207,22 @@ export function JoinedGroupsPage() {
   if (!snapshot.userID) return <Navigate to="/login" replace />;
 
   return (
-    <main className="rn-joined-groups-page" aria-busy={loading}>
+    <main
+      className="rn-joined-groups-page"
+      aria-busy={loading || refreshing}
+      onTouchStart={pullRefresh.onTouchStart}
+      onTouchMove={pullRefresh.onTouchMove}
+      onTouchEnd={pullRefresh.onTouchEnd}
+      onTouchCancel={pullRefresh.onTouchCancel}
+    >
       <section className="rn-joined-groups-surface">
-        <header className="rn-joined-groups-header">
+        <PageNavbar className="rn-joined-groups-header">
           <Link to="/contacts" aria-label="返回通讯录">
             <RNAssetIcon assetURL={backIconURL} />
           </Link>
           <h1>我的群聊</h1>
           <span aria-hidden="true" />
-        </header>
+        </PageNavbar>
         <label className="rn-joined-groups-search">
           <span className="sr-only">搜索群聊或群ID</span>
           <RNAssetIcon assetURL={searchIconURL} />
@@ -206,6 +238,11 @@ export function JoinedGroupsPage() {
             </button>
           ) : null}
         </label>
+        <PullRefreshIndicator
+          refreshing={refreshing}
+          armed={pullRefresh.armed}
+          pullDistance={pullRefresh.pullDistance}
+        />
         {error ? (
           <div className="rn-joined-groups-error" role="status">
             <span>{error}</span>

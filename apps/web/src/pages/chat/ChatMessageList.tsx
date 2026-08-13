@@ -6,6 +6,8 @@ import type {
 } from '@im28/im-sdk/web';
 
 import { ChatMessageBubble } from './ChatMessageBubble.js';
+import { ChatMessageSkeleton } from './ChatMessageSkeleton.js';
+import { ChatRelationshipNotice } from './ChatRelationshipNotice.js';
 import { buildChatMessageListEntries } from './chat-message-list-view.js';
 import type { ChatMessageView } from './chat-message-view.js';
 import {
@@ -35,6 +37,7 @@ interface ChatMessageListProps {
   readonly onQuoteMessage: (message: Message) => void;
   readonly onCopyMessage: (view: ChatMessageView) => Promise<boolean>;
   readonly onCopyLink: (url: string) => Promise<boolean>;
+  readonly onStartCall?: (mediaType: 'audio' | 'video') => void;
   readonly multiSelecting: boolean;
   readonly selectedMessageIDs: ReadonlySet<string>;
   readonly onToggleSelectedMessage: (message: Message) => void;
@@ -49,6 +52,9 @@ interface ChatMessageListProps {
   readonly onOpenQuotedMessage: (message: Message) => void;
   readonly exitingMessageIDs: ReadonlySet<string>;
   readonly onMessageExitComplete: (clientMsgID: string) => void;
+  readonly bottomNoticeText: string;
+  readonly bottomNoticeActionLabel: string;
+  readonly onBottomNoticeAction: () => void;
 }
 
 /** 呈现 RN 日期行、连续气泡、骨架与空状态。 */
@@ -71,6 +77,7 @@ export function ChatMessageList({
   onQuoteMessage,
   onCopyMessage,
   onCopyLink,
+  onStartCall,
   multiSelecting,
   selectedMessageIDs,
   onToggleSelectedMessage,
@@ -85,6 +92,9 @@ export function ChatMessageList({
   onOpenQuotedMessage,
   exitingMessageIDs,
   onMessageExitComplete,
+  bottomNoticeText,
+  bottomNoticeActionLabel,
+  onBottomNoticeAction,
 }: ChatMessageListProps) {
   useTailItemMotion({
     containerRef: listRef,
@@ -128,10 +138,11 @@ export function ChatMessageList({
         aria-label="消息记录"
         aria-busy={loading}
       >
+        <div className="rn-chat-message-stack">
         {historyLoading ? (
           <p className="rn-chat-history-loading" role="status">正在加载更早消息</p>
         ) : null}
-        {loading && messages.length === 0 ? <ChatMessageSkeleton /> : null}
+        {loading && messages.length === 0 ? <ChatMessageSkeleton showAvatar={isGroup} /> : null}
         {!loading && entries.length === 0 ? (
           <p className="rn-chat-message-empty">暂无消息记录</p>
         ) : null}
@@ -171,6 +182,7 @@ export function ChatMessageList({
             onQuoteMessage={onQuoteMessage}
             onCopyMessage={onCopyMessage}
             onCopyLink={onCopyLink}
+            {...(onStartCall ? { onStartCall } : {})}
             onOpenQuotedMessage={handleOpenQuotedMessage}
             multiSelecting={multiSelecting}
             selected={selectedMessageIDs.has(entry.message.clientMsgID)}
@@ -185,6 +197,12 @@ export function ChatMessageList({
             />
           ),
         )}
+        <ChatRelationshipNotice
+          text={bottomNoticeText}
+          actionLabel={bottomNoticeActionLabel}
+          onAction={onBottomNoticeAction}
+        />
+        </div>
       </section>
       {stickyDateLabel ? (
         <time className="rn-chat-sticky-date" aria-live="off">
@@ -201,18 +219,6 @@ export function ChatMessageList({
           {remainingUnreadCount > 99 ? '99+' : remainingUnreadCount}条未读
         </button>
       ) : null}
-    </div>
-  );
-}
-
-/** 复刻 RN 冷首屏交错气泡骨架，避免加载期空白。 */
-function ChatMessageSkeleton() {
-  return (
-    <div className="rn-chat-message-skeleton" aria-label="正在加载消息">
-      <span className="is-peer is-short" />
-      <span className="is-mine is-medium" />
-      <span className="is-peer is-long" />
-      <span className="is-mine is-short" />
     </div>
   );
 }

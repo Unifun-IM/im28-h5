@@ -29,6 +29,8 @@ export interface WebIMRuntimeSnapshot {
     readonly state: WebIMRuntimeState;
     readonly userID: string | null;
     readonly dataVersion: number;
+    /** 好友与我方黑名单领域事件的单调版本，不随消息事件推进。 */
+    readonly relationshipVersion: number;
     readonly incomingCall: IMIncomingCallSnapshot;
 }
 /** Web runtime 对页面开放的最小认证与连接 API。 */

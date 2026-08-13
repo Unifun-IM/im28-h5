@@ -5,6 +5,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import backIconURL from '../../assets/rn/components/navbar/nav-arrow-left.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { ChatMediaInteractionProvider, useChatMediaInteraction } from './ChatMediaInteractionProvider.js';
 import { ChatSearchHomePanel } from './ChatSearchHomePanel.js';
@@ -155,7 +156,7 @@ function ChatMessageSearchContent() {
           <Link to={chatURL}>取消</Link>
         </form>
       ) : (
-        <header className="rn-chat-search-nav"><button type="button" aria-label="返回搜索" onClick={() => { setPage('home'); setError(null); }}><RNAssetIcon assetURL={backIconURL} /></button><h1>{page === 'date' ? '按日期查找' : page === 'media' ? '图片与视频' : '按文件查找'}</h1><span /></header>
+        <PageNavbar className="rn-chat-search-nav"><button type="button" aria-label="返回搜索" onClick={() => { setPage('home'); setError(null); }}><RNAssetIcon assetURL={backIconURL} /></button><h1>{page === 'date' ? '按日期查找' : page === 'media' ? '图片与视频' : '按文件查找'}</h1><span /></PageNavbar>
       )}
       {page === 'home' ? <ChatSearchHomePanel query={query} loading={loading} error={error} onSearchText={() => void runTextSearch('all')} onOpenDate={() => void openDateIndex()} onOpenMedia={() => void openTypedIndex('media')} onOpenFile={() => void openTypedIndex('file')} /> : null}
       {page === 'text' ? <ChatSearchTextResults loading={loading} error={error} searched={searched} query={query} activeTab={textTab} results={results} isGroup={isGroup} conversationTitle={conversation?.name?.trim() ?? ''} currentUserID={snapshot.userID} chatURL={chatURL} onTabChange={tab => void runTextSearch(tab)} onOpenMedia={() => void openTypedIndex('media')} /> : null}

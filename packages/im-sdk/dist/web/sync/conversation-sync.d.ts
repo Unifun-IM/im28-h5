@@ -4,6 +4,7 @@ import { type IMConversationSettingsSync } from './conversation-settings.js';
 import { type IMConversationListActionsSync } from './conversation-list-actions.js';
 import { type WebIMUnreadMentionSnapshot } from './conversation-unread-mention.js';
 import { type IMOpenGroupConversationOptions } from './group-conversation-open.js';
+import { type IMConversationDraftSync } from './conversation-draft.js';
 /** 单次远端会话同步的分页限制。 */
 export interface WebIMConversationSyncOptions {
     readonly pageSize?: number;
@@ -15,7 +16,7 @@ export interface WebIMConversationListItem {
     readonly unreadMention: WebIMUnreadMentionSnapshot | null;
 }
 /** 页面可消费的 cache-first 会话能力。 */
-export interface WebIMConversationSync extends IMConversationSettingsSync, IMConversationListActionsSync {
+export interface WebIMConversationSync extends IMConversationSettingsSync, IMConversationListActionsSync, IMConversationDraftSync {
     listCached(options?: ConversationListOptions): Promise<readonly Conversation[]>;
     listCachedItems(options?: ConversationListOptions): Promise<readonly WebIMConversationListItem[]>;
     sync(options?: WebIMConversationSyncOptions): Promise<readonly Conversation[]>;

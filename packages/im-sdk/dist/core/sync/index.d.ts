@@ -11,6 +11,12 @@ export { resolveDirectConversationPeerUserID } from './direct-conversation-peer.
 export type { ResolveDirectConversationPeerUserIDInput } from './direct-conversation-peer.js';
 /** 创建认证账号绑定的黑名单读写 service。 */
 export { createWebIMBlacklistSync } from './blacklist-sync.js';
+/** 创建不复制资料或黑名单 owner 的单聊关系组合 facade。 */
+export { createIMDirectChatRelationshipSync } from './direct-chat-relationship-sync.js';
+/** 导出单聊关系组合 facade 的中性依赖契约。 */
+export type { IMDirectChatRelationshipSync, IMDirectChatRelationshipSyncDependencies, } from './direct-chat-relationship-sync.js';
+/** 判断 realtime 通知是否要求重新读取好友与黑名单关系事实。 */
+export { isIMRelationshipRealtimeEvent } from './relationship-realtime.js';
 /** 创建认证账号绑定的通讯录读取 service。 */
 export { createWebIMContactSync } from './contact-sync.js';
 /** 创建 RN、Web、Desktop 共用的联系人写动作 facade。 */
@@ -79,6 +85,10 @@ export { normalizeIMUserPresence, normalizeIMUserPresenceIDs, normalizeIMUserPre
 export type { IMUserPresence, IMUserPresenceListener, IMUserPresenceObservation, IMUserPresenceSync, IMUserPresenceSyncDependencies, } from './user-presence.js';
 /** 创建受认证账号约束的会话 cache/sync 服务。 */
 export { createWebIMConversationSync } from './conversation-sync.js';
+/** 创建跨端共用的账号内会话草稿持久化 facade。 */
+export { createIMConversationDraftSync, readIMConversationDraftDocument, } from './conversation-draft.js';
+/** 导出会话草稿 facade 的平台中立契约。 */
+export type { IMConversationDraftSync, IMConversationDraftSyncDependencies, } from './conversation-draft.js';
 /** 导出按群身份打开规范会话的共享能力。 */
 export { openIMGroupConversation } from './group-conversation-open.js';
 /** 导出群会话打开输入与依赖契约。 */
@@ -118,9 +128,11 @@ export { sendWebIMMentionMessage } from './message-mention-send.js';
 /** 创建 RN、Web 与 Desktop 共用的消息群发 facade。 */
 export { createIMMessageBroadcastSync, IM_BROADCAST_MAX_TARGETS, } from './message-broadcast.js';
 /** 导出消息群发的稳定目标、媒体选项、逐目标结果和依赖契约。 */
-export type { IMBroadcastAudioOptions, IMBroadcastFileOptions, IMBroadcastImageOptions, IMBroadcastTarget, IMBroadcastTargetResult, IMBroadcastTextOptions, IMBroadcastTextResult, IMBroadcastVideoOptions, IMMessageBroadcastSync, IMMessageBroadcastSyncDependencies, } from './message-broadcast.js';
+export type { IMBroadcastAudioOptions, IMBroadcastCardOptions, IMBroadcastFileOptions, IMBroadcastImageOptions, IMBroadcastTarget, IMBroadcastTargetResult, IMBroadcastTextOptions, IMBroadcastTextResult, IMBroadcastVideoOptions, IMMessageBroadcastSync, IMMessageBroadcastSyncDependencies, } from './message-broadcast.js';
 /** 导出共享批量转发执行函数。 */
 export { forwardWebIMMessages } from './message-forward.js';
+/** 导出多目标转发 shared owner 与目标上限。 */
+export { forwardWebIMMessagesToTargets, IM_FORWARD_MAX_TARGETS, normalizeForwardConversationIDs, } from './message-forward-targets.js';
 /** 导出共享转发来源与隐藏发送人能力判断。 */
 export { canForwardWebIMMessage } from './message-forward-state.js';
 /** 导出共享主动消息删除执行函数。 */
@@ -193,6 +205,8 @@ export type { IMGroupMessageCard, IMMessageCard, IMUserMessageCard, WebIMSendCar
 export type { WebIMSendMentionMessageOptions } from './message-mention-send.js';
 /** 导出批量转发 facade 与逐项结果 contract。 */
 export type { WebIMForwardCommentResult, WebIMForwardItemResult, WebIMForwardMessagesDependencies, WebIMForwardMessagesOptions, WebIMForwardMessagesResult, } from './message-forward.js';
+/** 导出多目标转发输入和逐目标结果。 */
+export type { WebIMForwardMessagesToTargetsOptions, WebIMForwardMessagesToTargetsResult, WebIMForwardTargetResult, } from './message-forward-targets.js';
 /** 导出主动消息删除 facade 与逐项结果 contract。 */
 export type { WebIMDeleteMessageItemResult, WebIMDeleteMessagesDependencies, WebIMDeleteMessagesOptions, WebIMDeleteMessagesResult, WebIMMessageDeleteScope, } from './message-delete.js';
 /** 导出主动文本编辑 facade contract。 */

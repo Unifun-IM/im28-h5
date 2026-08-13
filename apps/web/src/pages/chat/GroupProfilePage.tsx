@@ -6,6 +6,7 @@ import copyIconURL from '../../assets/rn/assets/icons/imm28/copy.dynamic.svg';
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
 import qrCodeIconURL from '../../assets/rn/assets/icons/imm28/qrcode-small.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { AvatarCropDialog } from '../../components/avatar/AvatarCropDialog.js';
 import { validateAvatarFile } from '../../components/avatar/avatar-crop.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
@@ -202,7 +203,7 @@ export function GroupProfilePage() {
   return (
     <main className="rn-group-profile-page" aria-busy={loading || saving || uploadingAvatar}>
       <section className="rn-group-profile-surface">
-        <header className="rn-group-profile-header"><button type="button" aria-label="返回群设置" onClick={() => navigate(backURL)}><RNAssetIcon assetURL={backIconURL} /></button><h1>群资料</h1><span /></header>
+        <PageNavbar className="rn-group-profile-header"><button type="button" aria-label="返回群设置" onClick={() => navigate(backURL)}><RNAssetIcon assetURL={backIconURL} /></button><h1>群资料</h1><span /></PageNavbar>
         <div className="rn-group-profile-content">
           {error ? <p className="rn-group-profile-error" role="alert">{error}</p> : null}
           {notice ? <p className="rn-group-profile-notice" role="status">{notice}</p> : null}

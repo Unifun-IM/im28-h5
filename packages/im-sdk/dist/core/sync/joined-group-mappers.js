@@ -1,6 +1,7 @@
 import {} from '@im28/im-sdk/core';
 import { resolveIMGroupManagementPermissions } from './group-management-permissions.js';
 import { normalizeIMGroupMode } from './group-mode.js';
+import { resolveIMGroupComposerUnavailableReason } from '../modules/group/composer-availability.js';
 /** 缓存 payload 中保存服务端顺序的私有字段。 */
 const JOINED_GROUP_ORDER_KEY = '__joinedGroupOrder';
 /** 将 Gateway group 转成共享 Group Repository 记录。 */
@@ -38,6 +39,8 @@ export function mapCoreGroupToWeb(group, currentUserID) {
     const ownerUserID = readString(payload.owner_user_id);
     // currentUserRole 统一成员和权限快照中的当前账号角色。
     const currentUserRole = normalizeJoinedGroupRole(payload);
+    /** status 是输入区和列表共用的标准群状态。 */
+    const status = normalizeJoinedGroupStatus(payload.status);
     /** permissions 与 RN 群设置共用显式 capability 和角色回退规则。 */
     const permissions = resolveIMGroupManagementPermissions({
         userPermission: payload.user_permission,
@@ -81,7 +84,14 @@ export function mapCoreGroupToWeb(group, currentUserID) {
         canEditAnnouncement: permissions.canEditAnnouncement,
         canMentionAll: permissions.canMentionAll,
         isCreatedByCurrentUser: Boolean(currentUserID.trim() && ownerUserID === currentUserID.trim()),
-        status: normalizeJoinedGroupStatus(payload.status),
+        status,
+        composerUnavailableReason: resolveIMGroupComposerUnavailableReason({
+            status,
+            currentUserRole,
+            ...(typeof payload.mute_all === 'boolean' ? { muteAll: payload.mute_all } : {}),
+            ...(typeof payload.mute_member === 'boolean' ? { muteMember: payload.mute_member } : {}),
+            userPermission: payload.user_permission,
+        }),
     };
 }
 /** 读取显式 payload，缺失时回退 Repository 平铺后的 Group 根对象。 */

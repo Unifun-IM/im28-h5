@@ -8,10 +8,17 @@ import { Navigate } from 'react-router-dom';
 
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { CallDeleteSheet } from './CallDeleteSheet.js';
 import { CallRecordRow } from './CallRecordRow.js';
-import { getCallID } from './call-list-view.js';
+import {
+  getCallID,
+  getCallListEmptyLabel,
+  refreshCallListPage,
+} from './call-list-view.js';
 import './calls-page.css';
 
 // PAGE_SIZE 对齐 RN 通话缓存分页大小。
@@ -35,6 +42,8 @@ export function CallsPage() {
   const [loading, setLoading] = useState(false);
   // loadingMore 防止重复请求下一页。
   const [loadingMore, setLoadingMore] = useState(false);
+  // refreshing 区分用户下拉刷新和首次静默同步。
+  const [refreshing, setRefreshing] = useState(false);
   // error 展示真实同步或删除异常。
   const [error, setError] = useState<string | null>(null);
   // editing 控制 RN 批量编辑态。
@@ -61,7 +70,30 @@ export function CallsPage() {
     });
     setItems(result.list);
     setTotal(result.total);
-  }, [calls, filter, keyword]);
+  }, [filter, keyword]);
+
+  /** 对齐 RN：强制同步服务端后重读当前筛选第一页，失败保留旧列表。 */
+  const refreshCalls = useCallback(async () => {
+    if (!calls || !snapshot.userID || refreshing || editing) return;
+    setRefreshing(true);
+    setError(null);
+    try {
+      /** result 只在远端同步完成后包含当前筛选的 canonical cache。 */
+      const result = await refreshCallListPage(calls, filter, keyword, PAGE_SIZE);
+      setItems(result.list);
+      setTotal(result.total);
+    } catch (cause) {
+      setError(readError(cause));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [calls, editing, filter, keyword, refreshing, snapshot.userID]);
+
+  /** pullRefresh 只翻译顶部单指下拉，编辑态不接管列表手势。 */
+  const pullRefresh = usePullRefresh({
+    refreshing: refreshing || editing,
+    onRefresh: refreshCalls,
+  });
 
   useEffect(() => {
     if (!calls || !snapshot.userID) return;
@@ -201,8 +233,14 @@ export function CallsPage() {
   if (!snapshot.userID) return <Navigate to="/login" replace />;
 
   return (
-    <main className="rn-calls-page">
-      <section className="rn-calls-surface" aria-busy={loading}>
+    <main
+      className="rn-calls-page"
+      onTouchStart={pullRefresh.onTouchStart}
+      onTouchMove={pullRefresh.onTouchMove}
+      onTouchEnd={pullRefresh.onTouchEnd}
+      onTouchCancel={pullRefresh.onTouchCancel}
+    >
+      <section className="rn-calls-surface" aria-busy={loading || refreshing}>
         <header className="rn-calls-header">
           <div className="rn-calls-header-top">
             {editing ? <span /> : (
@@ -244,6 +282,11 @@ export function CallsPage() {
             </button> : null}
           </label>
         </header>
+        <PullRefreshIndicator
+          refreshing={refreshing}
+          armed={pullRefresh.armed}
+          pullDistance={pullRefresh.pullDistance}
+        />
         {error ? <p className="rn-calls-error" role="status">{error}</p> : null}
         <section className="rn-call-list" aria-label="通话记录">
           {loading && !items.length ? <div className="rn-calls-loading"><span /></div>
@@ -251,7 +294,7 @@ export function CallsPage() {
               <CallRecordRow key={getCallID(call)} call={call} editing={editing}
                 selected={selectedIDs.has(getCallID(call))} selfID={snapshot.userID!}
                 onToggle={toggleSelected} />
-            )) : <p className="rn-calls-empty">暂无通话记录</p>}
+            )) : <p className="rn-calls-empty">{getCallListEmptyLabel(filter, keyword)}</p>}
           {items.length < total ? (
             <button className="rn-calls-more" type="button" disabled={loadingMore} onClick={() => void loadMore()}>
               {loadingMore ? '加载中...' : '加载更多'}
@@ -264,15 +307,15 @@ export function CallsPage() {
             onClick={() => setConfirmingDelete(true)}>删除({selectedIDs.size})</button>
         </footer> : null}
       </section>
-      {confirmingDelete ? <div className="rn-call-sheet-backdrop" role="presentation" onClick={() => setConfirmingDelete(false)}>
-        <section className="rn-call-sheet" role="dialog" aria-modal="true" aria-label="删除通话记录" onClick={event => event.stopPropagation()}>
-          <p>确定要删除这{selectedIDs.size}条通话记录吗？</p>
-          <button type="button" className="is-danger" disabled={deleting} onClick={() => void deleteSelected()}>
-            {deleting ? '删除中...' : '删除'}
-          </button>
-          <button type="button" onClick={() => setConfirmingDelete(false)}>取消</button>
-        </section>
-      </div> : null}
+      <CallDeleteSheet
+        count={selectedIDs.size}
+        deleting={deleting}
+        open={confirmingDelete}
+        onCancel={() => {
+          if (!deleting) setConfirmingDelete(false);
+        }}
+        onDelete={() => void deleteSelected()}
+      />
     </main>
   );
 }

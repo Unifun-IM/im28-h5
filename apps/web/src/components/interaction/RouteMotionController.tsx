@@ -15,8 +15,10 @@ export function RouteMotionController() {
     if (previousPathRef.current === location.pathname) return;
     previousPathRef.current = location.pathname;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    // page 是路由提交后当前可见的页面根节点。
-    const page = document.querySelector<HTMLElement>('#root main');
+    // page 优先选择当前 Activity 场景，避免给隐藏主页面添加入场类。
+    const page = document.querySelector<HTMLElement>(
+      '#root [data-primary-tab-scene="active"] main, #root main',
+    );
     if (!page) return;
     // pageElement 固化空值检查后的页面节点供异步回调安全使用。
     const pageElement = page;

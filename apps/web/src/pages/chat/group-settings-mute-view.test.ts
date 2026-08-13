@@ -27,6 +27,16 @@ describe('group settings and mute H5 contract', () => {
     expect(source).not.toContain('roleLevel === 100');
   });
 
+  /** 群禁言刷新只重读既有 shared 群和成员 facade。 */
+  it('群禁言成员面板复用全局下拉刷新且不增加 transport owner', () => {
+    expect(muteSource).toContain('usePullRefresh({');
+    expect(muteSource).toContain('sync.groups.sync({ pageSize: 100 })');
+    expect(muteSource).toContain('sync.groupMembers.sync(groupID, { pageSize: 100 })');
+    expect(muteSource).toContain('<PullRefreshIndicator');
+    expect(muteSource).toContain('refreshing: loading || refreshing || submitting');
+    expect(muteSource).not.toMatch(/GatewayHTTPClient|GroupRepository|@openim\//);
+  });
+
   it('所有 mutation 都有确认或显式确定操作且不伪造成功', () => {
     expect(managementSource).toContain('ariaLabel="确认群设置"');
     expect(muteSource).toContain('ariaLabel="确认禁言设置"');

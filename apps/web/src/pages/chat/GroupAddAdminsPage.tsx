@@ -4,7 +4,9 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import closeIconURL from '../../assets/rn/assets/icons/imm28/xmark.dynamic.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { GroupAdminMemberRow } from './GroupAdminMemberRow.js';
 import {
@@ -77,10 +79,10 @@ export function GroupAddAdminsPage() {
   return (
     <main className="rn-group-admin-page is-add" aria-busy={data.loading || data.submitting}>
       <section className="rn-group-admin-surface">
-        <header className="rn-group-admin-header">
+        <PageNavbar className="rn-group-admin-header">
           <Link to={adminsURL} aria-label="关闭添加管理员"><RNAssetIcon assetURL={closeIconURL} /></Link>
           <h1>添加管理员</h1><span />
-        </header>
+        </PageNavbar>
         {canManageAdmins ? <label className="rn-group-admin-search"><RNAssetIcon assetURL={searchIconURL} /><span className="sr-only">搜索成员</span><input type="search" value={keyword} placeholder="搜索成员" onChange={event => setKeyword(event.target.value)} /></label> : null}
         {data.error ? <p className="rn-group-admin-error" role="alert">{data.error}</p> : null}
         {data.loading && !data.members.length ? <GroupAddAdminState label="正在加载群成员" compact /> : null}
@@ -92,7 +94,7 @@ export function GroupAddAdminsPage() {
             onTouchEnd={pullRefresh.onTouchEnd}
             onTouchCancel={pullRefresh.onTouchCancel}
           >
-            <div className={`rn-group-admin-pull${pullRefresh.armed ? ' is-armed' : ''}`} style={{ height: pullRefresh.pullDistance }}>{pullRefresh.armed ? '松开刷新' : '下拉刷新'}</div>
+            <PullRefreshIndicator refreshing={false} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
             {candidates.map(member => <GroupAdminMemberRow key={member.userID} member={member} selected={selectedIDs.has(member.userID)} disabled={data.submitting} onAction={() => toggleMember(member.userID)} />)}
             {!candidates.length ? <p>{keyword.trim() ? '未找到相关成员' : '暂无可添加成员'}</p> : null}
           </div>

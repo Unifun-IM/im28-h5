@@ -3,9 +3,11 @@ import { resolveIMGroupMemberDisplayName, type Conversation, type WebIMGroupMemb
 import { Link, Navigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
-import { InteractionModal } from '../../components/interaction/index.js';
+import { InteractionModal, PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
+import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import './group-management-action-page.css';
 
@@ -43,6 +45,8 @@ export function GroupMutePage() {
   const [members, setMembers] = useState<readonly WebIMGroupMember[]>([]);
   /** loading 覆盖首次 cache 和权威刷新。 */
   const [loading, setLoading] = useState(true);
+  /** refreshing 区分用户下拉刷新和首次页面恢复。 */
+  const [refreshing, setRefreshing] = useState(false);
   /** submitting 阻止重复远端写入。 */
   const [submitting, setSubmitting] = useState(false);
   /** pickerTarget 驱动成员时长选择层。 */
@@ -90,6 +94,35 @@ export function GroupMutePage() {
 
   useEffect(() => { void load(); }, [load]);
 
+  /** 下拉刷新只重读 shared 群和成员 facade，失败保留当前禁言快照。 */
+  const refreshMuteFacts = useCallback(async (): Promise<void> => {
+    if (!sync || !conversation || refreshing || submitting) return;
+    /** groupID 只来自已经验证的当前群会话。 */
+    const groupID = conversation.targetID.trim();
+    if (!groupID) return;
+    setRefreshing(true);
+    setError(null);
+    try {
+      /** refreshedFacts 全部成功后才一次替换页面事实。 */
+      const refreshedFacts = await Promise.all([
+        sync.groups.sync({ pageSize: 100 }),
+        sync.groupMembers.sync(groupID, { pageSize: 100 }),
+      ]);
+      setGroup(refreshedFacts[0].find(item => item.groupID === groupID) ?? null);
+      setMembers(refreshedFacts[1]);
+    } catch (cause) {
+      setError(readMuteError(cause));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [conversation, refreshing, submitting, sync]);
+
+  /** pullRefresh 把 RN RefreshControl 投影为浏览器顶部单指下拉。 */
+  const pullRefresh = usePullRefresh({
+    refreshing: loading || refreshing || submitting,
+    onRefresh: refreshMuteFacts,
+  });
+
   /** mutedMembers 只使用 shared DTO 的标准禁言字段。 */
   const mutedMembers = useMemo(() => members.filter(member => member.isMuted), [members]);
   /** candidates 对齐 RN：排除本人、群主、管理员和已禁言成员。 */
@@ -131,9 +164,17 @@ export function GroupMutePage() {
   if (!loading && group && !group.permissions.canMuteAll && !group.permissions.canMuteMembers) return <Navigate to={manageURL} replace />;
 
   return (
-    <main className="rn-group-action-page" aria-busy={loading || submitting}>
+    <main
+      className="rn-group-action-page"
+      aria-busy={loading || refreshing || submitting}
+      onTouchStart={pullRefresh.onTouchStart}
+      onTouchMove={pullRefresh.onTouchMove}
+      onTouchEnd={pullRefresh.onTouchEnd}
+      onTouchCancel={pullRefresh.onTouchCancel}
+    >
       <section className="rn-group-action-surface">
-        <header className="rn-group-action-header"><Link to={manageURL} aria-label="返回群管理"><RNAssetIcon assetURL={backIconURL} /></Link><h1>群禁言</h1><span /></header>
+        <PageNavbar className="rn-group-action-header"><Link to={manageURL} aria-label="返回群管理"><RNAssetIcon assetURL={backIconURL} /></Link><h1>群禁言</h1><span /></PageNavbar>
+        <PullRefreshIndicator refreshing={refreshing} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
         <div className="rn-group-action-content">
           {error ? <p className="rn-group-action-error" role="alert">{error}</p> : null}
           {notice ? <p className="rn-group-action-notice" role="status">{notice}</p> : null}

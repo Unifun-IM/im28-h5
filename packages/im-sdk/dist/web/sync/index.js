@@ -7,6 +7,10 @@ export { createIMCallControlSync, normalizeIMCallServerURL } from './call-contro
 export { resolveDirectConversationPeerUserID } from './direct-conversation-peer.js';
 /** 创建认证账号绑定的黑名单读写 service。 */
 export { createWebIMBlacklistSync } from './blacklist-sync.js';
+/** 创建不复制资料或黑名单 owner 的单聊关系组合 facade。 */
+export { createIMDirectChatRelationshipSync } from './direct-chat-relationship-sync.js';
+/** 判断 realtime 通知是否要求重新读取好友与黑名单关系事实。 */
+export { isIMRelationshipRealtimeEvent } from './relationship-realtime.js';
 /** 创建认证账号绑定的通讯录读取 service。 */
 export { createWebIMContactSync } from './contact-sync.js';
 /** 创建 RN、Web、Desktop 共用的联系人写动作 facade。 */
@@ -53,6 +57,8 @@ export { createIMUserPresenceSync, } from './user-presence.js';
 export { normalizeIMUserPresence, normalizeIMUserPresenceIDs, normalizeIMUserPresencePayload, } from './user-presence-normalization.js';
 /** 创建受认证账号约束的会话 cache/sync 服务。 */
 export { createWebIMConversationSync } from './conversation-sync.js';
+/** 创建跨端共用的账号内会话草稿持久化 facade。 */
+export { createIMConversationDraftSync, readIMConversationDraftDocument, } from './conversation-draft.js';
 /** 导出按群身份打开规范会话的共享能力。 */
 export { openIMGroupConversation } from './group-conversation-open.js';
 /** 导出新 Gateway Difference 原子同步 owner，供受控平台组合。 */
@@ -77,6 +83,8 @@ export { sendWebIMMentionMessage } from './message-mention-send.js';
 export { createIMMessageBroadcastSync, IM_BROADCAST_MAX_TARGETS, } from './message-broadcast.js';
 /** 导出共享批量转发执行函数。 */
 export { forwardWebIMMessages } from './message-forward.js';
+/** 导出多目标转发 shared owner 与目标上限。 */
+export { forwardWebIMMessagesToTargets, IM_FORWARD_MAX_TARGETS, normalizeForwardConversationIDs, } from './message-forward-targets.js';
 /** 导出共享转发来源与隐藏发送人能力判断。 */
 export { canForwardWebIMMessage } from './message-forward-state.js';
 /** 导出共享主动消息删除执行函数。 */

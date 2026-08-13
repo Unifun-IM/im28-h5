@@ -1,6 +1,7 @@
 import { statement } from '../../db/database.js';
 import { Repository } from '../../db/repository.js';
 import { parseJsonColumn, readOptionalString, readRequiredNumber, readRequiredString } from '../../db/row.js';
+import { normalizePresetEmojiEntities } from '../message/preset-emoji.js';
 export class ConversationRepository extends Repository {
     constructor(database) {
         super(database);
@@ -28,56 +29,32 @@ export class ConversationRepository extends Repository {
     }
     async replaceAll(conversations) {
         await this.transaction(async (tx) => {
+            /** existingRows 在删除前冻结本地草稿，远端完整快照不得清除未发送内容。 */
+            const existingRows = await tx.query(statement('SELECT * FROM conversations'));
+            /** existingByID 只为仍存在于新快照的会话恢复本地草稿。 */
+            const existingByID = new Map(existingRows.map(row => {
+                /** existing 是当前账号旧会话的完整本地快照。 */
+                const existing = mapStoredConversationRow(row);
+                return [existing.conversationID, existing];
+            }));
             await tx.execute(statement('DELETE FROM conversations'));
-            await Promise.all(conversations.map(conversation => tx.execute(statement(`INSERT OR REPLACE INTO conversations (
-                conversation_id,
-                type,
-                target_id,
-                name,
-                face_url,
-                latest_message_id,
-                unread_count,
-                updated_at,
-                is_archived,
-                is_pinned,
-                pinned_at,
-                is_muted,
-                auto_delete_seconds,
-                auto_delete_updated_by,
-                auto_delete_updated_at,
-                clear_before_seq,
-                list_hidden,
-                draft,
-                raw_json
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-                conversation.conversationID,
-                conversation.type,
-                conversation.targetID,
-                conversation.name ?? null,
-                conversation.faceURL ?? null,
-                conversation.latestMessageID ?? null,
-                conversation.unreadCount,
-                conversation.updatedAt,
-                readConversationArchivedFlag(conversation),
-                Number(conversation.isPinned ?? false),
-                conversation.pinnedAt ?? 0,
-                Number(conversation.isMuted ?? false),
-                conversation.autoDeleteSeconds ?? 0,
-                conversation.autoDeleteUpdatedBy ?? null,
-                conversation.autoDeleteUpdatedAt ?? 0,
-                conversation.clearBeforeSeq ?? '0',
-                Number(conversation.listHidden ?? false),
-                conversation.draft || null,
-                JSON.stringify(conversation),
-            ]))));
+            await Promise.all(conversations.map(conversation => tx.execute(createConversationUpsertStatement(mergeStoredConversationDraft(conversation, existingByID.get(conversation.conversationID))))));
         });
     }
     /** 只替换普通会话集合，保留独立归档端点维护的归档快照。 */
     async replaceUnarchived(conversations) {
         await this.transaction(async (tx) => {
+            /** existingRows 在替换前保留普通会话的账号内草稿。 */
+            const existingRows = await tx.query(statement('SELECT * FROM conversations WHERE is_archived = 0'));
+            /** existingByID 只为服务端仍返回的会话恢复草稿。 */
+            const existingByID = new Map(existingRows.map(row => {
+                /** existing 是删除前的规范会话快照。 */
+                const existing = mapStoredConversationRow(row);
+                return [existing.conversationID, existing];
+            }));
             await tx.execute(statement('DELETE FROM conversations WHERE is_archived = 0'));
             await Promise.all(conversations.map(conversation => tx.execute(buildConversationInsertStatement({
-                ...conversation,
+                ...mergeStoredConversationDraft(conversation, existingByID.get(conversation.conversationID)),
                 isArchived: false,
             }))));
         });
@@ -137,11 +114,15 @@ export function mapStoredConversationRow(row) {
     const faceURL = readOptionalString(row, 'face_url');
     const latestMessageID = readOptionalString(row, 'latest_message_id');
     const draft = readOptionalString(row, 'draft');
+    /** draftEntities 从专用列恢复，避免远端 raw payload 覆盖 App 草稿身份。 */
+    const draftEntities = parseJsonColumn(row, 'draft_entities_json', []);
     /** autoDeleteUpdatedBy 保留服务端最近操作者，可为空。 */
     const autoDeleteUpdatedBy = readOptionalString(row, 'auto_delete_updated_by');
     /** clearBeforeSeq 是当前账号已确认的单调清空边界。 */
     const clearBeforeSeq = readRequiredString(row, 'clear_before_seq');
     const raw = parseJsonColumn(row, 'raw_json', {});
+    /** rawPayload 保留 Gateway 与其他 App 扩展字段。 */
+    const rawPayload = readConversationPayload(raw);
     return {
         ...raw,
         conversationID: readRequiredString(row, 'conversation_id'),
@@ -161,6 +142,10 @@ export function mapStoredConversationRow(row) {
         clearBeforeSeq,
         listHidden: readRequiredNumber(row, 'list_hidden') === 1,
         draft: draft ?? '',
+        payload: {
+            ...rawPayload,
+            draftPresetEmojiEntities: normalizePresetEmojiEntities(draftEntities, draft ?? ''),
+        },
         updatedAt: readRequiredNumber(row, 'updated_at'),
     };
 }
@@ -193,8 +178,9 @@ export function createConversationUpsertStatement(conversation) {
       clear_before_seq,
       list_hidden,
       draft,
+      draft_entities_json,
       raw_json
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT is_pinned FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT pinned_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT is_muted FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_seconds FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_updated_by FROM conversations WHERE conversation_id = ?), NULL), COALESCE(?, (SELECT auto_delete_updated_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT clear_before_seq FROM conversations WHERE conversation_id = ?), '0'), COALESCE(?, (SELECT list_hidden FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT draft FROM conversations WHERE conversation_id = ?), NULL), ?)`, [
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, (SELECT is_pinned FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT pinned_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT is_muted FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_seconds FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT auto_delete_updated_by FROM conversations WHERE conversation_id = ?), NULL), COALESCE(?, (SELECT auto_delete_updated_at FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT clear_before_seq FROM conversations WHERE conversation_id = ?), '0'), COALESCE(?, (SELECT list_hidden FROM conversations WHERE conversation_id = ?), 0), COALESCE(?, (SELECT draft FROM conversations WHERE conversation_id = ?), NULL), COALESCE(?, (SELECT draft_entities_json FROM conversations WHERE conversation_id = ?), NULL), ?)`, [
         conversation.conversationID,
         conversation.type,
         conversation.targetID,
@@ -222,8 +208,50 @@ export function createConversationUpsertStatement(conversation) {
         conversation.conversationID,
         conversation.draft ?? null,
         conversation.conversationID,
+        readConversationDraftEntitiesJSON(conversation),
+        conversation.conversationID,
         JSON.stringify(conversation),
     ]);
+}
+/** 将远端会话字段与删除前的本地草稿合并。 */
+function mergeStoredConversationDraft(conversation, existing) {
+    if (!existing)
+        return conversation;
+    /** incomingPayload 只保留新快照自己的扩展字段。 */
+    const incomingPayload = readConversationPayload(conversation);
+    /** existingPayload 提供专用列映射回来的草稿 entities。 */
+    const existingPayload = readConversationPayload(existing);
+    /** incomingHasEntities 允许调用方显式以空数组清除旧实体。 */
+    const incomingHasEntities = Object.prototype.hasOwnProperty.call(incomingPayload, 'draftPresetEmojiEntities');
+    return {
+        ...conversation,
+        draft: conversation.draft ?? existing.draft ?? '',
+        payload: {
+            ...incomingPayload,
+            ...(!incomingHasEntities && existingPayload.draftPresetEmojiEntities !== undefined
+                ? { draftPresetEmojiEntities: existingPayload.draftPresetEmojiEntities }
+                : {}),
+        },
+    };
+}
+/** 从会话 payload 提取显式草稿 entities 列值，缺失时交给 SQL 保留旧值。 */
+function readConversationDraftEntitiesJSON(conversation) {
+    /** payload 是专用列的兼容输入来源。 */
+    const payload = readConversationPayload(conversation);
+    if (!Object.prototype.hasOwnProperty.call(payload, 'draftPresetEmojiEntities')) {
+        return null;
+    }
+    return JSON.stringify(Array.isArray(payload.draftPresetEmojiEntities)
+        ? payload.draftPresetEmojiEntities
+        : []);
+}
+/** 将未知会话 payload 收窄为普通扩展对象。 */
+function readConversationPayload(conversation) {
+    /** payload 只接受非数组对象。 */
+    const payload = conversation.payload;
+    return payload && typeof payload === 'object' && !Array.isArray(payload)
+        ? payload
+        : {};
 }
 // 旧私有名称继续服务同文件快照替换，实际 SQL owner 已统一为公开构造器。
 const buildConversationInsertStatement = createConversationUpsertStatement;

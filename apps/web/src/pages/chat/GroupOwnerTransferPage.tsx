@@ -4,8 +4,9 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 
 import closeIconURL from '../../assets/rn/assets/icons/imm28/xmark.dynamic.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
-import { InteractionModal } from '../../components/interaction/index.js';
+import { InteractionModal, PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { getGroupMemberRoleLabel } from './group-members-view.js';
@@ -82,10 +83,10 @@ export function GroupOwnerTransferPage() {
   return (
     <main className="rn-group-owner-transfer-page" aria-busy={data.loading || data.submitting}>
       <section className="rn-group-owner-transfer-surface">
-        <header className="rn-group-owner-transfer-header">
+        <PageNavbar className="rn-group-owner-transfer-header">
           <Link to={closeURL} aria-label="关闭选择新群主"><RNAssetIcon assetURL={closeIconURL} /></Link>
           <h1>选择新群主</h1><span />
-        </header>
+        </PageNavbar>
         {canTransferOwner ? <label className="rn-group-owner-transfer-search"><RNAssetIcon assetURL={searchIconURL} /><span className="sr-only">搜索成员</span><input type="search" value={keyword} placeholder="搜索" onChange={event => setKeyword(event.target.value)} /></label> : null}
         {data.error ? <p className="rn-group-owner-transfer-error" role="alert">{data.error}</p> : null}
         {data.notice ? <p className="rn-group-owner-transfer-notice" role="status">{data.notice}</p> : null}
@@ -99,7 +100,7 @@ export function GroupOwnerTransferPage() {
             onTouchEnd={pullRefresh.onTouchEnd}
             onTouchCancel={pullRefresh.onTouchCancel}
           >
-            <div className={`rn-group-owner-transfer-pull${pullRefresh.armed ? ' is-armed' : ''}`} style={{ height: pullRefresh.pullDistance }}>{pullRefresh.armed ? '松开刷新' : '下拉刷新'}</div>
+            <PullRefreshIndicator refreshing={false} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
             {entries.map(entry => entry.type === 'section'
               ? <h2 key={entry.key}>{entry.title}</h2>
               : <GroupOwnerTransferRow key={entry.key} member={entry.member} displayName={entry.displayName} disabled={data.submitting} onSelect={() => setSelectedUserID(entry.member.userID)} />)}

@@ -6,6 +6,7 @@ import albumIconURL from '../../assets/rn/assets/icons/imm28/album.svg';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import scanIconURL from '../../assets/rn/assets/icons/imm28/group-action-scan.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { decodeBrowserQRCodeImage, startBrowserQRCodeScan, type StopBrowserQRCodeScan } from './browser-qr-decoder.js';
 import { readQRCodeBackHref } from './qr-route.js';
@@ -109,10 +110,10 @@ export default function QRCodeScanPage() {
   return (
     <main className="rn-qr-page" aria-busy={recognizing}>
       <section className="rn-qr-surface">
-        <header className="rn-qr-header">
+        <PageNavbar className="rn-qr-header">
           <button type="button" aria-label="返回" onClick={() => navigate(backHref)}><RNAssetIcon assetURL={backIconURL} /></button>
           <h1>扫一扫</h1><span aria-hidden="true" />
-        </header>
+        </PageNavbar>
         <section className="rn-qr-camera" aria-label="二维码摄像头预览">
           <video ref={videoRef} muted playsInline />
           {!scanning ? <RNAssetIcon assetURL={scanIconURL} /> : null}

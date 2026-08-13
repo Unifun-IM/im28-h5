@@ -48,14 +48,8 @@
   outline-color: var(--im-brand-primary);
 }
 
-.rn-primary-tab-item:active:not(:disabled) {
+.rn-primary-tab-item:active {
   background: var(--im-bg-pressed);
-}
-
-.rn-primary-tab-item:disabled {
-  color: var(--im-icon-secondary);
-  cursor: default;
-  opacity: 1;
 }
 
 .rn-primary-tab-icon-wrap {
@@ -113,7 +107,7 @@
 }
 
 @media (hover: hover) {
-  .rn-primary-tab-item:hover:not(:disabled) {
+  .rn-primary-tab-item:hover {
     background: var(--im-bg-pressed);
   }
 }

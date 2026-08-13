@@ -30,6 +30,40 @@
   opacity: 1;
 }
 
+.rn-chat-call-message {
+  display: flex;
+  min-width: 112px;
+  min-height: 24px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rn-chat-call-message.is-peer {
+  flex-direction: row-reverse;
+}
+
+.rn-chat-call-message .rn-asset-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
+.rn-chat-call-message.is-mine .rn-asset-icon {
+  transform: scaleX(-1);
+}
+
+.rn-chat-call-message:disabled {
+  cursor: default;
+}
+
 .rn-chat-media-image,
 .rn-chat-video-content {
   width: min(236px, 62vw);

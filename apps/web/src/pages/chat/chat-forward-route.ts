@@ -12,6 +12,17 @@ export interface ChatForwardLocationState {
   readonly forward: ChatForwardRouteState;
 }
 
+/** 旧目标页只允许把校验后的稳定身份交回聊天内弹窗。 */
+export interface ChatForwardPickerLocationState {
+  readonly forwardPicker: ChatForwardRouteState;
+}
+
+/** 旧转发目标页的唯一输出是聊天主路由和可选一次性弹窗状态。 */
+export interface ChatForwardCompatibilityDestination {
+  readonly pathname: string;
+  readonly state: ChatForwardPickerLocationState | null;
+}
+
 /** 从稳定会话和消息身份创建可跨 SPA 页面传递的状态。 */
 export function createChatForwardRouteState(options: {
   readonly sourceConversationID: string;
@@ -69,9 +80,36 @@ export function readChatForwardLocationState(
   });
 }
 
-/** 将来源会话编码为转发选择器 SPA 路径。 */
-export function buildChatForwardTargetRoute(sourceConversationID: string): string {
-  return `/conversations/${encodeURIComponent(sourceConversationID)}/forward`;
+/** 创建旧目标页到当前聊天弹窗的单次兼容状态。 */
+export function createChatForwardPickerLocationState(
+  forward: ChatForwardRouteState,
+): ChatForwardPickerLocationState {
+  return { forwardPicker: forward };
+}
+
+/** 只读取兼容 redirect 生成的稳定 ID 状态，不接受消息正文。 */
+export function readChatForwardPickerLocationState(
+  value: unknown,
+): ChatForwardRouteState | null {
+  if (!isRecord(value) || !isRecord(value.forwardPicker)) return null;
+  return readChatForwardLocationState({ forward: value.forwardPicker });
+}
+
+/** 将旧目标页 state 安全收敛为同一会话的聊天内弹窗入口。 */
+export function createChatForwardCompatibilityDestination(
+  conversationID: string,
+  locationState: unknown,
+): ChatForwardCompatibilityDestination {
+  // normalizedConversationID 只去除路由身份两端空白。
+  const normalizedConversationID = conversationID.trim();
+  // forward 复用现有 route contract，拒绝正文和畸形身份。
+  const forward = readChatForwardLocationState(locationState);
+  return {
+    pathname: `/conversations/${encodeURIComponent(normalizedConversationID)}`,
+    state: forward?.sourceConversationID === normalizedConversationID
+      ? createChatForwardPickerLocationState(forward)
+      : null,
+  };
 }
 
 /** 将未知值收窄为可安全读取字段的对象。 */

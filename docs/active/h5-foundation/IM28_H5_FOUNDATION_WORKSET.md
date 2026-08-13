@@ -1,17 +1,201 @@
 # IM28 H5 Foundation Workset
 
-## Current Workset W6.a6.20.30 Chat Quote Source Local Resolution And Focus
+## Current Workset W6 RN Parity Residual Inventory Refresh
 
 | field | value |
 | :--- | :--- |
-| status | `shared-core-ready/web-consumed/rn-frozen; browser-quote-data-gated` |
-| owner | `SDK messages.getCachedByStableMsgIDs -> MessageRepository -> H5 useChatQuoteSources -> ChatMessageList/React Router` |
-| completed | 当前窗口优先、client/server 稳定身份本地恢复、群昵称 shared resolver、当前 DOM 居中高亮、本地来源目标窗口路由、确认缺失文案 |
-| fail-closed | SQLite 读取失败不冒充已删除；跨会话结果、空 identity 和确认缺失来源不跳转；不新增 Gateway 查询或 cache mutation |
-| verification | SDK focused 2/12、full Web 91/381；H5 focused 4/15、466 assets、runtime boundary、SDK/H5 typecheck、1132-module build；cleanup P0/P1 zero |
-| browser gate | 真实 412px 三个会话均无引用消息且零横向溢出；路由与 console 健康，真实引用点击/高亮仍 sample-gated |
-| protected | `im28-phone` business clean；只发布 `build:web/sync:web`；未执行/修改 `build:package:desktop:web`，未同步 RN package |
-| next | `W6-rn-parity-residual-inventory-refresh` |
+| status | `active/inventory` |
+| owner | `RN frozen reference -> H5 route/interaction/state inventory -> existing shared SDK owners` |
+| target | 继续按 RN 页面、交互和状态逐项检索确定性缺口，优先选择不改 RN business 且不建立 Web 双轨的独立切片 |
+| non-claim | 不把 data/authorization/browser gate 伪报为实现缺口，不以收敛为由修改 RN 业务调用 |
+| verification | 每个后续切片独立冻结 contract、focused/full gates 和真实浏览器证据 |
+| protected | 后续 inventory 不默认修改 SDK 或 `im28-phone`；若确认 shared 缺口，仅允许单独冻结 contract 后执行 `build:web/sync:web` |
+| next | `.57` 已关闭通讯录主 Tab 申请角标缺口；重新扫描 RN/H5 route、手势、空态、modal、媒体与设置细节，选择下一项可闭环差异 |
+
+## Latest Closed Slice W6.a6.20.57
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; presentation-owner-converged; browser-zero-state-pass/non-zero-data-gated` |
+| goal | 对齐 RN 通讯录主 Tab 的好友申请未读加群申请总数角标，并让 Tab 与通讯录 shortcut 复用同一快照 |
+| business owner | SDK 既有 `friendApplications/groupApplications` read facades 继续唯一提供计数事实；无新增 Gateway、SQLite、DTO 或 mutation |
+| H5 owner | `PrimaryTabsLayout -> useVerificationUnreadCounts -> PrimaryTabBadgeProvider` 持有主 Tab 生命周期；TabBar 与 ContactsPage 只消费同一状态/刷新端口 |
+| freshness | 首次恢复与进入通讯录刷新；同 runtime/账号并发合并；账号切换拒绝旧结果回写 |
+| delete | 删除四 Tab 全部迁移后遗留的 nullable href、disabled button 和禁用 CSS 分支，不保留 compat |
+| verification floor | focused 3 files/7、full 111 files/344 tests、typecheck、1165-module build、diff check；真实四 Tab 路由与零值隐藏 proof |
+| protected | 本片未修改 SDK、generated package 或 `im28-phone`；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已有 owner、可独立验证且不修改 RN business 的确定性缺口。
+
+## Latest Closed Slice W6.a6.20.56
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; compatibility-only; browser-readonly-pass` |
+| goal | 让已发布/历史浏览器中的旧转发 URL 安全回到当前聊天内唯一目标选择器，不恢复第二页面 |
+| primary owner | `ChatPage -> ChatTargetPickerModal` 继续是唯一选择 UI；shared SDK 转发 facade 保持唯一业务 owner |
+| compatibility | `ChatForwardCompatibilityRedirect` 只做 replace；仅转交同路由会话、1–100 个稳定 client ID，并在聊天页复核后清除 state |
+| delete/register | 登记旧 route 为 compatibility-only；无旧页面/CSS/source/mutation；历史深链不再支持时可删除该 route 和 redirect |
+| verification floor | focused 1 file/4、full 110 files/341 tests、typecheck、1165-module build、diff check；旧 URL/reload/back/零日志 browser proof |
+| protected | 本片未修改 SDK、generated package 或 `im28-phone`；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续从 RN 页面/动作/状态清单选择不修改 RN business 的确定性缺口。
+
+## Latest Closed Slice W6.a6.20.55
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; presentation-only; cold-frame-timing-gated` |
+| goal | 用 RN 固定几何、头像差异、尾巴和 shimmer 替换 H5 自创的交替消息骨架 |
+| business owner | 既有 ChatPage/SDK history、cache 和 loading 主链不变；本片不新增业务 owner |
+| H5 owner | `ChatMessageSkeleton.tsx + chat-message-skeleton.css` 唯一持有加载视觉；`ChatMessageList` 只组合 loading/empty/isGroup |
+| delete | 删除旧内联 `ChatMessageSkeleton` 与 4 条 peer/mine pulse bar CSS，不保留 compat |
+| verification floor | focused 1 file/3、full 110 files/339 tests、466 assets、typecheck、1164-module build、diff check；真实短群聊 bottom geometry/稳定 reload |
+| browser gate | 第二账号真实路由和短列表贴底通过；本地 cache 命中过快，无法稳定捕获自然骨架帧，视觉瞬态保持 timing gate |
+| protected | `im28-phone` clean；本片不改 SDK source；只执行 Web build/sync，不执行 RN/Desktop/build:all/`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续从 RN 页面/动作/状态清单选择不修改 RN business 的确定性缺口。
+
+## Latest Closed Slice W6.a6.20.54
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; shared-core-ready/web-consumed/rn-frozen; mutation-gated` |
+| goal | 删除好友/群聊目标选择双轨，统一单选/多选/ALL 弹窗，并使短消息列表贴底 |
+| business owner | SDK `messages.forwardToTargets` 与 `messageBroadcast.sendCard/sendImage` 唯一持有多目标、batch、partial result 和 cache 收敛 |
+| H5 owner | `ChatTargetPickerModal` 唯一持有 modal/search/tab/selection；聊天转发直接在当前 ChatPage 打开；route shells 只恢复来源 |
+| delete | 删除独立转发目标页/route/CSS；二维码、群发、用户/群名片不再复制选择器 DOM |
+| verification floor | SDK focused 3/13 + all-runtime boundary/typecheck；H5 full 109/337、typecheck、1161-module build；登录态弹窗与短列表 browser proof |
+| browser gate | 已证明跨 Tab ALL、多选计数、当前聊天 URL 不变和短列表底对齐；未点击最终发送，真实 partial/list-back 保持授权门 |
+| protected | `im28-phone` clean；仅 `build:web/sync:web`；未执行 RN/Desktop/build:all 或 `build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续从 RN 页面/动作/状态清单选择不修改 RN business 的确定性缺口。
+
+## Latest Closed Slice W6.a6.20.53
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; presentation-owner-converged; physical-touch-gated` |
+| goal | 删除页面级下拉刷新三态展示双轨，让全部生产消费者复用同一全局组件 |
+| business owner | 20 个页面原有 refresh callback 和 shared SDK facades 完全保持，不新增 transport/cache/mutation owner |
+| H5 owner | `usePullRefresh` 唯一持有触摸翻译；`PullRefreshIndicator` 唯一持有三态 DOM/CSS；页面只组合两者 |
+| delete | 10 份手写 DOM 与 9 个 CSS 文件中的 `rn-*-pull` 选择器全部删除，不保留 compat |
+| verification floor | focused 5 files/10、full 108 files/334 tests、466 assets、typecheck、1158-module build、diff check、20/20 consumer contract |
+| browser gate | 5176 通话、会话、搜索、真实群成员四路由均为折叠全局提示、旧 class 0、数据正常和零 warning/error；物理触摸释放保持显式 gate |
+| not authorized | 任何真实 mutation；SDK/RN business；SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已有 shared owner、可只读验收且不修改 RN business 的确定性缺口。
+
+## Previous Closed Slice W6.a6.20.52
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass/physical-touch-gated` |
+| goal | 对齐 RN 普通转发目标列表 `RefreshControl`，保持三 Tab、搜索、目标打开和转发提交主链不变 |
+| business owner | `loadChatForwardTargets -> WebIMSync.conversations/contacts/groups` 继续唯一持有三类目标 cache-first/远端刷新事实 |
+| H5 owner | `ChatForwardTargetPage` 只复用全局 `usePullRefresh/PullRefreshIndicator`；全部刷新成功后才替换当前快照 |
+| verification floor | focused 4 files/8、full 107 files/332 tests、466 assets、typecheck、1158-module build、diff check |
+| browser gate | 5176 真实 3/2/1 三类目标、搜索/清除、三 Tab、折叠提示、412/412 和零 warning/error 通过；物理触摸释放保持显式 gate |
+| not authorized | 打开真实目标、提交转发；SDK/RN business；SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已有 shared owner、可只读验收且不修改 RN business 的确定性缺口。
+
+## Latest Closed Slice W6.a6.20.51
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass/empty-data-and-physical-touch-gated` |
+| goal | 对齐 RN 黑名单列表下拉刷新，并删除验证/群页面两套重复提示 owner |
+| business owner | `WebIMSync.blacklist.list/remove` 继续唯一持有黑名单事实与解除 mutation；页面无 transport/cache owner |
+| H5 owner | `MeBlacklistPage` 只复用全局 `usePullRefresh`；`PullRefreshIndicator` 为七个页面共用的纯展示组件 |
+| delete | 删除 `VerificationPullIndicator`、`GroupPullRefreshIndicator` 及重复 CSS，不保留 compat |
+| verification floor | focused 6 files/16、full 106 files/330 tests、466 assets、typecheck、1158-module build、diff check |
+| browser gate | 5176 空列表、搜索/清除、空态、412/412 和稳定 reload 通过；无黑名单样本、物理触摸和真实解除保持显式 gate |
+| not authorized | 解除真实黑名单；SDK/RN business；SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已有 shared owner、可只读验收且不修改 RN business 的确定性缺口。
+
+## Previous Closed Slice W6.a6.20.50
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass/physical-touch-and-action-data-gated` |
+| goal | 对齐 RN 指定群入群申请列表 `RefreshControl`，保持搜索、申请操作和 accept/reject 主链不变 |
+| business owner | `WebIMSync.groupApplications.list/accept/reject` 继续唯一持有申请事实与 mutation；页面无 transport/cache owner |
+| H5 owner | `GroupApplicationsPage` 只复用全局 `usePullRefresh` 和既有 `VerificationPullIndicator`；成功才替换列表，失败保留旧快照与搜索词 |
+| verification floor | focused 4 files/11、full 105 files/328 tests、466 assets、typecheck、1158-module build、diff check |
+| browser gate | 5176 真实群路由、搜索/清除、空态、412/412 和稳定 reload 零 warning/error 通过；物理触摸与申请操作保持显式 gate |
+| not authorized | 接受或拒绝真实申请；SDK/RN business；SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已有 shared owner、可只读验收且不修改 RN business 的确定性缺口。
+
+## Previous Closed Slice W6.a6.20.49
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass/physical-touch-gated` |
+| goal | 对齐 RN 群禁言手动成员列表 `RefreshControl`，保持禁言范围、成员动作和 mutation 主链不变 |
+| business owner | `WebIMSync.groups/groupMembers` 继续持有刷新事实；`WebIMSync.groupManagement` 继续唯一持有禁言 mutation |
+| H5 owner | `GroupMutePage` 只复用全局 `usePullRefresh`；`GroupPullRefreshIndicator` 为邀请、移除、禁言三个群页面共用的纯展示组件 |
+| verification floor | focused 3 files/8、full 104 files/326 tests、466 assets、typecheck、1158-module build、diff check |
+| browser gate | 5176 真实关闭范围、两位可禁言成员、412/412 和稳定 reload 零新增 warning/error 通过；物理触摸释放保持显式 gate |
+| not authorized | 开启/关闭群禁言、成员禁言或解除；SDK/RN business；SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已有 shared owner、可只读验收且不修改 RN business 的确定性缺口。
+
+## Previous Closed Slice W6.a6.20.48
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass/physical-touch-gated` |
+| goal | 对齐 RN 邀请群成员与移出群成员选择页 `RefreshControl`，保持搜索、选择和 mutation 主链不变 |
+| business owner | 邀请继续消费 `WebIMSync.groups/groupMembers/contacts`；移除继续消费 `WebIMSync.groups/groupMembers`；页面无 transport/cache owner |
+| H5 owner | 两页只复用全局 `usePullRefresh` 和共用三态提示；全部同步成功后才替换候选，失败保留旧快照与选择 |
+| verification floor | focused 4 files/8、full 104 files/325 tests、466 assets、typecheck、1158-module build、diff check |
+| browser gate | 5176 真实邀请空态、移除两位成员、搜索过滤、禁用提交、412px 与零 warning/error 通过；物理触摸释放保持显式 gate |
+| not authorized | 邀请或移除真实成员；SDK/RN business；SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已有 shared owner、可只读验收且不修改 RN business 的确定性缺口。
+
+## Previous Closed Slice W6.a6.20.47
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass/physical-touch-gated` |
+| goal | 对齐 RN 我的群聊列表 `RefreshControl`，同时保持搜索、长按动作和群生命周期主链不变 |
+| business owner | 既有 `WebIMSync.groups.sync` 继续唯一持有 Gateway 全分页与 SQLite 快照替换；页面无 transport/cache owner |
+| H5 owner | `JoinedGroupsPage` 只复用全局 `usePullRefresh`，失败保留旧列表并显示真实错误 |
+| verification floor | focused 3 files/8、full 103 files/323 tests、466 assets、typecheck、1158-module build、diff check |
+| browser gate | 5176 真实群、群主标签、无结果/恢复搜索、412/412 和零 warning/error 通过；物理触摸释放保持显式 gate |
+| not authorized | 退群、转让、分享或资料 mutation；SDK/RN business；SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已有 shared owner、可只读验收且不修改 RN business 的确定性缺口。
+
+## Previous Closed Slice W6.a6.20.46
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass/physical-touch-gated` |
+| goal | 对齐 RN 普通建群的已选好友复核、清空/逐个移除和页面下拉刷新 |
+| business owner | 继续复用既有 `WebIMSync.groups.create` 与 `WebIMSync.contacts.list`；未新增 Gateway、SQLite、DTO、Repository 或创建状态机 |
+| H5 owner | `CreateGroupSelectedFriends` 只投影选中预览与全局 `InteractionModal`；页面复用 `usePullRefresh`，失败保留旧联系人快照 |
+| verification floor | focused 3 files/8、full 102 files/321 tests、466 assets、typecheck、1158-module build、diff check |
+| browser gate | 5176 真实两位好友完成全选、复核、逐个移除和清空；提交态正确，412/412、console 0；物理触摸释放保持显式 gate |
+| not authorized | 创建真实群、修改 SDK/RN business、SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已有 shared owner、无需修改 RN business 的确定性缺口。
+
+## Previous Closed Slice W6.a6.20.45
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen; browser-real-data-pass` |
+| goal | 对齐 RN type1201 好友关系通知在聊天页、会话摘要和初始未读边界中的固定身份与文案 |
+| shared owner | SDK `modules/message/friend-added-message.ts` 持有类型、文案和 pure helper；未读边界复用同一常量 |
+| H5 consumers | 聊天气泡与会话摘要共同消费 shared helper，不保留页面级 1201 硬编码 |
+| verification floor | SDK focused 2 files/6、Web full 97/400、全 target typecheck/boundary；H5 focused 2/20、full 101/319、466 assets、1157-module build |
+| browser gate | 5176 真实会话摘要由 raw `[contentType=1201]` 修复为 RN 文案；稳定期 reload 无新增日志 |
+| not authorized | RN business/generated package、RN/Desktop/build:all/`build:package:desktop:web` |
 
 ## Latest Closed Slice W6.a6.20.21
 

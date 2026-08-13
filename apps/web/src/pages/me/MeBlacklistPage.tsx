@@ -4,8 +4,10 @@ import type { WebIMBlacklistUser } from '@im28/im-sdk/web';
 import { Navigate } from 'react-router-dom';
 
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { filterBlacklistUsers } from './blacklist-view.js';
 import { MeProfileHeader } from './MeProfileHeader.js';
@@ -23,6 +25,8 @@ export function MeBlacklistPage() {
   const [keyword, setKeyword] = useState('');
   // loading 覆盖首次读取和手动重试。
   const [loading, setLoading] = useState(false);
+  // refreshing 只表示用户触发的顶部下拉刷新。
+  const [refreshing, setRefreshing] = useState(false);
   // error 透传真实 Gateway 失败。
   const [error, setError] = useState<string | null>(null);
   // pendingUser 控制 RN 同源底部确认层。
@@ -45,6 +49,28 @@ export function MeBlacklistPage() {
   }, [runtime, snapshot.userID]);
 
   useEffect(() => { void loadUsers(); }, [loadUsers]);
+
+  /** 下拉刷新只重读既有 blacklist facade，失败保留旧列表。 */
+  const refreshUsers = useCallback(async (): Promise<void> => {
+    if (!runtime || !snapshot.userID || refreshing || removingUserID) return;
+    setRefreshing(true);
+    setError(null);
+    try {
+      /** nextUsers 只来自 shared 黑名单 facade。 */
+      const nextUsers = await runtime.getSync().blacklist.list({ pageSize: 100 });
+      setUsers(nextUsers);
+    } catch (cause) {
+      setError(readBlacklistError(cause, '黑名单加载失败'));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing, removingUserID, runtime, snapshot.userID]);
+
+  /** pullRefresh 把 RN FlatList 刷新投影为浏览器顶部单指下拉。 */
+  const pullRefresh = usePullRefresh({
+    refreshing: loading || refreshing || Boolean(removingUserID),
+    onRefresh: refreshUsers,
+  });
 
   /** 仅在 Gateway 解除成功后从当前列表移除用户。 */
   const confirmRemove = useCallback(async (): Promise<void> => {
@@ -72,13 +98,21 @@ export function MeBlacklistPage() {
   if (!snapshot.userID) return <Navigate to="/login" replace />;
 
   return (
-    <main className="rn-me-blacklist-page" aria-busy={loading}>
+    <main
+      className="rn-me-blacklist-page"
+      aria-busy={loading || refreshing || Boolean(removingUserID)}
+      onTouchStart={pullRefresh.onTouchStart}
+      onTouchMove={pullRefresh.onTouchMove}
+      onTouchEnd={pullRefresh.onTouchEnd}
+      onTouchCancel={pullRefresh.onTouchCancel}
+    >
       <section className="rn-me-blacklist-surface">
         <MeProfileHeader title="黑名单" backHref="/me/settings/permissions" />
         <label className="rn-me-blacklist-search">
           <RNAssetIcon assetURL={searchIconURL} />
           <input type="search" value={keyword} placeholder="搜索" aria-label="搜索黑名单" onChange={event => setKeyword(event.target.value)} />
         </label>
+        <PullRefreshIndicator refreshing={refreshing} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
         {error ? <div className="rn-me-blacklist-error" role="status"><span>{error}</span><button type="button" onClick={() => void loadUsers()}>重试</button></div> : null}
         <div className="rn-me-blacklist-list" role="list">
           {visibleUsers.map(user => <BlacklistRow key={user.userID} user={user} removing={removingUserID === user.userID} onRemove={() => setPendingUser(user)} />)}

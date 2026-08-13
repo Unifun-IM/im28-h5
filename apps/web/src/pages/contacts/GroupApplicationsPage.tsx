@@ -4,7 +4,9 @@ import { Navigate, useParams } from 'react-router-dom';
 
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { GroupApplicationActionDialog } from './GroupApplicationActionDialog.js';
 import { GroupApplicationRow } from './GroupApplicationRow.js';
@@ -24,6 +26,8 @@ export function GroupApplicationsPage() {
   const [keyword, setKeyword] = useState('');
   // loading 覆盖首次读取和处理后刷新。
   const [loading, setLoading] = useState(false);
+  // refreshing 只表示用户触发的顶部下拉刷新。
+  const [refreshing, setRefreshing] = useState(false);
   // error 显示真实 Gateway 失败。
   const [error, setError] = useState<string | null>(null);
   // activeApplication 控制 RN 操作弹层。
@@ -46,6 +50,28 @@ export function GroupApplicationsPage() {
   }, [groupID, runtime, snapshot.userID]);
 
   useEffect(() => { void loadApplications(); }, [loadApplications]);
+
+  /** 下拉刷新只重读既有 groupApplications facade，失败保留旧列表。 */
+  const refreshApplications = useCallback(async (): Promise<void> => {
+    if (!runtime || !snapshot.userID || !groupID || refreshing || pendingAction) return;
+    setRefreshing(true);
+    setError(null);
+    try {
+      /** nextApplications 只来自 shared 群申请 facade。 */
+      const nextApplications = await runtime.getSync().groupApplications.list({ pageSize: 100 });
+      setApplications(nextApplications);
+    } catch (cause) {
+      setError(readGroupApplicationError(cause, '入群申请加载失败'));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [groupID, pendingAction, refreshing, runtime, snapshot.userID]);
+
+  /** pullRefresh 把 RN RefreshControl 投影为浏览器顶部单指下拉。 */
+  const pullRefresh = usePullRefresh({
+    refreshing: loading || refreshing || Boolean(pendingAction),
+    onRefresh: refreshApplications,
+  });
 
   /** Gateway mutation 成功后才关闭弹层并重新读取列表。 */
   const handleApplication = useCallback(async (action: 'accept' | 'reject'): Promise<void> => {
@@ -76,11 +102,19 @@ export function GroupApplicationsPage() {
   if (!snapshot.userID) return <Navigate to="/login" replace />;
   if (!groupID) return <Navigate to="/contacts/verifications/group" replace />;
 
-  return <main className="rn-group-applications-page" aria-busy={loading}>
+  return <main
+    className="rn-group-applications-page"
+    aria-busy={loading || refreshing || Boolean(pendingAction)}
+    onTouchStart={pullRefresh.onTouchStart}
+    onTouchMove={pullRefresh.onTouchMove}
+    onTouchEnd={pullRefresh.onTouchEnd}
+    onTouchCancel={pullRefresh.onTouchCancel}
+  >
     <section className="rn-group-applications-surface">
       <GroupApplicationsHeader title="入群申请" backTo="/contacts/verifications/group" />
       <p className="rn-group-applications-group-name">{groupName}</p>
       <label className="rn-group-applications-search"><RNAssetIcon assetURL={searchIconURL} /><input type="search" value={keyword} placeholder="搜索申请人/用户ID" aria-label="搜索入群申请" onChange={event => setKeyword(event.target.value)} />{keyword ? <button type="button" aria-label="清除" onClick={() => setKeyword('')}><RNAssetIcon assetURL={clearIconURL} /></button> : null}</label>
+      <PullRefreshIndicator refreshing={refreshing} pullDistance={pullRefresh.pullDistance} armed={pullRefresh.armed} />
       {error ? <GroupApplicationsError message={error} onRetry={() => void loadApplications()} /> : null}
       <div className="rn-group-application-list">
         {entries.map(entry => entry.type === 'section' ? <h2 key={entry.key}>{entry.title}</h2> : <GroupApplicationRow key={entry.key} application={entry.application} onHandle={() => setActiveApplication(entry.application)} />)}

@@ -75,23 +75,6 @@
   white-space: nowrap;
 }
 
-.rn-contacts-pull {
-  display: grid;
-  height: 0;
-  place-items: center;
-  overflow: hidden;
-  color: var(--im-text-muted);
-  background: var(--im-bg-app);
-  font-size: 12px;
-  letter-spacing: 0;
-  line-height: 18px;
-  transition: height 140ms ease;
-}
-
-.rn-contacts-pull.is-armed {
-  color: var(--im-text-secondary);
-}
-
 .rn-contacts-error {
   display: flex;
   align-items: center;
@@ -439,10 +422,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rn-contacts-loading span,
-  .rn-contacts-pull {
+  .rn-contacts-loading span {
     animation: none;
-    transition: none;
   }
 }
 

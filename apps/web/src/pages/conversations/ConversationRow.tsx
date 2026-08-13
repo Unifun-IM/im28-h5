@@ -105,6 +105,7 @@ export function ConversationRow({ item, currentUserID, onOpenActions }: Conversa
   return (
     <Link
       className={`rn-conversation-row${conversation.isPinned ? ' is-pinned' : ''}`}
+      data-conversation-id={conversation.conversationID}
       to={`/conversations/${encodeURIComponent(conversation.conversationID)}`}
       aria-label={`打开与${title}的会话`}
       aria-haspopup="menu"

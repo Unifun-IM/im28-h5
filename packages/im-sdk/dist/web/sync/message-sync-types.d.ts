@@ -3,6 +3,7 @@ import type { WebIMDeleteMessagesOptions, WebIMDeleteMessagesResult } from './me
 import type { WebIMEditTextMessageOptions } from './message-edit.js';
 import type { IMGroupMentionSync } from './group-mention.js';
 import type { WebIMForwardMessagesOptions, WebIMForwardMessagesResult } from './message-forward.js';
+import type { WebIMForwardMessagesToTargetsOptions, WebIMForwardMessagesToTargetsResult } from './message-forward-targets.js';
 import type { WebIMSendAudioMessageOptions } from './message-audio-send.js';
 import type { WebIMSendCardMessageOptions } from './message-card-send.js';
 import type { WebIMSendCustomEmojiMessageOptions } from './message-custom-emoji-send.js';
@@ -46,6 +47,7 @@ export interface WebIMMessageSync {
     sendVideo(options: WebIMSendVideoMessageOptions): Promise<Message>;
     sendFile(options: WebIMSendFileMessageOptions): Promise<Message>;
     forward(options: WebIMForwardMessagesOptions): Promise<WebIMForwardMessagesResult>;
+    forwardToTargets(options: WebIMForwardMessagesToTargetsOptions): Promise<WebIMForwardMessagesToTargetsResult>;
     delete(options: WebIMDeleteMessagesOptions): Promise<WebIMDeleteMessagesResult>;
     editText(options: WebIMEditTextMessageOptions): Promise<Message>;
     retry(options: WebIMRetryMessageOptions): Promise<Message>;

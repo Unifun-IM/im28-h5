@@ -19,6 +19,14 @@ function createMessage(contentType: number, payload: unknown): Message {
 
 // 聊天消息 view 映射锁定 Gateway 媒体字段，防止交互 URL 再次丢失。
 describe('chat message view media mapping', () => {
+  /** 好友关系通知必须使用 RN 已发布的 shared 文案。 */
+  it('projects type1201 through the shared friend-added owner', () => {
+    expect(getChatMessageView(createMessage(1201, {}), false)).toEqual({
+      kind: 'system',
+      text: '你们已经成为好友，可以开始聊天了',
+    });
+  });
+
   it('投影音频真实 URL 与 RN 时长格式', () => {
     expect(
       getChatMessageView(
@@ -189,5 +197,64 @@ describe('chat message view media mapping', () => {
       kind: 'system',
       text: '你已设置消息在7天后自动删除',
     });
+  });
+
+  /** 群简介与发言频率必须消费 shared 结构化文案。 */
+  it('projects structured group system notices through the SDK owner', () => {
+    expect(getChatMessageView(createMessage(1521, {
+      system: {
+        event_type: 'group_description_changed',
+        text: '不可依赖的旧文案',
+        extra: { operator_user_id: 'user-1', operator_nickname: '旧昵称' },
+      },
+    }), true, 'user-1')).toEqual({
+      kind: 'system',
+      text: '你更新了[群简介]',
+    });
+    expect(getChatMessageView(createMessage(1599, {
+      system: {
+        event_type: 'group_send_frequency_changed',
+        extra: { send_frequency_enabled: true, send_frequency_seconds: 30 },
+      },
+    }), true)).toEqual({
+      kind: 'system',
+      text: '已开启发言频率控制，间隔时间为30秒',
+    });
+  });
+
+  it('使用 SDK 将历史语音通话摘要投影为可回拨气泡', () => {
+    expect(getChatMessageView(
+      createMessage(110, {
+        custom: {
+          key: 'im28.rtc.call',
+          data: JSON.stringify({
+            type: 'im28.rtc.call',
+            mediaType: 'voice',
+            status: 'ended',
+            durationSeconds: 8,
+          }),
+        },
+      }),
+      false,
+    )).toEqual({
+      kind: 'call',
+      text: '通话时长 00:08',
+      callMediaType: 'audio',
+      callStatus: 'ended',
+      callUnanswered: false,
+      durationSeconds: 8,
+    });
+  });
+
+  it('不把实时来电邀请投影成历史通话气泡', () => {
+    expect(getChatMessageView(
+      createMessage(110, {
+        custom: {
+          key: 'rtc.call.invite',
+          data: JSON.stringify({ call_type: 'audio', status: 'invited' }),
+        },
+      }),
+      false,
+    )).toEqual({ kind: 'text', text: '[通话]' });
   });
 });

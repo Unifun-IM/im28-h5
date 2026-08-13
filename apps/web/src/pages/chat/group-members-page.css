@@ -107,21 +107,6 @@
   cursor: pointer;
 }
 
-.rn-group-members-pull {
-  display: grid;
-  height: 0;
-  overflow: hidden;
-  place-items: center;
-  color: var(--im-text-muted);
-  font-size: 12px;
-  letter-spacing: 0;
-  transition: height 120ms ease;
-}
-
-.rn-group-members-pull.is-armed {
-  color: var(--im-brand-primary);
-}
-
 .rn-group-members-error {
   display: flex;
   align-items: center;
@@ -352,9 +337,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rn-group-members-loading span,
-  .rn-group-members-pull {
+  .rn-group-members-loading span {
     animation: none;
-    transition: none;
   }
 }

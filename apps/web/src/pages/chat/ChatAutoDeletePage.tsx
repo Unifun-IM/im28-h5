@@ -9,6 +9,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import checkIconURL from '../../assets/rn/assets/icons/imm28/check.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import {
   CHAT_AUTO_DELETE_OPTIONS,
@@ -134,7 +135,7 @@ export function ChatAutoDeletePage() {
   return (
     <main className="rn-chat-auto-delete-page">
       <section className="rn-chat-auto-delete-surface" aria-busy={loading || saving}>
-        <header className="rn-chat-auto-delete-header">
+        <PageNavbar className="rn-chat-auto-delete-header">
           <Link to={settingsURL} aria-label="返回聊天设置">
             <RNAssetIcon assetURL={backIconURL} />
           </Link>
@@ -146,7 +147,7 @@ export function ChatAutoDeletePage() {
           >
             {saving ? '保存中' : '确定'}
           </button>
-        </header>
+        </PageNavbar>
         <div className="rn-chat-auto-delete-content">
           {error ? <p className="rn-chat-auto-delete-error" role="status">{error}</p> : null}
           {authorized ? (

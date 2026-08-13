@@ -5,6 +5,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { InteractionModal } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { GroupAdminMemberRow } from './GroupAdminMemberRow.js';
 import { IM_GROUP_ADMIN_LIMIT, getGroupAdminMembers } from './group-admin-view.js';
 import { useGroupRoleRouteData } from './useGroupRoleRouteData.js';
@@ -46,10 +47,10 @@ export function GroupAdminsPage() {
   return (
     <main className="rn-group-admin-page" aria-busy={data.loading || data.submitting}>
       <section className="rn-group-admin-surface">
-        <header className="rn-group-admin-header">
+        <PageNavbar className="rn-group-admin-header">
           <Link to={manageURL} aria-label="返回群管理"><RNAssetIcon assetURL={backIconURL} /></Link>
           <h1>群管理员</h1><span />
-        </header>
+        </PageNavbar>
         <div className="rn-group-admin-tip">
           <p>管理员可协助群主管理群聊，拥有移除群成员的能力<br />只有群主具备设置管理员、解散群聊的能力<br />最多可设置{IM_GROUP_ADMIN_LIMIT}个管理员</p>
           {data.error ? <span role="alert">{data.error}</span> : null}

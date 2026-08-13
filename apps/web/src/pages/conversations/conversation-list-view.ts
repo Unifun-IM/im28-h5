@@ -4,7 +4,12 @@ import type {
   PresetEmojiEntity,
   WebIMConversationListItem,
 } from '@im28/im-sdk/web';
-import { projectPresetEmojiEntitiesToDisplayText } from '@im28/im-sdk/web';
+import {
+  getIMFriendAddedMessageText,
+  parseIMGroupSystemMessagePresentation,
+  projectPresetEmojiEntitiesToDisplayText,
+  readIMConversationDraftDocument,
+} from '@im28/im-sdk/web';
 
 /** 会话列表摘要同时标记草稿语义，供行组件使用 RN 对应颜色。 */
 export interface ConversationListPreview {
@@ -38,9 +43,16 @@ export function getConversationListPreview(
   currentUserID = '',
 ): ConversationListPreview {
   // draft 延续 RN 优先显示草稿的规则。
-  const draft = item.conversation.draft?.trim();
-  if (draft) {
-    return { isDraft: true, text: draft };
+  /** draftDocument 由 SDK 唯一解释正文与专用 SQLite entity 列。 */
+  const draftDocument = readIMConversationDraftDocument(item.conversation);
+  if (draftDocument.text) {
+    return {
+      isDraft: true,
+      text: draftDocument.text,
+      ...(draftDocument.entities.length
+        ? { entities: draftDocument.entities }
+        : {}),
+    };
   }
   /** message 在当前账号存在有效未读提醒时优先于最新普通消息。 */
   const message = currentUserID.trim() && item.unreadMention
@@ -49,7 +61,7 @@ export function getConversationListPreview(
   /** preview 是消息类型和 entity 已完成基础投影的摘要。 */
   const preview: ConversationListPreview = {
     isDraft: false,
-    text: getMessagePreviewText(message),
+    text: getMessagePreviewText(message, currentUserID),
     ...(message?.entities?.length
       ? { entities: message.entities }
       : {}),
@@ -160,6 +172,32 @@ export function getConversationUnreadTotal(
   );
 }
 
+/** 按 RN 循环规则选择当前可见位置之后的下一条未读会话。 */
+export function getNextUnreadConversationID(
+  items: readonly WebIMConversationListItem[],
+  lastTargetConversationID: string,
+  firstVisibleIndex: number,
+): string {
+  /** unreadItems 保留列表原顺序和索引，手动未读也视为未读状态。 */
+  const unreadItems = items.flatMap((item, index) => (
+    Math.max(0, Math.trunc(item.conversation.unreadCount)) > 0 ||
+    item.conversation.manualUnread === true
+      ? [{ conversationID: item.conversation.conversationID, index }]
+      : []
+  ));
+  if (!unreadItems.length) return '';
+  /** lastTargetIndex 存在时直接循环到下一条未读。 */
+  const lastTargetIndex = unreadItems.findIndex(
+    item => item.conversationID === lastTargetConversationID,
+  );
+  if (lastTargetIndex >= 0) {
+    return unreadItems[(lastTargetIndex + 1) % unreadItems.length]?.conversationID ?? '';
+  }
+  /** nextVisible 优先选首个可见会话之后的未读项，无结果则回到第一条。 */
+  const nextVisible = unreadItems.find(item => item.index > firstVisibleIndex);
+  return (nextVisible ?? unreadItems[0])?.conversationID ?? '';
+}
+
 /** 将未读数限制为 RN 会话 badge 的 999+ 上限。 */
 export function formatConversationUnread(unreadCount: number): string {
   // unread 是经过界面容错后的非负整数。
@@ -201,13 +239,19 @@ function formatClock(date: Date): string {
 }
 
 /** 将共享消息 body 映射为会话列表可读摘要。 */
-function getMessagePreviewText(message: Message | null): string {
+function getMessagePreviewText(message: Message | null, currentUserID: string): string {
   if (!message || message.contentType === 0) {
     return '暂无消息';
   }
   if (message.status === 'revoked') {
     return '消息已撤回';
   }
+  /** groupSystem 与聊天页共用 SDK 结构化系统文案 owner。 */
+  const groupSystem = parseIMGroupSystemMessagePresentation(message, currentUserID);
+  if (groupSystem) return groupSystem.text;
+  /** friendAddedText 与聊天页共用 SDK 的 type1201 固定投影。 */
+  const friendAddedText = getIMFriendAddedMessageText(message.contentType);
+  if (friendAddedText) return friendAddedText;
   // knownLabel 对齐 RN 媒体和业务消息的固定摘要。
   const knownLabel = MESSAGE_PREVIEW_LABELS[message.contentType];
   if (knownLabel) {

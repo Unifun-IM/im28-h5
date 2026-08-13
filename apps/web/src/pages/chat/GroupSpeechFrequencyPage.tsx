@@ -4,6 +4,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import './group-management-action-page.css';
 
@@ -114,7 +115,7 @@ export function GroupSpeechFrequencyPage() {
   return (
     <main className="rn-group-action-page" aria-busy={loading || submitting}>
       <section className="rn-group-action-surface">
-        <header className="rn-group-action-header"><Link to={manageURL} aria-label="返回群管理"><RNAssetIcon assetURL={backIconURL} /></Link><h1>发言频率</h1><button type="button" disabled={loading || submitting || !group} onClick={() => { void save(); }}>{submitting ? '保存中' : '确定'}</button></header>
+        <PageNavbar className="rn-group-action-header"><Link to={manageURL} aria-label="返回群管理"><RNAssetIcon assetURL={backIconURL} /></Link><h1>发言频率</h1><button type="button" disabled={loading || submitting || !group} onClick={() => { void save(); }}>{submitting ? '保存中' : '确定'}</button></PageNavbar>
         <div className="rn-group-action-content">
           {error ? <p className="rn-group-action-error" role="alert">{error}</p> : null}
           {loading ? <p className="rn-group-action-empty">正在加载发言频率</p> : null}

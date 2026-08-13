@@ -1786,3 +1786,308 @@ Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-empty-data-
 | failure | 空身份、跨会话结果、本地读取失败和确认缺失均不导航；只有确认缺失显示删除文案并禁用动作；不新增 Gateway、WebSocket、retry 或 cache write |
 | convergence | Web production caller 消费 shared 本地查询；RN 现有 `fetchMessageByID -> localIMStore` 与 FlatList caller 冻结，状态 `shared-core-ready/web-consumed/rn-frozen` |
 | acceptance | SDK focused 2 files/12 tests、full Web 91 files/381 tests、H5 focused 4 files/15 tests、466 assets、runtime boundary、SDK/H5 typecheck、build:web sync 与 1132-module build通过；真实三个会话均无引用消息，路由/overflow/console 健康，点击定位仍 data-gated |
+
+## 87. W6.a6.20.31 Chat Message Delete Shatter Exit Contract
+
+> OWNER AXIOM: 删除成功与逐项结果继续属于 shared SDK；H5 只能依据明确成功身份短暂保留展示行，不得用动画反推或伪造业务成功。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 只有本地/双方删除成功的消息执行约 620ms 碎裂退场；批量 partial result 只移除成功项，失败项保留；RN source/caller 只读冻结 |
+| shared result | 继续消费既有 `WebIMDeleteMessagesResult.deletedClientMsgIDs`；Gateway、scope/permission、逐项错误、SQLite success-only 隐藏和通知文案均不改变 |
+| Web snapshot | 在 shared delete 返回且页面 operation 重读 cache 前冻结当前窗口；只接受当前会话可见的非空成功 client ID；期间用最新 cache 更新未删除行并保留 realtime 新行 |
+| Web exit | 普通/系统消息共用 620ms anchor/content/固定粒子动画；根行动画结束逐项释放，700ms 兜底防止 DOM 中断残留；reduced-motion 缩短为 1ms |
+| partial/failure | 未返回成功 ID、异常 ID、路由切换和删除失败不触发退场；partial 失败行继续读取当前 cache；动画完成不写 SDK、SQLite 或 notice |
+| ownership | H5 仅持有 React state、DOM animation 与 CSS；禁止新增 Gateway/OpenIM/Repository/权限/结果映射或第二删除状态机 |
+| acceptance | H5 focused 4 files/13 tests、Web typecheck、1136-module production build 和 diff check 通过；真实 412px 页面零 overflow/error 且 620ms 规则加载；未执行破坏性删除，真实单条/批量/partial 动画仍 gated |
+
+## 88. W6.a6.20.32 Group Chat Composer Availability Contract
+
+> OWNER AXIOM: 群聊是否可发送及不可用原因属于 shared SDK；H5 只能投影 shared 群快照并拥有浏览器输入区布局，不能读取 raw 权限重算。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `getGroupSendDisabledReason` 按成员 removed/left/banned、群 banned/dismissed、`can_send_message`、群主豁免、个人/全员/普通成员禁言和频率限制判定；不可用栏取代 composer，多选仍优先；RN source/caller 冻结 |
+| shared rule | SDK `resolveIMGroupComposerUnavailableReason` 按相同优先级集中规则与中文文案；`mapCoreGroupToWeb` 从 joined-group raw payload 投影可选 `composerUnavailableReason` |
+| Web cache | 群聊 route 先读 groups/member SQLite，再刷新两套 facade；群权限刷新成功不被成员刷新失败吞掉；任一失败保留对应缓存并显示真实错误 |
+| Web footer | 固定 `多选 > 不可用提示 > 待转发 > 普通 composer`；不可用栏无按钮、textarea、语音、表情、附件或 pending forward 入口 |
+| fail-closed | 群快照恢复中、权威已加入列表缺失、无缓存读取失败分别显示 shared 恢复/退出/不可用文案；已有缓存且远端失败不把已知限制清空 |
+| realtime | 当前 Gateway 没有冻结独立群禁言/成员状态 realtime event；不得为本能力增加页面 WebSocket，进入/返回聊天及群 facade 同步负责收敛 |
+| convergence | H5 production caller 消费 shared 规则；RN caller 冻结，状态 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | SDK focused 2/13、full Web 91/381、boundary/Web typecheck/build:web；H5 focused 2/7、full 95/293、466 assets、typecheck、1139-module build；真实 412x786 单聊/普通群零回归，受限群样本 data-gated |
+
+## 89. W6.a6.20.33 Single Chat Relationship Availability Contract
+
+> OWNER AXIOM: 单聊关系可用性只基于服务端可证明的 `is_friend` 与我方 blacklist；没有反向黑名单字段时，禁止沿用历史变量名制造“对方拉黑我”的产品事实。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 我方 blacklist 替换 composer；非好友在消息底部显示验证文案/动作但保留 composer；发送命中好友关系错误后进入同一非好友投影；RN source/caller 冻结 |
+| shared rule | SDK `resolveIMDirectChatRelationshipPresentation/isIMFriendRelationshipSendError` 单一维护状态、优先级、中文文案和兼容错误词；`blocked-by-me > stranger > friend/self` |
+| shared facade | `createIMDirectChatRelationshipSync` 并行组合 `peerProfile.get().relationship + blacklist.has()`；不读取页面状态、不新增 Gateway/OpenAPI/SQLite/WebSocket owner |
+| Web adapter | `useChatDirectRelationship` 只保存 route projection；底部动作进入 `/contacts/users/:userID/add`；footer 继续按 `多选 > 不可用 > 待转发 > composer`；stranger 不关闭 composer |
+| fail-closed | 会话身份、关系首轮读取和无旧事实失败时不提前开放发送；已有明确投影不因后续读取失败清空；空目标拒绝进入远端 |
+| non-claim | `blockedByPeer` 在 RN 是历史兼容名，本片语义为 `is_friend=false` 或关系发送错误；Gateway 当前不能证明对方 blacklist，故不实现/展示反向拉黑 |
+| realtime | 当前只在 route enter 和发送关系错误收敛；好友/blacklist domain revision 不得用每条消息的通用 `dataVersion` 替代，进入下一独立切片 |
+| acceptance | SDK 96 files/395 tests、全 target typecheck、boundary、build:web/sync:web；H5 focused 2/6、typecheck、1143-module build；真实群聊与两条好友单聊零回归/console error；陌生人/blacklist 真实样本 data-gated |
+
+## 90. W6.a6.20.34 Single Chat Relationship Realtime Revision Contract
+
+> REVISION AXIOM: 好友和我方黑名单事实变化必须有独立 revision；普通消息、新增申请、拒绝申请和删除申请不能造成聊天页重复远程读取关系。
+
+| layer | contract |
+| :--- | :--- |
+| shared classifier | SDK `isIMRelationshipRealtimeEvent` 读取标准事件与原始 Gateway 事件名；好友增删改、黑名单增删和好友申请接受返回 true，仅申请列表变化与其他事件返回 false |
+| runtime snapshot | Web runtime 公开单调 `relationshipVersion`；命中 classifier 时只推进该版本，不伪装 SQLite `dataVersion` 变化 |
+| Web consumer | `ChatPage -> useChatDirectRelationship` 把 `relationshipVersion` 作为关系读取依赖；会话/账号变化仍按既有 route lifecycle 重读 |
+| isolation | 消息/会话/message.update 继续只走 realtime persistence 和 `dataVersion`；presence、group、call 与关系 revision 不互相代替 |
+| failure | 关系重读失败沿用 W33：已有明确投影不被清空，首轮无事实 fail-closed，错误可见；不新增 WebSocket、transport 或缓存 owner |
+| acceptance | SDK Web 93 files/387 tests、boundary、Web typecheck/build:web/sync:web；H5 typecheck、1144-module production build；412px 真实好友单聊刷新、可用 composer 与零横向溢出通过；真实双账号关系变更仍 data-gated |
+
+## 91. W6.a6.20.35 Single Chat Add Members Create Group Contract
+
+> OWNER AXIOM: 单聊设置入口只能把当前聊天对象作为固定成员组合进既有 shared 建群 owner；不得复制建群校验、Gateway 写入、缓存事务或另建第二条业务链。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `SingleChatSettingsScreen` 成员加号打开好友选择，当前单聊对象自动包含且不可取消，用户至少再选一位后创建群聊；RN source/caller 冻结 |
+| route | `/conversations/:conversationID/settings/create-group` 为 React Router SPA route；返回固定到当前设置页，不依赖浏览器临时 history 推断 |
+| peer identity | 只接受当前账号 cached/synced conversations 中 `conversationID` 精确匹配的单聊；固定成员取非当前账号的 peer userID，群聊、自聊、空身份和缺失会话 fail-closed |
+| selection | 固定成员不出现在候选列表且不可取消；搜索只过滤额外好友；提交前按固定成员优先稳定去重，页面显示的已选总数包含固定成员 |
+| shared owner | 普通建群和单聊入口都只调用 `WebIMSync.groups.create`；2–998、本人拒绝、默认群名、exactly-once、`remote-only` 与 SQLite 群/会话事务继续属于 SDK |
+| acceptance | H5 focused 2 files/13 tests、typecheck、1144-module build；412px 真实单聊设置入口、候选排除、选择 1 位后总数 2/按钮启用、返回与零 overflow 通过；未执行真实创建 |
+| protection | 本片不改 SDK source/package scripts 或 RN business；不执行 RN/Desktop/build:all/`build:package:desktop:web` build/sync |
+
+## 92. W6.a6.20.36 Conversation Tab Double Press Next Unread Contract
+
+> NAVIGATION AXIOM: 消息主标签双击只改变会话列表滚动位置；不得借此提交已读、发送回执或建立 SDK/数据库状态。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 已选消息 Tab 两次点击间隔 `<=320ms` 且非静音未读总数大于零时，列表滚动下一未读；RN source/caller 冻结 |
+| gesture | H5 唯一 `PrimaryTabBar` 记录消息 Tab 点击时间；离开消息主路由立即清空，其他 Tab 点击也清空；首次点击和超时点击保持普通 React Router 行为 |
+| page port | `PrimaryTabsLayout` 只保存当前 `ConversationsPage` 注册的短生命周期 callback；页面卸载必须注销，底栏不读取会话 DTO 或 DOM |
+| unread target | 候选满足 `unreadCount > 0 || manualUnread`；无上次目标时从首个可见行之后选第一条并回退列表首条，有上次目标时按未读列表顺序循环 |
+| DOM | 会话行暴露稳定 `data-conversation-id`；页面按 header 下方首个可见行计算索引，只执行 `scrollIntoView({ behavior: 'smooth', block: 'center' })` |
+| mutation boundary | 禁止调用 `markRead`、read receipt、Gateway、Repository、SQLite 或修改 unread/manual-unread；归档、搜索和会话打开语义不变 |
+| acceptance | H5 focused 2 files/10 tests、typecheck、1145-module build通过；5176 dev 服务健康，真实应用内登录态双击滚动因工具不可控保持 manual gate |
+| protection | SDK source/package 与 RN business 零改动；不执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build/sync |
+
+## 93. W6.a6.20.37 Chat Call Record Message Bubble Contract
+
+> OWNER AXIOM: 历史通话消息的协议解析、状态与文案属于 shared SDK；平台只拥有图标、布局和对既有通话 owner 的用户动作接线。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `parseRTCCallMessage/formatRTCCallMessageText/ChatMessageBody` 固定 audio/video、七种状态、`mm:ss`、拒绝/取消图标和点击回拨；RN caller 冻结 |
+| shared parser | `parseIMCallMessagePresentation` 兼容 core `payload`、Gateway `body.system/body.custom` 与 RN `customElem`；统一媒体、状态、秒数、房间和中文文案 |
+| lifecycle isolation | `im28.rtc.call` 历史摘要与 reject/cancel/hangup/ended/missed/failed/summary 终态可展示；实时 invite/accept 不得被历史气泡消费 |
+| Web view | `getChatMessageView` 只消费 SDK 投影；`ChatMessageContent` 使用 RN 镜像图标和稳定按钮尺寸，不读取 raw custom payload |
+| callback | 单聊点击只调用已有 `handleStartCall -> WebIMCallProvider.startOutgoing`；群聊记录只读，不新增群通话或第二鉴权/信令状态机 |
+| failure | 损坏 JSON、未知媒体/状态和非终态信令 fail-closed；不得回退成可点击假通话成功路径 |
+| convergence | Web production caller 已消费 shared parser；RN caller 冻结，状态 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | SDK focused 1/4、full Web 94/391、H5 focused 1/9、boundary、SDK Web/H5 typecheck 与 1147-module build通过；5176 目标会话零 console error，真实历史通话样本视觉仍 data-gated |
+| protection | `im28-phone` clean；只执行 build:web/sync:web，不执行 RN/Desktop/build:all/`build:package:desktop:web` |
+
+## 94. W6.a6.20.38 Conversation Draft Persistence Contract
+
+> OWNER AXIOM: 会话草稿正文、预设表情实体和同步替换保留规则属于 shared SDK；H5 只持有输入事件、路由生命周期和列表展示。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 输入变化保存到会话草稿，列表优先显示 `[草稿]`，重进恢复，成功发送或显式清空后移除；RN source/caller 冻结 |
+| shared facade | `createIMConversationDraftSync` 校验当前账号已缓存会话、trim `PresetEmojiDocument`、保存/读取正文与 entities；local-only，不调用 Gateway |
+| storage | schema v13 `draft_entities_json` 分列保存实体；`replaceAll/replaceUnarchived` 必须在删除前快照本地草稿并合并进远端会话，禁止同步刷新丢失草稿 |
+| Web consumer | `ChatPage/ChatComposer` 上报文档并只在发送成功/显式清空后清除；列表通过 `readIMConversationDraftDocument` 投影，不解析 raw payload |
+| failure | SDK/发送失败保留输入与 entities；坏实体归一化为空；缺失会话 fail-closed；不得出现 Gateway、假成功或第二份草稿映射 |
+| convergence | Web production caller 已消费 shared facade；RN caller 冻结，状态 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | SDK focused 3 files/12、full Web 95/394；H5 focused 2 files/12、full 97/304；typecheck、build:web/sync:web、1149-module build；5176 登录态输入/列表/重进/清空闭环与零 console error 通过 |
+| residual | 多标签同时编辑同一会话的冲突策略未定义；未发送消息或执行远端 mutation |
+| protection | `im28-phone` clean；不执行 RN/Desktop/build:all/`build:package:desktop:web` |
+
+## 95. W6.a6.20.39 Call List Pull Refresh Contract
+
+> OWNER AXIOM: 通话同步、缓存和筛选查询继续属于 shared SDK；H5 只拥有浏览器触摸手势、刷新提示和列表投影，不能建立第二条通话数据链。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 通话列表在顶部下拉释放后强制执行 `syncCallList`，再重读当前筛选第一页；编辑态不执行刷新；RN source/caller 冻结 |
+| Web gesture | `/calls` 复用全局 `usePullRefresh` 的单指、顶部、阈值与释放语义；只投影下拉/松开/刷新状态，不在 hook 中读取业务数据 |
+| shared chain | 页面只调用既有 `WebIMCallSync.sync()`，成功后调用 `listCached({ answerStatus, keyword, limit, offset: 0 })`；Gateway、分页、SQLite 和 DTO 映射保持 SDK 唯一 owner |
+| filter/edit | all/missed、当前搜索词和分页大小在刷新前后保持；`refreshing || editing` 时手势 fail-closed，避免重复同步或与批量选择冲突 |
+| failure | `sync` 失败不得调用 `listCached` 或替换列表；旧快照保留，页面显示真实错误，不返回空列表伪造成功 |
+| acceptance | H5 focused 1 file/4 tests、full 97 files/306 tests、typecheck、1149-module build；5176 412px 筛选/编辑/空态/TabBar/零 overflow/零 console warning-error 通过，物理触摸释放 gated |
+| protection | 本片不改 SDK source/package、RN business 或 desktop 脚本；不执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build/sync |
+
+## 96. W6.a6.20.40 Verification Center Pull Refresh Contract
+
+> OWNER AXIOM: 好友申请、群审核和各自未读总数继续属于现有 shared facade；H5 只拥有双 Tab 的触摸手势、刷新提示与结果投影。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 好友验证与群聊验证索引均用 `RefreshControl` 在顶部下拉重读当前列表；RN source/caller 冻结 |
+| Web gesture | 两个嵌入 Tab 复用全局 `usePullRefresh` 的单指、顶部、阈值和释放语义；切换 React Router tab 会卸载当前手势状态 |
+| shared reads | 好友侧只调用 `friendApplications.list`，群侧只调用 `groupApplications.list`；父层角标继续调用既有 `getUnreadCount` owners，页面不读取 Gateway 或重算计数 |
+| independence | 列表读取和角标刷新并行；角标失败不得阻断成功列表，列表失败不得用角标成功伪造空列表；失败保留旧列表并显示真实错误 |
+| concurrency | 首次 loading、用户 refreshing 和申请 mutation 各自可见；已有刷新期间不重复提交，下拉不执行 accept/reject/mark-read |
+| acceptance | focused helper tests、H5 full tests/typecheck/build；5176 双 Tab、空/非空列表、tab badge、移动宽度和 console 只读证明；物理触摸释放可显式 gated |
+| protection | 本片不改 SDK source/generated package、RN business 或 desktop 脚本；不执行任何 SDK/RN/Desktop build/sync |
+
+## 97. W6.a6.20.41 Call List Modal And Empty-State Contract
+
+> OWNER AXIOM: 通话删除、缓存重读和筛选查询继续属于 shared SDK；H5 本片只收敛确认层生命周期和空列表文案，不改变任何通话业务分支。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 编辑态选择记录后从底部确认删除；搜索无结果显示“暂无搜索结果”，未接筛选为空显示“暂无未接来电”，默认为空显示“暂无通话记录”；RN source/caller 冻结 |
+| modal owner | 删除确认复用全局 `InteractionModal` 原生 dialog top-layer、Esc、焦点圈定、背景 inert、遮罩关闭和 reduced-motion；独立组件保留退出动画期间的最后计数 |
+| shared mutation | 确认按钮仍只调用既有 `WebIMCallSync.delete`；成功后清空选择、退出编辑并重读首个 cache 分页，失败保留页面真实错误；不得新增 Gateway、Repository、DTO 或成功回退 |
+| empty projection | 空态纯函数按 `keyword.trim()` 优先、`missed` 次之、默认最后返回 RN 三类文案；不触发同步、缓存或筛选状态变化 |
+| acceptance | focused view/component contract tests、H5 full tests/typecheck/build；5176 `/calls` 空态、编辑态、modal 打开/关闭、移动宽度和零 console warning/error 只读证明；不确认真实删除 |
+| protection | 本片不改 SDK source/generated package、RN business 或 desktop 脚本；不执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build/sync |
+
+## 98. W6.a6.20.42 Settings Logout Modal Lifecycle Contract
+
+> OWNER AXIOM: 远端 logout、本地凭据、WebSocket、来电媒体和账号数据库清理继续属于 `WebIMRuntime.signOut`；H5 本片只收敛用户确认层生命周期，不复制退出状态机。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 通用设置点击“退出登录”后展示“退出登录 / 确认退出当前账号？ / 取消 / 退出”；确认后才调用既有 logout owner；RN source/caller 冻结 |
+| modal owner | 退出确认复用全局 `InteractionModal` 原生 dialog top-layer、Esc、焦点圈定、背景 inert、遮罩关闭和 reduced-motion；独立组件保留退出动画期间的可见内容 |
+| pending | `signingOut=true` 时遮罩、Esc、取消和重复确认全部 fail-closed；成功由 runtime snapshot 与 replace route 清场，失败关闭确认并显示真实错误 |
+| shared runtime | 页面仍只调用 `runtime.signOut()`；远端 logout 失败时继续由 runtime finally 清理本地 session/socket/account DB，不新增 fetch、token 或假成功分支 |
+| exclusion | 版本更新普通/强制关闭语义不属于本片；不修改 `MeVersionUpdateDialog`，避免混合不同 modal policy |
+| acceptance | focused component contract tests、H5 full tests/typecheck/build；5176 `/me/settings` 打开、Esc、遮罩、取消、移动宽度和零 console warning/error证明；不点击最终退出 |
+| protection | 本片不改 SDK source/generated package、RN business 或 desktop 脚本；不执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build/sync |
+
+## 99. W6.a6.20.43 Global Reset, Navbar And Route Motion Contract
+
+> UI FOUNDATION AXIOM: 浏览器默认控件样式、详情页顶栏和 SPA 入场动效各自只有一个 H5 owner；不得为已有 CSS/React Router 能力引入第二套 UI 组件库。
+
+| layer | contract |
+| :--- | :--- |
+| reset | `app.css` 单一清除 button 的原生 appearance、margin、padding、border、background 与非键盘 focus outline；显式页面 border 和 `:focus-visible` 可访问性焦点必须保留 |
+| navbar | 可寻址详情/选择页统一追加 `im-page-navbar`，由全局 CSS 固定 safe-area、56px 三列、24px 图标、居中单行标题和左右动作；页面 class 只保留背景/业务差异，不再决定基础几何 |
+| exclusions | 主 Tab 首页标题、聊天资料复合头、登录品牌头、媒体全屏头、dialog/sheet 内标题和内容 section header 不是详情页 navbar，不强制套用该 class |
+| motion | 继续使用既有 `RouteMotionController + interaction.css`；React Router pathname 变化只给当前 main 播放 160ms 轻量入场，固定 TabBar 不闪动，reduced-motion 关闭动画 |
+| dependency | 不引入 UI/motion library；当前能力无需新增运行依赖，避免 RN 样式被组件库覆盖或形成第二 modal/navbar/motion owner |
+| acceptance | reset/navbar contract tests、H5 full tests、466 assets、typecheck、production build；5176 至少覆盖设置、资料、群/联系人详情的按钮边框、navbar 几何、路由入场和移动宽度 |
+| protection | 本片只改 H5 UI/文档；不改 SDK source/generated package、RN business 或 desktop 脚本，不执行任何 SDK/RN/Desktop build/sync |
+
+## 100. W6.a6.20.44 Structured Group System Notice Contract
+
+> OWNER AXIOM: 群系统消息的 `event_type + system.extra -> 用户可见文案` 属于 shared SDK；平台只决定消息在会话列表或聊天页中的视觉位置。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `group_description_changed` 按 `operator_user_id/operator_nickname` 输出“你/昵称更新了[群简介]”；`group_send_frequency_changed` 按 enabled/seconds 输出开启间隔或关闭文案；RN source/caller 冻结 |
+| shared parser | `parseIMGroupSystemMessagePresentation` 兼容 core `Message.payload`、Gateway `body.system`、`payload.body.system` 与 RN 顶层 `system`；只识别上述两个稳定 event，不读取或信任 `system.text` 生成结构化文案 |
+| realtime | OpenAPI 已明确 `1521/group_description_changed`，Gateway WebSocket event classifier 必须把 `1521` 归为 `message`；发言频率没有已发布 numeric type，不新增猜测映射，只在消息进入后按 event 解析 |
+| Web consumers | 聊天页与会话列表都先消费 shared presentation，再回退现有媒体、文本和系统摘要；不得在两个页面各自解析 `system.extra` |
+| failure | 非对象、未知 event、畸形 extra 返回 `null`；`1521` 无结构化 event 时保留既有静态“群简介已更新”降级，不伪造操作者；未知 numeric type 不扩展支持范围 |
+| convergence | Web production callers 消费 shared parser；RN 现有等价 helper 冻结，状态 `shared-core-ready/web-consumed/rn-frozen`，只有独立 RN 授权后才能替换 caller |
+| acceptance | SDK parser/realtime focused tests、H5 chat/list projection tests、runtime boundary、SDK/H5 typecheck、仅 `build:web/sync:web`、H5 full tests/build；真实 `1521`/频率消息视觉和双账号 realtime 保持 natural-data gate |
+| protection | 不修改 `im28-phone/src/**`、RN generated package、Desktop 或 `build:package:desktop:web`；不执行 RN/Desktop/build:all build/sync |
+
+## 101. W6.a6.20.45 Friend-Added Message Presentation Contract
+
+> OWNER AXIOM: type1201 好友关系建立通知的稳定类型和中文文案属于 shared SDK；聊天页、会话摘要和未读边界不得分别维护常量。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | type `1201` 在聊天页与会话列表都显示“你们已经成为好友，可以开始聊天了”，并在初始未读边界中作为特殊关系通知处理；RN source/caller 冻结 |
+| shared owner | `IM_FRIEND_ADDED_MESSAGE_TYPE`、`IM_FRIEND_ADDED_MESSAGE_TEXT` 和 `getIMFriendAddedMessageText(contentType)` 统一定义身份与纯展示；未知类型返回 `null` |
+| shared reuse | `initial-unread-navigation` 必须复用 shared 类型常量，不保留第二个私有 1201；函数不读取 payload、不调用 Gateway 或数据库 |
+| Web consumers | H5 聊天气泡与会话摘要共同调用 shared projection；删除两个页面内的 1201 文案硬编码，其他系统类型和列表 label 不变 |
+| evidence | 真实登录态会话列表已出现 type1201 且当前展示 `[contentType=1201]`，因此摘要缺口不是 sample gate；聊天页已有等价行为 |
+| convergence | Web production callers 消费 shared owner；RN caller 冻结，状态 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | SDK pure helper/未读边界 tests、H5 chat/list tests、boundary/typecheck、仅 build:web/sync:web、H5 full tests/build；5176 真实目标行应显示 RN 文案且 console 为空 |
+| protection | 不修改 `im28-phone/src/**`、RN generated package、Desktop 或 `build:package:desktop:web`；不执行 RN/Desktop/build:all build/sync |
+
+## 102. W6.a6.20.52 Forward Target Pull Refresh Contract
+
+> OWNER AXIOM: 转发目标的会话、好友和群聊事实继续属于既有 shared facades；H5 只拥有浏览器触摸手势和刷新提示，不复制目标解析或转发提交状态机。
+
+> SUPERSEDED: `.54` 已删除独立转发目标页并改为聊天内统一目标弹窗；本节只保留 `.52` 当时验收证据，不再是当前 UI/route 合同。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 普通转发选择器在最近聊天/好友/群聊三 Tab 列表顶部用 `RefreshControl` 重读三类数据；搜索词和当前 Tab 不因刷新清空；RN source/caller 冻结 |
+| Web gesture | `/conversations/:conversationID/forward` 复用全局 `usePullRefresh/PullRefreshIndicator` 的单指、顶部、阈值、释放与三态语义；`location.state` 缺失继续按既有 contract 安全退出 |
+| shared reads | 页面只调用既有 `loadChatForwardTargets({ sync })`；cache-first 首入继续读取三类缓存，手动刷新不回显中间 cache；底层仅消费 `conversations.sync/contacts.list/groups.sync` |
+| atomic view | 手动刷新三个 facade 全部成功后才替换 `ChatForwardTargetSource`；任何失败保留当前三类目标、active Tab 和 keyword，并展示真实错误 |
+| concurrency | 首次 loading、用户 refreshing 或目标 opening 时拒绝新的下拉；目标会话解析、Router state 与 `messages.forward` 提交主链不变 |
+| acceptance | focused 4 files/8 tests、full 107 files/332 tests、466 assets、typecheck、1158-module build；5176 真实 3/2/1 三类目标、搜索/清除、三 Tab、412/412 与零 warning/error 通过，物理触摸释放 gated |
+| protection | 本片不改 SDK source/generated package、RN business 或 desktop 脚本；不打开真实目标、不提交转发，不执行任何 SDK/RN/Desktop build/sync |
+
+## 103. W6.a6.20.53 Pull Refresh Indicator Owner Convergence Contract
+
+> UI OWNER AXIOM: 浏览器下拉手势和三态提示分别只有一个 H5 owner；页面可以注入不同 refresh callback，但不得复制提示 DOM/CSS 或业务同步逻辑。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 已迁移列表继续按各自 RN `RefreshControl` 调用现有业务刷新；RN source/caller 冻结，本片不改变任何刷新行为 |
+| gesture owner | `usePullRefresh` 继续唯一负责顶部单指、阻尼、阈值、释放与取消；页面继续注入原 refresh callback，不新增数据访问 |
+| presentation owner | `PullRefreshIndicator` 唯一投影“下拉刷新/松开刷新/正在刷新”、高度、armed 色和 reduced-motion；全部 hook 生产消费者必须引用它 |
+| delete | Calls、Contacts、JoinedGroups、CreateGroup、会话/归档/搜索、群成员、添加管理员、转让群主的手写 DOM 与局部 `rn-*-pull` CSS 删除，不保留 compat |
+| behavior preservation | 各页 refreshing/loading 传值保持原语义；搜索页仅已提交查询的 loading 展示刷新高度；添加管理员/转让群主仍只展示手势距离，不把首次加载冒充刷新 |
+| acceptance | 20/20 consumer + legacy selector zero contract、focused 5 files/10、full 108 files/334 tests、466 assets、typecheck、1158-module build；5176 四路由零旧 class/零日志只读 smoke，物理触摸 gated |
+| protection | 本片不改 refresh callback、SDK source/generated package、RN business 或 desktop 脚本；不执行 mutation 或任何 SDK/RN/Desktop build/sync |
+
+## 104. W6.a6.20.54 Unified Chat Target Picker And Short-List Bottom Alignment Contract
+
+> OWNER AXIOM: 好友/群聊目标选择是一个 H5 presentation owner；跨目标转发、名片/图片 batch-send、逐目标结果和 success-only cache 收敛属于 shared SDK。短消息贴底只改变内部排版，不改变外层滚动、未读或历史分页语义。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 二维码分享使用底部弹层、搜索、好友/群聊 Tab 与选中计数；聊天短列表从输入区上方底部开始；RN source/caller 冻结 |
+| picker owner | `ChatTargetPickerModal` 可配置 `single|multiple`、目标类型、排除身份、初始选择和上限；多选显示 `ALL`，只切换当前 Tab 当前搜索结果并保留另一 Tab 已选项 |
+| consumers | 聊天转发直接在当前 `/conversations/:conversationID` 打开；群发、二维码、用户/群名片 route shell 只恢复来源/导航后打开同一弹窗，不复制目标 DOM/CSS |
+| shared mutations | `messages.forwardToTargets` 在 shared queue 内冻结来源并逐目标复用 canonical forward；`messageBroadcast.sendCard/sendImage` 统一 batch-send、逐目标 sent/failed/unknown 和 success-only SQLite 事务 |
+| failures | 全失败保留弹窗；部分成功显示成功/未成功数量并锁定重复提交；目标加载失败不伪造空成功，关闭始终可用 |
+| list layout | `.rn-chat-message-list` 保持唯一 overflow/scroll owner；内部 `.rn-chat-message-stack` 使用 100% 最小高度和 `justify-content:flex-end`，内容超屏后自然增长并继续由外层滚动 |
+| verification | SDK focused 3 files/13 tests、all-runtime boundary/typecheck；H5 full 109 files/337 tests、typecheck、1161-module build；5176 登录态跨 Tab ALL、URL 不跳转、同源群发弹窗与短列表 bottom-stack 只读通过 |
+| protection | `im28-phone` worktree clean；只执行 `build:web/sync:web`；不执行 RN/Desktop/build:all 或修改/执行 `build:package:desktop:web`；真实发送需显式授权 |
+
+## 105. W6.a6.20.55 Chat Initial Message Skeleton Parity Contract
+
+> PRESENTATION AXIOM: 聊天首屏 loading 只投影既有加载状态；骨架不得创建消息、缓存或业务成功路径，也不得使用与 RN 无关的随机/交替布局。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 固定 12 条 incoming 骨架循环使用 188x58、236x76、142x44、210x58；群聊每条显示 24px 头像，单聊不显示；使用左侧 skeleton tail 和 2.2s 横向 shimmer；容器底部对齐并裁切顶部；RN source/caller 冻结 |
+| H5 owner | `ChatMessageSkeleton.tsx + chat-message-skeleton.css` 唯一持有上述几何、资产和动画；`ChatMessageList` 只传入 `isGroup` 并遵循既有 `loading && messages.length === 0` 条件 |
+| layout | `.rn-chat-message-stack` 是骨架定位上下文；骨架 `absolute/inset:0/justify-content:flex-end/overflow:hidden`，不撑大外层 scroll、不会改变历史分页、未读定位或短消息贴底 |
+| delete | 删除旧的 4 条左右交替 pulse bar JSX/CSS，不保留兼容选择器、随机尺寸或第二 loading component |
+| accessibility | loading container 暴露 `role=status` 与“正在加载消息”；纯头像、tail、shimmer 不增加重复可读内容；reduced-motion 关闭 shimmer |
+| acceptance | focused behavior tests 锁 12 行、群/单聊头像差异、四档 RN 尺寸与 tail 资产；H5 full tests、466 assets、typecheck、production build、真实短群聊底部几何/稳定 reload；自然瞬态截图允许因本地 cache 过快保持 timing gate |
+| protection | 本片不修改 SDK source、generated business contract、RN business 或 desktop 脚本；不执行 RN/Desktop/build:all 或 `build:package:desktop:web` |
+
+## 106. W6.a6.20.56 Legacy Chat Forward Route Compatibility Contract
+
+> COMPATIBILITY AXIOM: 旧转发地址只能恢复到当前唯一聊天内目标弹窗，不得重新拥有页面 UI、目标读取、缓存、提交或 mutation 逻辑。
+
+| layer | contract |
+| :--- | :--- |
+| primary path | 新入口和生产交互唯一使用 `ChatPage -> ChatTargetPickerModal`；目标加载与选择 presentation 不得回到独立 route page |
+| legacy route | `/conversations/:conversationID/forward` 只渲染 `ChatForwardCompatibilityRedirect` 并 replace 到 canonical chat URL；直接访问、缺 state 或坏 state 也必须安全回聊天，不显示 404 |
+| state contract | 只接受既有 `chat-forward` 稳定身份、1–100 个非空 client message ID；拒绝 `messages`、`payload` 和消息正文；来源会话必须同时匹配 route conversation ID 与加载后的当前 Conversation |
+| replay | 有效兼容 state 只打开现有目标弹窗一次，随后 replace 清除；reload/back 不得再次打开；失配 state 仅清除，不触发目标读取或发送 |
+| delete-or-register | 兼容 route 明确登记为 `compatibility-only`；`ChatForwardTargetPage`、旧 CSS、第二 target source 和第二 mutation owner必须保持不存在；发布的历史深链/浏览器历史不再支持时删除 redirect |
+| acceptance | pure route tests、consumer structural contract、H5 full tests/typecheck/build/diff check；真实登录态旧 URL、reload、back、聊天内容和 console 只读验收 |
+| protection | 不修改 SDK source/generated package、`im28-phone` business 或 Desktop；不执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync；真实转发仍需显式授权 |
+
+## 107. W6.a6.20.57 Primary Contacts Tab Verification Badge Contract
+
+> STATE OWNER AXIOM: 主 Tab 生命周期内申请未读只能有一个 H5 状态 owner；TabBar 与通讯录 shortcut 必须读取同一快照，服务端事实继续唯一来自 shared SDK facade。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | 通讯录 Tab 角标等于好友申请未读加群申请总数；零值隐藏，三位数加宽，超过 999 才显示 `999+`；RN source/caller 冻结 |
+| shared reads | 只调用既有 `friendApplications.getUnreadCount` 与 `groupApplications.getUnreadCount`；页面不得新增 Gateway、SQLite、DTO mapper 或缓存替换 |
+| H5 owner | `PrimaryTabsLayout` 挂载唯一 `useVerificationUnreadCounts`；`PrimaryTabBadgeProvider` 向 `PrimaryTabBar` 与 `ContactsPage` 暴露同一 counts/refresh |
+| refresh | 登录态主布局首次挂载、进入通讯录和通讯录下拉均可刷新；同 runtime/账号的并发读取合并；旧 runtime/账号结果不得回写当前账号 |
+| full-screen route | 验证消息页在主 Tab 壳外，可独立复用同一 hook 实现；这不构成主 Tab 生命周期内第二状态 owner |
+| delete | 四个主 Tab 均已迁移，nullable href、disabled button 与相关 CSS 必须删除，不保留占位/compat 分支 |
+| acceptance | 组件角标合同、验证刷新合同、H5 full tests/typecheck/build/diff check；真实四 Tab SPA 路由、零值隐藏；非零视觉等待自然数据，不执行申请 mutation |
+| protection | 本片不修改 SDK source/generated package、`im28-phone` business 或 Desktop；不执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync |

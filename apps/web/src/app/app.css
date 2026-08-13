@@ -25,15 +25,44 @@ body {
   min-height: 100vh;
 }
 
-.rn-primary-tabs-layout,
+.rn-primary-tabs-layout {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .rn-primary-tabs-content {
-  min-height: 100vh;
-  min-height: 100dvh;
+  position: relative;
+  height: 100%;
+  min-height: 0;
 }
 
 .rn-primary-tabs-layout.has-tab-bar .rn-primary-tabs-content {
   --im-primary-tab-bar-space: var(--im-primary-tab-bar-height);
-  padding-bottom: var(--im-primary-tab-bar-height);
+  height: calc(100% - var(--im-primary-tab-bar-height));
+}
+
+.rn-primary-tab-scene {
+  position: absolute;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.rn-primary-tab-scene[data-primary-tab-scene='inactive'] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.rn-primary-tab-loading {
+  display: grid;
+  min-height: 100%;
+  place-content: center;
+  color: var(--im-text-secondary);
+  background: var(--im-bg-page);
 }
 
 button,
@@ -41,6 +70,17 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 0;
+  color: inherit;
+  background: transparent;
 }
 
 button,
@@ -56,6 +96,11 @@ input:focus-visible,
 textarea:focus-visible {
   outline: 2px solid #0b62d6;
   outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .rn-asset-icon {

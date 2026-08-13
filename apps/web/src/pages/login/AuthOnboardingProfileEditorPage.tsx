@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import {
   PROFILE_BIO_MAX_LENGTH,
   normalizeProfileBio,
@@ -50,7 +51,7 @@ export function AuthOnboardingProfileEditorPage({ mode }: AuthOnboardingProfileE
     ? [{ label: '男', value: 1 }, { label: '女', value: 2 }, { label: '未知', value: 0 }]
     : [{ label: '男', value: 1 }, { label: '女', value: 2 }];
   return <AuthOnboardingRouteGuard stage="complete-profile"><main className="auth-profile-editor-page"><section className="auth-profile-editor-surface">
-    <header><button type="button" aria-label="返回完善资料" onClick={() => navigate('/auth/complete-profile', { replace: true })}>‹</button><h1>{title}</h1><button type="button" onClick={completeEdit}>完成</button></header>
+    <PageNavbar className="auth-profile-editor-navbar"><button type="button" aria-label="返回完善资料" onClick={() => navigate('/auth/complete-profile', { replace: true })}>‹</button><h1>{title}</h1><button type="button" onClick={completeEdit}>完成</button></PageNavbar>
     {mode === 'gender' ? <div className="auth-profile-gender-card" role="radiogroup" aria-label="性别">
       {genderOptions.map(option => <button type="button" role="radio" aria-checked={genderDraft === option.value} key={option.value} onClick={() => setGenderDraft(option.value)}><span>{option.label}</span>{genderDraft === option.value ? <strong>✓</strong> : null}</button>)}
     </div> : <div className="auth-profile-bio-editor"><textarea autoFocus aria-label="个性签名输入框" value={bioDraft} maxLength={PROFILE_BIO_MAX_LENGTH} placeholder="填写个性签名" onChange={event => setBioDraft(Array.from(event.target.value).slice(0, PROFILE_BIO_MAX_LENGTH).join(''))} /><span>{Array.from(bioDraft).length}/{PROFILE_BIO_MAX_LENGTH}</span></div>}

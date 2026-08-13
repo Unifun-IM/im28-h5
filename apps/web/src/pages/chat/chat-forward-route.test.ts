@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildChatForwardTargetRoute,
   createChatForwardRouteState,
+  createChatForwardCompatibilityDestination,
+  createChatForwardPickerLocationState,
+  readChatForwardPickerLocationState,
   readChatForwardLocationState,
 } from './chat-forward-route.js';
 
@@ -22,9 +24,6 @@ describe('chat forward route state', () => {
       sourceClientMsgIDs: ['message-2', 'message-1'],
     });
     expect(readChatForwardLocationState({ forward })).toEqual(forward);
-    expect(buildChatForwardTargetRoute('source/chat')).toBe(
-      '/conversations/source%2Fchat/forward',
-    );
   });
 
   it('rejects refreshed, body-shaped, empty, and oversized states', () => {
@@ -55,5 +54,41 @@ describe('chat forward route state', () => {
         sourceClientMsgIDs: Array.from({ length: 101 }, (_, index) => `id-${index}`),
       },
     })).toBeNull();
+  });
+
+  it('wraps a validated legacy selector state without accepting message bodies', () => {
+    // forward 只包含来源会话与消息稳定 ID。
+    const forward = createChatForwardRouteState({
+      sourceConversationID: 'source-chat',
+      sourceConversationTitle: '来源会话',
+      sourceClientMsgIDs: ['message-1'],
+    });
+    expect(readChatForwardPickerLocationState(
+      createChatForwardPickerLocationState(forward),
+    )).toEqual(forward);
+    expect(readChatForwardPickerLocationState({
+      forwardPicker: { ...forward, messages: [{ text: '不允许' }] },
+    })).toBeNull();
+  });
+
+  it('redirects the legacy route to the same chat and drops mismatched source state', () => {
+    // forward 是旧选择页仍可能留在 history 中的稳定状态。
+    const forward = createChatForwardRouteState({
+      sourceConversationID: 'chat/one',
+      sourceConversationTitle: '来源会话',
+      sourceClientMsgIDs: ['message-1'],
+    });
+    expect(createChatForwardCompatibilityDestination('chat/one', { forward })).toEqual({
+      pathname: '/conversations/chat%2Fone',
+      state: { forwardPicker: forward },
+    });
+    expect(createChatForwardCompatibilityDestination('chat-two', { forward })).toEqual({
+      pathname: '/conversations/chat-two',
+      state: null,
+    });
+    expect(createChatForwardCompatibilityDestination(' chat-two ', null)).toEqual({
+      pathname: '/conversations/chat-two',
+      state: null,
+    });
   });
 });

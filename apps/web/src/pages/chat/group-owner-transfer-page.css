@@ -202,21 +202,6 @@
   letter-spacing: 0;
 }
 
-.rn-group-owner-transfer-pull {
-  display: grid;
-  height: 0;
-  overflow: hidden;
-  place-items: center;
-  color: var(--im-text-muted);
-  font-size: 12px;
-  letter-spacing: 0;
-  transition: height 120ms ease;
-}
-
-.rn-group-owner-transfer-pull.is-armed {
-  color: var(--im-brand-primary);
-}
-
 .rn-group-owner-transfer-confirm {
   position: fixed;
   right: max(0px, calc((100vw - 480px) / 2));
@@ -285,10 +270,4 @@
 .rn-group-owner-transfer-state.is-compact {
   min-height: 180px;
   background: transparent;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rn-group-owner-transfer-pull {
-    transition: none;
-  }
 }

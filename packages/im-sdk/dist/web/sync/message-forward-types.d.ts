@@ -30,6 +30,26 @@ export interface WebIMForwardMessagesResult {
     readonly list: readonly WebIMForwardItemResult[];
     readonly comment?: WebIMForwardCommentResult;
 }
+/** 多目标转发参数复用现有来源、发送人和附言语义。 */
+export interface WebIMForwardMessagesToTargetsOptions {
+    readonly conversationIDs: readonly string[];
+    readonly sourceClientMsgIDs: readonly string[];
+    readonly hideSenderName?: boolean;
+    readonly comment?: string;
+    readonly onSending?: (messages: readonly Message[]) => void;
+}
+/** 单个目标保留真实转发结果或可见失败，禁止整批伪成功。 */
+export interface WebIMForwardTargetResult {
+    readonly conversationID: string;
+    readonly result?: WebIMForwardMessagesResult;
+    readonly error?: string;
+}
+/** 多目标转发结果显式汇总目标级成功与失败。 */
+export interface WebIMForwardMessagesToTargetsResult {
+    readonly successCount: number;
+    readonly failedCount: number;
+    readonly targets: readonly WebIMForwardTargetResult[];
+}
 /** 已落库的单条 optimistic 转发上下文。 */
 export interface PreparedWebIMForwardItem {
     readonly sourceMessage: Message;

@@ -10,7 +10,10 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
+import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { GroupInviteMemberTile } from './GroupInviteMemberTile.js';
 import {
@@ -45,6 +48,8 @@ export function GroupInviteMembersPage() {
   const [message, setMessage] = useState('');
   /** loading 覆盖首次 cache-first 读取。 */
   const [loading, setLoading] = useState(true);
+  /** refreshing 区分用户下拉刷新和首次页面恢复。 */
+  const [refreshing, setRefreshing] = useState(false);
   /** submitting 阻止邀请 action 重复提交。 */
   const [submitting, setSubmitting] = useState(false);
   /** remoteCompleted 阻止远端已成功但缓存未收敛时再次提交。 */
@@ -98,6 +103,37 @@ export function GroupInviteMembersPage() {
   }, [conversationID, snapshot.userID, sync]);
 
   useEffect(() => { void load(); }, [load]);
+
+  /** 下拉刷新复用群、成员与好友三个 shared owner，失败保留旧快照。 */
+  const refreshCandidates = useCallback(async (): Promise<void> => {
+    if (!sync || !conversation || refreshing) return;
+    /** groupID 只来自已经验证的当前群会话。 */
+    const groupID = conversation.targetID.trim();
+    if (!groupID) return;
+    setRefreshing(true);
+    setError(null);
+    try {
+      /** refreshedValues 必须全部成功才替换页面候选事实。 */
+      const refreshedValues = await Promise.all([
+        sync.groups.sync({ pageSize: 100 }),
+        sync.groupMembers.sync(groupID, { pageSize: 100 }),
+        sync.contacts.list({ pageSize: 100 }),
+      ]);
+      setGroup(refreshedValues[0].find(item => item.groupID === groupID) ?? null);
+      setMembers(refreshedValues[1]);
+      setContacts(refreshedValues[2]);
+    } catch (cause) {
+      setError(readGroupInviteError(cause));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [conversation, refreshing, sync]);
+
+  /** pullRefresh 把 RN RefreshControl 投影为浏览器顶部单指下拉。 */
+  const pullRefresh = usePullRefresh({
+    refreshing,
+    onRefresh: refreshCandidates,
+  });
 
   /** memberUserIDs 只由 shared 群成员快照生成。 */
   const memberUserIDs = useMemo(() => members.map(member => member.userID), [members]);
@@ -173,18 +209,30 @@ export function GroupInviteMembersPage() {
   }
 
   return (
-    <main className="rn-group-remove-page is-invite" aria-busy={loading || submitting}>
+    <main
+      className="rn-group-remove-page is-invite"
+      aria-busy={loading || refreshing || submitting}
+      onTouchStart={pullRefresh.onTouchStart}
+      onTouchMove={pullRefresh.onTouchMove}
+      onTouchEnd={pullRefresh.onTouchEnd}
+      onTouchCancel={pullRefresh.onTouchCancel}
+    >
       <section className="rn-group-remove-surface">
-        <header className="rn-group-remove-header">
+        <PageNavbar className="rn-group-remove-header">
           <Link to={settingsURL} aria-label="返回群设置"><RNAssetIcon assetURL={backIconURL} /></Link>
           <h1>邀请群成员{selectedCount ? `（${selectedCount}）` : ''}</h1>
           <span aria-hidden="true" />
-        </header>
+        </PageNavbar>
         <label className="rn-group-remove-search">
           <RNAssetIcon assetURL={searchIconURL} />
           <input type="search" value={keyword} placeholder="搜索好友" aria-label="搜索可邀请好友" onChange={event => setKeyword(event.target.value)} />
           {keyword ? <button type="button" aria-label="清除搜索" onClick={() => setKeyword('')}><RNAssetIcon assetURL={clearIconURL} /></button> : null}
         </label>
+        <PullRefreshIndicator
+          refreshing={refreshing}
+          armed={pullRefresh.armed}
+          pullDistance={pullRefresh.pullDistance}
+        />
         {group?.joinApprovalRequired ? (
           <label className="rn-group-invite-message">
             <span>验证消息</span>

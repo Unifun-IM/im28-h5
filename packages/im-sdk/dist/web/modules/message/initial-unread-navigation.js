@@ -1,5 +1,4 @@
-/** RN 新好友建立通知类型，不作为普通未读区间的首条视觉锚点。 */
-const IM_FRIEND_ADDED_MESSAGE_TYPE = 1201;
+import { IM_FRIEND_ADDED_MESSAGE_TYPE } from './friend-added-message.js';
 /** 按从旧到新的消息顺序计算跨端一致的初始未读边界。 */
 export function getIMInitialUnreadNavigation(messages, lastReadSeq) {
     /** readSequence 只接受十进制 uint64 字符串，非法边界必须 fail-closed。 */

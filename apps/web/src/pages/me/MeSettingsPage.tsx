@@ -5,8 +5,10 @@ import type { WebIMClientVersionCheckResult } from '@im28/im-sdk/web';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { useWebThemePreference } from '../../runtime/theme-preference.js';
+import { MeLogoutDialog } from './MeLogoutDialog.js';
 import { MeVersionUpdateDialog } from './MeVersionUpdateDialog.js';
 import './me-page.css';
 import './me-settings-page.css';
@@ -76,11 +78,11 @@ export function MeSettingsPage() {
   return (
     <main className="rn-me-settings-page">
       <section className="rn-me-settings-surface">
-        <header className="rn-me-settings-header">
+        <PageNavbar className="rn-me-settings-header">
           <Link to="/me" aria-label="返回个人中心"><RNAssetIcon assetURL={backIconURL} /></Link>
           <h1>通用设置</h1>
           <span />
-        </header>
+        </PageNavbar>
         <div className="rn-me-settings-content">
           {error ? <p className="rn-me-settings-error" role="status">{error}</p> : null}
           {versionStatus ? <p className="rn-me-settings-notice" role="status">{versionStatus}</p> : null}
@@ -105,18 +107,12 @@ export function MeSettingsPage() {
           <button className="rn-me-logout" type="button" onClick={() => setConfirming(true)}>退出登录</button>
         </div>
       </section>
-      {confirming ? (
-        <div className="rn-me-dialog-backdrop" role="presentation" onClick={() => setConfirming(false)}>
-          <section className="rn-me-dialog" role="alertdialog" aria-modal="true" aria-labelledby="logout-title" onClick={event => event.stopPropagation()}>
-            <h2 id="logout-title">退出登录</h2>
-            <p>确认退出当前账号？</p>
-            <div>
-              <button type="button" disabled={signingOut} onClick={() => setConfirming(false)}>取消</button>
-              <button className="is-danger" type="button" disabled={signingOut} onClick={() => void signOut()}>{signingOut ? '退出中' : '退出'}</button>
-            </div>
-          </section>
-        </div>
-      ) : null}
+      <MeLogoutDialog
+        open={confirming}
+        signingOut={signingOut}
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => void signOut()}
+      />
       {updateInfo ? (
         <MeVersionUpdateDialog
           update={updateInfo}

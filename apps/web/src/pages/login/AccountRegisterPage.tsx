@@ -6,6 +6,7 @@ import clearIconURL from '../../assets/rn/screens/auth/assets/clear-icon.svg';
 import eyeClosedIconURL from '../../assets/rn/screens/auth/assets/eye-closed-icon.svg';
 import eyeIconURL from '../../assets/rn/screens/auth/assets/eye-icon.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { AuthAgreement } from './AuthAgreement.js';
 import { useAuthOnboarding } from './AuthOnboardingProvider.js';
@@ -124,11 +125,13 @@ export function AccountRegisterPage() {
   return (
     <main className="auth-page auth-register-page">
       <section className="auth-surface" aria-labelledby="account-register-title">
-        <header className="auth-register-navbar">
+        <PageNavbar className="auth-register-navbar">
           <button type="button" aria-label="返回账号登录" onClick={() => navigate('/auth/account')}>
             <RNAssetIcon assetURL={backIconURL} />
           </button>
-        </header>
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+        </PageNavbar>
         <div className="auth-register-content">
           <h1 id="account-register-title">账号密码注册</h1>
           <form className="auth-register-form" onSubmit={handleSubmit}>

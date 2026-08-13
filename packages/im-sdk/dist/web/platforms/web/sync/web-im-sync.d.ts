@@ -2,6 +2,7 @@ import type { GatewayHTTPClient } from '@im28/im-sdk/core';
 import { type WebIMCallSync } from '../../../sync/call-sync.js';
 import { type WebIMCustomEmojiSync } from '../../../sync/custom-emoji-sync.js';
 import { type WebIMBlacklistSync } from '../../../sync/blacklist-sync.js';
+import { type IMDirectChatRelationshipSync } from '../../../sync/direct-chat-relationship-sync.js';
 import { type WebIMFriendApplicationSync } from '../../../sync/friend-application-sync.js';
 import { type WebIMGroupApplicationSync } from '../../../sync/group-application-sync.js';
 import { type WebIMJoinedGroupSync } from '../../../sync/joined-group-sync.js';
@@ -21,6 +22,8 @@ import { type IMGroupLifecycleSync } from '../../../sync/group-lifecycle.js';
 /** Runtime 对页面公开的聚合数据同步入口。 */
 export interface WebIMSync {
     readonly blacklist: WebIMBlacklistSync;
+    /** 单聊关系只组合资料和我方黑名单的真实读取。 */
+    readonly directChatRelationship: IMDirectChatRelationshipSync;
     readonly calls: WebIMCallSync;
     readonly contacts: WebIMContactSync;
     readonly conversations: WebIMConversationSync;

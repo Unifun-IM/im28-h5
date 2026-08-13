@@ -8,6 +8,7 @@ import { createIMConversationArchiveSync, } from './conversation-archive-sync.js
 import { readUnreadMentionSnapshot, } from './conversation-unread-mention.js';
 import { syncIMGatewayDifference } from './gateway-difference-sync.js';
 import { openIMGroupConversation, } from './group-conversation-open.js';
+import { createIMConversationDraftSync, } from './conversation-draft.js';
 /** 创建认证账号绑定的浏览器会话同步服务。 */
 export function createWebIMConversationSync(dependencies) {
     return new WebIMConversationSyncImpl(dependencies);
@@ -26,6 +27,8 @@ class WebIMConversationSyncImpl {
     listActionsSync;
     /** archiveSync 是 RN/Web/Desktop 共用的归档分页与快照 owner。 */
     archiveSync;
+    /** draftSync 是正文和预设表情实体的本地持久化 owner。 */
+    draftSync;
     /** 保存 runtime owners，不复制 transport 或 storage 状态。 */
     constructor(dependencies) {
         this.dependencies = dependencies;
@@ -44,6 +47,10 @@ class WebIMConversationSyncImpl {
             mutationQueue: this.mutationQueue,
         });
         this.archiveSync = createIMConversationArchiveSync({
+            ...dependencies,
+            mutationQueue: this.mutationQueue,
+        });
+        this.draftSync = createIMConversationDraftSync({
             ...dependencies,
             mutationQueue: this.mutationQueue,
         });
@@ -93,6 +100,14 @@ class WebIMConversationSyncImpl {
     /** 清空会话历史并委托共享 Gateway cursor 状态机。 */
     clear(options) {
         return this.clearSync.clear(options);
+    }
+    /** 从当前账号 SQLite 读取规范草稿文档。 */
+    getDraft(conversationID) {
+        return this.draftSync.getDraft(conversationID);
+    }
+    /** 在共享队列内保存本地草稿，不调用 Gateway。 */
+    saveDraft(conversationID, document) {
+        return this.draftSync.saveDraft(conversationID, document);
     }
     /** 标记已读并委托平台中立列表动作 owner。 */
     markRead(conversationID, readSeq) {

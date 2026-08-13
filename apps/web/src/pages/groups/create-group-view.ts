@@ -1,5 +1,6 @@
 import {
   canCreateIMGroupWithMemberCount,
+  type Conversation,
   type WebIMContact,
 } from '@im28/im-sdk/web';
 
@@ -13,10 +14,12 @@ export interface CreateGroupCandidate {
 export function buildCreateGroupCandidates(
   contacts: readonly WebIMContact[],
   keyword: string,
+  excludedUserIDs: ReadonlySet<string> = new Set(),
 ): readonly CreateGroupCandidate[] {
   /** query 只属于页面搜索，不改变 SDK 好友快照。 */
   const query = keyword.trim().toLocaleLowerCase();
   return contacts.flatMap(contact => {
+    if (excludedUserIDs.has(contact.userID)) return [];
     /** displayName 已由 shared contact DTO 处理备注名优先。 */
     const displayName = contact.displayName.trim() || contact.userID;
     /** searchable 同时覆盖展示名和稳定用户 ID。 */
@@ -25,9 +28,49 @@ export function buildCreateGroupCandidates(
   });
 }
 
+/** 按好友原始顺序投影仍然有效的已选建群候选。 */
+export function buildSelectedCreateGroupCandidates(
+  candidates: readonly CreateGroupCandidate[],
+  selectedUserIDs: ReadonlySet<string>,
+): readonly CreateGroupCandidate[] {
+  return candidates.filter(candidate => selectedUserIDs.has(candidate.contact.userID));
+}
+
+/** 合并固定成员与页面选择成员，并按首次出现顺序去重。 */
+export function buildCreateGroupMemberUserIDs(
+  selectedUserIDs: Iterable<string>,
+  fixedUserIDs: readonly string[] = [],
+): readonly string[] {
+  /** memberUserIDs 只保留非空稳定身份，固定成员始终位于提交数组前方。 */
+  const memberUserIDs = [...fixedUserIDs, ...selectedUserIDs]
+    .map(userID => userID.trim())
+    .filter(Boolean);
+  return [...new Set(memberUserIDs)];
+}
+
 /** 创建按钮严格复用 SDK 的 RN 人数规则。 */
-export function canSubmitCreateGroup(selectedUserIDs: ReadonlySet<string>): boolean {
-  return canCreateIMGroupWithMemberCount(selectedUserIDs.size);
+export function canSubmitCreateGroup(
+  selectedUserIDs: ReadonlySet<string>,
+  fixedUserIDs: readonly string[] = [],
+): boolean {
+  return canCreateIMGroupWithMemberCount(
+    buildCreateGroupMemberUserIDs(selectedUserIDs, fixedUserIDs).length,
+  );
+}
+
+/** 从当前账号真实单聊会话解析“添加成员创建群聊”的固定对端。 */
+export function resolveSingleChatCreateGroupPeer(
+  conversations: readonly Conversation[],
+  conversationID: string,
+  currentUserID: string,
+): string {
+  /** conversation 必须是当前缓存中与 route ID 严格匹配的单聊。 */
+  const conversation = conversations.find(
+    item => item.conversationID === conversationID && item.type === 'single',
+  );
+  /** peerUserID 只接受非本人稳定目标身份。 */
+  const peerUserID = conversation?.targetID.trim() ?? '';
+  return peerUserID && peerUserID !== currentUserID.trim() ? peerUserID : '';
 }
 
 /** 判断 Gateway 已处理但缺失返回身份的不可重放创建错误。 */

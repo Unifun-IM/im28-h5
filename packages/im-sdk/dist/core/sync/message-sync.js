@@ -178,6 +178,10 @@ class WebIMMessageSyncImpl {
     async forward(options) {
         return this.messageMutations.forward(options);
     }
+    /** 从当前账号 cache 重读来源并向多个真实会话转发。 */
+    async forwardToTargets(options) {
+        return this.messageMutations.forwardToTargets(options);
+    }
     /** 从当前账号 cache 重读目标并执行 self/all 单删或批删。 */
     async delete(options) {
         return this.messageMutations.delete(options);

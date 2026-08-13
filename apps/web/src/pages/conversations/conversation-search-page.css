@@ -104,22 +104,6 @@
   padding-bottom: calc(var(--im-safe-bottom) + 16px);
 }
 
-.rn-conversation-search-pull {
-  display: grid;
-  height: 0;
-  overflow: hidden;
-  place-items: center;
-  color: var(--im-text-muted);
-  font-size: 12px;
-  letter-spacing: 0;
-  line-height: 18px;
-  transition: height 160ms ease;
-}
-
-.rn-conversation-search-pull.is-armed {
-  color: var(--im-brand-primary);
-}
-
 .rn-conversation-search-history {
   display: flex;
   gap: 8px;

@@ -13,7 +13,9 @@ import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regul
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
 import minusIconURL from '../../assets/rn/assets/icons/imm28/minus-circle.regular.svg';
 import plusIconURL from '../../assets/rn/assets/icons/imm28/plus-circle.regular.svg';
+import addMemberIconURL from '../../assets/rn/assets/icons/imm28/plus.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import {
   getRNAvatarGradient,
   getRNAvatarInitial,
@@ -212,13 +214,13 @@ export function ChatSettingsPage() {
   return (
     <main className="rn-chat-settings-page">
       <section className="rn-chat-settings-surface" aria-busy={loading}>
-        <header className="rn-chat-settings-header">
+        <PageNavbar className="rn-chat-settings-header">
           <Link to={chatURL} aria-label="返回聊天">
             <RNAssetIcon assetURL={backIconURL} />
           </Link>
           <h1>{view?.pageTitle ?? '聊天设置'}</h1>
           <span />
-        </header>
+        </PageNavbar>
         <div className="rn-chat-settings-content">
           {error ? <p className="rn-chat-settings-error" role="status">{error}</p> : null}
           {notice ? <p className="rn-chat-settings-notice" role="status">{notice}</p> : null}
@@ -377,11 +379,16 @@ function ChatAutoDeleteSettingsRow({
 function SingleSettingsCard({ view }: { readonly view: ChatSettingsView }) {
   // profileURL 只携带稳定用户 ID，不在设置页读取资料。
   const profileURL = `/contacts/users/${encodeURIComponent(view.targetID)}`;
+  /** createGroupURL 绑定当前真实单聊会话，不从 history state 接受对端身份。 */
+  const createGroupURL = `/conversations/${encodeURIComponent(view.conversationID)}/settings/create-group`;
   return (
     <div className="rn-chat-settings-card">
       <div className="rn-chat-settings-single-member">
         <Link to={profileURL} aria-label={`查看${view.title}的资料`}>
           <SettingsAvatar identity={view.targetID} name={view.title} avatarURL={view.avatarURL} size={40} />
+        </Link>
+        <Link className="rn-chat-settings-add-member" to={createGroupURL} aria-label="添加成员创建群聊">
+          <RNAssetIcon assetURL={addMemberIconURL} />
         </Link>
       </div>
       <ChatSearchSettingsRow view={view} />

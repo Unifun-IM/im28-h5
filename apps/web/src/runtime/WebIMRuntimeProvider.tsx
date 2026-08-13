@@ -33,6 +33,7 @@ const ANONYMOUS_SNAPSHOT: WebIMRuntimeSnapshot = {
   state: 'anonymous',
   userID: null,
   dataVersion: 0,
+  relationshipVersion: 0,
   incomingCall: { phase: 'idle', call: null, revision: 0 },
 };
 

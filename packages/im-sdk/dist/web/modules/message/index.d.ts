@@ -11,6 +11,16 @@ export type { IMInitialUnreadNavigation } from './initial-unread-navigation.js';
 export { getIMPreviousMessageHistoryCursor, mergeIMMessageHistoryWindow, } from './history-pagination.js';
 /** 导出聊天历史窗口契约。 */
 export type { IMMessageHistoryWindow } from './history-pagination.js';
+/** 导出跨端一致的历史通话消息解析与 RN 文案。 */
+export { formatIMCallMessageText, parseIMCallMessagePresentation, } from './call-message.js';
+/** 导出历史通话气泡的稳定展示契约。 */
+export type { IMCallMessageMediaType, IMCallMessagePresentation, IMCallMessageStatus, } from './call-message.js';
+/** 导出跨端一致的群简介与发言频率系统文案解析。 */
+export { parseIMGroupSystemMessagePresentation } from './group-system-message.js';
+/** 导出群系统消息的稳定展示契约。 */
+export type { IMGroupSystemMessageKind, IMGroupSystemMessagePresentation, } from './group-system-message.js';
+/** 导出好友关系建立通知的跨端类型与文案。 */
+export { IM_FRIEND_ADDED_MESSAGE_TEXT, IM_FRIEND_ADDED_MESSAGE_TYPE, getIMFriendAddedMessageText, } from './friend-added-message.js';
 /** 导出跨端 Composer 附件与文本的提交顺序。 */
 export { createIMComposerSubmissionPlan, shouldStageIMComposerMedia, } from './composer-submission.js';
 /** 导出 Composer 提交计划的稳定契约。 */

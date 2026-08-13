@@ -4,6 +4,8 @@ import {
   formatCallClock,
   formatCallDateHeader,
   getCallDayRange,
+  getCallListEmptyLabel,
+  refreshCallListPage,
 } from './call-list-view.js';
 
 describe('call detail list view', () => {
@@ -27,5 +29,54 @@ describe('call detail list view', () => {
     expect(formatCallDateHeader(source)).toBe('2026年8月10日');
     expect(formatCallClock(source)).toBe('09:07');
     expect(formatCallClock('invalid')).toBe('');
+  });
+
+  it('forces remote sync before rereading the selected cached page', async () => {
+    /** calls 记录刷新链的稳定调用顺序。 */
+    const calls: string[] = [];
+    /** service 只实现页面刷新需要的 facade 子集。 */
+    const service = {
+      async sync() {
+        calls.push('sync');
+        return { list: [], total: 0 };
+      },
+      async listCached(options: unknown) {
+        calls.push(`cache:${JSON.stringify(options)}`);
+        return { list: [], total: 0 };
+      },
+    };
+
+    await expect(refreshCallListPage(service, 'missed', 'donk', 30)).resolves.toEqual({
+      list: [],
+      total: 0,
+    });
+    expect(calls).toEqual([
+      'sync',
+      'cache:{"answerStatus":"missed","keyword":"donk","limit":30,"offset":0}',
+    ]);
+  });
+
+  it('does not replace cache when forced sync fails', async () => {
+    /** cacheReads 证明失败路径不会读取并投影伪成功快照。 */
+    let cacheReads = 0;
+    /** service 模拟 Gateway 同步失败。 */
+    const service = {
+      async sync() {
+        throw new Error('network failed');
+      },
+      async listCached() {
+        cacheReads += 1;
+        return { list: [], total: 0 };
+      },
+    };
+
+    await expect(refreshCallListPage(service, 'all', '', 30)).rejects.toThrow('network failed');
+    expect(cacheReads).toBe(0);
+  });
+
+  it('projects RN empty labels with search taking precedence over the missed filter', () => {
+    expect(getCallListEmptyLabel('missed', ' donk ')).toBe('暂无搜索结果');
+    expect(getCallListEmptyLabel('missed', '  ')).toBe('暂无未接来电');
+    expect(getCallListEmptyLabel('all', '')).toBe('暂无通话记录');
   });
 });

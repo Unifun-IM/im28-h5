@@ -1,6 +1,7 @@
 import { createWebIMCallSync } from '../../../sync/call-sync.js';
 import { createWebIMCustomEmojiSync, } from '../../../sync/custom-emoji-sync.js';
 import { createWebIMBlacklistSync } from '../../../sync/blacklist-sync.js';
+import { createIMDirectChatRelationshipSync, } from '../../../sync/direct-chat-relationship-sync.js';
 import { createWebIMFriendApplicationSync, } from '../../../sync/friend-application-sync.js';
 import { createWebIMGroupApplicationSync, } from '../../../sync/group-application-sync.js';
 import { createWebIMJoinedGroupSync, } from '../../../sync/joined-group-sync.js';
@@ -25,6 +26,19 @@ export function createWebIMSync(dependencies) {
     const sharedDependencies = { ...dependencies, mutationQueue };
     // contacts 是 blacklist 好友关系 enrichment 的唯一现有 owner。
     const contacts = createWebIMContactSync(sharedDependencies);
+    /** blacklist 是列表页和单聊关系共用的唯一黑名单 owner。 */
+    const blacklist = createWebIMBlacklistSync({
+        gatewayClient: dependencies.gatewayClient,
+        getCurrentUserID: dependencies.getCurrentUserID,
+        listContacts: () => contacts.list(),
+    });
+    /** peerProfile 是资料页和单聊好友关系共用的唯一资料 owner。 */
+    const peerProfile = createWebIMPeerProfileSync(sharedDependencies);
+    /** directChatRelationship 只投影已有 owner，不新增 transport 或 cache。 */
+    const directChatRelationship = createIMDirectChatRelationshipSync({
+        getPeerRelationship: async (userID) => (await peerProfile.get(userID)).relationship,
+        isBlockedByMe: userID => blacklist.has(userID),
+    });
     // groupMentions 是群成员身份、权限和 type106 发送的唯一业务 owner。
     const groupMentions = createIMGroupMentionSync(sharedDependencies);
     /** groups 是已加入群 cache/sync 的唯一 owner，也为群搜索提供关系快照。 */
@@ -47,11 +61,8 @@ export function createWebIMSync(dependencies) {
         groupMentionSync: groupMentions,
     });
     return {
-        blacklist: createWebIMBlacklistSync({
-            gatewayClient: dependencies.gatewayClient,
-            getCurrentUserID: dependencies.getCurrentUserID,
-            listContacts: () => contacts.list(),
-        }),
+        blacklist,
+        directChatRelationship,
         calls: createWebIMCallSync(sharedDependencies),
         contacts,
         conversations: createWebIMConversationSync({
@@ -81,7 +92,7 @@ export function createWebIMSync(dependencies) {
         },
         messages,
         messageBroadcast: createIMMessageBroadcastSync(sharedDependencies),
-        peerProfile: createWebIMPeerProfileSync(sharedDependencies),
+        peerProfile,
         presence: createIMUserPresenceSync({
             gatewayClient: dependencies.gatewayClient,
             getCurrentUserID: dependencies.getCurrentUserID,

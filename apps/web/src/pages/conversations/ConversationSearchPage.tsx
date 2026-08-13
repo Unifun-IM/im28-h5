@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
@@ -210,13 +211,11 @@ export function ConversationSearchPage() {
           />
           <button type="button" onClick={() => navigate(-1)}>取消</button>
         </form>
-        <div
-          className={`rn-conversation-search-pull${pullRefresh.armed ? ' is-armed' : ''}`}
-          style={{ height: loading && searchedQuery ? 36 : pullRefresh.pullDistance }}
-          aria-hidden={!loading && pullRefresh.pullDistance === 0}
-        >
-          <span>{loading ? '正在刷新' : pullRefresh.armed ? '松开刷新' : '下拉刷新'}</span>
-        </div>
+        <PullRefreshIndicator
+          refreshing={loading && Boolean(searchedQuery)}
+          armed={pullRefresh.armed}
+          pullDistance={pullRefresh.pullDistance}
+        />
         <section className="rn-conversation-search-content" aria-busy={loading} aria-live="polite">
           {error ? <ConversationSearchState label={error} compact /> : null}
           {!error && !searchedQuery ? (

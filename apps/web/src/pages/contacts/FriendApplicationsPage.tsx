@@ -2,10 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { WebIMFriendApplication } from '@im28/im-sdk/web';
 import { Navigate, useNavigate } from 'react-router-dom';
 
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { FriendApplicationConfirmDialog } from './FriendApplicationConfirmDialog.js';
 import { FriendApplicationRow } from './FriendApplicationRow.js';
 import { buildFriendApplicationEntries } from './friend-application-view.js';
+import { refreshVerificationEntries } from './verification-refresh.js';
 import './friend-applications-page.css';
 
 /** RN 好友验证面板通过 Web SDK facade 读写真实申请。 */
@@ -18,6 +21,8 @@ export function FriendApplicationsPage({ onUnreadChanged }: FriendApplicationsPa
   const [applications, setApplications] = useState<readonly WebIMFriendApplication[]>([]);
   // loading 覆盖首次读取和刷新。
   const [loading, setLoading] = useState(false);
+  // refreshing 只表示用户触发的顶部下拉刷新。
+  const [refreshing, setRefreshing] = useState(false);
   // error 显示真实 Gateway 失败。
   const [error, setError] = useState<string | null>(null);
   // confirmApplication 控制 RN 居中确认框。
@@ -61,6 +66,31 @@ export function FriendApplicationsPage({ onUnreadChanged }: FriendApplicationsPa
   }, [runtime, snapshot.userID]);
 
   useEffect(() => { void loadApplications(); }, [loadApplications]);
+
+  /** 下拉时并行刷新好友申请与父层角标，任一计数失败不清空列表。 */
+  const refreshApplications = useCallback(async (): Promise<void> => {
+    if (!runtime || !snapshot.userID || refreshing) return;
+    setRefreshing(true);
+    setError(null);
+    try {
+      /** nextApplications 只来自现有 shared 好友申请 facade。 */
+      const nextApplications = await refreshVerificationEntries({
+        loadEntries: () => runtime.getSync().friendApplications.list({ pageSize: 100 }),
+        refreshUnread: onUnreadChanged,
+      });
+      setApplications(nextApplications);
+    } catch (cause) {
+      setError(readFriendApplicationError(cause, '好友验证加载失败'));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [onUnreadChanged, refreshing, runtime, snapshot.userID]);
+
+  /** pullRefresh 只翻译验证列表顶部触摸手势。 */
+  const pullRefresh = usePullRefresh({
+    refreshing: loading || refreshing,
+    onRefresh: refreshApplications,
+  });
 
   /** Gateway accept 成功后才更新本地状态并重新读取服务端。 */
   const acceptApplication = useCallback(async (): Promise<void> => {
@@ -106,7 +136,17 @@ export function FriendApplicationsPage({ onUnreadChanged }: FriendApplicationsPa
   // confirmDialog 保持接受申请的唯一 mutation owner。
   const confirmDialog = confirmApplication ? <FriendApplicationConfirmDialog application={confirmApplication} pending={handlingID === confirmApplication.applicationID} onCancel={() => setConfirmApplication(null)} onConfirm={() => void acceptApplication()} /> : null;
 
-  return <section className="rn-friend-applications-embedded" aria-busy={loading}>{pageContent}{confirmDialog}</section>;
+  return <section
+    className="rn-friend-applications-embedded"
+    aria-busy={loading || refreshing}
+    onTouchStart={pullRefresh.onTouchStart}
+    onTouchMove={pullRefresh.onTouchMove}
+    onTouchEnd={pullRefresh.onTouchEnd}
+    onTouchCancel={pullRefresh.onTouchCancel}
+  >
+    <PullRefreshIndicator refreshing={refreshing} pullDistance={pullRefresh.pullDistance} armed={pullRefresh.armed} />
+    {pageContent}{confirmDialog}
+  </section>;
 }
 
 /** 好友验证嵌入页参数。 */

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 
 /** 个人资料全屏页共用的 RN 顶栏参数。 */
 interface MeProfileHeaderProps {
@@ -21,7 +22,7 @@ export function MeProfileHeader({
   onAction,
 }: MeProfileHeaderProps) {
   return (
-    <header className="rn-me-profile-header">
+    <PageNavbar className="rn-me-profile-header">
       <Link to={backHref} aria-label="返回">
         <RNAssetIcon assetURL={backIconURL} />
       </Link>
@@ -31,6 +32,6 @@ export function MeProfileHeader({
           {actionLabel}
         </button>
       ) : <span />}
-    </header>
+    </PageNavbar>
   );
 }

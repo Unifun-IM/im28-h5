@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { WebIMConversationListItem } from '@im28/im-sdk/web';
 import { Navigate, useNavigate } from 'react-router-dom';
 
@@ -7,6 +7,7 @@ import archiveIconURL from '../../assets/rn/assets/icons/imm28/file.collection.s
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { HomeActionMenu } from '../../components/home-actions/HomeActionMenu.js';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { usePrimaryTabBadges } from '../../components/primary-tabs/index.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
@@ -15,7 +16,10 @@ import {
   ConversationActionMenu,
 } from './ConversationActionMenu.js';
 import { ConversationDeleteSheet } from './ConversationDeleteSheet.js';
-import { getConversationUnreadTotal } from './conversation-list-view.js';
+import {
+  getConversationUnreadTotal,
+  getNextUnreadConversationID,
+} from './conversation-list-view.js';
 import { useConversationActions } from './useConversationActions.js';
 import './conversations-page.css';
 
@@ -24,7 +28,10 @@ export function ConversationsPage() {
   /** navigate 负责进入 RN 对齐的独立搜索路由。 */
   const navigate = useNavigate();
   // reportConversationUnreadTotal 将真实页面汇总同步给全局底栏。
-  const { reportConversationUnreadTotal } = usePrimaryTabBadges();
+  const {
+    reportConversationUnreadTotal,
+    registerConversationTabReselect,
+  } = usePrimaryTabBadges();
   // runtime context 是页面唯一允许消费的 SDK facade owner。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // sync 只在 runtime 已完成配置装配时存在。
@@ -39,6 +46,10 @@ export function ConversationsPage() {
   const [refreshing, setRefreshing] = useState(false);
   // error 显示真实 sync 错误，不回退 fake-success。
   const [error, setError] = useState<string | null>(null);
+  /** listRef 提供当前真实会话行的可见位置和滚动容器。 */
+  const listRef = useRef<HTMLElement | null>(null);
+  /** lastUnreadTargetIDRef 让连续双击按 RN 规则循环未读会话。 */
+  const lastUnreadTargetIDRef = useRef('');
   /** 先读账号 SQLite cache，再执行 Gateway 全量同步并重读组合列表。 */
   const loadConversations = useCallback(async () => {
     if (!sync || !snapshot.userID) {
@@ -151,6 +162,42 @@ export function ConversationsPage() {
   // unreadTotal 仅汇总非静音会话。
   const unreadTotal = useMemo(() => getConversationUnreadTotal(items), [items]);
 
+  /** scrollToNextUnreadConversation 只改变滚动位置，不触发已读 mutation。 */
+  const scrollToNextUnreadConversation = useCallback((): boolean => {
+    /** listElement 必须属于当前挂载的会话主列表。 */
+    const listElement = listRef.current;
+    if (!listElement) return false;
+    /** rows 使用稳定会话 ID 与当前 DOM 顺序对应。 */
+    const rows = [...listElement.querySelectorAll<HTMLElement>('[data-conversation-id]')];
+    /** headerBottom 排除粘性 header 覆盖的行。 */
+    const headerBottom = listElement.closest('.rn-conversation-surface')
+      ?.querySelector<HTMLElement>('.rn-conversation-header')
+      ?.getBoundingClientRect().bottom ?? 0;
+    /** firstVisibleIndex 对齐 RN FlatList 首个可见行索引。 */
+    const firstVisibleIndex = rows.findIndex(row => row.getBoundingClientRect().bottom > headerBottom);
+    /** targetID 由纯规则统一处理手动未读、当前位置和循环目标。 */
+    const targetID = getNextUnreadConversationID(
+      items,
+      lastUnreadTargetIDRef.current,
+      firstVisibleIndex < 0 ? 0 : firstVisibleIndex,
+    );
+    if (!targetID) {
+      lastUnreadTargetIDRef.current = '';
+      return false;
+    }
+    /** target 只从已渲染稳定 ID 行中解析，不拼 CSS selector。 */
+    const target = rows.find(row => row.dataset.conversationId === targetID);
+    if (!target) return false;
+    lastUnreadTargetIDRef.current = targetID;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return true;
+  }, [items]);
+
+  useEffect(() => {
+    registerConversationTabReselect(scrollToNextUnreadConversation);
+    return () => registerConversationTabReselect(null);
+  }, [registerConversationTabReselect, scrollToNextUnreadConversation]);
+
   useEffect(() => {
     reportConversationUnreadTotal(unreadTotal);
   }, [reportConversationUnreadTotal, unreadTotal]);
@@ -216,13 +263,11 @@ export function ConversationsPage() {
           </button>
         </header>
 
-        <div
-          className={`rn-conversation-pull${pullRefresh.armed ? ' is-armed' : ''}`}
-          style={{ height: refreshing ? 36 : pullRefresh.pullDistance }}
-          aria-hidden={!refreshing && pullRefresh.pullDistance === 0}
-        >
-          <span>{refreshing ? '正在刷新' : pullRefresh.armed ? '松开刷新' : '下拉刷新'}</span>
-        </div>
+        <PullRefreshIndicator
+          refreshing={refreshing}
+          armed={pullRefresh.armed}
+          pullDistance={pullRefresh.pullDistance}
+        />
 
         {error ? (
           <p className="rn-conversation-error" role="status">
@@ -230,7 +275,7 @@ export function ConversationsPage() {
           </p>
         ) : null}
 
-        <section className="rn-conversation-list" aria-label="会话列表">
+        <section ref={listRef} className="rn-conversation-list" aria-label="会话列表">
           {loading && items.length === 0 ? (
             <div className="rn-conversation-loading" aria-label="正在加载会话">
               <span />

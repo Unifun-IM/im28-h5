@@ -26,6 +26,10 @@
   background: var(--im-conversation-pinned-background);
 }
 
+.rn-conversation-header.is-archive {
+  padding-top: 0;
+}
+
 .rn-conversation-header-top {
   display: flex;
   height: 48px;
@@ -86,23 +90,6 @@
   font-weight: 500;
   letter-spacing: 0;
   line-height: 20px;
-}
-
-.rn-conversation-pull {
-  display: grid;
-  height: 0;
-  place-items: center;
-  overflow: hidden;
-  color: var(--im-text-muted);
-  background: var(--im-bg-app);
-  font-size: 12px;
-  letter-spacing: 0;
-  line-height: 18px;
-  transition: height 140ms ease;
-}
-
-.rn-conversation-pull.is-armed {
-  color: var(--im-text-secondary);
 }
 
 .rn-conversation-error {
@@ -559,10 +546,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rn-conversation-loading span,
-  .rn-conversation-pull {
+  .rn-conversation-loading span {
     animation: none;
-    transition: none;
   }
 }
 

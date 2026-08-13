@@ -2,16 +2,14 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { ChatPage } from '../pages/chat/ChatPage.js';
+import { ChatForwardCompatibilityRedirect } from '../pages/chat/ChatForwardCompatibilityRedirect.js';
 import { CustomEmojiManagerPage } from '../pages/chat/CustomEmojiManagerPage.js';
-import { ChatForwardTargetPage } from '../pages/chat/ChatForwardTargetPage.js';
-import { ConversationsPage } from '../pages/conversations/ConversationsPage.js';
 import { ContactFriendApplicationPage } from '../pages/contacts/ContactFriendApplicationPage.js';
 import { ContactProfilePage } from '../pages/contacts/ContactProfilePage.js';
 import { ContactSearchPage } from '../pages/contacts/ContactSearchPage.js';
 import { GroupApplicationsPage } from '../pages/contacts/GroupApplicationsPage.js';
 import { JoinedGroupsPage } from '../pages/contacts/JoinedGroupsPage.js';
 import { VerificationMessagesPage } from '../pages/contacts/VerificationMessagesPage.js';
-import { CallsPage } from '../pages/calls/CallsPage.js';
 import { CallDetailPage } from '../pages/calls/CallDetailPage.js';
 import { AccountRegisterPage } from '../pages/login/AccountRegisterPage.js';
 import { AuthCompleteProfilePage } from '../pages/login/AuthCompleteProfilePage.js';
@@ -19,7 +17,6 @@ import { AuthInvitePage } from '../pages/login/AuthInvitePage.js';
 import { AuthOnboardingProvider } from '../pages/login/AuthOnboardingProvider.js';
 import { AuthOnboardingProfileEditorPage } from '../pages/login/AuthOnboardingProfileEditorPage.js';
 import { LoginPage } from '../pages/login/LoginPage.js';
-import { MePage } from '../pages/me/MePage.js';
 import { MeBlacklistPage } from '../pages/me/MeBlacklistPage.js';
 import { MeProfileEditorPage } from '../pages/me/MeProfileEditorPage.js';
 import { MeProfilePage } from '../pages/me/MeProfilePage.js';
@@ -35,8 +32,6 @@ import { WebIMCallProvider, WebIMRuntimeProvider } from '../runtime/index.js';
 import { PrimaryTabsLayout } from './PrimaryTabsLayout.js';
 import { RouteMotionController } from '../components/interaction/index.js';
 
-/** 联系人主页面按 React Router 路由加载，避免拼音词典进入其他页面首包。 */
-const ContactsPage = lazy(() => import('../pages/contacts/ContactsPage.js'));
 /** 好友名片选择页按动作路由加载，不进入通讯录和主路由首包。 */
 const ContactCardSharePage = lazy(() => import('../pages/contacts/ContactCardSharePage.js'));
 /** 共同群聊按资料子路由加载，不进入联系人主列表首包。 */
@@ -118,17 +113,10 @@ export function App() {
           <Route path="/auth/complete-profile/gender" element={<AuthOnboardingProfileEditorPage mode="gender" />} />
           <Route path="/auth/complete-profile/bio" element={<AuthOnboardingProfileEditorPage mode="bio" />} />
           <Route element={<PrimaryTabsLayout />}>
-            <Route path="/conversations" element={<ConversationsPage />} />
-            <Route
-              path="/contacts"
-              element={(
-                <Suspense fallback={<ContactsRouteLoadingState />}>
-                  <ContactsPage />
-                </Suspense>
-              )}
-            />
-            <Route path="/calls" element={<CallsPage />} />
-            <Route path="/me" element={<MePage />} />
+            <Route path="/conversations" />
+            <Route path="/contacts" />
+            <Route path="/calls" />
+            <Route path="/me" />
           </Route>
           <Route
             path="/conversations/search"
@@ -262,6 +250,10 @@ export function App() {
             element={<ChatPage />}
           />
           <Route
+            path="/conversations/:conversationID/forward"
+            element={<ChatForwardCompatibilityRedirect />}
+          />
+          <Route
             path="/conversations/:conversationID/emojis"
             element={<CustomEmojiManagerPage />}
           />
@@ -278,6 +270,14 @@ export function App() {
             element={(
               <Suspense fallback={<ChatSettingsRouteLoadingState />}>
                 <ChatSettingsPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/create-group"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <CreateGroupPage fromSingleSettings />
               </Suspense>
             )}
           />
@@ -408,10 +408,6 @@ export function App() {
                 <GroupCardSharePage />
               </Suspense>
             )}
-          />
-          <Route
-            path="/conversations/:conversationID/forward"
-            element={<ChatForwardTargetPage />}
           />
           <Route path="*" element={<NotFoundPage />} />
           </Routes>

@@ -133,6 +133,13 @@ export const SDK_MIGRATIONS = [
        END`,
         ],
     },
+    {
+        version: 13,
+        name: 'add_conversation_draft_entities',
+        statements: [
+            `ALTER TABLE conversations ADD COLUMN draft_entities_json TEXT`,
+        ],
+    },
 ];
 export async function runMigrations(database, migrations = SDK_MIGRATIONS) {
     await database.open();

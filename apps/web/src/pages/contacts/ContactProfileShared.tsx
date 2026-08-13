@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import {
   getRNAvatarGradient,
   getRNAvatarInitial,
@@ -25,7 +26,7 @@ export function ContactProfileHeader({
   trailing,
 }: ContactProfileHeaderProps) {
   return (
-    <header className="rn-contact-profile-header">
+    <PageNavbar className="rn-contact-profile-header">
       <Link className="rn-contact-profile-back" to={backHref} aria-label="返回">
         <RNAssetIcon assetURL={backIconURL} />
       </Link>
@@ -33,7 +34,7 @@ export function ContactProfileHeader({
         {titleNode ?? <h1>{title}</h1>}
       </span>
       <span>{trailing}</span>
-    </header>
+    </PageNavbar>
   );
 }
 

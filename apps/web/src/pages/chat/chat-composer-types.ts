@@ -18,14 +18,18 @@ export interface ChatComposerMentionRequest {
 
 /** RN composer 对外只暴露页面编排所需的文档、媒体与提及 actions。 */
 export interface ChatComposerProps {
+  /** 页面从账号内 SQLite 恢复的未发送草稿。 */
+  readonly initialDraftDocument: PresetEmojiDocument;
+  /** 普通 Composer 草稿变化后交还页面持久化，编辑消息不触发。 */
+  readonly onDraftDocumentChange: (document: PresetEmojiDocument) => void;
   readonly sending: boolean;
   readonly voiceRecordingStatus: ChatVoiceRecordingStatus;
   readonly voiceRecordingSeconds: number;
-  readonly onSendText: (document: PresetEmojiDocument) => Promise<void>;
+  readonly onSendText: (document: PresetEmojiDocument) => Promise<boolean>;
   readonly onSendMention: (
     document: PresetEmojiDocument,
     mentions: readonly MessageMention[],
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   readonly mentionMembers: readonly WebIMGroupMember[];
   readonly canMentionAll: boolean;
   readonly currentUserID: string;
@@ -39,7 +43,7 @@ export interface ChatComposerProps {
   readonly quoteMessage: Message | null;
   readonly isGroup: boolean;
   readonly onCancelQuote: () => void;
-  readonly onSendQuote: (sourceMessage: Message, text: string) => Promise<void>;
+  readonly onSendQuote: (sourceMessage: Message, text: string) => Promise<boolean>;
   readonly onSendAlbum: (items: readonly ChatAlbumSelectionItem[]) => Promise<void>;
   readonly onSendSubmission: (
     plan: IMComposerSubmissionPlan,
@@ -48,7 +52,7 @@ export interface ChatComposerProps {
     quoteMessage: Message | null,
     media: ChatAlbumSelectionItem | null,
     file: File | null,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   readonly showCallAction: boolean;
   readonly onOpenCallPicker: () => void;
   readonly onOpenCardPicker: () => void;

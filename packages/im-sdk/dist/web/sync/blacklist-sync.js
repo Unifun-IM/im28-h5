@@ -24,6 +24,18 @@ class WebIMBlacklistSyncImpl {
         const friendIDs = new Set((await contactsPromise).map(contact => contact.userID));
         return items.map(item => normalizeBlacklistUser(item, friendIDs)).filter(isBlacklistUser);
     }
+    /** 读取目标是否存在于我方真实黑名单，不触发联系人 enrichment。 */
+    async has(userID) {
+        this.requireAuthenticatedUser();
+        /** normalizedUserID 防止空 ID 进入远端分页。 */
+        const normalizedUserID = userID.trim();
+        if (!normalizedUserID) {
+            throw createWebIMSyncError('BLACKLIST_USER_ID_REQUIRED', 'Blacklist user ID is required.');
+        }
+        /** items 复用唯一分页 owner，避免页面自行解释 Gateway payload。 */
+        const items = await this.listAllItems(100);
+        return items.some(item => readBlacklistUserID(item) === normalizedUserID);
+    }
     /** 等待 Gateway 解除成功；失败由 caller 保留原列表。 */
     async remove(userID) {
         this.requireAuthenticatedUser();

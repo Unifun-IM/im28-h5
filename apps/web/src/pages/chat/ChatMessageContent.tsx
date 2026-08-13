@@ -3,7 +3,11 @@ import { getIMAudioMessageIdentity, type Message } from '@im28/im-sdk/web';
 
 import fileIconURL from '../../assets/rn/assets/icons/imm28/doc.svg';
 import playIconURL from '../../assets/rn/assets/icons/imm28/play.solid.svg';
+import phoneDisabledIconURL from '../../assets/rn/assets/icons/imm28/phone-disabled.dynamic.svg';
+import phoneOutIconURL from '../../assets/rn/assets/icons/imm28/phone-out.dynamic.svg';
 import speakIconURL from '../../assets/rn/assets/icons/imm28/speak.svg';
+import videoCameraIconURL from '../../assets/rn/assets/icons/imm28/video-camera.dynamic.svg';
+import videoCameraOffIconURL from '../../assets/rn/assets/icons/imm28/video-camera-off.dynamic.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import {
   getRNAvatarGradient,
@@ -32,6 +36,7 @@ interface ChatMessageContentProps {
   readonly quoteSource: ChatQuoteSourceView | null;
   readonly onOpenQuotedMessage: (message: Message) => void;
   readonly onCopyLink: (url: string) => Promise<boolean>;
+  readonly onStartCall?: (mediaType: 'audio' | 'video') => void;
 }
 
 /** 根据展示模型呈现文本、媒体、文件、名片和表情内容。 */
@@ -42,9 +47,34 @@ export function ChatMessageContent({
   quoteSource,
   onOpenQuotedMessage,
   onCopyLink,
+  onStartCall,
 }: ChatMessageContentProps) {
   // media 提供当前聊天页唯一的预览和音频 owner。
   const media = useChatMediaInteraction();
+  if (view.kind === 'call') {
+    /** mediaType 缺失时保持展示但禁止回拨。 */
+    const mediaType = view.callMediaType;
+    /** iconURL 复刻 RN 对已取消/已拒绝记录使用禁用图标的规则。 */
+    const iconURL = mediaType === 'video'
+      ? view.callUnanswered ? videoCameraOffIconURL : videoCameraIconURL
+      : view.callUnanswered ? phoneDisabledIconURL : phoneOutIconURL;
+    return (
+      <button
+        className={`rn-chat-call-message${mine ? ' is-mine' : ' is-peer'}`}
+        type="button"
+        aria-label={onStartCall
+          ? mediaType === 'video' ? '拨打视频电话' : '拨打语音电话'
+          : mediaType === 'video' ? '视频通话记录' : '语音通话记录'}
+        disabled={!mediaType || !onStartCall}
+        onClick={() => {
+          if (mediaType && onStartCall) onStartCall(mediaType);
+        }}
+      >
+        <span>{view.text}</span>
+        <RNAssetIcon assetURL={iconURL} />
+      </button>
+    );
+  }
   if (view.kind === 'image') {
     // imageURL 保持缩略图展示，同时拒绝不安全协议。
     const imageURL = normalizeChatMediaURL(view.thumbnailURL || view.mediaURL);

@@ -43,6 +43,7 @@ interface ChatMessageBubbleProps {
   readonly onQuoteMessage: (message: Message) => void;
   readonly onCopyMessage: (view: ChatMessageView) => Promise<boolean>;
   readonly onCopyLink: (url: string) => Promise<boolean>;
+  readonly onStartCall?: (mediaType: 'audio' | 'video') => void;
   readonly onOpenQuotedMessage: (message: Message) => void;
   readonly multiSelecting: boolean;
   readonly selected: boolean;
@@ -70,6 +71,7 @@ export function ChatMessageBubble({
   onQuoteMessage,
   onCopyMessage,
   onCopyLink,
+  onStartCall,
   onOpenQuotedMessage,
   multiSelecting,
   selected,
@@ -160,6 +162,7 @@ export function ChatMessageBubble({
         quoteSource={quoteSource}
         onOpenQuotedMessage={onOpenQuotedMessage}
         onCopyLink={onCopyLink}
+        {...(onStartCall ? { onStartCall } : {})}
       />
       <time>{formatChatMessageTimeText(message)}</time>
       {entry.groupPosition === 'single' || entry.groupPosition === 'last' ? (
@@ -289,9 +292,7 @@ function OutgoingMessageStatus({
 /** 使用 RN 原始 SVG 呈现气泡尾部并随明暗主题切换。 */
 function ChatBubbleTail({ mine }: { readonly mine: boolean }) {
   if (mine) {
-    return (
-      <RNAssetIcon assetURL={outgoingTailURL} className="rn-chat-tail is-mine" />
-    );
+    return <RNAssetIcon assetURL={outgoingTailURL} className="rn-chat-tail is-mine" />;
   }
   return (
     <span className="rn-chat-tail is-peer">

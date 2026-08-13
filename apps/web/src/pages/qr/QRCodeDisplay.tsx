@@ -4,6 +4,7 @@ import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regul
 import downloadIconURL from '../../assets/rn/assets/icons/imm28/share-ios.svg';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import {
   createBrowserQRCodeFile,
   downloadBrowserQRCode,
@@ -81,11 +82,11 @@ export function QRCodeDisplay(props: QRCodeDisplayProps) {
   return (
     <main className="rn-qr-display-page" aria-busy={rendering}>
       <section className="rn-qr-display-surface">
-        <header className="rn-qr-display-header">
+        <PageNavbar className="rn-qr-display-header">
           <button type="button" aria-label={props.closeLabel} onClick={props.onClose}><RNAssetIcon assetURL={backIconURL} /></button>
           <h1>二维码</h1>
           <button type="button" aria-label="下载二维码" disabled={!ready} onClick={() => void downloadQRCode()}><RNAssetIcon assetURL={downloadIconURL} /></button>
-        </header>
+        </PageNavbar>
         <section className="rn-qr-display-content">
           <div className="rn-qr-display-card">
             <div className="rn-qr-display-identity">

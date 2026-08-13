@@ -3,21 +3,26 @@ import type { WebIMGroupApplication } from '@im28/im-sdk/web';
 import { Link, Navigate } from 'react-router-dom';
 
 import nextIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { GroupApplicationsError, GroupApplicationsPageState } from './GroupApplicationsShared.js';
 import { buildGroupVerificationEntries, readGroupApplicationError } from './group-application-view.js';
+import { refreshVerificationEntries } from './verification-refresh.js';
 import './group-applications-page.css';
 
 /** RN 群聊验证索引页通过一个 audit facade 聚合可审核群。 */
-export function GroupVerificationPage() {
+export function GroupVerificationPage({ onUnreadChanged }: GroupVerificationPageProps) {
   // runtime context 是页面唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // applications 保存完整审核列表供群聚合。
   const [applications, setApplications] = useState<readonly WebIMGroupApplication[]>([]);
   // loading 覆盖首次读取和刷新。
   const [loading, setLoading] = useState(false);
+  // refreshing 只表示用户触发的顶部下拉刷新。
+  const [refreshing, setRefreshing] = useState(false);
   // error 显示真实 Gateway 失败。
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +41,31 @@ export function GroupVerificationPage() {
   }, [runtime, snapshot.userID]);
 
   useEffect(() => { void loadApplications(); }, [loadApplications]);
+
+  /** 下拉时并行刷新群审核与父层角标，列表失败时保留旧快照。 */
+  const refreshApplications = useCallback(async (): Promise<void> => {
+    if (!runtime || !snapshot.userID || refreshing) return;
+    setRefreshing(true);
+    setError(null);
+    try {
+      /** nextApplications 只来自现有 shared 群申请 facade。 */
+      const nextApplications = await refreshVerificationEntries({
+        loadEntries: () => runtime.getSync().groupApplications.list({ pageSize: 100 }),
+        refreshUnread: onUnreadChanged,
+      });
+      setApplications(nextApplications);
+    } catch (cause) {
+      setError(readGroupApplicationError(cause, '群聊验证加载失败'));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [onUnreadChanged, refreshing, runtime, snapshot.userID]);
+
+  /** pullRefresh 只翻译验证列表顶部触摸手势。 */
+  const pullRefresh = usePullRefresh({
+    refreshing: loading || refreshing,
+    onRefresh: refreshApplications,
+  });
 
   // groups 只聚合待处理记录并按 RN 数量排序。
   const groups = useMemo(
@@ -66,5 +96,20 @@ export function GroupVerificationPage() {
       </div>
   </>;
 
-  return <section className="rn-group-verification-embedded" aria-busy={loading}>{pageContent}</section>;
+  return <section
+    className="rn-group-verification-embedded"
+    aria-busy={loading || refreshing}
+    onTouchStart={pullRefresh.onTouchStart}
+    onTouchMove={pullRefresh.onTouchMove}
+    onTouchEnd={pullRefresh.onTouchEnd}
+    onTouchCancel={pullRefresh.onTouchCancel}
+  >
+    <PullRefreshIndicator refreshing={refreshing} pullDistance={pullRefresh.pullDistance} armed={pullRefresh.armed} />
+    {pageContent}
+  </section>;
+}
+
+/** 群验证嵌入页参数。 */
+interface GroupVerificationPageProps {
+  readonly onUnreadChanged?: () => void | Promise<void>;
 }

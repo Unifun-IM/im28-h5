@@ -2,6 +2,7 @@ import { type WebIMAudioUploadOptions } from './message-audio-send.js';
 import { type GatewayHTTPClient, type Message } from '@im28/im-sdk/core';
 import { type IMMediaUploadPort, type WebIMFileUploadOptions, type WebIMImageUploadOptions } from './message-media-send.js';
 import { type WebIMVideoUploadOptions } from './message-video-send.js';
+import { type IMMessageCard } from './message-card-send.js';
 import { type WebIMSyncContextDependencies } from './sync-context.js';
 import type { WebIMSyncMutationQueueDependencies } from './sync-mutation-queue.js';
 /** Gateway 批量发送允许的最大目标数。 */
@@ -44,6 +45,13 @@ export interface IMBroadcastAudioOptions extends WebIMAudioUploadOptions {
     /** 显式重试时必须复用首次请求的批次 ID。 */
     readonly batchID?: string;
 }
+/** 名片群发参数复用 type108 规范卡片 body 和稳定目标身份。 */
+export interface IMBroadcastCardOptions {
+    readonly targets: readonly IMBroadcastTarget[];
+    readonly card: IMMessageCard;
+    /** 显式重试时必须复用首次请求的批次 ID。 */
+    readonly batchID?: string;
+}
 /** 单个目标的远端结果和本地缓存完成状态。 */
 export interface IMBroadcastTargetResult {
     readonly target: IMBroadcastTarget;
@@ -69,6 +77,7 @@ export interface IMMessageBroadcastSync {
     sendVideo(options: IMBroadcastVideoOptions): Promise<IMBroadcastTextResult>;
     sendFile(options: IMBroadcastFileOptions): Promise<IMBroadcastTextResult>;
     sendAudio(options: IMBroadcastAudioOptions): Promise<IMBroadcastTextResult>;
+    sendCard(options: IMBroadcastCardOptions): Promise<IMBroadcastTextResult>;
 }
 /** 文本群发依赖当前账号、Gateway、稳定 ID 和共享写队列。 */
 export interface IMMessageBroadcastSyncDependencies extends WebIMSyncContextDependencies, WebIMSyncMutationQueueDependencies {

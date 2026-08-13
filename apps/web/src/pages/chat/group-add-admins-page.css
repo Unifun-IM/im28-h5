@@ -35,21 +35,6 @@
   padding-bottom: calc(88px + var(--im-safe-bottom));
 }
 
-.rn-group-admin-pull {
-  display: grid;
-  height: 0;
-  overflow: hidden;
-  place-items: center;
-  color: var(--im-text-muted);
-  font-size: 12px;
-  letter-spacing: 0;
-  transition: height 120ms ease;
-}
-
-.rn-group-admin-pull.is-armed {
-  color: var(--im-brand-primary);
-}
-
 .rn-group-admin-candidates > p {
   margin: 0;
   padding: 80px 24px 0;
@@ -111,10 +96,4 @@
 
 .rn-group-admin-footer > button:disabled {
   opacity: 0.4;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rn-group-admin-pull {
-    transition: none;
-  }
 }

@@ -17,17 +17,17 @@ interface UseChatOutgoingMessageActionsOptions {
   readonly onSending: (message: Message) => void;
   readonly runMessageOperation: (
     operation: (activeSync: WebIMSync) => Promise<void>,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
 }
 
 /** ChatPage 消费的真实文本、媒体与失败重试 actions。 */
 interface ChatOutgoingMessageActions {
-  readonly sendText: (document: PresetEmojiDocument) => Promise<void>;
+  readonly sendText: (document: PresetEmojiDocument) => Promise<boolean>;
   readonly sendMention: (
     document: PresetEmojiDocument,
     mentions: readonly MessageMention[],
-  ) => Promise<void>;
-  readonly sendQuote: (sourceMessage: Message, text: string) => Promise<void>;
+  ) => Promise<boolean>;
+  readonly sendQuote: (sourceMessage: Message, text: string) => Promise<boolean>;
   readonly sendAlbum: (items: readonly ChatAlbumSelectionItem[]) => Promise<void>;
   readonly sendAudio: (file: File, durationSeconds: number) => Promise<void>;
   readonly sendSubmission: (
@@ -37,7 +37,7 @@ interface ChatOutgoingMessageActions {
     quoteMessage: Message | null,
     media: ChatAlbumSelectionItem | null,
     file: File | null,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   readonly retry: (clientMsgID: string) => Promise<void>;
 }
 
@@ -89,19 +89,20 @@ export function useChatOutgoingMessageActions({
 
   /** 按浏览器选择顺序逐张上传并发送图片或视频。 */
   const sendAlbum = useCallback(
-    (items: readonly ChatAlbumSelectionItem[]) =>
-      runMessageOperation(async activeSync => {
+    async (items: readonly ChatAlbumSelectionItem[]) => {
+      await runMessageOperation(async activeSync => {
         for (const item of items) {
           await sendAlbumItem(activeSync, conversationID, item, onSending);
         }
-      }),
+      });
+    },
     [conversationID, onSending, runMessageOperation],
   );
 
   /** 发送浏览器录音文件并保留实际媒体格式和时长。 */
   const sendAudio = useCallback(
-    (file: File, durationSeconds: number) =>
-      runMessageOperation(async activeSync => {
+    async (file: File, durationSeconds: number) => {
+      await runMessageOperation(async activeSync => {
         await activeSync.messages.sendAudio({
           conversationID,
           source: file,
@@ -111,7 +112,8 @@ export function useChatOutgoingMessageActions({
           durationSeconds,
           onSending,
         });
-      }),
+      });
+    },
     [conversationID, onSending, runMessageOperation],
   );
 
@@ -173,10 +175,11 @@ export function useChatOutgoingMessageActions({
 
   /** 让 shared SDK 从同一 SQLite failed row 恢复安全请求。 */
   const retry = useCallback(
-    (clientMsgID: string) =>
-      runMessageOperation(async activeSync => {
+    async (clientMsgID: string) => {
+      await runMessageOperation(async activeSync => {
         await activeSync.messages.retry({ clientMsgID, onSending });
-      }),
+      });
+    },
     [onSending, runMessageOperation],
   );
 

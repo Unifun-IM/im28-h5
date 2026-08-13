@@ -14,7 +14,9 @@ import {
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import {
@@ -203,11 +205,11 @@ export function GroupMembersPage() {
       onTouchCancel={pullRefresh.onTouchCancel}
     >
       <section className="rn-group-members-surface">
-        <header className="rn-group-members-header">
+        <PageNavbar className="rn-group-members-header">
           <Link to={settingsURL} aria-label="返回群设置"><RNAssetIcon assetURL={backIconURL} /></Link>
           <h1>群成员（{memberCount}）</h1>
           <span aria-hidden="true" />
-        </header>
+        </PageNavbar>
         <label className="rn-group-members-search">
           <span className="sr-only">搜索群成员</span>
           <RNAssetIcon assetURL={searchIconURL} />
@@ -223,13 +225,11 @@ export function GroupMembersPage() {
             </button>
           ) : null}
         </label>
-        <div
-          className={`rn-group-members-pull${pullRefresh.armed ? ' is-armed' : ''}`}
-          style={{ height: refreshing ? 36 : pullRefresh.pullDistance }}
-          aria-hidden={!refreshing && pullRefresh.pullDistance === 0}
-        >
-          <span>{refreshing ? '正在刷新' : pullRefresh.armed ? '松开刷新' : '下拉刷新'}</span>
-        </div>
+        <PullRefreshIndicator
+          refreshing={refreshing}
+          armed={pullRefresh.armed}
+          pullDistance={pullRefresh.pullDistance}
+        />
         {error ? (
           <div className="rn-group-members-error" role="alert">
             <span>{error}</span>

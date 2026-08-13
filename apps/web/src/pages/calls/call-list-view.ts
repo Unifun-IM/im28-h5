@@ -1,4 +1,25 @@
-import type { GatewayCall } from '@im28/im-sdk/web';
+import type { GatewayCall, WebIMCallAnswerStatus, WebIMCallSync } from '@im28/im-sdk/web';
+
+/** 强制同步通话记录后读取当前筛选的首个缓存分页。 */
+export async function refreshCallListPage(
+  service: Pick<WebIMCallSync, 'sync' | 'listCached'>,
+  answerStatus: WebIMCallAnswerStatus,
+  keyword: string,
+  limit: number,
+): Promise<Awaited<ReturnType<WebIMCallSync['listCached']>>> {
+  await service.sync();
+  return service.listCached({ answerStatus, keyword, limit, offset: 0 });
+}
+
+/** 按 RN 搜索、未接筛选和默认顺序返回空列表文案。 */
+export function getCallListEmptyLabel(
+  answerStatus: WebIMCallAnswerStatus,
+  keyword: string,
+): string {
+  if (keyword.trim()) return '暂无搜索结果';
+  if (answerStatus === 'missed') return '暂无未接来电';
+  return '暂无通话记录';
+}
 
 /** 获取通话记录稳定 ID。 */
 export function getCallID(call: GatewayCall): string {

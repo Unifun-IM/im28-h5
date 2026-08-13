@@ -9,6 +9,7 @@ import { createWebIMClientVersion } from './web-im-client-version.js';
 import { createBrowserOSSUploadPort } from '../media/index.js';
 import { normalizeIMCallTerminalSignals } from '../../../sync/call-terminal-signal.js';
 import { normalizeIMCallRealtimeSignals } from '../../../sync/call-realtime-signal.js';
+import { isIMRelationshipRealtimeEvent } from '../../../sync/relationship-realtime.js';
 import { createIMIncomingCallLifecycleState, dismissIMIncomingCall, reconcileIMPendingIncomingCall, reduceIMIncomingCallSignals, resetIMIncomingCallLifecycleState, } from '../../../sync/incoming-call-lifecycle.js';
 /** 创建复用共享 Gateway HTTP/WebSocket clients 的浏览器 runtime。 */
 export function createWebIMRuntime(options) { return new WebIMRuntimeImpl(options); }
@@ -27,6 +28,8 @@ class WebIMRuntimeImpl {
     currentSession = null;
     currentSnapshot;
     dataVersion = 0;
+    /** relationshipVersion 只标记好友与我方黑名单领域事实可能变化。 */
+    relationshipVersion = 0;
     realtimeClient = null;
     unsubscribeRealtime = null;
     hasRealtimeConnected = false;
@@ -286,6 +289,10 @@ class WebIMRuntimeImpl {
             this.sync.presence.handleRealtimeEvent(event);
             return;
         }
+        if (isIMRelationshipRealtimeEvent(event)) {
+            this.publishRelationshipChange();
+            return;
+        }
         if (event.type === 'message' || event.type === 'conversation' || event.type === 'message.update') {
             // eventUserID 阻止旧账号队列完成后发布新账号的数据版本。
             const eventUserID = this.currentSession?.userID;
@@ -406,6 +413,13 @@ class WebIMRuntimeImpl {
         for (const listener of this.listeners)
             listener();
     }
+    /** 发布好友/黑名单领域 revision，避免页面借普通消息版本重复拉取关系。 */
+    publishRelationshipChange() {
+        this.relationshipVersion += 1;
+        this.currentSnapshot = this.createSnapshot();
+        for (const listener of this.listeners)
+            listener();
+    }
     /** 后台恢复 pending 失败不改变认证成功状态。 */
     scheduleIncomingCallRefresh() {
         void this.refreshIncomingCall()
@@ -428,6 +442,7 @@ class WebIMRuntimeImpl {
             state: this.currentState,
             userID: this.currentSession?.userID ?? null,
             dataVersion: this.dataVersion,
+            relationshipVersion: this.relationshipVersion,
             incomingCall: this.incomingCallState.snapshot,
         };
     }

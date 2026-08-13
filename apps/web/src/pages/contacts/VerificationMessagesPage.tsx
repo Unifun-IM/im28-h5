@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { FriendApplicationsPage } from './FriendApplicationsPage.js';
 import { GroupVerificationPage } from './GroupVerificationPage.js';
@@ -30,16 +31,16 @@ export function VerificationMessagesPage() {
   const activeTab: VerificationTab = tab;
   return <main className="rn-verification-messages-page">
     <section className="rn-verification-messages-surface">
-      <header className="rn-verification-messages-header">
+      <PageNavbar className="rn-verification-messages-header">
         <Link to="/contacts" aria-label="返回通讯录"><RNAssetIcon assetURL={backIconURL} /></Link>
         <h1>验证消息</h1><span aria-hidden="true" />
-      </header>
+      </PageNavbar>
       <nav className="rn-verification-messages-tabs" role="tablist" aria-label="验证消息类型">
         <Link role="tab" aria-selected={activeTab === 'friend'} className={activeTab === 'friend' ? 'is-active' : ''} replace to="/contacts/verifications/friend"><span>好友验证</span><VerificationCountBadge count={counts.friend} /></Link>
         <Link role="tab" aria-selected={activeTab === 'group'} className={activeTab === 'group' ? 'is-active' : ''} replace to="/contacts/verifications/group"><span>群聊验证</span><VerificationCountBadge count={counts.group} /></Link>
       </nav>
       <section className="rn-verification-messages-body">
-        {activeTab === 'friend' ? <FriendApplicationsPage onUnreadChanged={refresh} /> : <GroupVerificationPage />}
+        {activeTab === 'friend' ? <FriendApplicationsPage onUnreadChanged={refresh} /> : <GroupVerificationPage onUnreadChanged={refresh} />}
       </section>
     </section>
   </main>;

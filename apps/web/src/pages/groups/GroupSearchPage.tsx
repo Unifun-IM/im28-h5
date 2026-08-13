@@ -8,6 +8,7 @@ import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import {
   readGroupSearchCreateState,
@@ -105,10 +106,10 @@ export function GroupSearchPage() {
   return (
     <main className="rn-group-search-page" aria-busy={searching}>
       <section className="rn-group-search-surface">
-        <header className="rn-group-search-header">
+        <PageNavbar className="rn-group-search-header">
           <button type="button" aria-label="返回发起群聊" onClick={returnToCreation}><RNAssetIcon assetURL={backIconURL} /></button>
           <h1>查找群聊</h1><span aria-hidden="true" />
-        </header>
+        </PageNavbar>
         <label className="rn-group-search-box">
           <RNAssetIcon assetURL={searchIconURL} />
           <input autoFocus type="search" value={keyword} placeholder="输入群 ID 或群名称" autoCapitalize="none" autoComplete="off" onChange={event => setKeyword(event.target.value)} />

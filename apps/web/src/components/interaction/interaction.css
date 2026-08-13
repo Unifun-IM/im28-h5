@@ -4,6 +4,26 @@
   --im-motion-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.im-pull-refresh {
+  display: grid;
+  height: 0;
+  place-items: center;
+  overflow: hidden;
+  color: var(--im-text-muted);
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 18px;
+  transition: height var(--im-motion-fast) ease;
+}
+
+.im-pull-refresh.is-armed {
+  color: var(--im-brand-primary);
+}
+
+.im-pull-refresh span {
+  transform: translateY(-1px);
+}
+
 .im-page-enter {
   animation: im-page-enter var(--im-motion-base) var(--im-motion-ease-out) both;
 }

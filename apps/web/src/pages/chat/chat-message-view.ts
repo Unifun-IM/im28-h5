@@ -1,4 +1,12 @@
-import type { Message, PresetEmojiEntity } from '@im28/im-sdk/web';
+import {
+  getIMFriendAddedMessageText,
+  parseIMCallMessagePresentation,
+  parseIMGroupSystemMessagePresentation,
+  type IMCallMessageMediaType,
+  type IMCallMessageStatus,
+  type Message,
+  type PresetEmojiEntity,
+} from '@im28/im-sdk/web';
 import { getChatAutoDeleteSystemText } from './chat-auto-delete-system-view.js';
 /** Chat 消息正文在浏览器中的受控呈现类型。 */
 export type ChatMessageViewKind =
@@ -11,6 +19,7 @@ export type ChatMessageViewKind =
   | 'card'
   | 'emoji'
   | 'quote'
+  | 'call'
   | 'unsupported';
 
 /** 从 Gateway message body 安全提取的只读展示模型。 */
@@ -25,6 +34,9 @@ export interface ChatMessageView {
   readonly durationSeconds?: number;
   readonly emojiID?: string;
   readonly quoteMessageID?: string;
+  readonly callMediaType?: IMCallMessageMediaType;
+  readonly callStatus?: IMCallMessageStatus;
+  readonly callUnanswered?: boolean;
   readonly entities?: readonly PresetEmojiEntity[];
 }
 
@@ -36,7 +48,6 @@ const GROUP_SYSTEM_MESSAGE_TYPES = new Set([
 
 /** 缺少完整成员资料时仍可稳定展示的 RN 系统文案。 */
 const SYSTEM_MESSAGE_FALLBACKS: Readonly<Record<number, string>> = {
-  1201: '你们已经成为好友，可以开始聊天了',
   1501: '群聊已创建',
   1502: '群资料已更新',
   1504: '群成员退出群聊',
@@ -69,6 +80,12 @@ export function getChatMessageView(
   }
   // body 是 shared mapper 保存的 Gateway MessageBody。
   const body = asRecord(message.payload);
+  /** groupSystem 统一读取结构化 event/extra，不在 H5 复制操作者和频率规则。 */
+  const groupSystem = parseIMGroupSystemMessagePresentation(message, currentUserID);
+  if (groupSystem) return { kind: 'system', text: groupSystem.text };
+  /** friendAddedText 与会话列表、未读边界共用 SDK 的 type1201 owner。 */
+  const friendAddedText = getIMFriendAddedMessageText(message.contentType);
+  if (friendAddedText) return { kind: 'system', text: friendAddedText };
   // systemText 优先使用服务端兼容文案，业务判断仍基于 contentType。
   const systemText = readNestedString(body, 'system', 'text');
   if (message.contentType === 1701) {
@@ -82,8 +99,7 @@ export function getChatMessageView(
     };
   }
   if (
-    message.contentType === 1201 ||
-    (isGroup && GROUP_SYSTEM_MESSAGE_TYPES.has(message.contentType))
+    isGroup && GROUP_SYSTEM_MESSAGE_TYPES.has(message.contentType)
   ) {
     return {
       kind: 'system',
@@ -174,6 +190,18 @@ export function getChatMessageView(
   }
   if (message.contentType === 113) {
     return { kind: 'system', text: '对方正在输入' };
+  }
+  /** call 由 SDK 统一识别历史摘要和终态通知，实时 invite 保持在通话状态机。 */
+  const call = parseIMCallMessagePresentation(message);
+  if (call) {
+    return {
+      kind: 'call',
+      text: call.text,
+      callMediaType: call.mediaType,
+      callStatus: call.status,
+      callUnanswered: call.unanswered,
+      durationSeconds: call.durationSeconds,
+    };
   }
   // text 覆盖文本、@、Markdown 和兼容 OpenIM textElem。
   const text =

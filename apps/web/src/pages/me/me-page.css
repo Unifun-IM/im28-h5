@@ -269,6 +269,25 @@
   background: var(--im-profile-sheet-backdrop);
 }
 
+.rn-me-logout-dialog-backdrop {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  place-items: center;
+  margin: 0;
+  padding: 24px;
+  background: transparent;
+}
+
+.rn-me-logout-dialog-backdrop[open] {
+  display: grid;
+}
+
+.rn-me-logout-dialog-backdrop:not([open]) {
+  display: none;
+}
+
 .rn-me-dialog {
   width: min(100%, 320px);
   overflow: hidden;

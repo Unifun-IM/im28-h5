@@ -31,6 +31,8 @@ type ChatComposerPanel = 'actions' | 'emoji' | null;
 
 /** 呈现 RN input pill、发送按钮和真实附件功能面板。 */
 export function ChatComposer({
+  initialDraftDocument,
+  onDraftDocumentChange,
   sending,
   voiceRecordingStatus,
   voiceRecordingSeconds,
@@ -61,11 +63,10 @@ export function ChatComposer({
   onVoiceRecordCancel,
   onError,
 }: ChatComposerProps) {
-  // draftDocument 仅属于当前页面生命周期，不写入 token/session storage。
-  const [draftDocument, setDraftDocument] = useState<PresetEmojiDocument>({
-    text: '',
-    entities: [],
-  });
+  // draftDocument 从当前账号 SDK SQLite 恢复，仍由 Composer 持有即时编辑状态。
+  const [draftDocument, setDraftDocument] = useState<PresetEmojiDocument>(
+    initialDraftDocument,
+  );
   // activePanel 保证功能面板和表情面板互斥。
   const [activePanel, setActivePanel] = useState<ChatComposerPanel>(null);
   // voiceMode 在文本和 RN 按住说话输入之间切换。
@@ -77,16 +78,21 @@ export function ChatComposer({
     onClosePanel: () => setActivePanel(null),
     onError,
   });
+  /** 更新普通草稿并通知页面持久化；消息编辑文档保持瞬时状态。 */
+  function updateDraftDocument(document: PresetEmojiDocument): void {
+    setDraftDocument(document);
+    if (!editingMessage) onDraftDocumentChange(document);
+  }
   // draftEditing 持有 textarea selection 的唯一编辑入口。
   const draftEditing = useChatComposerDraftEditing({
     document: draftDocument,
-    onChangeDocument: setDraftDocument,
+    onChangeDocument: updateDraftDocument,
   });
   // mentions 管理群聊 @ 查询、候选身份与光标恢复。
   const mentions = useChatComposerMentions({
     enabled: isGroup && !editingMessage && !quoteMessage,
     document: draftDocument,
-    onChangeDocument: setDraftDocument,
+    onChangeDocument: updateDraftDocument,
     textareaRef: draftEditing.textareaRef,
     members: mentionMembers,
     selfID: currentUserID,
@@ -160,7 +166,7 @@ export function ChatComposer({
     }
     if (selectedEdit) {
       const completed = await onEditText(selectedEdit, document);
-      if (completed) setDraftDocument({ text: '', entities: [] });
+      if (completed) setDraftDocument(initialDraftDocument);
       return;
     }
     if (pendingMedia || pendingFile) {
@@ -169,13 +175,9 @@ export function ChatComposer({
       const visibleMentions = mentions.collect(document.text);
       attachments.clearPendingMedia();
       attachments.clearPendingFile();
-      if (document.text) {
-        setDraftDocument({ text: '', entities: [] });
-        mentions.clear();
-        if (selectedQuote) onCancelQuote();
-      }
       setActivePanel(null);
-      await onSendSubmission(
+      /** completed 只在组合发送全部步骤成功后清空文本草稿。 */
+      const completed = await onSendSubmission(
         plan,
         document,
         visibleMentions,
@@ -183,25 +185,39 @@ export function ChatComposer({
         pendingMedia,
         pendingFile,
       );
+      if (completed && document.text) {
+        updateDraftDocument({ text: '', entities: [] });
+        mentions.clear();
+        if (selectedQuote) onCancelQuote();
+      }
       return;
     }
     // selectedQuote 固定提交瞬间的来源，避免异步期间被新动作替换。
     const selectedQuote = quoteMessage;
-    setDraftDocument({ text: '', entities: [] });
     setActivePanel(null);
     if (selectedQuote) {
-      onCancelQuote();
-      await onSendQuote(selectedQuote, document.text);
+      /** completed 保护失败发送时的草稿和引用来源。 */
+      const completed = await onSendQuote(selectedQuote, document.text);
+      if (completed) {
+        updateDraftDocument({ text: '', entities: [] });
+        onCancelQuote();
+      }
       return;
     }
     // visibleMentions 只包含仍存在于提交正文中的用户选择。
     const visibleMentions = mentions.collect(document.text);
-    mentions.clear();
     if (visibleMentions.length) {
-      await onSendMention(document, visibleMentions);
+      /** completed 保护失败提及发送时的文本与 mention identity。 */
+      const completed = await onSendMention(document, visibleMentions);
+      if (completed) {
+        updateDraftDocument({ text: '', entities: [] });
+        mentions.clear();
+      }
       return;
     }
-    await onSendText(document);
+    /** completed 只在 shared message 状态机确认成功后清空草稿。 */
+    const completed = await onSendText(document);
+    if (completed) updateDraftDocument({ text: '', entities: [] });
   }
 
   /** Enter 发送、Shift+Enter 换行，并尊重中文输入法合成态。 */
@@ -232,7 +248,7 @@ export function ChatComposer({
         <ChatComposerEditPreview
           message={editingMessage}
           onCancel={() => {
-            setDraftDocument({ text: '', entities: [] });
+            setDraftDocument(initialDraftDocument);
             onCancelEdit();
           }}
         />

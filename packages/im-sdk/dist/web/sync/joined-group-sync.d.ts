@@ -37,6 +37,7 @@ export interface WebIMJoinedGroup {
     readonly canMentionAll: boolean;
     readonly isCreatedByCurrentUser: boolean;
     readonly status: WebIMJoinedGroupStatus;
+    readonly composerUnavailableReason?: string;
 }
 /** 我的群聊远端分页参数。 */
 export interface WebIMJoinedGroupSyncOptions {

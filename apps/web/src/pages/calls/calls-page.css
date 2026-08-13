@@ -1,6 +1,6 @@
 .rn-calls-page {
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: calc(100vh - var(--im-primary-tab-bar-space, 0px));
+  min-height: calc(100dvh - var(--im-primary-tab-bar-space, 0px));
   color: var(--im-text-primary);
   background: var(--im-bg-page);
 }
@@ -8,8 +8,8 @@
 .rn-calls-surface {
   position: relative;
   width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: calc(100vh - var(--im-primary-tab-bar-space, 0px));
+  min-height: calc(100dvh - var(--im-primary-tab-bar-space, 0px));
   margin: 0 auto;
   background: var(--im-bg-app);
 }
@@ -201,8 +201,10 @@
 .rn-call-edit-bar button:last-child { text-align: right; }
 .rn-call-edit-bar button.is-danger, .rn-call-sheet button.is-danger { color: var(--im-status-danger); }
 .rn-call-edit-bar button:disabled { color: var(--im-text-muted); cursor: default; }
-.rn-call-sheet-backdrop { position: fixed; z-index: 40; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: var(--im-bg-overlay); }
-.rn-call-sheet { width: 100%; padding: 0 0 max(8px, var(--im-safe-bottom)); overflow: hidden; border-radius: 12px 12px 0 0; background: var(--im-bg-page); }
+.rn-call-sheet-backdrop { width: 100%; max-width: none; height: 100%; max-height: none; align-items: flex-end; justify-content: center; margin: 0; padding: 0; background: transparent; }
+.rn-call-sheet-backdrop[open] { display: flex; }
+.rn-call-sheet-backdrop:not([open]) { display: none; }
+.rn-call-sheet { width: min(100%, 480px); padding: 0 0 max(8px, var(--im-safe-bottom)); overflow: hidden; border-radius: 12px 12px 0 0; background: var(--im-bg-page); }
 .rn-call-sheet p { margin: 0; padding: 16px; color: var(--im-text-muted); background: var(--im-bg-card); font-size: 12px; line-height: 18px; text-align: center; }
 .rn-call-sheet button { width: 100%; min-height: 48px; border: 0; color: var(--im-text-primary); background: var(--im-bg-card); cursor: pointer; font-size: 16px; }
 .rn-call-sheet button:last-child { margin-top: 8px; }

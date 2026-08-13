@@ -9,6 +9,7 @@ import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regul
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
 import { InteractionModal } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import './group-management-page.css';
 
@@ -130,10 +131,10 @@ export function GroupManagementPage() {
   return (
     <main className="rn-group-management-page" aria-busy={loading || submitting}>
       <section className="rn-group-management-surface">
-        <header className="rn-group-management-header">
+        <PageNavbar className="rn-group-management-header">
           <Link to={settingsURL} aria-label="返回群设置"><RNAssetIcon assetURL={backIconURL} /></Link>
           <h1>群管理</h1><span />
-        </header>
+        </PageNavbar>
         <div className="rn-group-management-content">
           {error ? <p className="rn-group-management-error" role="alert">{error}</p> : null}
           {notice ? <p className="rn-group-management-notice" role="status">{notice}</p> : null}
