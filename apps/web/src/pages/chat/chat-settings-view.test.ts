@@ -66,6 +66,8 @@ describe('chat settings view', () => {
       canEditGroupProfile: false,
       canRemoveMembers: false,
       canClearForAll: true,
+      canQuitGroup: false,
+      canDismissGroup: false,
     });
   });
 
@@ -95,7 +97,30 @@ describe('chat settings view', () => {
       canEditGroupProfile: true,
       canRemoveMembers: true,
       canClearForAll: true,
+      canQuitGroup: true,
+      canDismissGroup: false,
     });
+  });
+
+  it('projects leave and dismiss only from the matching shared capability', () => {
+    /** conversation 是生命周期 capability 当前绑定的真实群会话。 */
+    const conversation = createConversation({
+      conversationID: 'conversation-group-1',
+      type: 'group',
+      targetID: 'group-1',
+    });
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ currentUserRole: 'member' }),
+    )).toMatchObject({ canQuitGroup: true, canDismissGroup: false });
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ currentUserRole: 'owner' }),
+    )).toMatchObject({ canQuitGroup: false, canDismissGroup: true });
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ groupID: 'other-group', currentUserRole: 'owner' }),
+    )).toMatchObject({ canQuitGroup: false, canDismissGroup: false });
   });
 
   it('only exposes the announcement row through the matching shared capability', () => {

@@ -7,11 +7,15 @@ import groupsIconURL from '../../assets/rn/assets/icons/imm28/contact-groups.svg
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import starIconURL from '../../assets/rn/assets/icons/imm28/star.solid.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { CallTypeActionSheet } from '../../components/call/CallTypeActionSheet.js';
+import { HomeActionMenu } from '../../components/home-actions/HomeActionMenu.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
 import { ContactActionMenu } from './ContactActionMenu.js';
-import { ContactCallSheet, ContactDeleteSheet } from './ContactActionSheets.js';
+import { ContactDeleteSheet } from './ContactActionSheets.js';
 import { ContactRow } from './ContactRow.js';
+import { VerificationCountBadge } from './VerificationCountBadge.js';
+import { useVerificationUnreadCounts } from './use-verification-unread.js';
 import {
   createContactCardShareLocationState,
   getContactActionMenuState,
@@ -57,6 +61,11 @@ export function ContactsPage() {
   const [actionPending, setActionPending] = useState(false);
   /** actionError 呈现真实 facade 或通话启动失败。 */
   const [actionError, setActionError] = useState<string | null>(null);
+  // verificationCounts 复用验证页相同的 SDK 未读规则。
+  const {
+    counts: verificationCounts,
+    refresh: refreshVerificationCounts,
+  } = useVerificationUnreadCounts();
 
   /** 先读账号 SQLite cache，再调用唯一 contacts facade 完成远端刷新。 */
   const loadContacts = useCallback(async () => {
@@ -85,13 +94,18 @@ export function ContactsPage() {
     setRefreshing(true);
     setError(null);
     try {
-      setContacts(await contactsFacade.list());
+      // contacts 与 verification counts 对齐 RN 同一次下拉刷新入口。
+      const [nextContacts] = await Promise.all([
+        contactsFacade.list(),
+        refreshVerificationCounts(),
+      ]);
+      setContacts(nextContacts);
     } catch {
       setError('加载失败，请稍后重试');
     } finally {
       setRefreshing(false);
     }
-  }, [contactsFacade, refreshing, snapshot.userID]);
+  }, [contactsFacade, refreshVerificationCounts, refreshing, snapshot.userID]);
 
   /** pullRefresh 复用跨列表触摸适配器并注入联系人 canonical refresh。 */
   const pullRefresh = usePullRefresh({
@@ -249,7 +263,7 @@ export function ContactsPage() {
           <div className="rn-contacts-header-top">
             <span aria-hidden="true" />
             <h1>通讯录({contacts.length})</h1>
-            <span aria-hidden="true" />
+            <div><HomeActionMenu /></div>
           </div>
           <Link className="rn-contacts-search" to="/contacts/search" aria-label="搜索好友或账号ID">
             <RNAssetIcon assetURL={searchIconURL} />
@@ -275,7 +289,7 @@ export function ContactsPage() {
         <section className="rn-contacts-list" aria-label="联系人列表">
           <Link className="rn-contact-shortcut" to="/contacts/verifications/friend">
             <span><RNAssetIcon assetURL={bellIconURL} /></span>
-            <strong>验证消息</strong>
+            <strong><span>验证消息</span><VerificationCountBadge count={verificationCounts.total} /></strong>
           </Link>
           <Link className="rn-contact-shortcut is-group-list" to="/contacts/groups">
             <span><RNAssetIcon assetURL={groupsIconURL} /></span>
@@ -338,8 +352,9 @@ export function ContactsPage() {
           onClose={() => setActionMenu(null)}
           onAction={handleContactAction}
         />
-        <ContactCallSheet
-          contact={callTarget}
+        <CallTypeActionSheet
+          open={Boolean(callTarget)}
+          peerName={callTarget?.displayName || callTarget?.userID || ''}
           pending={actionPending}
           onClose={() => setCallTarget(null)}
           onSelect={mediaType => void startContactCall(mediaType)}

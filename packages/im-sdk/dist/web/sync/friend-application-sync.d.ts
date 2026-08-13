@@ -24,6 +24,8 @@ export interface WebIMFriendApplicationListOptions {
 /** 页面可消费的认证好友申请能力。 */
 export interface WebIMFriendApplicationSync {
     list(options?: WebIMFriendApplicationListOptions): Promise<readonly WebIMFriendApplication[]>;
+    getUnreadCount(): Promise<number>;
+    markRead(applicationIDs: readonly string[]): Promise<void>;
     accept(applicationID: string): Promise<void>;
 }
 /** 好友申请 facade 只复用 shared Gateway 和动态认证 owner。 */

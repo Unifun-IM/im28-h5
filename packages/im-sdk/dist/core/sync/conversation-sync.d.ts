@@ -3,6 +3,7 @@ import { type IMConversationClearOptions, type IMConversationClearSyncDependenci
 import { type IMConversationSettingsSync } from './conversation-settings.js';
 import { type IMConversationListActionsSync } from './conversation-list-actions.js';
 import { type WebIMUnreadMentionSnapshot } from './conversation-unread-mention.js';
+import { type IMOpenGroupConversationOptions } from './group-conversation-open.js';
 /** 单次远端会话同步的分页限制。 */
 export interface WebIMConversationSyncOptions {
     readonly pageSize?: number;
@@ -18,6 +19,8 @@ export interface WebIMConversationSync extends IMConversationSettingsSync, IMCon
     listCached(options?: ConversationListOptions): Promise<readonly Conversation[]>;
     listCachedItems(options?: ConversationListOptions): Promise<readonly WebIMConversationListItem[]>;
     sync(options?: WebIMConversationSyncOptions): Promise<readonly Conversation[]>;
+    /** 按群身份读取或拉取规范会话并收敛当前账号缓存。 */
+    openGroup(options: IMOpenGroupConversationOptions): Promise<Conversation>;
     /** 通过独立归档端点收敛完整归档快照。 */
     syncArchived(options?: WebIMConversationSyncOptions): Promise<readonly Conversation[]>;
     /** 通过共享 success-only 状态机清空会话历史。 */

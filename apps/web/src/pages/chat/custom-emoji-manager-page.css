@@ -6,7 +6,7 @@
 
 .rn-custom-emoji-manager-surface {
   position: relative;
-  width: min(100%, 480px);
+  width: 100%;
   min-height: 100dvh;
   margin: 0 auto;
   padding-bottom: calc(76px + env(safe-area-inset-bottom));

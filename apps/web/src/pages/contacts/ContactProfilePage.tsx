@@ -323,6 +323,9 @@ export function ContactProfilePage() {
               <Link
                 className="rn-contact-profile-primary"
                 to={buildContactFriendApplicationRoute(profile.userID)}
+                state={readContactProfileSourceType(location.state) ? {
+                  sourceType: readContactProfileSourceType(location.state),
+                } : undefined}
               >
                 加好友
               </Link>
@@ -395,4 +398,10 @@ export function ContactProfilePage() {
       />
     </main>
   );
+}
+
+/** 从扫码资料路由读取受控好友来源。 */
+function readContactProfileSourceType(state: unknown): 'qrcode' | null {
+  if (!state || typeof state !== 'object') return null;
+  return Reflect.get(state, 'sourceType') === 'qrcode' ? 'qrcode' : null;
 }

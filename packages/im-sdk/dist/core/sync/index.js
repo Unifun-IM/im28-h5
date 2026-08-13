@@ -1,4 +1,5 @@
 /** 创建跨端共用的通话记录 cache/sync 服务，并保留 Web 兼容名称。 */
+export { canCreateIMGroupWithMemberCount, createIMGroupCreationSync, IM_GROUP_CREATION_MAX_MEMBER_COUNT, IM_GROUP_CREATION_MIN_MEMBER_COUNT, } from './group-creation.js';
 export { createIMCallRecordSync, createWebIMCallSync, mapIMCallTerminalSignalToRecord, } from './call-sync.js';
 /** 创建 RN、Web 与 Desktop 共用的通话控制 facade。 */
 export { createIMCallControlSync, normalizeIMCallServerURL } from './call-control.js';
@@ -18,6 +19,12 @@ export { formatIMFriendSourceType, IM_FRIEND_SOURCE_TYPE_EMAIL, IM_FRIEND_SOURCE
 export { createWebIMGroupApplicationSync } from './group-application-sync.js';
 /** 导出 RN、Web、Desktop 共用的群管理权限投影。 */
 export { resolveIMGroupManagementPermissions } from './group-management-permissions.js';
+/** 导出群管理员和群主变更的共享单次写入核心。 */
+export { cancelIMGroupAdmins, filterIMGroupAdminCandidates, filterIMGroupOwnerTransferCandidates, IM_GROUP_ADMIN_LIMIT, setIMGroupAdmins, transferIMGroupOwner, } from './group-admin-owner.js';
+/** 导出群设置与禁言的共享业务入口。 */
+export { createIMGroupManagementSync, updateIMGroupMemberMute, updateIMGroupMute, updateIMGroupSettings, } from './group-settings-mute.js';
+/** 导出群退出与解散的共享破坏性生命周期入口。 */
+export { createIMGroupLifecycleSync, dismissIMGroup, leaveIMGroup, } from './group-lifecycle.js';
 /** 创建认证账号绑定的 cache-first 我的群聊 service。 */
 export { createWebIMJoinedGroupSync } from './joined-group-sync.js';
 /** 导出跨端共用的群公告发布、已读版本和权限合同。 */
@@ -40,6 +47,8 @@ export { resolveIMGroupMemberDisplayName } from './sender-display-name.js';
 export { createWebIMPeerProfileSync } from './peer-profile-sync.js';
 /** 创建受认证账号约束的会话 cache/sync 服务。 */
 export { createWebIMConversationSync } from './conversation-sync.js';
+/** 导出按群身份打开规范会话的共享能力。 */
+export { openIMGroupConversation } from './group-conversation-open.js';
 /** 导出新 Gateway Difference 原子同步 owner，供受控平台组合。 */
 export { syncIMGatewayDifference } from './gateway-difference-sync.js';
 /** 创建跨端共用的归档会话全分页与快照收敛 facade。 */
@@ -58,6 +67,8 @@ export { createWebIMMessageSync } from './message-sync.js';
 export { createIMMessageSearchSync } from './message-search.js';
 /** 导出共享群聊提及发送函数。 */
 export { sendWebIMMentionMessage } from './message-mention-send.js';
+/** 创建 RN、Web 与 Desktop 共用的消息群发 facade。 */
+export { createIMMessageBroadcastSync, IM_BROADCAST_MAX_TARGETS, } from './message-broadcast.js';
 /** 导出共享批量转发执行函数。 */
 export { forwardWebIMMessages } from './message-forward.js';
 /** 导出共享转发来源与隐藏发送人能力判断。 */

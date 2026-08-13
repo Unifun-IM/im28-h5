@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Conversation, Message, WebIMSync } from '@im28/im-sdk/web';
+import type { Conversation, IMMessageCard, Message, WebIMSync } from '@im28/im-sdk/web';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useWebIMRuntime } from '../../runtime/index.js';
+import { CallTypeActionSheet } from '../../components/call/CallTypeActionSheet.js';
+import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
 import { ChatComposer } from './ChatComposer.js';
+import { ChatCardPickerDialog } from './ChatCardPickerDialog.js';
 import { ChatHeader } from './ChatHeader.js';
 import { ChatMediaInteractionProvider } from './ChatMediaInteractionProvider.js';
 import { ChatMessageList } from './ChatMessageList.js';
@@ -35,6 +37,8 @@ export function ChatPage() {
   const navigate = useNavigate();
   // runtime context 提供 auth guard、配置错误和聚合 sync facade。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  // callOwner 是应用全局唯一 Web 通话生命周期 owner。
+  const callOwner = useWebIMCall();
   // sync 与 runtime 生命周期一致，页面不实例化 Gateway 或 Repository。
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
   // conversation 为 RN header 提供会话缓存身份。
@@ -51,6 +55,12 @@ export function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   // notice 只呈现已完成的真实非消息 mutation 结果。
   const [notice, setNotice] = useState<string | null>(null);
+  // cardPickerVisible 控制当前聊天唯一名片选择弹层。
+  const [cardPickerVisible, setCardPickerVisible] = useState(false);
+  // callPickerVisible 只控制单聊语音/视频二次选择层。
+  const [callPickerVisible, setCallPickerVisible] = useState(false);
+  // callStarting 防止二次点击重复创建通话生命周期。
+  const [callStarting, setCallStarting] = useState(false);
   // messageListRef 持有唯一消息滚动容器。
   const messageListRef = useRef<HTMLElement>(null);
   // outgoingActions 统一复用 SDK message facade 和页面 operation owner。
@@ -112,6 +122,8 @@ export function ChatPage() {
     setConversation(null);
     setMessages([]);
     setQuoteMessage(null);
+    setCardPickerVisible(false);
+    setCallPickerVisible(false);
     void (async () => {
       try {
         // cachedConversations 确认目标属于当前认证账号 SQLite。
@@ -229,6 +241,39 @@ export function ChatPage() {
       }
     }
   }
+  /** 通过 shared message facade 发送当前选择的 type108 名片。 */
+  async function handleSendCard(card: IMMessageCard): Promise<boolean> {
+    /** completed 只在 Gateway 和 SQLite 状态机完整成功后置为真。 */
+    let completed = false;
+    await runMessageOperation(async activeSync => {
+      await activeSync.messages.sendCard({
+        conversationID,
+        card,
+        onSending: handleLocalSendingMessage,
+      });
+      completed = true;
+    });
+    return completed;
+  }
+  /** 当前单聊直接复用 canonical conversation 身份启动全局通话 owner。 */
+  async function handleStartCall(mediaType: 'audio' | 'video'): Promise<void> {
+    if (!conversation || conversation.type !== 'single' || callStarting) return;
+    setCallPickerVisible(false);
+    setCallStarting(true);
+    setError(null);
+    try {
+      await callOwner.startOutgoing({
+        conversationID: conversation.conversationID,
+        peerName: conversation.name?.trim() || conversation.targetID,
+        peerAvatarURL: conversation.faceURL?.trim() || '',
+        mediaType,
+      });
+    } catch (cause) {
+      setError(readChatPageError(cause));
+    } finally {
+      setCallStarting(false);
+    }
+  }
   if (restoring) return <ChatPageState label="正在恢复会话" />;
   if (!runtime) return <ChatPageState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
@@ -303,7 +348,16 @@ export function ChatPage() {
             onCancelEdit={editFlow.cancelEdit}
             onEditText={editFlow.submitEdit}
             onSendAlbum={outgoingActions.sendAlbum}
-            onSendFile={outgoingActions.sendFile}
+            onSendSubmission={outgoingActions.sendSubmission}
+            showCallAction={conversation?.type === 'single'}
+            onOpenCallPicker={() => {
+              setError(null);
+              setCallPickerVisible(true);
+            }}
+            onOpenCardPicker={() => {
+              setError(null);
+              setCardPickerVisible(true);
+            }}
             loadCachedCustomEmojis={customEmojiActions.loadCached}
             syncCustomEmojis={customEmojiActions.refresh}
             onSendCustomEmoji={customEmojiActions.send}
@@ -317,6 +371,23 @@ export function ChatPage() {
           />
         </ChatPageFooter>
         <ChatMessageDeleteSheet flow={deleteFlow} />
+        <CallTypeActionSheet
+          open={callPickerVisible && conversation?.type === 'single'}
+          peerName={conversation?.name?.trim() || conversation?.targetID || ''}
+          pending={callStarting}
+          onClose={() => setCallPickerVisible(false)}
+          onSelect={mediaType => { void handleStartCall(mediaType); }}
+        />
+        <ChatCardPickerDialog
+          visible={cardPickerVisible}
+          sync={sync}
+          conversation={conversation}
+          currentUserID={snapshot.userID}
+          sending={sending}
+          operationError={error}
+          onClose={() => setCardPickerVisible(false)}
+          onSend={handleSendCard}
+        />
       </section>
     </main>
   );

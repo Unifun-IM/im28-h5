@@ -1,9 +1,18 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GatewayUser } from '@im28/im-sdk/web';
 import { Link, Navigate } from 'react-router-dom';
 
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
+import qrCodeIconURL from '../../assets/rn/assets/icons/imm28/qrcode-small.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { AvatarCropDialog } from '../../components/avatar/AvatarCropDialog.js';
+import { AvatarSourceActionSheet } from '../../components/avatar/AvatarSourceActionSheet.js';
+import { validateAvatarFile } from '../../components/avatar/avatar-crop.js';
+import {
+  AVATAR_ALBUM_INPUT,
+  AVATAR_CAMERA_INPUT,
+  buildAvatarUpload,
+} from '../../components/avatar/avatar-upload.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { MeProfileHeader } from './MeProfileHeader.js';
 import { getProfileGenderLabel, normalizeProfileBio } from './profile-edit-view.js';
@@ -19,6 +28,16 @@ export function MeProfilePage() {
   const [loading, setLoading] = useState(false);
   // error 保留真实请求错误。
   const [error, setError] = useState<string | null>(null);
+  // avatarSheetVisible 控制 RN 同语义的头像来源选择。
+  const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
+  // pendingAvatar 保存当前等待裁剪的浏览器文件。
+  const [pendingAvatar, setPendingAvatar] = useState<File | null>(null);
+  // updatingAvatar 覆盖 Canvas 编码、OSS 上传和资料 mutation。
+  const [updatingAvatar, setUpdatingAvatar] = useState(false);
+  // albumInputRef 触发普通相册文件选择器。
+  const albumInputRef = useRef<HTMLInputElement | null>(null);
+  // cameraInputRef 触发支持环境摄像头的单图选择器。
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   /** 从 profile facade 重读当前资料。 */
   const loadProfile = useCallback(async () => {
@@ -38,6 +57,51 @@ export function MeProfilePage() {
     void loadProfile();
   }, [loadProfile]);
 
+  /** 关闭来源 sheet 后在当前用户手势内打开相册选择。 */
+  function chooseAlbum(): void {
+    setAvatarSheetVisible(false);
+    albumInputRef.current?.click();
+  }
+
+  /** 关闭来源 sheet 后请求拍照；桌面浏览器允许平台退化。 */
+  function chooseCamera(): void {
+    setAvatarSheetVisible(false);
+    cameraInputRef.current?.click();
+  }
+
+  /** 在任何解码或远端 I/O 前校验浏览器所选头像。 */
+  function selectAvatar(file: File | undefined, input: HTMLInputElement): void {
+    // value 复位后允许再次选择同一个文件。
+    input.value = '';
+    if (!file) return;
+    try {
+      validateAvatarFile(file);
+      setPendingAvatar(file);
+      setError(null);
+    } catch (cause) {
+      setError(readProfilePageError(cause, '无法读取所选头像'));
+    }
+  }
+
+  /** 通过 shared SDK 原子完成头像上传和当前资料更新。 */
+  async function updateAvatar(blob: Blob): Promise<void> {
+    if (!runtime || !snapshot.userID || updatingAvatar) return;
+    setUpdatingAvatar(true);
+    setError(null);
+    try {
+      // updatedProfile 只有 OSS 与 update-profile 都成功且身份一致时返回。
+      const updatedProfile = await runtime.getSync().profile.updateAvatar(
+        buildAvatarUpload(snapshot.userID, blob),
+      );
+      setProfile(current => ({ ...current, ...updatedProfile }));
+      setPendingAvatar(null);
+    } catch (cause) {
+      setError(readProfilePageError(cause, '头像上传失败'));
+    } finally {
+      setUpdatingAvatar(false);
+    }
+  }
+
   if (restoring) return <ProfilePageState label="正在恢复个人资料" />;
   if (!runtime) return <ProfilePageState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
@@ -48,6 +112,8 @@ export function MeProfilePage() {
   const nickname = profile?.nickname?.trim() || userID;
   // bio 对齐 RN trim/截断规则。
   const bio = normalizeProfileBio(profile?.bio);
+  // avatarFallback 在远端头像缺失或加载失败时显示昵称首字符。
+  const avatarFallback = Array.from(nickname)[0]?.toUpperCase() || '人';
   return (
     <main className="rn-me-profile-page" aria-busy={loading}>
       <section className="rn-me-profile-surface">
@@ -58,15 +124,32 @@ export function MeProfilePage() {
             <button type="button" onClick={() => void loadProfile()}>重试</button>
           </div> : null}
           <div className="rn-me-profile-card">
+            <button className="rn-me-profile-row rn-me-profile-avatar-row" type="button" disabled={updatingAvatar} onClick={() => setAvatarSheetVisible(true)}>
+              <span className="rn-me-profile-label">头像</span>
+              <span className="rn-me-profile-trailing">
+                {updatingAvatar ? <span className="rn-me-profile-avatar-status">上传中</span> : <span className="rn-me-profile-avatar"><span>{avatarFallback}</span>{profile?.avatar_url?.trim() ? <img src={profile.avatar_url} alt="当前头像" onError={event => { event.currentTarget.hidden = true; }} /> : null}</span>}
+                <RNAssetIcon assetURL={arrowIconURL} />
+              </span>
+            </button>
             <ProfileLinkRow label="昵称" value={nickname} href="/me/profile/nickname" />
             <ProfileLinkRow label="性别" value={getProfileGenderLabel(profile?.gender)} href="/me/profile/gender" />
             <div className="rn-me-profile-row is-static">
               <span className="rn-me-profile-label">ID</span>
               <span className="rn-me-profile-trailing"><strong>{userID}</strong></span>
             </div>
+            <Link className="rn-me-profile-row" to="/me/qrcode" state={{ backHref: '/me/profile' }}>
+              <span className="rn-me-profile-label">二维码</span>
+              <span className="rn-me-profile-trailing">
+                <RNAssetIcon assetURL={qrCodeIconURL} />
+              </span>
+            </Link>
             <ProfileLinkRow label="个性签名" value={bio || '未设置'} href="/me/profile/bio" last />
           </div>
         </div>
+        <input ref={albumInputRef} className="rn-avatar-file-input" type="file" accept={AVATAR_ALBUM_INPUT.accept} aria-label="从相册选择头像" onChange={event => selectAvatar(event.currentTarget.files?.[0], event.currentTarget)} />
+        <input ref={cameraInputRef} className="rn-avatar-file-input" type="file" accept={AVATAR_CAMERA_INPUT.accept} capture={AVATAR_CAMERA_INPUT.capture} aria-label="拍照设置头像" onChange={event => selectAvatar(event.currentTarget.files?.[0], event.currentTarget)} />
+        <AvatarSourceActionSheet visible={avatarSheetVisible} onAlbum={chooseAlbum} onCamera={chooseCamera} onClose={() => setAvatarSheetVisible(false)} />
+        {pendingAvatar ? <AvatarCropDialog file={pendingAvatar} uploading={updatingAvatar} imageAlt="待裁剪个人头像" errorMessage="头像裁剪失败" onCancel={() => { if (!updatingAvatar) setPendingAvatar(null); }} onConfirm={updateAvatar} onError={message => setError(message)} /> : null}
       </section>
     </main>
   );
@@ -99,6 +182,6 @@ function ProfilePageState({ label, detail }: { readonly label: string; readonly 
 }
 
 /** 将未知异常收敛为不含凭据的页面消息。 */
-function readProfilePageError(cause: unknown): string {
-  return cause instanceof Error && cause.message ? cause.message : '个人资料加载失败';
+function readProfilePageError(cause: unknown, fallback = '个人资料加载失败'): string {
+  return cause instanceof Error && cause.message ? cause.message : fallback;
 }

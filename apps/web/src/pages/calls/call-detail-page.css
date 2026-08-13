@@ -1,5 +1,5 @@
 .rn-call-detail-page { min-height: 100vh; min-height: 100dvh; color: var(--im-text-primary); background: var(--im-bg-page); }
-.rn-call-detail-surface { width: min(100%, 480px); min-height: 100vh; min-height: 100dvh; margin: 0 auto; background: var(--im-bg-app); }
+.rn-call-detail-surface { width: 100%; min-height: 100vh; min-height: 100dvh; margin: 0 auto; background: var(--im-bg-app); }
 .rn-call-detail-header { display: grid; height: calc(var(--im-safe-top) + 52px); grid-template-columns: 48px 1fr 48px; align-items: end; padding: var(--im-safe-top) 16px 4px; }
 .rn-call-detail-header button { display: grid; width: 40px; height: 40px; place-items: center; padding: 0; border: 0; color: var(--im-icon-primary); background: transparent; cursor: pointer; }
 .rn-call-detail-header button .rn-asset-icon { width: 24px; height: 24px; }

@@ -1,3 +1,4 @@
+import { createIMGroupCreationSync, } from './group-creation.js';
 import { GroupRepository, } from '@im28/im-sdk/core';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { sendWebIMTextMessage } from './message-text-send.js';
@@ -89,6 +90,10 @@ class WebIMJoinedGroupSyncImpl {
         // queue 与 realtime/full sync 共用唯一 mutation 顺序。
         const queue = this.dependencies.mutationQueue;
         return queue ? queue.enqueue(operation) : operation();
+    }
+    /** 创建群完整委托平台中立 owner，页面不直接调用 Gateway 或写缓存。 */
+    create(options) {
+        return createIMGroupCreationSync(this.dependencies).create(options);
     }
 }
 /** 拉取全部 token 分页并按首见 group ID 去重。 */

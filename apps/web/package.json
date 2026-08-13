@@ -13,8 +13,10 @@
   },
   "dependencies": {
     "@im28/im-sdk": "file:../../packages/im-sdk",
+    "@zxing/browser": "0.1.5",
     "livekit-client": "^2.19.2",
     "pinyin-pro": "^3.28.1",
+    "qrcode": "1.5.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2",

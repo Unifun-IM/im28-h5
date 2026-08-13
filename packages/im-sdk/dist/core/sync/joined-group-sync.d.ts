@@ -1,3 +1,4 @@
+import { type IMGroupCreationOptions, type IMGroupCreationResult } from './group-creation.js';
 import { type GatewayHTTPClient, type Message } from '@im28/im-sdk/core';
 import { type WebIMSyncContextDependencies } from './sync-context.js';
 import type { WebIMSyncMutationQueueDependencies } from './sync-mutation-queue.js';
@@ -22,6 +23,13 @@ export interface WebIMJoinedGroup {
     readonly ownerUserID: string;
     readonly currentUserRole: WebIMJoinedGroupRole;
     readonly joinApprovalRequired?: boolean;
+    readonly allowMemberInvite?: boolean;
+    readonly allowMemberAddFriend?: boolean;
+    readonly allowMemberNickname?: boolean;
+    readonly muteAll?: boolean;
+    readonly muteMember?: boolean;
+    readonly speechFrequencyEnabled?: boolean;
+    readonly speechFrequencySeconds?: number;
     readonly permissions: IMGroupManagementPermissions;
     readonly canEditAnnouncement: boolean;
     readonly canMentionAll: boolean;
@@ -42,6 +50,7 @@ export interface WebIMJoinedGroupSync {
     publishAnnouncement(options: IMPublishWebIMGroupAnnouncementOptions): Promise<IMPublishWebIMGroupAnnouncementResult>;
     getAnnouncementReadStatus(groupID: string): Promise<IMGroupAnnouncementReadStatus>;
     markAnnouncementRead(groupID: string, announcementVersion: string): Promise<IMGroupAnnouncementReadStatus>;
+    create(options: IMGroupCreationOptions): Promise<IMGroupCreationResult>;
 }
 /** Web 群公告发布参数绑定当前群与缓存会话。 */
 export interface IMPublishWebIMGroupAnnouncementOptions {

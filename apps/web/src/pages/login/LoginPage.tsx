@@ -28,6 +28,7 @@ import {
   submitAuthLogin,
 } from './auth-login-submission.js';
 import { LoginAgreementDialog } from './LoginAgreementDialog.js';
+import { ForgotPasswordMethodsDialog } from './ForgotPasswordMethodsDialog.js';
 import { LoginTermsDialog } from './LoginTermsDialog.js';
 import './login-page.css';
 
@@ -65,6 +66,8 @@ export function LoginPage({ mode }: LoginPageProps) {
   const [termsVisible, setTermsVisible] = useState(false);
   // agreementPromptVisible 复刻提交前二次确认。
   const [agreementPromptVisible, setAgreementPromptVisible] = useState(false);
+  // forgotPasswordVisible 控制 RN 忘记密码替代登录方式 sheet。
+  const [forgotPasswordVisible, setForgotPasswordVisible] = useState(false);
   // submitting 防止重复认证请求。
   const [submitting, setSubmitting] = useState(false);
   // error 显示真实 Gateway 或能力缺口错误。
@@ -82,6 +85,7 @@ export function LoginPage({ mode }: LoginPageProps) {
     setCredential('');
     setError(null);
     setNotice(null);
+    setForgotPasswordVisible(false);
   }, [mode]);
 
   /** 执行登录；手机号/邮箱仅在 20002 时进入真实自动注册。 */
@@ -265,7 +269,7 @@ export function LoginPage({ mode }: LoginPageProps) {
 
               {mode === 'account' ? (
                 <div className="auth-assist-row">
-                  <button type="button" onClick={() => setError('当前 Gateway 未提供忘记密码接口。')}>忘记密码？</button>
+                  <button type="button" onClick={() => setForgotPasswordVisible(true)}>忘记密码？</button>
                   <Link to="/auth/register">注册账号</Link>
                 </div>
               ) : null}
@@ -286,6 +290,7 @@ export function LoginPage({ mode }: LoginPageProps) {
       </section>
 
       <AuthCountryCodeDialog visible={countryPickerVisible} value={countryCode} onClose={() => setCountryPickerVisible(false)} onSelect={setCountryCode} />
+      <ForgotPasswordMethodsDialog visible={forgotPasswordVisible} onClose={() => setForgotPasswordVisible(false)} onPhone={() => { setForgotPasswordVisible(false); navigate('/auth/phone'); }} onEmail={() => { setForgotPasswordVisible(false); navigate('/auth/email'); }} />
       <LoginAgreementDialog visible={agreementPromptVisible} onCancel={() => setAgreementPromptVisible(false)} onAccept={handleAgreementAccepted} onOpenTerms={() => setTermsVisible(true)} />
       <LoginTermsDialog runtime={runtime} visible={termsVisible} onClose={() => setTermsVisible(false)} />
     </main>

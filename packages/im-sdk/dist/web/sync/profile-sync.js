@@ -3,9 +3,40 @@ import { createWebIMSyncError } from './sync-context.js';
 export function createWebIMProfileSync(dependencies) {
     /** 在远端资料操作前统一拒绝匿名调用。 */
     const requireAuthenticatedUser = () => {
-        if (!dependencies.getCurrentUserID()?.trim()) {
+        // userID 同时作为远端响应和跨上传阶段的账号边界。
+        const userID = dependencies.getCurrentUserID()?.trim() ?? '';
+        if (!userID) {
             throw createWebIMSyncError('PROFILE_AUTH_REQUIRED', 'Current user profile requires an authenticated Web IM session.');
         }
+        return userID;
+    };
+    /** 校验资料响应属于发起 mutation 的同一认证账号。 */
+    const requireMatchingProfile = (userID, updated) => {
+        if (updated.user_id?.trim() !== userID) {
+            throw createWebIMSyncError('PROFILE_RESPONSE_MISMATCH', 'Updated profile does not match the authenticated user.');
+        }
+        return updated;
+    };
+    /** 通过平台端口上传头像，并拒绝上传阶段账号切换或非远端地址。 */
+    const uploadAvatarForUser = async (userID, input) => {
+        // uploadPort 缺失必须可见失败，禁止返回 blob URL 或假成功地址。
+        const uploadPort = dependencies.mediaUploadPort;
+        if (!uploadPort) {
+            throw createWebIMSyncError('PROFILE_AVATAR_UPLOAD_UNAVAILABLE', 'Profile avatar upload requires a platform upload adapter.');
+        }
+        // normalizedInput 在 OSS I/O 前执行头像格式与大小约束。
+        const normalizedInput = normalizeWebIMProfileAvatarInput(input);
+        // uploaded 只能来自当前 runtime 注入的真实媒体上传端口。
+        const uploaded = await uploadPort.upload(normalizedInput);
+        if (dependencies.getCurrentUserID()?.trim() !== userID) {
+            throw createWebIMSyncError('PROFILE_ACCOUNT_CHANGED', 'Authenticated user changed while uploading the profile avatar.');
+        }
+        // avatarURL 必须是可提交到 Gateway 的远端 HTTP(S) 地址。
+        const avatarURL = uploaded.url.trim();
+        if (!/^https?:\/\//i.test(avatarURL)) {
+            throw createWebIMSyncError('PROFILE_AVATAR_URL_INVALID', 'Profile avatar upload did not return a remote URL.');
+        }
+        return avatarURL;
     };
     return {
         getCurrent: async () => {
@@ -13,8 +44,28 @@ export function createWebIMProfileSync(dependencies) {
             return dependencies.gatewayClient.getCurrentUserDetail();
         },
         update: async (patch) => {
-            requireAuthenticatedUser();
-            return dependencies.gatewayClient.updateUserProfile(normalizeWebIMProfileUpdate(patch));
+            // userID 冻结本次资料 mutation 的账号身份。
+            const userID = requireAuthenticatedUser();
+            // updated 必须回显同一账号，避免切号或错误响应污染页面状态。
+            const updated = await dependencies.gatewayClient.updateUserProfile(normalizeWebIMProfileUpdate(patch));
+            return requireMatchingProfile(userID, updated);
+        },
+        uploadAvatar: async (input) => {
+            // userID 在任何平台上传前冻结，防止结果被后续账号使用。
+            const userID = requireAuthenticatedUser();
+            return uploadAvatarForUser(userID, input);
+        },
+        updateAvatar: async (input) => {
+            // userID 贯穿上传和资料 mutation，避免客户端分步编排产生切号窗口。
+            const userID = requireAuthenticatedUser();
+            // avatarURL 只来自同一账号完成的平台上传。
+            const avatarURL = await uploadAvatarForUser(userID, input);
+            if (dependencies.getCurrentUserID()?.trim() !== userID) {
+                throw createWebIMSyncError('PROFILE_ACCOUNT_CHANGED', 'Authenticated user changed before updating the profile avatar.');
+            }
+            // updated 只有远端资料明确回显原账号时才作为成功返回。
+            const updated = await dependencies.gatewayClient.updateUserProfile({ avatar_url: avatarURL });
+            return { ...requireMatchingProfile(userID, updated), avatar_url: updated.avatar_url?.trim() || avatarURL };
         },
     };
 }
@@ -39,9 +90,37 @@ function normalizeWebIMProfileUpdate(patch) {
     if (patch.bio !== undefined) {
         normalized.bio = Array.from(patch.bio.trim()).slice(0, 100).join('');
     }
+    if (patch.avatar_url !== undefined) {
+        // avatarURL 只接受平台上传端口返回的远端地址。
+        const avatarURL = patch.avatar_url.trim();
+        if (!/^https?:\/\//i.test(avatarURL)) {
+            throw createWebIMSyncError('PROFILE_AVATAR_URL_INVALID', 'Profile avatar must use a remote HTTP(S) URL.');
+        }
+        normalized.avatar_url = avatarURL;
+    }
     if (!Object.keys(normalized).length) {
         throw createWebIMSyncError('PROFILE_UPDATE_EMPTY', 'Profile update requires at least one supported field.');
     }
     return normalized;
+}
+/** 头像上传只接受裁剪后的常见静态图片和 10MB 上限。 */
+function normalizeWebIMProfileAvatarInput(input) {
+    // mimeType 与 extension 共同阻止 SVG 或可执行内容伪装成头像。
+    const mimeType = input.mimeType.trim().toLowerCase();
+    // extension 统一为小写以便跨平台上传端口消费。
+    const extension = input.extension.trim().toLowerCase();
+    // size 使用整数进行明确的 10MB 上限判断。
+    const size = Math.trunc(input.size);
+    if (!input.name.trim() || input.source === null || input.source === undefined) {
+        throw createWebIMSyncError('PROFILE_AVATAR_SOURCE_INVALID', 'Select a profile avatar image.');
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(mimeType) ||
+        !['jpg', 'jpeg', 'png', 'webp'].includes(extension)) {
+        throw createWebIMSyncError('PROFILE_AVATAR_TYPE_INVALID', 'Profile avatars support JPEG, PNG, or WEBP images.');
+    }
+    if (!Number.isFinite(input.size) || size <= 0 || size > 10 * 1024 * 1024) {
+        throw createWebIMSyncError('PROFILE_AVATAR_SIZE_INVALID', 'Profile avatar image cannot exceed 10MB.');
+    }
+    return { ...input, name: input.name.trim(), mimeType, extension, size };
 }
 //# sourceMappingURL=profile-sync.js.map

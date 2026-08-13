@@ -17,12 +17,13 @@ const BASE_DRAFT: AuthOnboardingProfileDraft = {
 };
 
 describe('auth onboarding profile draft', () => {
-  it('只合并完善资料子路由允许编辑的字段', () => {
+  it('只合并完善资料页面允许编辑的字段', () => {
     // nextDraft 应保留 current-detail 的账号与只读字段。
     const nextDraft = mergeAuthOnboardingProfileDraft(BASE_DRAFT, {
       nickname: '新昵称',
       gender: 2,
       bio: '新签名',
+      avatarURL: 'https://cdn.example.com/new.png',
     });
 
     expect(nextDraft).toEqual({
@@ -30,6 +31,7 @@ describe('auth onboarding profile draft', () => {
       nickname: '新昵称',
       gender: 2,
       bio: '新签名',
+      avatarURL: 'https://cdn.example.com/new.png',
     });
   });
 

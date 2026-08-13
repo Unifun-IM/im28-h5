@@ -31,6 +31,8 @@ export type ConversationHomeSearchItem =
       readonly avatarURL: string;
       readonly conversationID: string;
       readonly messageID: string;
+      readonly matchCount: number;
+      readonly messagePosition: number;
     };
 
 /** 首页搜索分区保留 RN 固定好友、群聊、聊天记录顺序。 */
@@ -47,6 +49,12 @@ export interface BuildConversationHomeSearchSectionsInput {
   readonly groups: readonly WebIMJoinedGroup[];
   readonly conversations: readonly WebIMConversationListItem[];
   readonly messages: readonly Message[];
+}
+
+/** 搜索文本切片用于在 H5 视图中复刻 RN 命中着色。 */
+export interface ConversationSearchTextSegment {
+  readonly text: string;
+  readonly highlighted: boolean;
 }
 
 /** 按 RN 规则把好友、群聊和消息缓存聚合为三个结果分区。 */
@@ -133,6 +141,8 @@ export function buildConversationHomeSearchSections(
         avatarURL: conversation.conversation.faceURL?.trim() ?? '',
         conversationID,
         messageID: target.clientMsgID,
+        matchCount: messages.length,
+        messagePosition: readMessagePosition(target),
       };
     });
   /** sections 过滤空分区但不改变 RN 固定顺序。 */
@@ -142,6 +152,53 @@ export function buildConversationHomeSearchSections(
     { key: 'message', title: '聊天记录', items: messageItems },
   ];
   return sections.filter(section => section.items.length > 0);
+}
+
+/** 合并消息搜索分页并按会话累计命中数、保留最远定位消息。 */
+export function mergeConversationHomeSearchMessageSections(
+  current: readonly ConversationHomeSearchSection[],
+  incoming: readonly ConversationHomeSearchSection[],
+): readonly ConversationHomeSearchSection[] {
+  /** incomingMessageSection 只消费下一页聊天记录，好友和群聊仍由首页快照持有。 */
+  const incomingMessageSection = incoming.find(section => section.key === 'message');
+  if (!incomingMessageSection?.items.length) return current;
+  /** currentMessageSection 保存已渲染的会话聚合结果。 */
+  const currentMessageSection = current.find(section => section.key === 'message');
+  /** mergedItems 按首次出现顺序保存消息会话行。 */
+  const mergedItems = [...(currentMessageSection?.items ?? [])];
+  /** indexByKey 让同一会话跨页命中合并到唯一行。 */
+  const indexByKey = new Map(mergedItems.map((item, index) => [item.key, index]));
+  /** item 逐项合并下一页中的规范消息会话投影。 */
+  for (const item of incomingMessageSection.items) {
+    if (item.type !== 'message') continue;
+    /** existingIndex 定位同一会话已有聚合行。 */
+    const existingIndex = indexByKey.get(item.key);
+    /** existing 只允许消息项参与计数合并。 */
+    const existing = existingIndex === undefined ? undefined : mergedItems[existingIndex];
+    if (existingIndex === undefined || existing?.type !== 'message') {
+      indexByKey.set(item.key, mergedItems.length);
+      mergedItems.push(item);
+      continue;
+    }
+    /** target 保留位置更远的消息，保持 RN 点击搜索结果的定位语义。 */
+    const target = item.messagePosition < existing.messagePosition ? item : existing;
+    /** matchCount 累加不同 SQLite 分页中的真实命中。 */
+    const matchCount = existing.matchCount + item.matchCount;
+    mergedItems[existingIndex] = {
+      ...target,
+      matchCount,
+      subtitle: `共${matchCount}条相关聊天记录`,
+    };
+  }
+  /** mergedMessageSection 替换或追加唯一聊天记录分区。 */
+  const mergedMessageSection: ConversationHomeSearchSection = {
+    key: 'message',
+    title: '聊天记录',
+    items: mergedItems,
+  };
+  return currentMessageSection
+    ? current.map(section => section.key === 'message' ? mergedMessageSection : section)
+    : [...current, mergedMessageSection];
 }
 
 /** 维护最多十条、去重且最近优先的搜索历史。 */
@@ -155,6 +212,48 @@ export function updateConversationSearchHistory(
   if (!normalizedQuery) return history;
   return [normalizedQuery, ...history.filter(item => item !== normalizedQuery)]
     .slice(0, Math.max(0, limit));
+}
+
+/** 判断异步搜索结果是否仍属于页面最新请求。 */
+export function isCurrentConversationSearchRequest(
+  currentRequestID: number,
+  candidateRequestID: number,
+): boolean {
+  return currentRequestID === candidateRequestID;
+}
+
+/** 按 RN 规则进行大小写不敏感、支持多处命中的文本切片。 */
+export function splitConversationSearchHighlightedText(
+  text: string,
+  keyword: string,
+): readonly ConversationSearchTextSegment[] {
+  /** query 去掉提交关键词两端空白。 */
+  const query = keyword.trim();
+  if (!text || !query) return text ? [{ text, highlighted: false }] : [];
+  /** lowerText 只用于定位，不改变原始展示字符。 */
+  const lowerText = text.toLocaleLowerCase();
+  /** lowerQuery 与 RN 一致执行大小写不敏感匹配。 */
+  const lowerQuery = query.toLocaleLowerCase();
+  /** segments 保留命中与未命中文本的原始顺序。 */
+  const segments: ConversationSearchTextSegment[] = [];
+  /** cursor 指向下一次查找起点。 */
+  let cursor = 0;
+  while (cursor < text.length) {
+    /** matchIndex 是本轮关键词命中的起始位置。 */
+    const matchIndex = lowerText.indexOf(lowerQuery, cursor);
+    if (matchIndex < 0) {
+      segments.push({ text: text.slice(cursor), highlighted: false });
+      break;
+    }
+    if (matchIndex > cursor) {
+      segments.push({ text: text.slice(cursor, matchIndex), highlighted: false });
+    }
+    /** matchEnd 保留与提交关键词等长的原文片段。 */
+    const matchEnd = matchIndex + query.length;
+    segments.push({ text: text.slice(matchIndex, matchEnd), highlighted: true });
+    cursor = matchEnd;
+  }
+  return segments;
 }
 
 /** 判断查询是否命中任一用户可见字段。 */
@@ -179,9 +278,10 @@ function buildContactSubtitle(contact: WebIMContact, query: string): string {
 
 /** 按稳定 seq 优先、发送时间回退比较消息位置。 */
 function compareMessagePosition(left: Message, right: Message): number {
-  /** leftPosition 使用精确 seq 的安全数字表示，否则回退发送时间。 */
-  const leftPosition = left.seq ?? left.sendTime;
-  /** rightPosition 与左侧使用相同规则。 */
-  const rightPosition = right.seq ?? right.sendTime;
-  return leftPosition - rightPosition;
+  return readMessagePosition(left) - readMessagePosition(right);
+}
+
+/** 读取消息定位顺序，优先稳定 seq 并回退发送时间。 */
+function readMessagePosition(message: Message): number {
+  return message.seq ?? message.sendTime;
 }

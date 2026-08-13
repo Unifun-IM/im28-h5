@@ -7,6 +7,7 @@ import { createIMConversationListActionsSync, } from './conversation-list-action
 import { createIMConversationArchiveSync, } from './conversation-archive-sync.js';
 import { readUnreadMentionSnapshot, } from './conversation-unread-mention.js';
 import { syncIMGatewayDifference } from './gateway-difference-sync.js';
+import { openIMGroupConversation, } from './group-conversation-open.js';
 /** 创建认证账号绑定的浏览器会话同步服务。 */
 export function createWebIMConversationSync(dependencies) {
     return new WebIMConversationSyncImpl(dependencies);
@@ -80,6 +81,10 @@ class WebIMConversationSyncImpl {
         // context 在网络请求前冻结本轮 user/database owner。
         const context = requireWebIMSyncContext(this.dependencies, 'Conversation sync');
         return this.mutationQueue.enqueue(() => this.syncDirect(context, options));
+    }
+    /** 打开群会话并委托共享身份校验与 success-only cache owner。 */
+    openGroup(options) {
+        return openIMGroupConversation({ ...this.dependencies, mutationQueue: this.mutationQueue }, options);
     }
     /** 全分页同步归档端点，不复用普通会话替换语义。 */
     syncArchived(options = {}) {

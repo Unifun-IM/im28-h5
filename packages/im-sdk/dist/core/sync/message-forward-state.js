@@ -10,7 +10,7 @@ export function canForwardWebIMMessage(message, options = {}) {
     try {
         assertForwardSource(message);
         if (options.hideSenderName)
-            buildWebIMPersistedMessageRequest(message);
+            buildHiddenSenderForwardRequest(message);
         return true;
     }
     catch {
@@ -41,7 +41,7 @@ export async function prepareWebIMForwardBatch(context, options, dependencies) {
     const hideSenderName = options.hideSenderName === true;
     // hiddenSenderRequests 在 optimistic 写入前验证全部 body。
     const hiddenSenderRequests = hideSenderName
-        ? sourceMessages.map(buildWebIMPersistedMessageRequest)
+        ? sourceMessages.map(buildHiddenSenderForwardRequest)
         : [];
     // outputClientMsgIDs 对齐平台预创建的 optimistic 实体，缺省时仍由 SDK 生成。
     const outputClientMsgIDs = normalizeForwardOutputIDs(options, sourceClientMsgIDs);
@@ -99,6 +99,13 @@ export async function prepareWebIMForwardBatch(context, options, dependencies) {
         messageRepository,
         conversationRepository,
     };
+}
+/** 隐藏发送人转发维持既有支持矩阵，不随失败重试类型自动扩张。 */
+function buildHiddenSenderForwardRequest(message) {
+    if (message.contentType === 108) {
+        throw createWebIMSyncError('MESSAGE_RETRY_UNSUPPORTED', 'Card messages do not support hidden-sender forwarding.');
+    }
+    return buildWebIMPersistedMessageRequest(message);
 }
 /** 规范化并验证源消息 ID 列表。 */
 function normalizeForwardSourceIDs(values) {

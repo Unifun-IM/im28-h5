@@ -9,6 +9,7 @@ import copyIconURL from '../../assets/rn/assets/icons/imm28/copy.dynamic.svg';
 import settingsIconURL from '../../assets/rn/assets/icons/imm28/set.svg';
 import profileIconURL from '../../assets/rn/assets/icons/imm28/user.svg';
 import securityIconURL from '../../assets/rn/assets/icons/imm28/lock.svg';
+import qrCodeIconURL from '../../assets/rn/assets/icons/imm28/qrcode-small.svg';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
@@ -87,7 +88,12 @@ export function MePage() {
             ) : null}
           </span>
           <div className="rn-me-identity">
-            <strong>{displayName || '加载中'}</strong>
+            <span className="rn-me-name-row">
+              <strong>{displayName || '加载中'}</strong>
+              <Link aria-label="我的二维码" to="/me/qrcode" state={{ backHref: '/me' }}>
+                <RNAssetIcon assetURL={qrCodeIconURL} />
+              </Link>
+            </span>
             <button type="button" disabled={!userID} onClick={() => void copyUserID()}>
               <span>ID：{userID || '--'}</span>
               <RNAssetIcon assetURL={copyIconURL} />

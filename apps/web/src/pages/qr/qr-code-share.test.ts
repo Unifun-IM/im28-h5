@@ -1,0 +1,24 @@
+import { describe, expect, it } from 'vitest';
+
+import appSource from '../../app/App.tsx?raw';
+import displaySource from './QRCodeDisplay.tsx?raw';
+import pageSource from './QRCodeSharePage.tsx?raw';
+
+/** 应用内二维码分享回归禁止页面绕开共享目标和消息 owners。 */
+describe('QR code in-app share route', () => {
+  it('个人与群二维码都进入可刷新的 React Router 分享页', () => {
+    expect(appSource).toContain('path="/me/qrcode/share"');
+    expect(appSource).toContain('path="/conversations/:conversationID/settings/qrcode/share"');
+    expect(displaySource).toContain('onClick={props.onShare}');
+  });
+
+  it('确认后复用共享目标 owner 和 SDK 图片发送，不携带 Blob 路由状态', () => {
+    expect(pageSource).toContain('loadChatForwardTargets');
+    expect(pageSource).toContain('resolveChatForwardTargetConversationID');
+    expect(pageSource).toContain('sync.messages.sendImage');
+    expect(pageSource).toContain('width: 320');
+    expect(pageSource).not.toContain('location.state');
+    expect(pageSource).not.toContain('gatewayClient');
+    expect(pageSource).not.toContain('sendImageMessage');
+  });
+});

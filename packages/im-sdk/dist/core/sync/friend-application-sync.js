@@ -45,6 +45,25 @@ class WebIMFriendApplicationSyncImpl {
         }
         throw createWebIMSyncError('FRIEND_APPLICATION_PAGE_LIMIT_EXCEEDED', 'Friend application pagination exceeded the safety limit.');
     }
+    /** 读取 Gateway 维护的好友申请未读总数。 */
+    async getUnreadCount() {
+        this.requireAuthenticatedUser();
+        // response 保留服务端已读状态的唯一真相。
+        const response = await this.dependencies.gatewayClient.getFriendApplicationUnreadCount();
+        return normalizeFriendApplicationUnreadCount(response.unread_count);
+    }
+    /** 将明确指定的好友申请标记为已读，拒绝空集合触发隐式全量操作。 */
+    async markRead(applicationIDs) {
+        this.requireAuthenticatedUser();
+        // normalizedIDs 保序去重并排除空白申请 ID。
+        const normalizedIDs = Array.from(new Set(applicationIDs.map(item => item.trim()).filter(Boolean)));
+        if (normalizedIDs.length === 0) {
+            throw createWebIMSyncError('FRIEND_APPLICATION_IDS_REQUIRED', 'At least one friend application ID is required.');
+        }
+        await this.dependencies.gatewayClient.markFriendApplicationsRead({
+            application_ids: normalizedIDs,
+        });
+    }
     /** 调用 shared accept operation，成功语义交给页面刷新。 */
     async accept(applicationID) {
         this.requireAuthenticatedUser();
@@ -122,5 +141,11 @@ function clampFriendApplicationPageSize(value) {
     if (!Number.isFinite(value))
         return 100;
     return Math.min(200, Math.max(1, Math.trunc(value ?? 100)));
+}
+/** 将异常未读数收敛为非负整数。 */
+function normalizeFriendApplicationUnreadCount(value) {
+    if (!Number.isFinite(value))
+        return 0;
+    return Math.max(0, Math.trunc(value ?? 0));
 }
 //# sourceMappingURL=friend-application-sync.js.map

@@ -10,7 +10,6 @@ import { useWebIMRuntime } from '../../runtime/index.js';
 import { JoinedGroupRow } from './JoinedGroupRow.js';
 import {
   filterJoinedGroups,
-  findJoinedGroupConversationID,
 } from './joined-group-view.js';
 import './joined-groups-page.css';
 
@@ -54,23 +53,18 @@ export function JoinedGroupsPage() {
 
   useEffect(() => { void loadGroups(); }, [loadGroups]);
 
-  /** 从 cache 或远端会话列表解析真实 conversation 后进入聊天页。 */
+  /** 通过 shared 会话 facade 打开规范群会话后进入聊天页。 */
   const openGroup = useCallback(async (group: WebIMJoinedGroup): Promise<void> => {
     if (!runtime || openingGroupID) return;
     setOpeningGroupID(group.groupID);
     setError(null);
     try {
-      // conversations 先读取当前账号 SQLite，避免无意义网络请求。
-      let conversations = await runtime.getSync().conversations.listCached({ limit: 500 });
-      // conversationID 只接受真实 cache 命中的会话。
-      let conversationID = findJoinedGroupConversationID(group, conversations);
-      if (!conversationID) {
-        // 远端同步仍复用 canonical conversation facade。
-        conversations = await runtime.getSync().conversations.sync({ pageSize: 100 });
-        conversationID = findJoinedGroupConversationID(group, conversations);
-      }
-      if (!conversationID) throw new Error('群会话尚未建立');
-      navigate(`/conversations/${encodeURIComponent(conversationID)}`);
+      // conversation 由 SDK 统一完成 cache、Gateway 身份校验和 SQLite 收敛。
+      const conversation = await runtime.getSync().conversations.openGroup({
+        groupID: group.groupID,
+        conversationID: group.conversationID,
+      });
+      navigate(`/conversations/${encodeURIComponent(conversation.conversationID)}`);
     } catch (cause) {
       setError(readJoinedGroupError(cause, '打开群聊失败'));
     } finally {

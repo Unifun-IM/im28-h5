@@ -6,7 +6,7 @@
 }
 
 .rn-chat-settings-surface {
-  width: min(100%, 480px);
+  width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0 auto;
@@ -260,6 +260,77 @@
   cursor: pointer;
   font: inherit;
   text-align: left;
+}
+
+.rn-chat-settings-lifecycle-row {
+  width: 100%;
+  justify-content: center;
+  border: 0;
+  color: var(--im-status-danger);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.rn-chat-settings-lifecycle-row > span:first-child {
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+.rn-chat-settings-lifecycle-row:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.rn-chat-settings-lifecycle-confirm {
+  width: min(340px, calc(100vw - 48px));
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--im-bg-card);
+}
+
+.rn-chat-settings-lifecycle-confirm h2,
+.rn-chat-settings-lifecycle-confirm p {
+  margin: 0;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.rn-chat-settings-lifecycle-confirm h2 {
+  padding: 20px 20px 8px;
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.rn-chat-settings-lifecycle-confirm p {
+  padding: 0 20px 20px;
+  color: var(--im-text-secondary);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.rn-chat-settings-lifecycle-confirm > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+}
+
+.rn-chat-settings-lifecycle-confirm button {
+  min-height: 48px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.rn-chat-settings-lifecycle-confirm button + button {
+  border-left: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: var(--im-status-danger);
+}
+
+.rn-chat-settings-lifecycle-confirm button:disabled {
+  cursor: default;
+  opacity: 0.55;
 }
 
 .rn-chat-settings-button-row {

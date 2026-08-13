@@ -9,6 +9,9 @@ import { createGroupPermissionsFixture } from '../../test-fixtures/group-permiss
 
 import {
   buildConversationHomeSearchSections,
+  isCurrentConversationSearchRequest,
+  mergeConversationHomeSearchMessageSections,
+  splitConversationSearchHighlightedText,
   updateConversationSearchHistory,
 } from './conversation-home-search.js';
 
@@ -121,6 +124,45 @@ describe('conversation home search', () => {
       type: 'message',
       subtitle: '共2条相关聊天记录',
       messageID: 'message-earlier',
+      matchCount: 2,
+      messagePosition: 3,
+    });
+  });
+
+  /** 验证聊天记录跨页按会话合并计数并保留更远消息。 */
+  it('merges paged message matches without duplicating conversations', () => {
+    /** conversations 提供两页消息所需的稳定会话。 */
+    const conversations = [
+      createConversationItem('single_user-2', 'single', 'user-2', 'donk二大爷'),
+      createConversationItem('group_group-1', 'group', 'group-1', 'donk的群聊'),
+    ];
+    /** firstPage 模拟 SQLite 首页包含较新的群消息。 */
+    const firstPage = buildConversationHomeSearchSections({
+      query: 'donk', contacts: [], groups: [], conversations,
+      messages: [createMessage('group-newer', 'group_group-1', 9)],
+    });
+    /** secondPage 模拟下一页命中同一群和另一单聊。 */
+    const secondPage = buildConversationHomeSearchSections({
+      query: 'donk', contacts: [], groups: [], conversations,
+      messages: [
+        createMessage('group-older', 'group_group-1', 3),
+        createMessage('single-message', 'single_user-2', 2),
+      ],
+    });
+    /** merged 必须保持分区唯一并累计群命中数。 */
+    const merged = mergeConversationHomeSearchMessageSections(firstPage, secondPage);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.items).toHaveLength(2);
+    expect(merged[0]?.items[0]).toMatchObject({
+      key: 'message-group_group-1',
+      messageID: 'group-older',
+      matchCount: 2,
+      subtitle: '共2条相关聊天记录',
+    });
+    expect(merged[0]?.items[1]).toMatchObject({
+      key: 'message-single_user-2',
+      matchCount: 1,
     });
   });
 
@@ -139,6 +181,30 @@ describe('conversation home search', () => {
       '查询7',
       '查询8',
       '查询9',
+    ]);
+  });
+
+  /** 验证输入变化后旧异步请求不能再提交页面结果。 */
+  it('accepts only the latest search request generation', () => {
+    expect(isCurrentConversationSearchRequest(7, 7)).toBe(true);
+    expect(isCurrentConversationSearchRequest(8, 7)).toBe(false);
+  });
+
+  /** 验证结果高亮与 RN 一样忽略大小写并保留全部命中。 */
+  it('splits highlighted result text with RN matching semantics', () => {
+    expect(splitConversationSearchHighlightedText('Hello hello 你好', 'HELLO')).toEqual([
+      { text: 'Hello', highlighted: true },
+      { text: ' ', highlighted: false },
+      { text: 'hello', highlighted: true },
+      { text: ' 你好', highlighted: false },
+    ]);
+    expect(splitConversationSearchHighlightedText('明天吃什么', '吃')).toEqual([
+      { text: '明天', highlighted: false },
+      { text: '吃', highlighted: true },
+      { text: '什么', highlighted: false },
+    ]);
+    expect(splitConversationSearchHighlightedText('没有命中', '')).toEqual([
+      { text: '没有命中', highlighted: false },
     ]);
   });
 });

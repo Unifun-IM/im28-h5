@@ -7,20 +7,23 @@ import {
 } from 'react';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
-import { RNAssetIcon } from '../../components/RNAssetIcon.js';
-import { cropGroupAvatarFile } from './group-avatar-crop.js';
+import { RNAssetIcon } from '../RNAssetIcon.js';
+import { cropAvatarFile } from './avatar-crop.js';
+import './avatar-crop.css';
 
-/** 群头像裁剪层仅接收本地文件，不持有 runtime 或远端 mutation。 */
-interface GroupAvatarCropDialogProps {
+/** 头像裁剪层仅接收本地文件，不持有 runtime 或远端 mutation。 */
+interface AvatarCropDialogProps {
   readonly file: File;
   readonly uploading: boolean;
+  readonly imageAlt: string;
+  readonly errorMessage: string;
   readonly onCancel: () => void;
   readonly onConfirm: (blob: Blob) => Promise<void>;
   readonly onError: (message: string) => void;
 }
 
 /** 拖动开始时冻结当前指针和图片位移。 */
-interface GroupAvatarDragState {
+interface AvatarDragState {
   readonly pointerID: number;
   readonly pointerX: number;
   readonly pointerY: number;
@@ -29,13 +32,15 @@ interface GroupAvatarDragState {
 }
 
 /** RN AvatarCropPreview 的浏览器平台实现。 */
-export function GroupAvatarCropDialog({
+export function AvatarCropDialog({
   file,
   uploading,
+  imageAlt,
+  errorMessage,
   onCancel,
   onConfirm,
   onError,
-}: GroupAvatarCropDialogProps) {
+}: AvatarCropDialogProps) {
   // objectURL 由 effect 每次 setup 创建，兼容 React StrictMode 重放生命周期。
   const [objectURL, setObjectURL] = useState('');
   // imageSize 保存浏览器解码后的原始像素尺寸。
@@ -49,7 +54,7 @@ export function GroupAvatarCropDialog({
   // stageRef 提供真实裁剪视口边长。
   const stageRef = useRef<HTMLDivElement | null>(null);
   // dragRef 只保存活动指针手势，不触发渲染。
-  const dragRef = useRef<GroupAvatarDragState | null>(null);
+  const dragRef = useRef<AvatarDragState | null>(null);
 
   useEffect(() => {
     // nextObjectURL 与本次 effect cleanup 一一对应，防止 StrictMode 提前释放重用 URL。
@@ -126,7 +131,7 @@ export function GroupAvatarCropDialog({
     setConfirming(true);
     try {
       // blob 与 RN cropAvatarAsset 同为 512x512 JPEG 输出。
-      const blob = await cropGroupAvatarFile(file, {
+      const blob = await cropAvatarFile(file, {
         sourceWidth: imageSize.width,
         sourceHeight: imageSize.height,
         stageSize,
@@ -136,7 +141,7 @@ export function GroupAvatarCropDialog({
       });
       await onConfirm(blob);
     } catch (cause) {
-      onError(cause instanceof Error && cause.message ? cause.message : '群头像裁剪失败');
+      onError(cause instanceof Error && cause.message ? cause.message : errorMessage);
     } finally {
       setConfirming(false);
     }
@@ -145,16 +150,16 @@ export function GroupAvatarCropDialog({
   // busy 同时覆盖本地编码和远端上传阶段。
   const busy = confirming || uploading;
   return (
-    <section className="rn-group-avatar-crop" role="dialog" aria-modal="true" aria-labelledby="group-avatar-crop-title">
-      <header className="rn-group-avatar-crop-header">
+    <section className="rn-avatar-crop" role="dialog" aria-modal="true" aria-labelledby="avatar-crop-title">
+      <header className="rn-avatar-crop-header">
         <button type="button" aria-label="取消头像裁剪" disabled={busy} onClick={onCancel}><RNAssetIcon assetURL={backIconURL} /></button>
-        <h2 id="group-avatar-crop-title">头像预览</h2><span />
+        <h2 id="avatar-crop-title">头像预览</h2><span />
       </header>
-      <div className="rn-group-avatar-crop-body">
-        <div ref={stageRef} className="rn-group-avatar-crop-stage" onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>
+      <div className="rn-avatar-crop-body">
+        <div ref={stageRef} className="rn-avatar-crop-stage" onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>
           {objectURL ? <img
               src={objectURL}
-              alt="待裁剪群头像"
+              alt={imageAlt}
               draggable={false}
               style={{
                 width: imageSize.width >= imageSize.height ? 'auto' : '100%',
@@ -163,11 +168,11 @@ export function GroupAvatarCropDialog({
               }}
               onLoad={event => setImageSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })}
             /> : null}
-          <span className="rn-group-avatar-crop-mask" aria-hidden="true" />
+          <span className="rn-avatar-crop-mask" aria-hidden="true" />
         </div>
-        <label className="rn-group-avatar-crop-zoom"><span>缩放</span><input aria-label="头像缩放" type="range" min="1" max="4" step="0.01" value={scale} disabled={busy} onChange={changeScale} /></label>
+        <label className="rn-avatar-crop-zoom"><span>缩放</span><input aria-label="头像缩放" type="range" min="1" max="4" step="0.01" value={scale} disabled={busy} onChange={changeScale} /></label>
       </div>
-      <footer className="rn-group-avatar-crop-footer"><button type="button" disabled={busy} onClick={onCancel}>取消</button><button type="button" disabled={busy || !imageSize.width} onClick={() => { void confirm(); }}>{busy ? '处理中' : '确定'}</button></footer>
+      <footer className="rn-avatar-crop-footer"><button type="button" disabled={busy} onClick={onCancel}>取消</button><button type="button" disabled={busy || !imageSize.width} onClick={() => { void confirm(); }}>{busy ? '处理中' : '确定'}</button></footer>
     </section>
   );
 }

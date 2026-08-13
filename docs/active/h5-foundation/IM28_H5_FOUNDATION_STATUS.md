@@ -1,8 +1,249 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a7.1 H5 lightweight interaction foundation 已完成；RN 样式结构保持不变，SDK/RN 未修改`
-- next_step: `W6.a6.18.3.13.4 Web group admin/owner contract/core；先冻结 exactly-once 与 partial-success，不改 RN 业务逻辑，不执行真实 mutation`
+- current_step: `W6.a6.20.14 群主转让已迁为独立 React Router SPA 页面`
+- next_step: `执行 W6-rn-parity-residual-inventory-refresh；按 RN page/action/state 与 H5 route/owner 重新检索剩余缺口`
+
+## W6.a6.20.14 Group Owner Transfer Route Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| RN route parity | `done-local` | 新增 `/settings/manage/owner-transfer`；标题、搜索、角色优先分组、下拉刷新、成员选择与二次确认均由独立页面持有；管理首页只保留入口 | 真实非空候选、确认层视觉和成功返回需要可用群数据 |
+| shared owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 继续唯一持有群主权限、候选过滤、exactly-once Gateway、group/member 原子角色事务及权威刷新；H5 不复制角色或事务规则 | RN 现有转让链保持冻结，未宣称双端 convergence；未执行真实 mutation |
+| H5 behavior | `done-local/fail-closed` | 管理员和群主页面共用 cache-first route data hook；搜索使用 shared 显示名，当前群主排除，管理员置顶，普通成员按拼音分组；`remote-only` 可见且不重放 | 当前浏览器实例受 SQLite 多标签互斥锁阻塞，登录态页面链未完成浏览器复验 |
+| structure | `clean` | 管理首页旧群主 picker/action/成员加载已删除；新 route、view helper 与 shared hook 各有单一生产消费者链，无 compat 双轨、页面 Gateway/SQL、TODO/debug log 或 orphan owner | 自动 convergence script 在本仓库不存在 |
+| verification | `green-local` | H5 focused 3 files/10 tests；full verify 含 SDK Web 85 files/357 tests、466 assets、boundary、SDK/H5 typecheck、1102-module build；diff-check 通过 | build 仅有既有 large-chunk warning |
+| freeze | `pass` | `im28-phone` worktree clean；本片未改 SDK source，只由 verify 执行 `build:web/sync:web` | RN/desktop build 与 `build:package:desktop:web` 未执行 |
+
+## W6.a6.20.13 Group Administrator Routes Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| RN route parity | `done-local` | 新增 `/settings/manage/admins` 管理员列表和 `/admins/add` 候选页；管理首页只保留入口；浏览器历史/刷新具有稳定 route | 当前账号目标群已不在会话 cache，非空列表视觉与真实返回链 data-gated |
+| shared owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 唯一持有权限、普通成员候选、`IM_GROUP_ADMIN_LIMIT`、exactly-once set/cancel、群/成员缓存事务及 `local/remote-only`；H5 不复制上限 | RN 现有角色 mutation caller 保持冻结，未宣称双端 convergence |
+| H5 behavior | `done-local/fail-closed` | 子路由 cache-first 恢复会话/群/成员，先同步群再同步成员；候选刷新会裁剪失效选择；错误或无权限时隐藏添加、搜索、候选和提交动作 | 未执行真实添加/移除管理员 mutation |
+| structure | `clean` | 旧管理员添加/取消 modal 和 action 从 `GroupManagementPage` 删除；列表、添加 route 和 shared mutation 分层单一，无 compat 双轨、页面 Gateway/SQL、fake-success 或 orphan helper | 群主转让已由 `W6.a6.20.14` 独立 route 关闭 |
+| verification | `green-local` | SDK focused 1 file/5 tests；H5 focused 1 file/4 tests；full verify 含 SDK Web 85 files/357 tests、466 assets、boundary、SDK/H5 typecheck、1099-module build；diff-check 通过 | build 仅有既有 large-chunk warning |
+| browser/freeze | `pass-readonly/data-gated` | 412px 两个新 route 在目标群缺失时展示真实错误且动作 fail-closed，document/viewport 均 412px；`im28-phone` worktree clean | 未制造群数据；RN/desktop build 与 `build:package:desktop:web` 未执行 |
+
+## W6.a6.20.12 Home Search Clear Control Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| RN parity | `done-local` | 搜索有值时显示 RN `xmark-circle` 清除按钮；空值隐藏；点击后清空输入、旧结果、分页和错误态并恢复搜索历史 | physical touch keyboard/Safari/Firefox |
+| focus | `pass-chromium` | 清除后 `activeElement.type=search`，保持 RN TextInput 编辑态，避免移动端键盘因按钮获焦而收起 | iOS Safari virtual keyboard proof |
+| structure | `clean` | `ConversationSearchInput` 只翻译 input/Enter/clear DOM 事件；页面仍是唯一搜索状态与 SDK orchestration owner；page/input/helper 为 376/53/287 行 | no shared SDK capability change |
+| browser | `pass-readonly` | 已登录账号 412x786：`donk` 产生 2 行真实结果；清除后 row=0、历史恢复、按钮消失、输入 active；document/viewport 均 412px | no mutation executed |
+| verification | `green-local` | focused H5 2 files/7 tests；final full verify 含 SDK Web 85 files/356 tests、466 assets、runtime boundary、SDK/H5 typecheck、1092-module build；diff-check 通过 | build 仅有既有 large-chunk warning |
+| freeze | `pass` | 本片未修改 `im28-phone` 或 `im28-sdk/src`；仅按 H5 门禁执行 `build:web/sync:web` | RN/desktop build 与 `build:package:desktop:web` 未执行 |
+
+## W6.a6.20.11 Home Search Highlight Parity Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| RN parity | `done-local` | 好友/群聊标题与副标题按 RN 规则执行 trim、大小写不敏感和多处命中品牌色；聊天记录汇总行保持不高亮 | 当前真实 cache 只有好友命中，无群结果样本 |
+| ownership | `clean` | 搜索筛选/缓存仍由 SDK 持有；H5 helper 只切分展示文本，页面只渲染语义标签和 CSS color | RN caller 冻结，本片不产生 shared convergence 声明 |
+| browser | `pass-readonly/data-gated` | 已登录账号 412x786：`donk` 两行好友各有一个 `rgb(123, 97, 255)` 命中；`123` 聊天记录行 `mark=0`；document/viewport 均 412px | 无真实群结果，未执行 mutation |
+| verification | `green-local` | focused helper 5/5；full verify 含 SDK Web 85 files/356 tests、466 assets、runtime boundary、SDK/H5 typecheck、1091-module build；diff-check 通过 | build 仅有既有 large-chunk warning |
+| freeze | `pass` | `im28-phone` worktree clean；SDK 源码零改动，只按 H5 门禁执行 `build:web/sync:web` | RN/desktop build 与 `build:package:desktop:web` 未执行 |
+
+## W6.a6.20.10 Home Search Pagination And Stale Request Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared owner | `converged-owner-consumed` | 继续只消费 SDK `contacts/groups/conversations` cache 与 `messages.searchCached({ limit, offset })`；关键词、可见正文、删除/撤回过滤和结果分页仍由 shared message search owner 持有 | RN caller 冻结，本轮未改写或重新宣称 convergence |
+| H5 orchestration | `done-local` | `/conversations/search` 对齐 RN 8 条聊天记录分页、同会话跨页计数/最远消息定位、输入变化 request generation、下拉重读与不重复写历史；好友/群聊仍按页面快照分区展示 | 当前真实缓存不足 8 条同关键词消息，分页按钮运行态 data-gated |
+| structure | `clean` | H5 helper 只做 view projection/merge；无页面 SQL/Gateway、第二搜索条件 owner、fake-success、TODO/console 或 orphan helper；页面 348 行、helper 247 行 | full verify 后新增的 request-generation 纯函数由 focused/typecheck 覆盖 |
+| browser | `pass-readonly/data-gated` | 已登录账号 412x786：缺省历史 `donk`，真实好友两行；`123` 命中聊天记录一行且可定位稳定消息；document/body/viewport 均 412px，下拉文案存在 | 无群命中、无 8 条以上同关键词消息，未触发真实查看更多手势；未执行任何 mutation |
+| verification | `green-local` | focused helper 4/4；full verify 含 SDK Web 85 files/356 tests、466 assets、runtime boundary、SDK/H5 typecheck、1091-module build；最终 H5 typecheck/diff-check 通过 | build 仅有既有 large-chunk warning |
+| RN freeze | `pass` | `im28-phone` worktree clean；只运行 Web build/sync | RN/desktop build 未执行，`build:package:desktop:web` 未修改或执行 |
+
+## W6.a6.20.9 Group Conversation Open Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared conversation owner | `shared-core-ready/web-consumed/rn-frozen` | `openIMGroupConversation` cache-first 解析群目标；缺少/失效会话 ID 时经 `getGroup -> getConversation` 获取真实 ID；严格校验群/会话身份，并在当前账号队列内保存 latest message 与 conversation | RN `fetchGroupConversation` 生产 caller 冻结，未执行 caller convergence |
+| H5 consumers | `done-local` | “我的群聊”“共同群聊”“查找群聊”的已加入分支全部只调用 `conversations.openGroup`，按 SDK 返回的规范会话 ID 导航；删除页面本地 list/sync/find 双轨 | 群申请分支保持既有 owner；无真实非空群样本，未执行远端打开请求 |
+| structure | `clean` | 规范 ID、Gateway DTO 映射、缓存写入、失效 ID fallback 与账号切换保护只存在于 SDK；H5 只持有 opening 状态、错误展示和 React Router 导航 | RN frozen path 已登记，未来需独立授权 convergence |
+| browser | `pass-readonly/data-gated` | 已登录账号 `/contacts/groups`、两位联系人的 `/contacts/users/:userID/groups` 均为真实空态；页面无 console error | 当前账号没有已加入群或共同群，无法证明非空点击、Gateway fallback 与 chat route 视觉链 |
+| verification | `green-local` | SDK focused sql.js 4/4；full verify 含 SDK Web 85 files/356 tests、466 assets、runtime boundary、SDK/H5 typecheck、1091-module build | build 仅有既有 large-chunk warning |
+| RN freeze | `pass` | `im28-phone` worktree clean；只发布 H5 generated package | RN/desktop build 未执行，`build:package:desktop:web` 未修改或执行 |
+
+## W6.a6.20.8 Verification Unread Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared application owner | `shared-core-ready/web-consumed/rn-frozen` | friend facade 统一专用未读读取、非负整数归一化、明确 ID 保序去重和空集合 fail-closed；group facade 以审核第一页 `total` 读取当前账号待处理总数 | RN 现有 service/caller 冻结，未执行 caller convergence |
+| H5 consumer | `done-local` | 通讯录入口与验证双 tab 共用单一 hook/角标；页面进入、通讯录下拉、好友单条已读成功为明确刷新点；incoming 未读申请资料入口先本地投影再调用 shared mutation，失败不阻断导航 | 当前真实账号计数为 0、申请均 outgoing/accepted，未取得 incoming 未读或非零群审核数据 |
+| structure | `clean` | DTO/未读/审核 total 语义只在 SDK；H5 只持有并行读取、`0/99+` UI 和路由；无 Gateway/OpenAPI 直调、第二计数 owner、orphan wrapper 或 compat 暗桩 | RN frozen path 已登记，未来需单独授权 convergence |
+| browser | `pass-readonly` | 412px 真实账号 `/contacts`、friend/group tabs、2 条 accepted 好友申请与群空态；申请行具备资料按钮，双页零横向溢出、console 0 | 未点击申请，未执行 mark-read/accept/reject mutation；dark/desktop/Safari/Firefox 未验收 |
+| verification | `green-local` | SDK focused 2 files/15 tests；H5 badge 1/1；full verify 含 SDK Web 84 files/352 tests、466 assets、boundary、SDK/H5 typecheck、1091-module build | build 仅有既有 large-chunk warning |
+| RN freeze | `pass` | `im28-phone` worktree clean；仅执行 `build:web/sync:web` 并同步 H5 generated package | RN/desktop build 未执行，`build:package:desktop:web` 未修改或执行 |
+
+## W6.a6.20.7 Personal Profile Avatar Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared profile owner | `shared-core-ready/web-consumed/rn-frozen` | `WebIMSync.profile.updateAvatar` 冻结当前账号并原子执行静态图片/10MB 校验、Web OSS 上传、avatar-only Gateway update 与响应身份校验；部分响应缺头像时保留已确认远端 URL | RN `ProfileScreen/uploadAvatar/updateSelfInfo` 保持冻结，未执行 caller convergence |
+| H5 personal profile | `done-local` | `/me/profile` 恢复 RN 头像行、相册/拍照/取消和共享 512x512 JPEG crop；成功后只用 SDK 返回资料更新当前视图，失败保留裁剪层与可见错误 | 真实文件选择、OSS 上传、profile update、刷新回读与第二终端展示未授权 |
+| structure | `clean` | `updateAvatar` 是个人资料唯一写入口；onboarding 的 `uploadAvatar -> memory draft -> final update` 是不同提交时序；旧 onboarding 专属 sheet/helper 已删除，来源 sheet、输入合同和 crop owner 仅一份 | RN consumer 继续登记为 frozen，不以多 runtime 编译替代 caller convergence |
+| browser | `pass-readonly` | 已登录账号 412px `/me/profile` 显示头像行；来源层准确展示“从相册选一张/拍一张照片/取消”；input 为静态图片相册与 `capture=environment` 拍照；document/body 均 412px，无横向溢出；只打开并取消 | 未选择文件或触发任何上传/资料 mutation；未取得 console/light/dark/desktop proof |
+| verification | `green-local` | SDK focused 1 file/8 tests；H5 focused 3 files/5 tests；full verify 含 SDK Web 84 files/349 tests、466 assets、SDK/H5 typecheck、1089-module build；runtime boundary 与 diff-check 通过 | build 仅有既有 large-chunk warning；仓库无 `scripts/check-convergence.sh` |
+| RN freeze | `pass` | `im28-phone` worktree clean；只执行 `build:web/sync:web` 并同步 H5 generated package | RN package 未重建，`build:package:desktop:web` 未修改或执行 |
+
+## W6.a6.20.6 Onboarding Avatar Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared profile owner | `shared-core-ready/web-consumed/rn-frozen` | `WebIMSync.profile.uploadAvatar/update` 统一 JPEG/PNG/WEBP、10MB、远端 HTTP(S) URL、上传前后账号一致性和 update 响应身份；复用生产 Web OSS adapter | RN `CompleteProfileScreen/uploadAvatar/updateSelfInfo` 保持冻结，未执行 caller convergence |
+| H5 onboarding | `done-local` | 完善资料头像恢复 RN 相册/拍照/取消 sheet；群头像裁剪抽为单一共享 512x512 JPEG Canvas owner；上传成功只写内存草稿，最终“完成”才与 nickname/gender/bio 一起提交 `avatar_url` | 有效 onboarding marker 只来自新账号注册；当前已登录账号不得伪造 marker |
+| browser | `guard-only/data-gated` | 已登录账号直达 `/auth/complete-profile` 必须按 guard 返回会话页；未制造注册、上传或资料 mutation | 真实新账号来源 sheet、文件选择、裁剪、OSS 上传、最终 update、移动端/桌面 light/dark/history 需获批可抛弃账号 |
+| verification | `green-local` | focused H5 4 files/10 tests；full verify 含 SDK Web 84 files/347 tests、466 assets、SDK/H5 typecheck、1089-module build；runtime boundary 与 diff-check 通过 | build 仅有既有 large-chunk warning |
+| RN freeze | `pass` | `im28-phone` worktree clean；只执行 `build:web/sync:web` 并同步 H5 generated package | RN package 未重建，desktop scripts 未改 |
+
+## W6.a6.20.5 Group Server Search Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared search owner | `shared-core-ready/web-consumed/rn-frozen` | Gateway 搜索 wrapper 不再丢失 `source_type`；shared facade 统一 trim、认证、稳定 ID 去重和 `pending > joined > available`，并复用唯一已加入群 owner 提供真实会话 ID | RN `CreateGroupServerSearchScreen/searchGroupsByID/joinGroupByID` 保持冻结，未执行 caller convergence |
+| H5 route | `done-local` | `/groups/create` 恢复 RN“查找群聊”入口；`/groups/search` 支持防抖、loading/error/empty、三态操作及返回时保留已选好友；available 复用既有申请页和 `source_type=search` | 无真实可加入结果，未触发申请 mutation |
+| browser | `pass-readonly/data-gated` | 412px 认证账号验证入口、独立 route、`donk` 与已知旧群 ID 的真实空结果、返回后已选好友保持、零横向溢出 | 结果行/已加入跳转/待审核禁用/申请成功与第二账号 list-back 缺少后端数据证明 |
+| verification | `green-local` | SDK focused 2 files/9 tests；H5 focused 3 files/7 tests；full verify 含 SDK Web 84 files/345 tests、466 assets、typecheck、1084-module build | build 仅有既有 large-chunk warning |
+| RN freeze | `pass` | `im28-phone/src/**`、测试、App/native 零改动；仅运行 `build:web/sync:web` 并同步 H5 generated package | RN package 未重建，desktop scripts 未改 |
+
+## W6.a6.20.4 Chat Composer Pending Attachment Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared submission plan | `shared-core-ready/web-consumed/rn-frozen` | `shouldStageIMComposerMedia/createIMComposerSubmissionPlan` 固定已有草稿+单媒体待发送、编辑态附件互斥、`media -> file -> text` 串行步骤 | RN 现有 composer 编排保持冻结，需独立授权后才能切换 shared consumer |
+| H5 pending attachment | `done-local` | 文件选择后不立即上传，展示名称/类别/大小/移除；待发送附件可单独提交，媒体/文件与文本/@/引用在一个 operation 中顺序执行，前序失败阻断后续 | 真实文件/媒体上传与带草稿组合消息未执行 |
+| browser | `pass-no-send` | 412x820 单聊选择仓库内 `package.json` 后显示 `文件 · 924 B`、发送按钮可见、无横向溢出；移除后恢复加号，零 console error | 未点击发送，未产生 Gateway/OSS/SQLite outgoing mutation |
+| verification | `green-local` | SDK focused 3/3；H5 focused 3 files/10 tests；full verify 含 SDK Web 84 files/343 tests、466 assets、typecheck、1081-module build | build 仅有既有 large-chunk warning |
+| RN freeze | `pass` | 未修改 `im28-phone/src/**`、测试、App/native；只执行 `build:web/sync:web` 并同步 H5 generated package | RN package 未重建 |
+
+## W6.a6.20.3 Chat Composer Camera And RTC Entries Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| camera platform | `done-local` | 独立单张 `image/* + capture=environment` input；结果复用 album 校验与 `messages.sendImage` 上传/状态链；取消零错误 | 未点击拍照，未请求 camera permission，桌面浏览器按平台退化为文件选择 |
+| RTC composition | `done-local/shared-owner-consumed` | 单聊显示 RN 同顺序入口，二次选择复用全局 `CallTypeActionSheet -> WebIMCallProvider -> SDK calls`；群聊隐藏 | 未选择语音/视频，未发起 Gateway/LiveKit/媒体权限；真实群页当前账号 data-gated |
+| owner convergence | `pass` | 联系人与聊天共用一个 H5 通话方式弹层；删除旧 `ContactCallSheet`；图片、鉴权、信令、媒体状态均无第二 owner | RN business remains frozen |
+| browser | `pass-readonly` | 412x820 真实单聊证明 `相册/拍照/音视频通话/文件/名片` 顺序、通话二选一/取消、camera DOM contract、`scrollWidth=clientWidth=412`、零 console warning/error | camera/file chooser 与 final call 均未触发 |
+| verification | `green-local` | H5 focused 3 files/10 tests、typecheck；full verify 含 SDK Web 83 files/340 tests、466 assets、1078-module build；RN worktree clean | build 仅有既有 large-chunk warning |
+
+## W6.a6.20.2 Chat Composer Card Send Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared message owner | `shared-core-ready/web-consumed/rn-frozen` | `messages.sendCard` 统一 user/group card 校验、type108 body、optimistic row、Gateway 回显、SQLite 收敛和 persisted retry | RN 现有消息发送 consumer 冻结；真实失败重试未执行 |
+| compatibility guard | `pass` | type108 新增失败重试后，隐藏发送人转发仍按原矩阵拒绝名片；全量 guard 回归证明零 optimistic/network 副作用 | 普通服务端转发仍按既有能力运行 |
+| H5 UI | `done-local` | 附件面板增加 RN 名片资产；用户/群 tab、搜索、单选、显式发送；单聊排除本人和当前对端；页面不构造 Gateway body | 拍照、音视频通话附件动作仍待 residual inventory |
+| browser | `pass-no-send` | 412px 真实单聊仅展示第三位好友；群 tab 真实空态；选中后按钮解锁；`scrollWidth=clientWidth=412`；安全关闭并返回会话列表 | 未点击发送，未修改远端或账号数据 |
+| verification | `green-local` | SDK focused 11/11、Web 83 files/340 tests；H5 focused 5/5、466 assets/typecheck/1074-module build；RN worktree clean | build 仅有既有 large-chunk warning |
+
+## W6.a6.20.1 Forgot Password Methods Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| RN parity | `done-local` | 账号登录“忘记密码”打开手机号/邮箱/客服三分支 sheet；不再展示“接口不存在”错误替代交互 | 真实客服渠道由产品配置决定 |
+| H5 platform/UI | `done-local` | 复用全局原生 `InteractionModal`；切 route 前关闭 sheet，route change 再兜底清理；客服说明不提交请求 | 无忘记密码 API，符合 RN 当前 fallback |
+| browser | `pass-readonly` | 412px 三分支、单 dialog、phone/email path、零溢出；退出 donk 后使用 `15555555551/666666` 恢复 | 未请求验证码、修改密码或资料 |
+| verification | `green-local` | focused 2 files/6 tests；full verify 含 SDK Web 82 files/337 tests、466 assets/typecheck、1071-module build；RN worktree clean | build 仅有既有 large-chunk warning |
+| non-applicable | `web-not-applicable` | RN 网络设置是原生 HTTP/OpenIM HTTP/SOCKS proxy 注入；浏览器无等价 per-app proxy owner | Electron/Desktop 可在后续独立 platform adapter 实现 |
+
+## W6.a6.18.3.19 QR Code In-App Share Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| target/source | `shared-core-ready/web-consumed/rn-frozen` | `forward-target-source` 统一普通转发和二维码分享的好友/群 cache-first 加载、投影与真实会话解析；SDK/RN 源码未改 | RN selector consumer frozen |
+| H5 platform/UI | `done-local` | 个人/群稳定 share route；RN 好友/群 tab、搜索、单选和确认；确认后才从 shared payload 生成 320x320 PNG 并调用 `messages.sendImage` | 真实上传/发送与可选附言当前 RN UI 已注释，不新增 Web-only 路径 |
+| authenticated browser | `pass-no-send` | 真实账号两位好友；412px tab/单选/按钮门禁/安全返回/零横向溢出；群 tab 空态真实显示 | 当前账号 joined groups 为空，群目标卡片 data-gated；未点击最终分享 |
+| verification | `green-local` | H5 focused 6 files/13 tests；full verify 含 SDK Web 82 files/337 tests、466 assets/typecheck、1070-module build；RN worktree clean | second-account realtime/list-back only |
+
+## W6.a6.18.3.18 Group QR Code Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared payload/source | `shared-core-ready/web-consumed/rn-frozen` | `buildIM28GroupQRCodePayload` 统一 groupCard；群会话/cache/sync 精确匹配，单聊和缺失群 fail-closed；无页面 Gateway 请求 | RN helper/page consumer frozen |
+| H5 platform/UI | `done-local` | 群资料增加 `/settings/qrcode`；个人/群共用 `QRCodeDisplay`、Canvas、PNG、Web Share 与异步 cleanup；扫码返回严格绑定同一路由 | 应用内发送、真实下载/系统分享 |
+| authenticated browser | `pass-data-gated` | 412px 个人二维码抽取回归完整、Canvas 268x268、零溢出；缺失群深链显示真实错误 | 当前账号仅两条单聊且 joined groups 为空，真实群视觉不可证明 |
+| verification | `green-local` | focused 5 files/13 tests；full verify 含 SDK Web 82 files/337 tests、466 assets/typecheck、1067-module build；RN worktree clean | valid group account、external browser matrix only |
+
+## W6.a6.18.3.17 Personal QR Code Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared payload/profile | `shared-core-ready/web-consumed/rn-frozen` | `buildIM28UserQRCodePayload` 统一用户码；`profile.getCurrent` 提供真实昵称/头像/ID；页面不复制协议或资料 DTO | RN helper/page consumer frozen |
+| H5 platform/UI | `done-local` | `/me/qrcode` React Router lazy route；Canvas 高纠错二维码、居中头像 fallback、PNG 下载与文件 Web Share；渲染成功前导出 fail-closed | 真实系统下载/分享弹窗、跨浏览器文件分享 |
+| authenticated browser | `pass-readonly` | 真实账号从 `/me`、`/me/profile`、`/scan` 三入口可达；412x786 与 1280x800 完整二维码、零横向溢出 | 未点击下载/分享，未请求相机或相册 |
+| verification | `green-local` | H5 focused 5/5；full verify 含 SDK Web 82 files/337 tests、466 assets、typecheck、1064-module production build；RN worktree clean | 外部下载/分享/browser matrix only |
+
+## W6.a6.18.3.16 QR Scanner Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared QR contract | `shared-core-ready/web-consumed/rn-frozen` | myCard/groupCard JSON、im28 URL、legacy user JSON、source/type/encoding fail-closed；public group/get + qrcode apply facade | RN helper/NativeModule consumer frozen |
+| H5 platform/UI | `done-local` | 首页扫一扫；`/scan` dynamic ZXing；user profile/source propagation；`/groups/:groupID/apply`；click-only permission、stop/late-permission cleanup | physical camera、album file、real recognized QR、Safari/Firefox |
+| authenticated browser | `pass-readonly` | 412x786 首页菜单与扫码首屏；412/412 无横向溢出；未触发权限；历史群 ID 真实返回“资源不存在”而非假资料 | known valid public group、real apply/list-back |
+| verification | `green-local` | SDK QR+group application 9/9、Web 82 files/337 tests、build:web/sync:web；H5 focused 7/7、typecheck、1031-module build；RN status clean | external permission/recognition/mutation only |
+
+## W6.a6.18.3.15.2 Voice Broadcast Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared audio broadcast | `shared-core-ready/web-consumed/rn-frozen` | `prepareWebIMAudioUpload` 统一 audio MIME、1–60 秒、size/body；整批 upload once + batch-send once；沿用 partial/cache owner | real recorder/upload/send；RN consumer frozen |
+| H5 recorder/UI | `done-local` | 直接复用聊天 recorder/hook/gesture/CSS owner；2 秒、60 秒、上滑 56px、permission-await 与 route cleanup | physical hold、permission、audio playback、Safari/Firefox |
+| authenticated browser | `pass-readonly` | 412x786 compose 语音/键盘模式切换，“按住说话”可见；未 pointer-down | 未录音、未上传、未发送 |
+| verification | `green-local` | SDK voice focused 9/9、全量 82 files/335 tests、build:web/sync:web；H5 recorder 6/6、466 assets、typecheck、797-module build；RN status clean | external recorder/send/browser matrix only |
+
+## W6.a6.18.3.15.1 Media Broadcast Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared media broadcast | `shared-core-ready/web-consumed/rn-frozen` | image/video/file 复用普通发送 MIME/size/duration/dimension/body；整批 upload once + batch-send once；上传失败零 Gateway；切号 fail-closed；逐目标/cache 复用文本 owner | voice broadcast；RN consumer frozen；real send/realtime/list-back |
+| H5 compose | `done-local` | RN 资产图片/视频/文件入口；复用聊天选择校验和 video metadata；页面级可回收预览；只调用 `sync.messageBroadcast` | file chooser/真实上传、physical touch、Safari/Firefox |
+| authenticated browser | `pass-readonly` | 412x786 真实好友进入 compose；三媒体入口可见；surface 412/412 无横向溢出；composer 123px；console error=0 | 未选择文件、未上传、未发送 |
+| verification | `green-local` | SDK media focused 6/6、全量 82 files/334 tests、build:web/sync:web；H5 media helpers 8/8、466 assets、typecheck、796-module build；RN status clean | external upload/send/browser matrix only |
+
+语音群发需要复用 shared `message-audio-send` 的 1–60 秒和 body owner，但录音权限、MediaRecorder、按住说话交互属于 Web adapter；二维码扫描继续保持独立浏览器 platform slice。
+
+## W6.a6.18.3.15 Text Broadcast Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared broadcast | `shared-core-ready/web-consumed/rn-frozen` | 1–50、trim/保序去重、stable batch/client IDs、one batch-send、逐目标 sent/failed/unknown、真实会话校验和 success-only message/conversation transaction | RN consumer frozen；real partial/result/realtime/list-back |
+| H5 route/UI | `done-local` | 会话/通讯录共享入口；`/broadcast/select -> /broadcast/compose`；好友/群 cache-first、搜索/全选/上限、text draft、逐目标计数；Router state 仅稳定 ID | media broadcast、physical touch、Safari/Firefox |
+| authenticated browser | `pass-readonly` | 412x786 下真实 2 好友；选择一人、进入 compose、空文本 disabled、填写后 enabled、退出回 conversations；scrollWidth=innerWidth；console warning/error=0 | 未点击发送，未修改账号或远端数据 |
+| verification | `green-local` | SDK real sql.js 3/3、全量 82 files/331 tests、typecheck:web/build:web/sync:web；H5 route/view 4/4、466 assets、typecheck、793-module build；生产 route 200 | external send/browser matrix only |
+
+媒体群发没有以临时 Blob URL 或页面 OSS 调用补齐；后续 `.15.1` 必须复用 shared media upload/body/checkpoint 状态机。扫码依赖浏览器摄像头、HTTPS、permission 和二维码解析 port，保持另一独立切片。
+
+## W6.a6.18.3.14 Group Creation Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| residual inventory | `refreshed` | RN Screen/production caller、H5 route/page 与 active ledger 交叉过滤；外部验收门和平台专属项不重复计为开发缺口 | inventory remains living SSOT |
+| shared creation | `shared-core-ready/web-consumed/rn-frozen` | 2–998、trim/去重/本人拒绝、默认群名、one Gateway write、strict group/conversation IDs、群/会话原子事务和 `remote-only` 防重放 | RN consumer frozen；real create/realtime/second-account/list-back |
+| H5 route/UI | `done-local` | `/groups/create`、cache-first 好友、五列选择/搜索/上限/返回来源、会话与通讯录共享更多入口；只进入真实 conversation ID | authenticated non-empty read-only visual、physical touch、Safari/Firefox、real create |
+| verification | `green-local` | SDK creation 4/4、creation+lifecycle 10/10、typecheck:web；H5 creation+lifecycle view 6/6、typecheck、build 784 modules；RN status clean | full verify and external mutation smoke |
+
+## W6.a6.18.3.13.6 Closeout (2026-08-13)
+
+| gate | verdict | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| SDK shared owner | `pass-local` | `createIMGroupLifecycleSync`；leave/dismiss preflight、one Gateway write、strict group identity、group-domain transaction/rollback、`local\|remote-only`；群管理 related 27/27 | real leave/dismiss + server-denial + second-account realtime/list-back |
+| H5 consumer | `pass-local` | 群设置页只消费 `permissions.canQuitGroup/canDismissGroup` 与 `sync.groupLifecycle`；native dialog、remote-only fail-visible/lock；focused 12/12 + typecheck/build | real owner/member group confirmation visual and final result |
+| browser read-only | `pass-data-gated` | current account conversations route healthy、console blocking error=0；stale group deep link fail-visible | current account only has two single chats, so group action/modal visual unavailable without fabricating data |
+| RN freeze | `pass` | `im28-phone` worktree clean；未运行 `build:rn/sync:rn/build:all` | RN consumer convergence requires separate authorization |
+
+## W6.a6.18.3.13.5 Closeout (2026-08-13)
+
+| gate | verdict | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| SDK shared owner | `pass-local` | `createIMGroupManagementSync`；field permission、exactly-once、strict group/member identity、preserve-raw、`local\|remote-only`；focused 28/28 | real toggle/mute + server-denial + second-account realtime/list-back |
+| H5 consumer | `pass-local` | `/settings/manage`、`/manage/mute`、`/manage/speech-frequency` 只消费 `sync.groupManagement`；focused 14/14 + typecheck/build | authenticated group sample unavailable after current account cache changed |
+| browser read-only | `pass-data-gated` | three deep links resolve；missing-group fail-visible；412px `scrollWidth=innerWidth`；console error=0；no mutation executed | real group values、confirmation visual、mobile/Safari/Firefox |
+| RN freeze | `pass` | `im28-phone` worktree clean；未运行 `build:rn/sync:rn/build:all` | RN consumer convergence requires separate authorization |
 - blockers: `W5.a3 browser matrix remains blocked-environment；destructive/send/edit/delete/clear and real dual-account RTC flows require explicit authorization`
 - gate_state: `W6 group-profile compatibility exit converged/local；真实群资料/公告写入与第二账号 realtime/list-back 未授权；clear-history、archive and incoming-call prior gates remain unchanged`
 - latest_interaction_evidence: `2026-08-13 H5 interaction closeout: components/interaction 单一 owner 提供 route main-only、realtime tail-message、TabBar selected 和 native dialog；prefers-reduced-motion fail-quiet；ConversationDeleteSheet 成为首个 modal consumer；H5 typecheck/build、466 assets、390x844 zero-overflow、authenticated tab route/zero-console passed；空账号无会话，真实 delete-sheet/message-entry visual remains data-gated；SDK/RN/build:package:desktop:web untouched`
@@ -14,6 +255,7 @@
 - latest_rn_freeze_evidence: `2026-08-12 RN 12 个 tracked 业务文件与 packages/im-sdk 恢复 HEAD、3 个新增 composition 文件及其生成产物移除；im28-phone 整仓 worktree clean，npx tsc --noEmit 通过；H5/Web 后续只 build:web/sync:web，不改 RN 业务源码或 RN 本地 SDK 包`
 - latest_group_member_removal_evidence: `2026-08-12 shared removeIMGroupMembers/createIMGroupMentionSync.removeMembers 为 Web owner；stable-ID 去重、角色目标限制、exactly-once Gateway write、group/member transaction、authoritative|local|remote-only；H5 React Router 页面消费，RN kickGroupMembers 保持冻结基线且不是 shared consumer；真实移除未执行，build:package:desktop:web 未修改或执行`
 - latest_group_member_invitation_evidence: `2026-08-12 新 OpenAPI requester_user_ids + data.list 已进入 Gateway facade；shared inviteIMGroupMembers/createIMGroupMentionSync.inviteMembers 按 join_approval_required 选择 application|direct，好友 allow_group_invite fail-closed、exactly-once、strict response、authoritative|local|remote-only；H5 /settings/members/invite 消费，SDK 17/17、H5 10/10/typecheck/build；真实邀请未执行，RN worktree clean，build:package:desktop:web 未修改或执行`
+- latest_group_admin_owner_evidence: `2026-08-13 shared set/cancel admins + transfer owner 持有 owner/target/admin-limit 校验、exactly-once Gateway、group/member 原子事务、权限降级和独立权威刷新；候选过滤也归 SDK；H5 /settings/manage 只持有 React Router/list/picker/native dialog；SDK related 16/16 + new 4/4、build:web/typecheck；H5 focused 11/11 + typecheck/build；未执行真实 mutation，im28-phone 零改动，build:package:desktop:web 未修改或执行`
 - latest_group_card_evidence: `2026-08-12 group-card closeout: SDK contact-actions 12/12、RN/Web typecheck、build:rn/build:web；RN tsc + 43 focused；H5 focused 9/9、typecheck/build；authenticated real group showed entry, 7 real friend targets, search/single-select/cancel and 480px no-overflow；no share/send mutation；build:package:desktop:web untouched`
 - latest_group_profile_evidence: `2026-08-12 group-profile-name closeout: SDK joined-group 6/6、all-runtime typecheck/boundary、build:rn/build:web；RN tsc + openIMService 126/126 + group UI 5/5；H5 focused 10/10 + full verify，SDK Web 70/278、466 assets/typecheck/production build；authenticated real group opened profile/name editor and cancelled with 567px no-overflow/zero console error；no update/copy mutation；build:package:desktop:web untouched`
 - latest_group_avatar_evidence: `2026-08-12 group-avatar closeout: SDK 73 files/285 tests + all-runtime typecheck/boundary、build:rn/build:web；RN openIMService 127/127；H5 crop/profile 4/4、typecheck/production build；authenticated real group opened local 360px circular crop preview at 567x786, image decode/confirm readiness/zero-overflow/zero-console passed then cancelled；no upload/update mutation；build:package:desktop:web untouched`
@@ -64,6 +306,18 @@
 | acceptance | `web-local-green/external-gated` | SDK 17/17、H5 10/10/typecheck/build、dev-pc 运行；真实邀请与第二账号 application/member realtime/list-back 未执行 |
 
 本切片未点击最终邀请，不创建申请、不直接加群、不发送验证消息。仅执行 `build:web/sync:web`，未运行 RN 或 Desktop 发布脚本；`build:package:desktop:web` 未修改或执行。
+
+## W6.a6.18.3.13.4 Shared Group Admin And Owner
+
+| capability | state | frozen contract |
+| :--- | :--- | :--- |
+| canonical owner | `shared-core-ready/web-consumed/rn-frozen` | SDK 统一 owner capability、目标角色、管理员上限、exactly-once、原子角色事务与独立权威刷新 |
+| H5 consumer | `pass-local/no-real-write` | `/settings/manage` 只持有列表、选择、确认与反馈；候选过滤调用 shared helper，三种提交只调用 `groupMembers` facade |
+| RN consumer | `frozen/not-consumed` | RN `updateGroupMemberRole/transferGroupOwner` 与页面事件链保持现有业务基线，本切片零修改 |
+| partial success | `fail-visible` | 远端成功后本地/刷新失败返回 `remote-only|local`，禁止重放 set/cancel/transfer；转让后缺失权限按 member fail-closed |
+| acceptance | `web-local-green/external-gated` | SDK 16/16 + 4/4、H5 11/11/typecheck/build；真实角色变更与第二账号 realtime/list-back 未执行 |
+
+本切片没有确认最终管理员或群主操作。只执行 `build:web/sync:web`，未运行 RN/Desktop 构建或同步；`build:package:desktop:web` 未修改或执行。
 
 ## W6.a6.18.3.12 Group Profile Combined Compatibility Exit
 

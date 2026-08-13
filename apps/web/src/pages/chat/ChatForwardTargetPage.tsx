@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
-import type { WebIMContact, WebIMJoinedGroup } from '@im28/im-sdk/web';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
@@ -13,14 +12,16 @@ import {
   type ChatForwardLocationState,
 } from './chat-forward-route.js';
 import {
-  contactToChatForwardTarget,
-  conversationToChatForwardTarget,
   filterChatForwardTargets,
-  findForwardGroupConversationID,
-  groupToChatForwardTarget,
   type ChatForwardTarget,
   type ChatForwardTargetKind,
 } from './forward-target-view.js';
+import {
+  loadChatForwardTargets,
+  readChatForwardTargets,
+  resolveChatForwardTargetConversationID,
+  type ChatForwardTargetSource,
+} from './forward-target-source.js';
 import './chat-forward.css';
 
 /** 选择器 tab 与 RN 最近聊天、好友、群聊顺序一致。 */
@@ -49,12 +50,8 @@ export function ChatForwardTargetPage() {
   const [activeTab, setActiveTab] = useState<ChatForwardTargetKind>('conversation');
   // keyword 只在当前 tab 执行本地过滤。
   const [keyword, setKeyword] = useState('');
-  // recent 保存 cache-first 会话目标。
-  const [recent, setRecent] = useState<readonly ChatForwardTarget[]>([]);
-  // contacts 保存真实 Gateway 好友目标。
-  const [contacts, setContacts] = useState<readonly WebIMContact[]>([]);
-  // groups 保存 cache-first 已加入群目标。
-  const [groups, setGroups] = useState<readonly WebIMJoinedGroup[]>([]);
+  // source 保存共享 owner 返回的 cache-first 三类目标。
+  const [source, setSource] = useState<ChatForwardTargetSource>({ recent: [], contacts: [], groups: [] });
   // loading 只表示三类 facade 的当前刷新轮次。
   const [loading, setLoading] = useState(false);
   // openingKey 阻止重复打开同一目标会话。
@@ -75,22 +72,7 @@ export function ChatForwardTargetPage() {
     setLoading(true);
     setError(null);
     try {
-      // cachedResults 允许慢网时先显示最近会话和群聊。
-      const [cachedConversations, cachedGroups] = await Promise.all([
-        sync.conversations.listCached({ archived: false, limit: 100 }),
-        sync.groups.listCached(),
-      ]);
-      setRecent(cachedConversations.map(conversationToChatForwardTarget));
-      setGroups(cachedGroups);
-      // syncedResults 由三个既有 facade 完成分页、归一化和落库。
-      const [syncedConversations, syncedContacts, syncedGroups] = await Promise.all([
-        sync.conversations.sync({ pageSize: 100 }),
-        sync.contacts.list({ pageSize: 100 }),
-        sync.groups.sync({ pageSize: 50 }),
-      ]);
-      setRecent(syncedConversations.map(conversationToChatForwardTarget));
-      setContacts(syncedContacts);
-      setGroups(syncedGroups);
+      setSource(await loadChatForwardTargets({ sync, onCached: setSource }));
     } catch (cause) {
       setError(readForwardTargetError(cause));
     } finally {
@@ -102,10 +84,8 @@ export function ChatForwardTargetPage() {
 
   // targets 仅投影当前 tab，保持各 facade 原始顺序。
   const targets = useMemo(() => {
-    if (activeTab === 'friend') return contacts.map(contactToChatForwardTarget);
-    if (activeTab === 'group') return groups.map(groupToChatForwardTarget);
-    return recent;
-  }, [activeTab, contacts, groups, recent]);
+    return readChatForwardTargets(source, activeTab);
+  }, [activeTab, source]);
   // visibleTargets 应用当前关键字，不改变 target identity。
   const visibleTargets = useMemo(
     () => filterChatForwardTargets(targets, keyword),
@@ -120,20 +100,8 @@ export function ChatForwardTargetPage() {
     setOpeningKey(target.key);
     setError(null);
     try {
-      // targetConversationID 必须来自 facade 返回值或真实会话 cache。
-      let targetConversationID = target.conversationID;
-      if (target.kind === 'friend') {
-        targetConversationID = (await sync.peerProfile.openConversation(target.id)).conversationID;
-      } else if (target.kind === 'group') {
-        // conversations 先读 cache，缺失时使用 canonical sync 刷新。
-        let conversations = await sync.conversations.listCached({ limit: 500 });
-        targetConversationID = findForwardGroupConversationID(target, conversations);
-        if (!targetConversationID) {
-          conversations = await sync.conversations.sync({ pageSize: 100 });
-          targetConversationID = findForwardGroupConversationID(target, conversations);
-        }
-      }
-      if (!targetConversationID) throw new Error('目标会话尚未建立');
+      // targetConversationID 由转发与分享共用 owner 解析。
+      const targetConversationID = await resolveChatForwardTargetConversationID(sync, target);
       // routeState 继续只传稳定 IDs，不携带 Message body。
       const routeState: ChatForwardLocationState = { forward: forwardState };
       navigate(`/conversations/${encodeURIComponent(targetConversationID)}`, { state: routeState });

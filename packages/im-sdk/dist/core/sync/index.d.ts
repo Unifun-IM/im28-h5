@@ -1,4 +1,5 @@
 /** 创建跨端共用的通话记录 cache/sync 服务，并保留 Web 兼容名称。 */
+export { canCreateIMGroupWithMemberCount, createIMGroupCreationSync, IM_GROUP_CREATION_MAX_MEMBER_COUNT, IM_GROUP_CREATION_MIN_MEMBER_COUNT, type IMGroupCreationOptions, type IMGroupCreationResult, type IMGroupCreationSync, type IMGroupCreationSyncDependencies, } from './group-creation.js';
 export { createIMCallRecordSync, createWebIMCallSync, mapIMCallTerminalSignalToRecord, } from './call-sync.js';
 /** 创建 RN、Web 与 Desktop 共用的通话控制 facade。 */
 export { createIMCallControlSync, normalizeIMCallServerURL } from './call-control.js';
@@ -24,8 +25,20 @@ export { formatIMFriendSourceType, IM_FRIEND_SOURCE_TYPE_EMAIL, IM_FRIEND_SOURCE
 export { createWebIMGroupApplicationSync } from './group-application-sync.js';
 /** 导出 RN、Web、Desktop 共用的群管理权限投影。 */
 export { resolveIMGroupManagementPermissions } from './group-management-permissions.js';
+/** 导出群管理员和群主变更的共享单次写入核心。 */
+export { cancelIMGroupAdmins, filterIMGroupAdminCandidates, filterIMGroupOwnerTransferCandidates, IM_GROUP_ADMIN_LIMIT, setIMGroupAdmins, transferIMGroupOwner, } from './group-admin-owner.js';
+/** 导出群设置与禁言的共享业务入口。 */
+export { createIMGroupManagementSync, updateIMGroupMemberMute, updateIMGroupMute, updateIMGroupSettings, } from './group-settings-mute.js';
+/** 导出群退出与解散的共享破坏性生命周期入口。 */
+export { createIMGroupLifecycleSync, dismissIMGroup, leaveIMGroup, } from './group-lifecycle.js';
+/** 导出群生命周期的输入、结果和部分成功契约。 */
+export type { IMDismissGroupOptions, IMGroupLifecycleCacheState, IMGroupLifecycleOperation, IMGroupLifecycleResult, IMGroupLifecycleSync, IMGroupLifecycleSyncDependencies, IMLeaveGroupOptions, } from './group-lifecycle.js';
+/** 导出群设置与禁言的中性输入、结果和缓存状态。 */
+export type { IMGroupManagementSync, IMGroupManagementSyncDependencies, IMGroupMemberMuteMutationResult, IMGroupSettingsMutationResult, IMGroupSettingsMuteCacheState, IMGroupSpeechFrequencySeconds, IMUpdateGroupMemberMuteOptions, IMUpdateGroupMuteOptions, IMUpdateGroupSettingsOptions, } from './group-settings-mute.js';
 /** 导出群管理权限投影的中性契约。 */
 export type { IMGroupManagementPermissions, IMResolveGroupManagementPermissionsInput, } from './group-management-permissions.js';
+/** 导出群角色 mutation 的中性输入和提交契约。 */
+export type { IMGroupAdminChangeCommit, IMGroupAdminChangeOptions, IMGroupOwnerTransferCommit, IMGroupOwnerTransferOptions, IMGroupRoleCandidate, IMGroupRoleMutationCacheState, } from './group-admin-owner.js';
 /** 创建认证账号绑定的 cache-first 我的群聊 service。 */
 export { createWebIMJoinedGroupSync } from './joined-group-sync.js';
 /** 导出跨端共用的群公告发布、已读版本和权限合同。 */
@@ -47,7 +60,7 @@ export { resolveIMGroupMemberDisplayName } from './sender-display-name.js';
 /** 导出群成员名称投影的最小字段契约。 */
 export type { IMGroupMemberDisplayNameSource } from './sender-display-name.js';
 /** 导出中性群提及 facade 的公共契约。 */
-export type { IMGroupMentionMember, IMGroupMentionSync, IMGroupMentionSyncDependencies, IMInviteGroupMembersResult, IMRemoveGroupMembersResult, IMSendGroupMentionOptions, } from './group-mention.js';
+export type { IMGroupMentionMember, IMGroupMentionSync, IMGroupMentionSyncDependencies, IMGroupAdminChangeResult, IMGroupOwnerTransferResult, IMInviteGroupMembersResult, IMRemoveGroupMembersResult, IMSendGroupMentionOptions, } from './group-mention.js';
 /** 导出群邀请输入、模式和部分成功状态契约。 */
 export type { IMGroupMemberInvitationCacheState, IMGroupMemberInvitationCommit, IMGroupMemberInvitationMode, IMInvitableGroupContact, IMInviteGroupMembersOptions, } from './group-member-invitation.js';
 /** 导出群成员移除输入和部分成功状态契约。 */
@@ -56,6 +69,10 @@ export type { IMGroupMemberRemovalCacheState, IMGroupMemberRemovalCommit, IMRemo
 export { createWebIMPeerProfileSync } from './peer-profile-sync.js';
 /** 创建受认证账号约束的会话 cache/sync 服务。 */
 export { createWebIMConversationSync } from './conversation-sync.js';
+/** 导出按群身份打开规范会话的共享能力。 */
+export { openIMGroupConversation } from './group-conversation-open.js';
+/** 导出群会话打开输入与依赖契约。 */
+export type { IMGroupConversationOpenDependencies, IMOpenGroupConversationOptions, } from './group-conversation-open.js';
 /** 导出新 Gateway Difference 原子同步 owner，供受控平台组合。 */
 export { syncIMGatewayDifference } from './gateway-difference-sync.js';
 /** 导出 Difference 同步的稳定结果契约。 */
@@ -88,6 +105,10 @@ export { createIMMessageSearchSync } from './message-search.js';
 export type { IMMessageSearchSync, IMMessageSearchSyncDependencies, } from './message-search.js';
 /** 导出共享群聊提及发送函数。 */
 export { sendWebIMMentionMessage } from './message-mention-send.js';
+/** 创建 RN、Web 与 Desktop 共用的消息群发 facade。 */
+export { createIMMessageBroadcastSync, IM_BROADCAST_MAX_TARGETS, } from './message-broadcast.js';
+/** 导出消息群发的稳定目标、媒体选项、逐目标结果和依赖契约。 */
+export type { IMBroadcastAudioOptions, IMBroadcastFileOptions, IMBroadcastImageOptions, IMBroadcastTarget, IMBroadcastTargetResult, IMBroadcastTextOptions, IMBroadcastTextResult, IMBroadcastVideoOptions, IMMessageBroadcastSync, IMMessageBroadcastSyncDependencies, } from './message-broadcast.js';
 /** 导出共享批量转发执行函数。 */
 export { forwardWebIMMessages } from './message-forward.js';
 /** 导出共享转发来源与隐藏发送人能力判断。 */
@@ -133,7 +154,7 @@ export type { WebIMContact, WebIMContactListOptions, WebIMContactSearchUser, Web
 /** 导出好友申请 facade contract。 */
 export type { WebIMFriendApplication, WebIMFriendApplicationDirection, WebIMFriendApplicationListOptions, WebIMFriendApplicationSync, WebIMFriendApplicationSyncDependencies, } from './friend-application-sync.js';
 /** 导出群申请审核 facade contract。 */
-export type { WebIMGroupApplication, WebIMGroupApplicationListOptions, WebIMGroupApplicationSync, WebIMGroupApplicationSyncDependencies, WebIMGroupApplicationType, } from './group-application-sync.js';
+export type { WebIMGroupApplication, WebIMGroupApplicationListOptions, WebIMGroupApplicationSync, WebIMGroupApplicationSyncDependencies, WebIMGroupApplicationType, WebIMApplyGroupOptions, WebIMGroupSearchItem, WebIMGroupSearchJoinedItem, WebIMGroupSearchStatus, WebIMPublicGroup, } from './group-application-sync.js';
 /** 导出我的群聊 facade contract。 */
 export type { IMPublishWebIMGroupAnnouncementOptions, IMPublishWebIMGroupAnnouncementResult, WebIMJoinedGroup, WebIMJoinedGroupRole, WebIMJoinedGroupStatus, WebIMJoinedGroupSync, WebIMJoinedGroupSyncDependencies, WebIMJoinedGroupSyncOptions, } from './joined-group-sync.js';
 /** 导出群公告共享 owner 的平台中立契约。 */
@@ -156,6 +177,8 @@ export type { WebIMCustomEmojiSync, WebIMCustomEmojiSyncDependencies, } from './
 export type { WebIMMessageSync, WebIMMessageSyncDependencies, WebIMPullMessageHistoryOptions, } from './message-sync.js';
 /** 导出文本发送 contract。 */
 export type { WebIMSendTextMessageOptions } from './message-text-send.js';
+/** 导出平台中立消息名片与当前会话发送 contract。 */
+export type { IMGroupMessageCard, IMMessageCard, IMUserMessageCard, WebIMSendCardMessageOptions, } from './message-card-send.js';
 /** 导出群聊提及发送 contract。 */
 export type { WebIMSendMentionMessageOptions } from './message-mention-send.js';
 /** 导出批量转发 facade 与逐项结果 contract。 */

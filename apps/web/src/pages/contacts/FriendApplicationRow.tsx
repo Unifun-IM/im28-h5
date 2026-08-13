@@ -15,6 +15,7 @@ import {
 interface FriendApplicationRowProps {
   readonly application: WebIMFriendApplication;
   readonly handling: boolean;
+  readonly onOpen: () => void;
   readonly onAccept: () => void;
 }
 
@@ -22,6 +23,7 @@ interface FriendApplicationRowProps {
 export function FriendApplicationRow({
   application,
   handling,
+  onOpen,
   onAccept,
 }: FriendApplicationRowProps) {
   // avatarStyle 复用 RN FNV-1a 渐变。
@@ -31,24 +33,24 @@ export function FriendApplicationRow({
   // canAccept 只允许 incoming pending 申请显示按钮。
   const canAccept = canAcceptFriendApplication(application);
   return <article className="rn-friend-application-row" role="listitem">
-    <span className="rn-friend-application-avatar-wrap">
-      <span className="rn-friend-application-avatar" style={avatarStyle}>
-        <span>{getRNAvatarInitial(application.displayName)}</span>
-        {application.avatarURL ? <img src={application.avatarURL} alt="" loading="lazy" onError={event => { event.currentTarget.hidden = true; }} /> : null}
+    <button type="button" className="rn-friend-application-open" onClick={onOpen} aria-label={`查看 ${application.displayName} 的资料`}>
+      <span className="rn-friend-application-avatar-wrap">
+        <span className="rn-friend-application-avatar" style={avatarStyle}>
+          <span>{getRNAvatarInitial(application.displayName)}</span>
+          {application.avatarURL ? <img src={application.avatarURL} alt="" loading="lazy" onError={event => { event.currentTarget.hidden = true; }} /> : null}
+        </span>
       </span>
-    </span>
-    <span className="rn-friend-application-body">
       <span className="rn-friend-application-copy">
         <strong>{application.displayName}</strong>
         <span>{getFriendApplicationSourceText(application)}</span>
         <span>{getFriendApplicationMessageText(application)}</span>
       </span>
-      <span className="rn-friend-application-operation">
-        {canAccept ? <button type="button" disabled={handling} aria-label={`添加好友 ${application.displayName}`} onClick={onAccept}>{handling ? '处理中' : '加好友'}</button> : <span className="rn-friend-application-status">
-          {application.direction === 'outgoing' ? <RNAssetIcon assetURL={arrowUpRightURL} /> : null}
-          {getFriendApplicationStatusText(application.status)}
-        </span>}
-      </span>
+    </button>
+    <span className="rn-friend-application-operation">
+      {canAccept ? <button type="button" disabled={handling} aria-label={`添加好友 ${application.displayName}`} onClick={onAccept}>{handling ? '处理中' : '加好友'}</button> : <span className="rn-friend-application-status">
+        {application.direction === 'outgoing' ? <RNAssetIcon assetURL={arrowUpRightURL} /> : null}
+        {getFriendApplicationStatusText(application.status)}
+      </span>}
     </span>
   </article>;
 }

@@ -15,7 +15,7 @@
 .rn-contact-card-share-sheet {
   position: relative;
   display: grid;
-  width: min(100%, 480px);
+  width: 100%;
   height: min(72dvh, 640px);
   min-height: 420px;
   grid-template-rows: 56px 48px minmax(0, 1fr) auto;

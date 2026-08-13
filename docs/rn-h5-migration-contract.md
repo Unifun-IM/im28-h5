@@ -88,6 +88,7 @@ Current canonical routes:
 | `/contacts/friend-applications`、`/contacts/group-applications` | legacy Web index paths | redirect-only compatibility to canonical verification tabs；no page/business owner | `compatibility-only` |
 | `/contacts/group-applications/:groupID` | `GroupApplicationsScreen` + `GroupApplicationListView` | authenticated per-group filter/search/section/status and real accept/reject through same audit facade | `implemented-local/acceptance-gated` |
 | `/contacts/groups` | `ContactGroupListScreen` + `contactGroupHelpers` | authenticated cache-first joined-group list/search/status/role and real conversation lookup/open | `implemented-local/acceptance-gated` |
+| `/groups/create` | `ChatHomeScreen` + `GroupActionBubble` + `CreateGroupScreen` | authenticated five-column friend selection、2–998 rule、default group name and shared exactly-once create/cache convergence；success opens only the server-returned conversation ID | `done-local/mutation-acceptance-gated` |
 | `/contacts/users/:userID` | `ContactListScreen` -> `UserProfileScreen` | authenticated real user/friend profile, RN 120px hero and success-only direct-conversation creation/persistence | `implemented-local/acceptance-gated` |
 | `/contacts/users/:userID/add` | `UserProfileScreen` -> `AddFriendScreen` request state | authenticated RN 64px result row、80-character message and real success-only `applyFriend` | `implemented-local/acceptance-gated` |
 | `/calls` | `ChatHomeScreen` calls tab + `CallListScreen` | authenticated route; real cache/sync/delete; no RTC placeholder | `core-done-local/acceptance-gated` |
@@ -294,7 +295,7 @@ W6.a5.2.1 恢复联系人列表核心；验证消息、我的群聊、profile �
 | adapters | shared `GatewayHTTPClient.getCurrentUserDetail`; Web sync/runtime facades; React Router `/me` and `/me/settings` callers |
 | route/shell | `/me` remains inside `PrimaryTabsLayout`; `/me/settings` is a full-screen route outside the bottom tab shell; guest deep links replace to `/login` |
 | source assets/style | RN `assets/my/bg.jpg`、`set.svg`、`nav-arrow-right.regular.svg`、profile light/dark tokens；222px hero、96px avatar、overlapping rounded content panel、56px menu/logout rows |
-| excluded visible actions | personal-profile edit needs update/upload/QR subflows; account-security needs bind/reset/settings contracts; QR is explicitly unavailable in shared Web Gateway client; none receive placeholder controls |
+| excluded visible actions | personal-profile avatar edit、QR and account-security need separate bounded subflows; none receive placeholder controls |
 | no-fake rule | page imports only `@im28/im-sdk/web` through the runtime context; no direct fetch/Gateway client, hardcoded user profile, fake logout, placeholder destination or page-local tabbar |
 | open gaps | authenticated real profile/logout Network proof；profile edit/account security are implemented-local but acceptance-gated；QR/display/notification/network/cache/version require separate bounded cards |
 | acceptance gate | focused endpoint/runtime test + workspace verify + mobile/desktop light/dark route/back/refresh proof; real account must prove current-detail and logout redirect/session cleanup before production parity |
@@ -305,7 +306,7 @@ Local evidence: authenticated current-detail rendered the real `donk / 862727535
 
 | field | value |
 | :--- | :--- |
-| feature slice | personal profile read/edit for nickname、gender、bio；不含 avatar upload、QR 与 account security |
+| feature slice | personal profile read/edit for nickname、gender、bio；avatar upload 由 onboarding 独立切片消费同一 facade，个人资料头像编辑、QR 与 account security 不在本卡 |
 | phase | done-local/acceptance-gated；one Gateway operation + three route-owned field actions |
 | production flow | RN `ProfileScreen` profile/nickname branches + `ProfileGenderPickerScreen` + `ProfileBioEditorScreen` -> `updateSelfInfo` -> Gateway update-profile |
 | operations | `WebIMSync.profile.getCurrent`; `WebIMSync.profile.update({ nickname | gender | bio })` -> `POST /v1/users/update-profile` |
@@ -313,11 +314,11 @@ Local evidence: authenticated current-detail rendered the real `donk / 862727535
 | adapters | shared `GatewayHTTPClient.updateUserProfile`; existing `WebIMSync.profile`; React Router `/me/profile` and `/me/profile/nickname|gender|bio` |
 | route/shell | all profile/detail edit routes are full-screen outside `PrimaryTabsLayout`; cancel/back/save use React Router and survive refresh |
 | source style | RN 94px top bar、72px side actions、16px page padding、12px cards、56px rows、nickname 56px input、bio 160px textarea/count、gender selected mark、profile light/dark tokens |
-| excluded actions | avatar needs upload credential/crop/upload chain; QR is unavailable in shared Web client; neither receives a visible placeholder |
+| excluded actions | personal-profile avatar edit and QR remain separate routes；本卡不复制 onboarding 的文件/裁剪 UI |
 | no-fake rule | save success only after `updateUserProfile` resolves; errors stay visible; unchanged values navigate back without a network success claim |
 | local evidence | authenticated real current-detail rendered nickname/gender/ID/bio; 390x844 and 760x900 light layouts、all three editor routes、unchanged save、direct refresh、back/forward and guest redirect passed; cold restart added no console warning/error; `npm run verify` passed 466 assets、24 files / 67 tests、typecheck and production build |
 | no-fake verdict | one canonical `MeProfileEditorPage -> WebIMSync.profile.update -> GatewayHTTPClient.updateUserProfile` path; no direct fetch/Gateway、mock branch、placeholder action、compat wrapper or file over 300 lines |
-| open gaps | authenticated changed-value update Network/result proof and dark visual proof；avatar/QR/account-security remain separate bounded slices |
+| open gaps | authenticated changed-value update Network/result proof and dark visual proof；personal-profile avatar edit/QR/account-security remain separate bounded slices |
 | acceptance gate | focused auth/input/result/failure tests + workspace verify + mobile/desktop light/dark direct-route/save/cancel/back/refresh proof + real account update evidence |
 
 W6.a5.2.5 未修改真实账号资料：浏览器 proof 只提交未变化值，确保没有未经授权的远端副作用。真实 nickname/gender/bio mutation 与 dark matrix 通过前，状态保持 `done-local/acceptance-gated`。
@@ -395,7 +396,7 @@ Canonical contract: `docs/runtime-contracts/web-settings-cache-version.md`. Cont
 | invite code | `InviteCodeScreen` -> retry `registerPendingRegistration(pending, code)` | 同一个 register operation 的 optional `invite_code` | `runtime-chain-ready`；无独立 validate operation，不得新增邀请码 API 或本地校验成功态 |
 | account registration | `AccountRegisterScreen.onRegistered` | existing `WebIMRuntime.register({type:'account'})` | `runtime-chain-ready`；成功后进入 profile route，不再直接进 conversations |
 | current profile | `CompleteProfileScreen` initial contact/user -> `updateSelfInfo` | `WebIMSync.profile.getCurrent/update` -> current-detail/update-profile | nickname/gender/bio `runtime-chain-ready` |
-| avatar | crop -> `uploadAvatar` -> update profile `faceURL` | shared client has upload credential + `avatar_url` DTO；Web upload/crop facade absent | `blocked-web-upload`；不渲染可提交头像动作 |
+| avatar | crop -> `uploadAvatar` -> update profile `faceURL` | `WebIMSync.profile.uploadAvatar/update` + production Web OSS port；H5 shared 512x512 JPEG crop | `shared-core-ready/web-consumed/rn-frozen`；真实新账号上传/update 仍 acceptance-gated |
 | phone/email bind | `BindContactScreen` -> send code -> bind/update | bind/update operations exist；send-code operation absent | `blocked-verification-code`；注册已有 contact 只读展示，缺失 contact 不提供假绑定入口 |
 
 ### Route / State Matrix
@@ -431,9 +432,10 @@ Canonical contract: `docs/runtime-contracts/web-settings-cache-version.md`. Cont
 | `W6.a5.2.8.1-onboarding-route-state` | onboarding marker、pending-secret owner、`/auth/invite` and `/auth/complete-profile` guards、register redirects | existing login/register only | done-local/acceptance-gated；secret-free marker、memory-only pending、login/register split and fail-closed guards have focused tests |
 | `W6.a5.2.8.2-invite-page` | RN invite modal/page visual and real register retry | register with/without `invite_code` | done-local/acceptance-gated；real error stays visible；approved invite-required Network/visual evidence pending |
 | `W6.a5.2.8.3-complete-profile-core` | current profile read、RN geometry/grouping/missing-contact dialog、memory draft、gender/bio React Router edit、submit transition | current-detail + update-profile | implemented-local/acceptance-gated；10 focused app tests + full verify + anonymous deep-link guards pass；valid-context mutation/visual evidence pending |
-| avatar/contact extensions | upload/crop or verification lifecycle | missing Web upload / send-code facade | blocked until each contract is independently frozen |
+| avatar extension | album/camera、shared crop、upload、memory draft、final update | `WebIMSync.profile.uploadAvatar/update` | implemented-local/acceptance-gated；valid new-account Network/result/visual proof pending |
+| contact extension | verification lifecycle | send-code facade absent | blocked-verification-code |
 
-Anti-fake verdict: H5 `register -> /conversations` drift is corrected locally: existing login still enters conversations, while successful register records only an account-scoped marker and enters complete-profile; invite-required keeps the original request in memory and retries the same register operation. Gender/bio subroutes only update a Provider memory draft；the main form remains the sole update-profile caller. Avatar/contact display is read-only and has no no-op action. The implementation does not persist verification secrets, infer invite validity from four local characters, copy RN's no-op send-code success, or treat blocked controls as completed onboarding. Valid new-account Network/result and responsive light/dark evidence remain required before parity acceptance.
+Anti-fake verdict: H5 `register -> /conversations` drift is corrected locally: existing login still enters conversations, while successful register records only an account-scoped marker and enters complete-profile; invite-required keeps the original request in memory and retries the same register operation. Gender/bio subroutes and uploaded avatar URL only update a Provider memory draft；the main form remains the sole update-profile caller。头像必须经真实 OSS port 返回远端 URL，上传失败或切号不得形成草稿成功；contact 仍只读且无 no-op action。The implementation does not persist verification secrets, infer invite validity from four local characters, copy RN's no-op send-code success, or treat blocked controls as completed onboarding. Valid new-account Network/result and responsive light/dark evidence remain required before parity acceptance.
 
 ## 19. W6.a5.2.9 Blacklist Contract
 
@@ -1311,3 +1313,240 @@ Closeout: SDK Web 73 files/290 tests，其中公告发布/已读/realtime real s
 | route/cleanup | RN 在 active chat 可用 banner，其他场景全局来电层；终态统一停止铃声并释放 room/track/listener | H5 全局 owner 不依赖当前页面；route/logout/unmount/账号切换清理 UI/audio/media，页面刷新只可通过 pending 重新验证，不能恢复内存 token |
 
 Contract trace verdict: shared strict process parser 已由 RN 生产 `parseRTCServerCallSignal` 实际消费；`incoming-call-lifecycle.ts` 持有 event/call 去重、同 call accept/终态清理、终态先到防复活、有界集合与 Gateway pending 校验，Web runtime 实际订阅过程通知并发布无 token 的 `incomingCall` snapshot，登录/restore/reconnect/visibility 前台恢复 pending，账号切换/退出清空身份。H5 全局 Provider 已投影 RN 同语义 banner/fullscreen/可拖动 floating、shared 资料补齐、铃声/autoplay 恢复与 active route；SDK Web incoming orchestrator 保证 reject 不创建媒体，answer 成功后才创建 LiveKit session，远端终态只释放媒体且不回发 hangup，幂等 cleanup 且 token 不进入 React state/cache。SDK all-runtime typecheck/boundary、incoming/runtime 22/22 and final 15/15、build:web；H5 typecheck、UI/tone 6/6、build 和认证浏览器冷启动零遮罩/零 console smoke 已通过，状态为 `done-local/real-call-acceptance-gated`。真实双账号 invite/answer/reject/timeout、铃声、后台/多 tab 和媒体权限继续需要显式授权；本切片未执行任何呼叫、接听、声音播放或权限请求。
+
+## 55. W6.a6.18.3.15 Text Message Broadcast Contract
+
+> PROCESS AXIOM: 一次群发提交只能产生一次 batch-send；顶层成功不代表每个目标成功，客户端必须按稳定 `client_msg_id` 保留逐目标 sent/failed/unknown，不能重放整批掩盖 partial result。
+
+| contract | canonical owner and behavior |
+| :--- | :--- |
+| target | shared SDK 统一 1–50、`friend|group + targetID` trim/保序去重；H5 Router 只保存稳定身份，不保存 DTO、会话猜测或媒体对象 |
+| idempotency | SDK 为整批和每个目标创建或复用稳定 ID；同一 submit 只调用一次 `batchSendMessage`；网络或本地收敛后客户端不得自动二次提交 |
+| result | 只按 `client_msg_id` 关联逐项回包；缺项是 `unknown`，明确非零码是 `failed`，code=0 是 `sent`；不信任顶层 success/failed count |
+| cache | 只有明确成功、canonical message identity 与真实 friend/group conversation 匹配时，才在一个事务写消息和 latest conversation；缺消息/身份或本地失败返回 `remote-only` |
+| H5 | 会话/通讯录复用 `HomeActionMenu`；`/broadcast/select` cache-first 读取好友/群并提供搜索/全选/50 上限；`/broadcast/compose` 只持有文本草稿和逐目标结果反馈 |
+| RN | `BroadcastMessageFlow/BroadcastTargetSelectScreen/BroadcastComposeScreen` 保持冻结参考；本 H5 切片不修改或宣称 RN consumer convergence |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen`。SDK real sql.js 覆盖目标归一化、partial/missing result、success-only cache 和权威 conversation fallback；H5 route/view 4/4、typecheck/build 通过。认证 Chromium 412x786 以真实 2 好友完成选择、进入 compose、空/非空按钮状态和退出，`scrollWidth=innerWidth` 且零 console warning/error。没有点击发送、没有修改远端或账号数据；媒体群发与二维码扫描不在本合同内。
+
+## 56. W6.a6.18.3.15.1 Image Video File Broadcast Contract
+
+> PROCESS AXIOM: 一个媒体群发批次只能上传一个远端对象并执行一次 batch-send；不得循环调用普通单会话 send，也不得在页面复制 OSS 或 Gateway body。
+
+| contract | canonical owner and behavior |
+| :--- | :--- |
+| shared media | `prepareWebIMImageUpload/prepareWebIMVideoUpload/prepareWebIMFileUpload` 同时服务普通聊天和群发，统一 MIME、大小、时长、尺寸、文件元数据和 OSS snapshot/body |
+| ordering | 目标/账号先校验；上传在 mutation queue 外执行；上传完成后二次确认同一账号，再在共享队列内执行唯一 batch-send 和 success-only cache convergence |
+| failure | 上传失败不得调用 Gateway；缺 upload adapter 显式失败；切号显式 `BROADCAST_ACCOUNT_CHANGED`；远端 partial result 延续文本群发 sent/failed/unknown，不自动重放 |
+| H5 | compose 复用聊天附件校验和 video metadata reader，只持有浏览器 `File`、隐藏 input、RN 资产图标与页面生命周期 object URL；结果继续展示逐目标计数 |
+| RN | 现有 Broadcast flow 保持冻结参考；shared-core 可编译不等于 RN production caller 已收敛 |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen`。SDK 定向 6/6 与全量 82 files/334 tests 通过；H5 466 assets、typecheck、796-module build 通过。认证 Chromium 412x786 只读证明图片/视频/文件入口、412/412 零溢出和零 console error。没有选择本地文件、上传或发送；语音群发和二维码扫描保持后续独立切片。
+
+## 57. W6.a6.18.3.15.2 Voice Broadcast Contract
+
+> PROCESS AXIOM: 群发语音必须与普通聊天共用 audio upload/body 和浏览器 recorder/gesture owner；页面不得单独维护 MediaRecorder、时长门槛或 OSS 分支。
+
+| contract | canonical owner and behavior |
+| :--- | :--- |
+| shared audio | `prepareWebIMAudioUpload` 统一 audio MIME、精确 size、RN 四舍五入和 1–60 秒；普通发送与群发构造相同 type103 body |
+| Web recorder | `chat-voice-recorder` 唯一管理 getUserMedia/MediaRecorder/chunk/File/track cleanup；`useChatVoiceRecorder` 唯一管理 permission-await、2 秒门槛、60 秒 auto-send 和 unmount cancel |
+| gesture | `ChatVoiceInput` 唯一管理 text/voice 切换、pointer capture、上滑 56px 取消、HUD 和组件 CSS；聊天页与群发页共同消费 |
+| mutation | 群发仍为 upload once + batch-send once + sent/failed/unknown + success-only cache；H5 不持有 OSS/Gateway 或本地数据库写入 |
+| RN | RN Broadcast 和 audio service 保持冻结参考；未宣称 production caller converged |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen`。SDK voice 定向 9/9、全量 82 files/335 tests、build:web/sync:web 通过；H5 recorder 6/6、466 assets、typecheck、797-module build 通过。认证 412x786 只读切换到“按住说话”，未 pointer-down、未请求麦克风、未录音上传发送。
+
+## 58. W6.a6.18.3.16 QR Scanner Platform Contract
+
+> PROCESS AXIOM: 二维码解码是平台 I/O，用户/群目标识别与入群申请是 shared 业务；H5 不得复制协议、直调 OpenAPI，页面加载不得自动请求摄像头权限。
+
+| contract | canonical owner and behavior |
+| :--- | :--- |
+| payload | SDK `modules/qr-code` 统一 myCard/groupCard JSON、im28 user/group URL 与 legacy user JSON；未知 source、类型错配、空 ID、畸形编码 fail-closed |
+| browser decode | H5 route 动态加载 `@zxing/browser`；摄像头只在明确点击后请求，图片只来自原生 file input；首次结果、停止、返回、异常与迟到权限结果均释放媒体轨道/object URL |
+| user route | 用户码进入既有 peer profile；若为陌生人，好友申请 route 将 `sourceType=qrcode` 传给 shared `applyFriend`，页面不另建用户 DTO 或申请 mutation |
+| group route | 陌生群必须用 `/v1/group/public/get` 读取公开资料、membership/application status；`groupApplications.apply` 统一 group ID/message/source validation 并调用一次真实 apply endpoint |
+| RN | RN qr helper、NativeModule camera/album 和页面 flow 保持冻结；shared-core 可编译不代表 RN production caller 已收敛 |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen`。SDK focused 9/9、Web 全量 82 files/337 tests、build:web/sync:web 通过；H5 focused 7/7、typecheck、1031-module build 通过。认证 Chromium 412x786 只读证明首页入口、扫码首屏和零溢出；未点击开始扫码/相册，未识别真实二维码，未提交好友或群申请。一个历史群 ID 通过真实 public/get 返回“资源不存在”，页面未生成假资料或假成功。
+
+## 59. W6.a6.18.3.17 Personal QR Code Display Contract
+
+> PROCESS AXIOM: 用户二维码 payload 是 shared 业务协议，Canvas、文件下载和系统分享是 Web 平台 I/O；H5 页面不得自组用户码、缓存另一份资料或在渲染失败后导出空图。
+
+| contract | canonical owner and behavior |
+| :--- | :--- |
+| identity | `WebIMSync.profile.getCurrent` 提供当前认证用户真实资料，昵称按 `nickname -> userID` 回退；Router state 仅恢复 `/me`、`/me/profile`、`/scan` 三个白名单入口 |
+| payload | 页面只调用 SDK `buildIM28UserQRCodePayload(userID)`；myCard/version/source/ID 结构不在 H5 复制 |
+| render | H5 `qrcode` Canvas adapter 使用 `H` 纠错等级和稳定白边，在中心绘制头像首字 fallback；Canvas 同时是页面、下载和分享的唯一图像 owner |
+| export | 仅在资料加载和 Canvas 渲染完成后开放 PNG 下载与文件 Web Share；浏览器不支持文件分享时 fail-visible，不伪造成功态 |
+| RN | RN `MyQRCodeScreen/qrCodeHelpers` 保持冻结参考；本切片不修改 RN caller、payload 或展示逻辑 |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen`。H5 focused 5/5、full verify 通过，其中 SDK Web 82 files/337 tests、466 assets、typecheck、1064-module production build 均为 green。认证 Chromium 在 412x786 与 1280x800 证明三入口、完整二维码和零横向溢出；未点击下载/系统分享，未请求相机/相册，RN worktree clean。
+
+## 60. W6.a6.18.3.18 Group QR Code Display Contract
+
+> PROCESS AXIOM: 已加入群二维码必须绑定当前账号真实群会话与群快照；route group/conversation ID 不能自行成为群资料。个人和群二维码的 Web Canvas/导出/分享必须只有一个 owner。
+
+| contract | canonical owner and behavior |
+| :--- | :--- |
+| source | `loadGroupProfileSource` 复用 `WebIMSync.conversations/groups`，先投影缓存再刷新；只接受 group conversation，群 ID 必须来自 conversation target 并精确匹配 shared 群快照 |
+| route | RN 群资料层级映射为 `/conversations/:conversationID/settings/profile -> /settings/qrcode`；扫码页只接受同一会话二维码 route 作为受控返回来源 |
+| payload | 群页只调用 SDK `buildIM28GroupQRCodePayload(groupID)`；groupCard/source/payload JSON 不在 H5 重组 |
+| Web platform | `QRCodeDisplay` 与 `browser-qr-image` 同时服务个人/群码；共享 Canvas、H 纠错、头像 fallback、PNG、Web Share 和 late-render cleanup，不建立两套 export lifecycle |
+| fail-closed | 单聊、缺失会话、缺失群快照均显示真实错误，不生成 route-only 假二维码；已有 cache 但刷新失败可继续展示 cache 并显示错误 |
+| RN | RN `GroupEditScreen/QRCodeActionSheet/qrCodeHelpers` 保持冻结参考；本切片不修改 RN 业务、分享或发送语义 |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen`。H5 focused 5 files/13 tests，full verify 中 SDK Web 82 files/337 tests、466 assets、typecheck、1067-module production build 均通过。认证 Chromium 412px 证明个人二维码抽取回归为 268x268 且零溢出；历史群深链 fail-visible。当前账号会话仅两条单聊且“我的群聊”为空，真实群卡片/二维码视觉保持 data-gated，未伪造资料、下载、分享、扫码或 mutation。
+
+## 61. W6.a6.18.3.19 QR Code In-App Share Contract
+
+> PROCESS AXIOM: “分享二维码”是发送图片到应用内好友/群的业务动作，不能由 Web Share 替代；目标加载、目标投影、真实会话解析和图片发送必须复用既有 owners，路由不得保存 Blob、消息正文或凭据。
+
+| gate | frozen contract |
+| :--- | :--- |
+| source | 个人码从 `profile.getCurrent + buildIM28UserQRCodePayload` 重建；群码从严格匹配的 `loadGroupProfileSource + buildIM28GroupQRCodePayload` 重建 |
+| target | `forward-target-source` 统一普通转发和二维码分享的 cache-first 好友/群读取、展示投影和真实 conversation 解析；二维码 UI 只允许 RN 同语义单选 |
+| send | 最终确认后才在内存 Canvas 生成 320x320 PNG，并且只调用 `WebIMSync.messages.sendImage`；上传/body/optimistic/SQLite/Gateway 继续由 SDK 持有 |
+| routing | `/me/qrcode/share` 与 `/conversations/:conversationID/settings/qrcode/share` 可刷新恢复公开来源；不携带 File/Blob、消息 body、token 或 route-only 群资料 |
+| failure | 来源、目标会话、Canvas、上传或消息发送任一失败均停留当前页可见报错；成功前不导航、不显示假成功、不制造约定式群会话 ID |
+| boundary | RN 业务零修改；SDK 已有图片发送满足合同，本切片无新 SDK 路径；真实发送、第二账号 realtime/list-back 需独立授权 |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen`。H5 focused 6 files/13 tests，full verify 中 SDK Web 82 files/337 tests、466 assets、typecheck、1070-module production build 均通过。认证 Chromium 412px 证明个人二维码进入好友/群分享页、真实两位好友、单选计数、发送按钮门禁、安全返回和零横向溢出；群 tab 因当前账号没有 joined groups 保持真实空态。未点击最终分享，未上传或发送消息，RN worktree clean。
+
+## 62. W6.a6.20.1 Forgot Password Methods Contract
+
+> PROCESS AXIOM: Gateway 忘记密码端点下线后，Web 必须复刻 RN 的替代登录方式，不得继续调用旧端点，也不得用“接口不存在”错误文案代替用户可执行的找回路径。
+
+| gate | frozen contract |
+| :--- | :--- |
+| entry | 仅账号密码登录页显示“忘记密码？”；点击打开原生 modal bottom sheet，不发送网络请求 |
+| methods | “手机号登录”进入 `/auth/phone`，“邮箱登录”进入 `/auth/email`；切路由前必须关闭 sheet，route mode 更新再兜底清理 |
+| support | 未绑定手机/邮箱时只显示 RN 同文案客服说明；没有真实客服 endpoint 时不制造 ticket、发送或成功态 |
+| API | 禁止调用 `forgotPassword` 或已删除 OpenAPI；登录、登录后密码修改继续使用各自既有 owners |
+| platform exclusion | RN 网络设置使用原生 HTTP/OpenIM HTTP/SOCKS proxy；浏览器 `fetch/WebSocket` 无等价 per-app proxy 注入，H5 不实现保存后无效的假设置；Electron/Desktop 另建 platform adapter |
+
+Closeout verdict: `done-local/rn-parity`。H5 focused 2 files/6 tests，full verify 中 SDK Web 82 files/337 tests、466 assets、typecheck、1071-module production build 均通过。认证 Chromium 412px 完成手机号、邮箱、客服三分支、单 modal、route cleanup 与零横向溢出；退出当前账号后已使用 `15555555551/666666` 恢复 donk。未请求验证码、修改密码、提交客服或改动 RN。
+
+## 63. W6.a6.20.2 Chat Composer Card Send Contract
+
+> PROCESS AXIOM: 联系人资料页“把某张名片分享给好友”和聊天附件“把所选名片发送到当前会话”不是同一 target contract；两者可共用 type108 wire schema，但不得共用含糊的页面编排或绕过 message state owner。
+
+| layer | contract |
+| :--- | :--- |
+| SDK message facade | `messages.sendCard({ conversationID, card })` 只接受 `user(userID/nickname/avatarURL)` 或 `group(groupID/groupName/avatarURL)`，空稳定 ID 在任何 optimistic/network I/O 前拒绝 |
+| state/cache | 复用统一 `executeWebIMMessageSend`，先落同一 `sending` 行，再按 Gateway 相同 client ID 收敛 `sent`；失败更新同一行为 `failed`，type108 可从严格持久化 payload 重试 |
+| forward compatibility | 失败重试支持 type108 不自动扩大隐藏发送人转发矩阵；hidden-sender 继续在 optimistic/network 前拒绝卡片，普通 server-backed forward 行为不变 |
+| H5 selector | 复用 `contacts/groups` cache-first source；单聊排除本人和当前对端，群聊排除本人；tab/search/single-select 只保存稳定目标 key，不携带 Gateway body |
+| page caller | `ChatPage` 只传平台中立 card 并通过统一 operation owner 重读当前会话 SQLite；成功才关闭弹层，失败保留选择和可见错误 |
+| RN boundary | RN `ChatComposerPanels/CardPickerModal/sendCardMessage` 仅作为行为参考并保持冻结；本切片不改 RN source、测试或生成包 |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen`。SDK focused 3 files/11 tests、Web full 83 files/340 tests；H5 focused 2 files/5 tests、466 assets、typecheck 与 1074-module production build 通过。认证 Chromium 412px 证明真实好友过滤、用户/群切换、单选门禁和 412/412 零溢出；弹层重开先清空上一账号内存快照。最终发送未点击，第二账号 realtime/list-back 与真实失败重试仍为授权验收门。
+
+## 64. W6.a6.20.3 Chat Composer Camera And RTC Entry Contract
+
+> PROCESS AXIOM: Web 拍照和通话入口只能组合既有 platform/shared owners；附件面板不得复制图片上传、通话鉴权、信令或 LiveKit 状态机。
+
+| layer | contract |
+| :--- | :--- |
+| RN parity | 单聊 action 固定 `相册 -> 拍照 -> 音视频通话 -> 文件 -> 名片`；群聊固定隐藏 RTC，其余动作保持原顺序 |
+| camera platform | 独立隐藏 input 使用 `type=file + accept=image/* + capture=environment + single`；取消不报错，结果进入既有 `validateChatAlbumSelection -> sendAlbum -> messages.sendImage` |
+| call selector | 联系人和聊天共同消费 `CallTypeActionSheet`；只提供 audio/video/cancel，无 Gateway、token、conversation 创建或媒体逻辑 |
+| chat caller | 仅真实 `Conversation.type=single` 可打开 RTC；以 `conversationID/name/faceURL` 调用全局 `WebIMCallProvider.startOutgoing`，页面不得拼接会话 ID或直接消费 SDK call control |
+| route lifecycle | 切换 conversation 时清除 card/call selector state；呼出开始后由全局 Provider 接管 `/calls/active` 与结束返回 |
+| external gate | camera chooser/permission、图片上传发送、audio/video final selection、Gateway/LiveKit、双账号 RTC 和真实群聊视觉均未授权，不得从只读证据推断成功 |
+| RN boundary | RN `ComposerActionPanel/useChatMediaPicker/ChatRTCCallActionSheet` 只读参考且保持冻结；本切片无 SDK 或 RN source 修改 |
+
+Closeout verdict: `done-local/shared-owner-consumed`。H5 focused 3 files/10 tests、typecheck 和 full verify 通过；full verify 包含 SDK Web 83 files/340 tests、466 assets 与 1078-module production build。认证 Chromium 412x820 证明单聊五动作顺序、camera DOM contract、通话二选一/取消、412/412 零溢出和零 console warning/error；未打开 chooser、请求权限、上传、发送或发起通话，RN worktree clean。
+
+## 65. W6.a6.20.4 Chat Composer Pending Attachment Contract
+
+> PROCESS AXIOM: 浏览器 File 选择是平台瞬时状态，媒体/文件/文本的组合提交顺序是共享业务语义；H5 不得因回调分散而越过失败步骤继续发送后续文本。
+
+| layer | contract |
+| :--- | :--- |
+| shared plan | SDK `shouldStageIMComposerMedia` 仅在已有草稿且单选媒体时返回待发送；`createIMComposerSubmissionPlan` 拒绝编辑态附件并固定 `media -> file -> text` 顺序 |
+| platform state | H5 hook 只保存当前页面生命周期的 `File/ChatAlbumSelectionItem`；普通文件始终待显式发送，单媒体按 shared 判定，多媒体继续沿既有立即顺序发送 |
+| file presentation | 文件栏只展示浏览器可确认的名称、音频/文件类别、大小与移除动作；图片/视频不新增 RN 不存在的顶部缩略图 |
+| operation | 组合提交在一个 `runMessageOperation` 中复用既有 image/video/file/text/mention/quote facade；任一步骤 reject 后立即停止，最终统一重读 SQLite cache |
+| lifecycle | 用户点击提交时先清空 pending 与有效文本草稿，失败由既有 failed message/cache 状态呈现；File/Blob 不进入 Router、token storage 或 SQLite |
+| RN boundary | RN `useChatMediaPicker/useChatComposerSendActions/chatDetailComposerHelpers` 只读参考并保持冻结；本切片只 build/sync Web package，不重建 RN package |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen`。SDK focused 3/3，H5 focused 3 files/10 tests；full verify 包含 SDK Web 84 files/343 tests、466 assets、typecheck 与 1081-module production build。认证 in-app browser 412x820 只选择仓库内 `package.json`，证明待发送栏、发送门禁、移除恢复、412/412 零溢出与零 console error；未点击发送、上传或产生消息 mutation。真实带草稿单媒体/文件组合、失败阻断和第二账号 list-back 保留授权验收门。
+
+## 66. W6.a6.20.5 Group Server Search Contract
+
+> PROCESS AXIOM: 群搜索命中来源、当前账号关系和申请防重属于共享业务事实；H5 页面不得根据标题、路由历史或按钮点击自行推断已加入/待审核状态。
+
+| layer | contract |
+| :--- | :--- |
+| Gateway transport | `/v1/group/search` 使用专属 `GatewayGroupSearchItem`，必须保留 `group/source_type` 和服务端可选关系字段；不得复用会丢 wrapper 的普通群列表 normalizer |
+| shared facade | 非空 keyword 才进入认证/I/O；搜索结果与 canonical 已加入群列表并行读取，按稳定群 ID 去重，关系优先级固定 `pending > joined > available` |
+| route/context | `/groups/create -> /groups/search` 通过严格 Router state 只传 selected user IDs、backHref 和 search keyword；返回创建页必须保留已选好友，不跨路由携带群 DTO、token 或数据库对象 |
+| actions | joined 仅在真实 `conversationID` 存在时进入会话；pending 禁止重复申请；available 进入 `/groups/:groupID/apply` 并使用 `source_type=search`；最终 mutation 继续由 `groupApplications.apply` 持有 |
+| UI truth | loading/error/empty 必须显式；服务端空列表不得转成假结果。标题、头像、成员数仅投影 shared DTO，页面不调用 OpenAPI/SQL、不缓存第二份搜索结果 |
+| RN boundary | RN `CreateGroupServerSearchScreen/searchGroupsByID/joinGroupByID` 只读参考并保持冻结；本切片只运行 `build:web/sync:web`，不重建 RN package，不修改 desktop build scripts |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-empty-data-gated`。SDK focused 2 files/9 tests、H5 focused 3 files/7 tests；full verify 包含 SDK Web 84 files/345 tests、466 assets、typecheck 与 1084-module production build。认证 412px 浏览器证明真实入口、独立 route、空结果和已选好友返回保持；当前账号以 `donk` 和已知旧群 ID 搜索均无服务端结果，因此 joined/pending/available 行、真实申请和第二账号 list-back 未验收，不能宣称远端功能闭环。
+
+## 67. W6.a6.20.7 Personal Profile Avatar Contract
+
+> ATOMICITY AXIOM: 个人资料头像只有上传与当前账号资料更新均成功且响应身份一致时才成功；H5 页面不得分步编排或先展示 blob URL。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `ProfileScreen` 头像行 -> `AvatarActionSheet` 的“从相册选一张/拍一张照片/取消” -> 圆形裁剪 -> `uploadAvatar` -> `updateSelfInfo(faceURL)`；RN 业务源码只读冻结 |
+| shared owner | `WebIMSync.profile.updateAvatar` 冻结认证 userID，复用 `uploadAvatarForUser` 的 JPEG/PNG/WEBP、10MB、平台上传 port、远端 HTTP(S) URL 和上传后切号保护，再执行一次 avatar-only `updateUserProfile` 并严格匹配响应账号 |
+| H5 platform/UI | `/me/profile` 只持有头像行、共用 `AvatarSourceActionSheet`、album/camera file input、`AvatarCropDialog` 与 success-only 当前页面投影；裁剪失败、上传失败、切号或 Gateway 失败均保持错误可见且不关闭裁剪层 |
+| timing split | 个人资料必须调用原子 `updateAvatar`；onboarding 继续调用 `uploadAvatar` 只写 Provider 内存草稿，最终“完成”才通过唯一 `update` 提交全部资料。两者不是双轨，不得互换提交时序 |
+| structure | 旧 onboarding 专属来源 sheet 和上传元数据 helper 删除；H5 来源 sheet、文件合同、512x512 JPEG crop owner 各一份。SDK 业务规则不复制到页面 |
+| acceptance | 浏览器只允许打开/取消来源层；真实文件选择、OSS 上传、profile mutation、刷新回读和第二终端展示需要显式授权。RN caller convergence 需独立 RN 任务 |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; mutation-acceptance-gated`。SDK focused 1 file/8 tests、H5 focused 3 files/5 tests；full verify 包含 SDK Web 84 files/349 tests、466 assets、SDK/H5 typecheck 与 1089-module production build。已登录 412px `/me/profile` 证明头像行、RN 三项来源文案、静态图片/camera input 与零横向溢出；仅打开并取消，未选择文件或执行上传/update。`im28-phone` worktree clean，`build:package:desktop:web` 未修改或执行。
+
+## 68. W6.a6.20.8 Verification Unread Contract
+
+> AXIOM: 好友验证未读只来自专用 unread/read API；群验证角标只来自审核接口按权限聚合的 `total`。页面不得按列表长度/`isRead` 猜计数，也不得用空 IDs 触发隐式全量已读。
+
+| owner | contract |
+| :--- | :--- |
+| shared SDK | `friendApplications.getUnreadCount/markRead` 负责认证、非负整数、稳定 ID 保序去重、空集合 fail-closed；`groupApplications.getUnreadCount` 用 `page=1/page_size=1` 保留服务端审核 `total` |
+| H5 | `/contacts` 与 `/contacts/verifications/:tab` 共用单一 hook 和 `0` 隐藏/`99+` 角标；incoming 未读申请进入资料页前调用 shared 单条已读，失败不阻断 RN 既有导航语义 |
+| RN freeze | `fetchFriendApplicationUnreadCount/markFriendApplicationsRead/fetchGroupApplicationAuditList` 保持现状；本 H5 slice 不修改 RN caller |
+| acceptance | 当前真实账号计数 0、2 条申请均 outgoing/accepted、群审核空；仅完成只读路由/布局/console 证明，真实 incoming mark-read、非零群 total、accept/reject 与 RN convergence 保持 gated |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pass/mutation-acceptance-gated`。SDK focused 2 files/15 tests、H5 badge 1/1；full verify 包含 SDK Web 84 files/352 tests、466 assets、SDK/H5 typecheck 与 1091-module build。412px 真实账号 friend/group routes 零溢出、零 console；未点击申请或执行 mutation，RN worktree clean，Desktop/RN builds 与 `build:package:desktop:web` 未修改或执行。
+
+## 69. W6.a6.20.13 Group Administrator Routes Contract
+
+> OWNER AXIOM: 群管理员权限、候选、数量上限、角色 mutation 和缓存收敛只由 SDK 定义；H5 独立 route 不得复制业务规则或保留第二套管理 modal。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `GroupAdminsScreen -> GroupAddAdminsScreen` 是页面/返回栈基线；RN source 只读冻结，不因 H5 路由对齐而改写 |
+| shared SDK | `group-admin-owner.ts` 公开 `IM_GROUP_ADMIN_LIMIT` 并同时用于强校验；`setAdmins/cancelAdmins` 持有权限、候选角色、exactly-once Gateway 与 group/member cache transaction |
+| routes | `/conversations/:conversationID/settings/manage/admins` 展示管理员并确认移除；`/admins/add` 搜索普通成员、受 shared 剩余名额约束并一次批量提交；直接刷新必须从稳定 conversation ID 恢复 |
+| cache order | cache-first 展示后必须先同步群资料，再同步成员完整分页，避免冷缓存成员 owner 因群身份尚未落库而失败；刷新后的候选必须裁剪已退群或已变角色的选择 |
+| fail-closed | runtime、登录、会话、群身份或 `canManageAdmins` 任一不成立时不得暴露 mutation 动作；`remote-only` 不得自动重放角色请求 |
+| delete-or-register | 管理页旧管理员添加/取消 picker 与 action 已删除，不保留 compat；当时登记的群主转让后续项已由 `.20.14` 独立 route 关闭 |
+| acceptance | 当前账号目标群缺失，只证明独立 route、真实错误和动作隐藏；非空管理员列表、添加/移除、刷新回读和第二账号角色变化均未授权/数据受限 |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pass/data-gated`。SDK focused 1 file/5 tests、H5 focused 1 file/4 tests；full verify 包含 SDK Web 85 files/357 tests、466 assets、boundary/typecheck 与 1099-module build。RN worktree clean，未运行 RN/desktop build 或 `build:package:desktop:web`。
+
+## 70. W6.a6.20.14 Group Owner Transfer Route Contract
+
+> OWNER AXIOM: 群主转让候选、权限、角色状态迁移和缓存收敛只由 SDK 定义；H5 必须用独立 SPA route 呈现，不得在群管理首页保留第二套 picker 或 mutation。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `GroupTransferOwnerScreen` 的关闭式独立选择页、搜索、管理员优先、成员分组、下拉刷新和二次确认是 H5 页面基线；RN source 只读冻结 |
+| shared SDK | `filterIMGroupOwnerTransferCandidates` 排除当前群主并约束 active admin/member；`groupMembers.transferOwner` 持有 capability、exactly-once Gateway、group/member 原子角色事务与独立权威刷新 |
+| route | `/conversations/:conversationID/settings/manage/owner-transfer` 只从稳定 conversation ID 恢复真实群、成员和权限；管理首页只保留 `Link` 入口 |
+| presentation | H5 搜索复用 shared 显示名，管理员在“群主及群管理员”分组优先，普通成员按 RN 拼音分组；选择后显示头像、昵称、提示、确定/取消，提交中禁用重复动作 |
+| convergence | 管理员和群主 route 共用一个 cache-first data adapter；页面不 import Gateway/OpenIM、不得复制角色条件；`remote-only` 保持错误可见且禁止自动重放 |
+| success/failure | 成功后当前账号已失去 owner 权限，必须 replace 到群设置页；runtime、登录、会话、群身份或 capability 缺失时 fail-closed，不展示提交动作 |
+| delete-or-register | 管理页旧群主 picker、成员 load 和 action 已删除，不保留 compat；新 route 是唯一 H5 UI owner |
+| acceptance | helper 行为与 route contract 已自动证明；真实浏览器登录受 SQLite 多标签互斥锁阻塞，非空候选、确认视觉、真实转让、权威回读和第二账号角色变化仍 data-gated/未授权 |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-login-lock/data-gated`。H5 focused 3 files/10 tests；full verify 包含 SDK Web 85 files/357 tests、466 assets、boundary/typecheck 与 1102-module build。SDK source 与 RN business 均未修改，RN worktree clean，未运行 RN/desktop build 或 `build:package:desktop:web`。

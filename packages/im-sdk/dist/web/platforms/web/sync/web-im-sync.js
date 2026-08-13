@@ -9,10 +9,13 @@ import { createWebIMPeerProfileSync, } from '../../../sync/peer-profile-sync.js'
 import { createWebIMConversationSync, } from '../../../sync/conversation-sync.js';
 import { canIMGroupMemberClearAllMessages } from '../../../sync/conversation-clear-sync.js';
 import { createWebIMMessageSync, } from '../../../sync/message-sync.js';
+import { createIMMessageBroadcastSync, } from '../../../sync/message-broadcast.js';
 import { createWebIMRealtimeSync, } from '../../../sync/realtime-sync.js';
 import { createWebIMSyncMutationQueue } from '../../../sync/sync-mutation-queue.js';
 import { createWebIMContactSync, } from '../../../sync/contact-sync.js';
 import { createWebIMProfileSync } from '../../../sync/profile-sync.js';
+import { createIMGroupManagementSync, } from '../../../sync/group-settings-mute.js';
+import { createIMGroupLifecycleSync, } from '../../../sync/group-lifecycle.js';
 /** 创建联系人、会话与消息共享认证上下文的同步 facade。 */
 export function createWebIMSync(dependencies) {
     // mutationQueue 让所有远端拉取和本地写入按调用顺序完整执行。
@@ -23,6 +26,8 @@ export function createWebIMSync(dependencies) {
     const contacts = createWebIMContactSync(sharedDependencies);
     // groupMentions 是群成员身份、权限和 type106 发送的唯一业务 owner。
     const groupMentions = createIMGroupMentionSync(sharedDependencies);
+    /** groups 是已加入群 cache/sync 的唯一 owner，也为群搜索提供关系快照。 */
+    const groups = createWebIMJoinedGroupSync(sharedDependencies);
     /** canClearAllMembers 从共享成员 cache 读取当前账号角色并应用中性权限规则。 */
     const canClearAllMembers = async (conversation) => {
         /** currentUserID 只来自 runtime 私有认证 owner。 */
@@ -55,17 +60,26 @@ export function createWebIMSync(dependencies) {
         }),
         customEmojis: createWebIMCustomEmojiSync(sharedDependencies),
         friendApplications: createWebIMFriendApplicationSync(dependencies),
-        groupApplications: createWebIMGroupApplicationSync(dependencies),
-        groups: createWebIMJoinedGroupSync(sharedDependencies),
+        groupApplications: createWebIMGroupApplicationSync({
+            ...dependencies,
+            listJoinedGroups: () => groups.sync(),
+        }),
+        groups,
         groupMentions,
+        groupManagement: createIMGroupManagementSync(sharedDependencies),
+        groupLifecycle: createIMGroupLifecycleSync(sharedDependencies),
         groupMembers: {
             listCached: groupID => groupMentions.listMembers(groupID),
             sync: (groupID, options) => groupMentions.syncMembers(groupID, options),
             updateSelfNickname: (groupID, nickname) => groupMentions.updateSelfNickname(groupID, nickname),
             inviteMembers: options => groupMentions.inviteMembers(options),
             removeMembers: options => groupMentions.removeMembers(options),
+            setAdmins: options => groupMentions.setAdmins(options),
+            cancelAdmins: options => groupMentions.cancelAdmins(options),
+            transferOwner: options => groupMentions.transferOwner(options),
         },
         messages,
+        messageBroadcast: createIMMessageBroadcastSync(sharedDependencies),
         peerProfile: createWebIMPeerProfileSync(sharedDependencies),
         profile: createWebIMProfileSync(dependencies),
         realtime: createWebIMRealtimeSync(sharedDependencies),

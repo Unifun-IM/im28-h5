@@ -2,6 +2,7 @@ import type {
   CustomEmoji,
   Message,
   MessageMention,
+  IMComposerSubmissionPlan,
   PresetEmojiDocument,
   WebIMGroupMember,
 } from '@im28/im-sdk/web';
@@ -33,7 +34,17 @@ export interface ChatComposerProps {
   readonly onCancelQuote: () => void;
   readonly onSendQuote: (sourceMessage: Message, text: string) => Promise<void>;
   readonly onSendAlbum: (items: readonly ChatAlbumSelectionItem[]) => Promise<void>;
-  readonly onSendFile: (file: File) => Promise<void>;
+  readonly onSendSubmission: (
+    plan: IMComposerSubmissionPlan,
+    document: PresetEmojiDocument,
+    mentions: readonly MessageMention[],
+    quoteMessage: Message | null,
+    media: ChatAlbumSelectionItem | null,
+    file: File | null,
+  ) => Promise<void>;
+  readonly showCallAction: boolean;
+  readonly onOpenCallPicker: () => void;
+  readonly onOpenCardPicker: () => void;
   readonly loadCachedCustomEmojis: () => Promise<readonly CustomEmoji[]>;
   readonly syncCustomEmojis: () => Promise<readonly CustomEmoji[]>;
   readonly onSendCustomEmoji: (emoji: CustomEmoji) => Promise<boolean>;

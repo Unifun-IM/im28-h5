@@ -7,62 +7,68 @@ export const WEB_IM_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 export const WEB_IM_FILE_MAX_BYTES = 100 * 1024 * 1024;
 /** 发送一张图片并跨上传阶段收敛本地消息状态。 */
 export async function sendWebIMImageMessage(context, options, dependencies) {
-    // input 在写入 sending row 前完成业务约束校验。
-    const input = normalizeWebIMMediaInput(options, WEB_IM_IMAGE_MAX_BYTES, 'image');
-    // localBody 不持久化临时 blob URL，刷新后仍保持有效 JSON。
-    const localBody = {
-        image: {
-            list: [buildImageMetadata(options, input.size)],
-        },
-    };
+    // prepared 保证单聊与群发使用同一图片校验和 Gateway body。
+    const prepared = prepareWebIMImageUpload(options);
     return executeWebIMUploadedMessageSend(context, {
         conversationID: options.conversationID,
-        contentType: 102,
-        localBody,
-        input,
+        ...prepared,
         ...(options.onSending ? { onSending: options.onSending } : {}),
+    }, dependencies);
+}
+/** 构造可由单聊或群发复用的图片上传定义。 */
+export function prepareWebIMImageUpload(options) {
+    // input 在任何本地写入或平台上传前完成业务约束校验。
+    const input = normalizeWebIMMediaInput(options, WEB_IM_IMAGE_MAX_BYTES, 'image');
+    // metadata 保留浏览器可证明的尺寸与精确字节数。
+    const metadata = buildImageMetadata(options, input.size);
+    return {
+        contentType: 102,
+        input,
+        localBody: { image: { list: [metadata] } },
         createRemoteBody: uploaded => ({
             image: {
-                list: [
-                    {
+                list: [{
                         media_id: uploaded.objectKey,
                         url: uploaded.url,
                         thumbnail_url: uploaded.url,
-                        ...buildImageMetadata(options, input.size),
-                    },
-                ],
+                        ...metadata,
+                    }],
             },
         }),
-    }, dependencies);
+    };
 }
 /** 发送一个普通文件并保留可重读的本地元数据。 */
 export async function sendWebIMFileMessage(context, options, dependencies) {
-    // input 使用普通文件上限，不按扩展名伪造 MIME。
-    const input = normalizeWebIMMediaInput(options, WEB_IM_FILE_MAX_BYTES, 'file');
-    // fileBody 允许 sending/failed bubble 立即展示文件名和大小。
-    const fileBody = {
-        file: {
-            name: input.name,
-            mime_type: input.mimeType,
-            size_bytes: String(input.size),
-        },
-    };
+    // prepared 保证单聊与群发使用同一文件校验和 Gateway body。
+    const prepared = prepareWebIMFileUpload(options);
     return executeWebIMUploadedMessageSend(context, {
         conversationID: options.conversationID,
-        contentType: 105,
-        localBody: fileBody,
-        input,
+        ...prepared,
         ...(options.onSending ? { onSending: options.onSending } : {}),
+    }, dependencies);
+}
+/** 构造可由单聊或群发复用的普通文件上传定义。 */
+export function prepareWebIMFileUpload(options) {
+    // input 使用普通文件上限，不按扩展名伪造 MIME。
+    const input = normalizeWebIMMediaInput(options, WEB_IM_FILE_MAX_BYTES, 'file');
+    // metadata 是本地占位和远端文件 body 的共同事实。
+    const metadata = {
+        name: input.name,
+        mime_type: input.mimeType,
+        size_bytes: String(input.size),
+    };
+    return {
+        contentType: 105,
+        input,
+        localBody: { file: metadata },
         createRemoteBody: uploaded => ({
             file: {
                 media_id: uploaded.objectKey,
                 url: uploaded.url,
-                name: input.name,
-                mime_type: input.mimeType,
-                size_bytes: String(input.size),
+                ...metadata,
             },
         }),
-    }, dependencies);
+    };
 }
 /** 归一化文件元数据并执行种类对应的大小约束。 */
 export function normalizeWebIMMediaInput(options, maxBytes, kind) {

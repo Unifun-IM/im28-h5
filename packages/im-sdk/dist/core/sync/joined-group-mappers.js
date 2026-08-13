@@ -54,6 +54,27 @@ export function mapCoreGroupToWeb(group, currentUserID) {
         ownerUserID,
         currentUserRole,
         joinApprovalRequired: payload.join_approval_required === true,
+        ...(typeof payload.allow_member_invite === 'boolean'
+            ? { allowMemberInvite: payload.allow_member_invite }
+            : {}),
+        ...(typeof payload.allow_member_add_friend === 'boolean'
+            ? { allowMemberAddFriend: payload.allow_member_add_friend }
+            : {}),
+        ...(typeof payload.allow_member_nickname === 'boolean'
+            ? { allowMemberNickname: payload.allow_member_nickname }
+            : {}),
+        ...(typeof payload.mute_all === 'boolean'
+            ? { muteAll: payload.mute_all }
+            : {}),
+        ...(typeof payload.mute_member === 'boolean'
+            ? { muteMember: payload.mute_member }
+            : {}),
+        ...(typeof payload.send_frequency_enabled === 'boolean'
+            ? { speechFrequencyEnabled: payload.send_frequency_enabled }
+            : {}),
+        ...(Number.isFinite(Number(payload.send_frequency_seconds))
+            ? { speechFrequencySeconds: Number(payload.send_frequency_seconds) }
+            : {}),
         permissions,
         canEditAnnouncement: permissions.canEditAnnouncement,
         canMentionAll: permissions.canMentionAll,

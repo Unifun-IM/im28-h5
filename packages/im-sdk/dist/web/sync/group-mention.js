@@ -1,4 +1,5 @@
 import { ConversationRepository, GroupMemberRepository, GroupRepository, normalizeMessageMentions, } from '@im28/im-sdk/core';
+import { cancelIMGroupAdmins, setIMGroupAdmins, transferIMGroupOwner, } from './group-admin-owner.js';
 import { createWebIMGroupMemberSync, } from './group-member-sync.js';
 import { inviteIMGroupMembers, } from './group-member-invitation.js';
 import { removeIMGroupMembers, } from './group-member-removal.js';
@@ -19,8 +20,71 @@ export function createIMGroupMentionSync(dependencies) {
         updateSelfNickname: (groupID, nickname) => memberSync.updateSelfNickname(groupID, nickname),
         inviteMembers: options => inviteGroupMembers(sharedDependencies, memberSync, mutationQueue, options),
         removeMembers: options => removeGroupMembers(sharedDependencies, memberSync, mutationQueue, options),
+        setAdmins: options => changeGroupAdmins(sharedDependencies, memberSync, mutationQueue, options, 'admin'),
+        cancelAdmins: options => changeGroupAdmins(sharedDependencies, memberSync, mutationQueue, options, 'member'),
+        transferOwner: options => transferGroupOwner(sharedDependencies, memberSync, mutationQueue, options),
         send: options => mutationQueue.enqueue(() => sendGroupMention(sharedDependencies, options)),
     };
+}
+/** 管理员远端写入只入队一次，后置权威刷新失败不会重放 mutation。 */
+async function changeGroupAdmins(dependencies, memberSync, mutationQueue, options, role) {
+    /** context 在写入前冻结当前认证账号和数据库。 */
+    const context = requireWebIMSyncContext(dependencies, 'Group administrator change');
+    /** committed 只包含一次远端写和 success-only 本地事务。 */
+    const committed = await mutationQueue.enqueue(() => role === 'admin'
+        ? setIMGroupAdmins(context, options, dependencies.gatewayClient)
+        : cancelIMGroupAdmins(context, options, dependencies.gatewayClient));
+    try {
+        /** members 独立执行权威刷新，不会重新调用管理 mutation。 */
+        const members = await memberSync.sync(committed.group.groupID);
+        return {
+            groupID: committed.group.groupID,
+            changedUserIDs: committed.changedUserIDs,
+            role: committed.role,
+            members,
+            cacheState: 'authoritative',
+        };
+    }
+    catch {
+        /** members 在刷新失败时返回当前可用缓存。 */
+        const members = await memberSync.listCached(committed.group.groupID);
+        return {
+            groupID: committed.group.groupID,
+            changedUserIDs: committed.changedUserIDs,
+            role: committed.role,
+            members,
+            cacheState: committed.cacheState,
+        };
+    }
+}
+/** 群主远端转让只入队一次，后置权威刷新失败不会重放 mutation。 */
+async function transferGroupOwner(dependencies, memberSync, mutationQueue, options) {
+    /** context 在写入前冻结当前认证账号和数据库。 */
+    const context = requireWebIMSyncContext(dependencies, 'Group owner transfer');
+    /** committed 只包含一次远端写和 success-only 本地事务。 */
+    const committed = await mutationQueue.enqueue(() => transferIMGroupOwner(context, options, dependencies.gatewayClient));
+    try {
+        /** members 独立执行权威刷新，不会重新调用群主转让。 */
+        const members = await memberSync.sync(committed.group.groupID);
+        return {
+            groupID: committed.group.groupID,
+            previousOwnerUserID: committed.previousOwnerUserID,
+            newOwnerUserID: committed.newOwnerUserID,
+            members,
+            cacheState: 'authoritative',
+        };
+    }
+    catch {
+        /** members 在刷新失败时返回本地已提交或旧快照。 */
+        const members = await memberSync.listCached(committed.group.groupID);
+        return {
+            groupID: committed.group.groupID,
+            previousOwnerUserID: committed.previousOwnerUserID,
+            newOwnerUserID: committed.newOwnerUserID,
+            members,
+            cacheState: committed.cacheState,
+        };
+    }
 }
 /** 邀请 mutation 只入队一次，直接入群后刷新失败也不会重放远端写入。 */
 async function inviteGroupMembers(dependencies, memberSync, mutationQueue, options) {

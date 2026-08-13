@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
 import {
+  createIMComposerSubmissionPlan,
   trimPresetEmojiDocument,
+  type IMComposerSubmissionPlan,
   type PresetEmojiDocument,
 } from '@im28/im-sdk/web';
 
@@ -9,15 +11,13 @@ import keyboardIconURL from '../../assets/rn/assets/icons/imm28/keyboard.svg';
 import plusIconURL from '../../assets/rn/assets/icons/imm28/plus-circle.regular.svg';
 import sendIconURL from '../../assets/rn/assets/icons/imm28/send.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
-import { ChatAttachmentActionPanel } from './ChatAttachmentActionPanel.js';
+import { ChatComposerAttachmentControls } from './ChatComposerAttachmentControls.js';
 import { ChatComposerQuotePreview } from './ChatComposerQuotePreview.js';
 import { ChatComposerEditPreview } from './ChatComposerEditPreview.js';
+import { ChatComposerPendingFile } from './ChatComposerPendingFile.js';
 import { ChatSystemEmojiPanel } from './ChatSystemEmojiPanel.js';
 import { PresetEmojiTextContent } from './PresetEmojiTextContent.js';
 import { ChatVoiceInput } from './ChatVoiceInput.js';
-import {
-  CHAT_ALBUM_ACCEPT,
-} from './chat-attachment-selection.js';
 import { useChatComposerDraftEditing } from './useChatComposerDraftEditing.js';
 import { getChatMessageEditDocument } from './chat-message-edit-view.js';
 import { useChatComposerAttachments } from './useChatComposerAttachments.js';
@@ -46,7 +46,10 @@ export function ChatComposer({
   onCancelQuote,
   onSendQuote,
   onSendAlbum,
-  onSendFile,
+  onSendSubmission,
+  showCallAction,
+  onOpenCallPicker,
+  onOpenCardPicker,
   loadCachedCustomEmojis,
   syncCustomEmojis,
   onSendCustomEmoji,
@@ -67,8 +70,8 @@ export function ChatComposer({
   const [voiceMode, setVoiceMode] = useState(false);
   // attachments 隔离浏览器 input、校验和选择异常。
   const attachments = useChatComposerAttachments({
+    draftText: draftDocument.text,
     onSendAlbum,
-    onSendFile,
     onClosePanel: () => setActivePanel(null),
     onError,
   });
@@ -88,7 +91,11 @@ export function ChatComposer({
     canMentionAll,
   });
   // canSend 统一控制键盘提交与可见发送按钮。
-  const canSend = Boolean(draftDocument.text.trim()) && !sending && !voiceMode;
+  const canSend = Boolean(
+    draftDocument.text.trim() ||
+    attachments.pendingMedia ||
+    attachments.pendingFile,
+  ) && !sending && !voiceMode;
 
   useEffect(() => {
     if (!editingMessage) return;
@@ -107,9 +114,47 @@ export function ChatComposer({
     const document = trimPresetEmojiDocument(draftDocument);
     // selectedEdit 固定提交瞬间的原消息，失败时保留当前草稿。
     const selectedEdit = editingMessage;
+    // pendingMedia/pendingFile 固定本次选择，清空行为与 RN 提交时机一致。
+    const pendingMedia = attachments.pendingMedia;
+    const pendingFile = attachments.pendingFile;
+    // plan 先执行跨端互斥校验，再允许编辑或组合发送继续。
+    let plan: IMComposerSubmissionPlan;
+    try {
+      plan = createIMComposerSubmissionPlan({
+        text: document.text,
+        hasPendingMedia: Boolean(pendingMedia),
+        hasPendingFile: Boolean(pendingFile),
+        editing: Boolean(selectedEdit),
+      });
+    } catch (cause) {
+      onError(cause instanceof Error ? cause.message : '消息暂不可发送');
+      return;
+    }
     if (selectedEdit) {
       const completed = await onEditText(selectedEdit, document);
       if (completed) setDraftDocument({ text: '', entities: [] });
+      return;
+    }
+    if (pendingMedia || pendingFile) {
+      // selectedQuote 和 visibleMentions 都必须取提交瞬间快照。
+      const selectedQuote = quoteMessage;
+      const visibleMentions = mentions.collect(document.text);
+      attachments.clearPendingMedia();
+      attachments.clearPendingFile();
+      if (document.text) {
+        setDraftDocument({ text: '', entities: [] });
+        mentions.clear();
+        if (selectedQuote) onCancelQuote();
+      }
+      setActivePanel(null);
+      await onSendSubmission(
+        plan,
+        document,
+        visibleMentions,
+        selectedQuote,
+        pendingMedia,
+        pendingFile,
+      );
       return;
     }
     // selectedQuote 固定提交瞬间的来源，避免异步期间被新动作替换。
@@ -165,6 +210,12 @@ export function ChatComposer({
         />
       ) : null}
       <ChatMentionPickerPanel items={mentions.items} onSelect={mentions.select} />
+      {attachments.pendingFile ? (
+        <ChatComposerPendingFile
+          file={attachments.pendingFile}
+          onRemove={attachments.clearPendingFile}
+        />
+      ) : null}
       <form className="rn-chat-composer" onSubmit={handleSubmit}>
         <ChatVoiceInput
           voiceMode={voiceMode}
@@ -226,7 +277,12 @@ export function ChatComposer({
             assetURL={activePanel === 'emoji' ? keyboardIconURL : emojiIconURL}
           />
         </button>
-        {!voiceMode && (editingMessage || draftDocument.text.trim()) ? (
+        {!voiceMode && (
+          editingMessage ||
+          draftDocument.text.trim() ||
+          attachments.pendingMedia ||
+          attachments.pendingFile
+        ) ? (
           <button
             className="rn-chat-send-button"
             type="submit"
@@ -263,27 +319,19 @@ export function ChatComposer({
           onError={onError}
         />
       ) : null}
-      {activePanel === 'actions' ? (
-        <ChatAttachmentActionPanel
-          albumInputRef={attachments.albumInputRef}
-          fileInputRef={attachments.fileInputRef}
-        />
-      ) : null}
-      <input
-        ref={attachments.albumInputRef}
-        hidden
-        type="file"
-        multiple
-        accept={CHAT_ALBUM_ACCEPT}
+      <ChatComposerAttachmentControls
+        visible={activePanel === 'actions'}
         disabled={sending}
-        onChange={event => void attachments.selectAlbum(event)}
-      />
-      <input
-        ref={attachments.fileInputRef}
-        hidden
-        type="file"
-        disabled={sending}
-        onChange={event => void attachments.selectFile(event)}
+        showCallAction={showCallAction}
+        attachments={attachments}
+        onOpenCallPicker={() => {
+          setActivePanel(null);
+          onOpenCallPicker();
+        }}
+        onOpenCardPicker={() => {
+          setActivePanel(null);
+          onOpenCardPicker();
+        }}
       />
     </section>
   );

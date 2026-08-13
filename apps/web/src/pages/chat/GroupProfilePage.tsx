@@ -1,23 +1,18 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import type { Conversation, WebIMJoinedGroup } from '@im28/im-sdk/web';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import copyIconURL from '../../assets/rn/assets/icons/imm28/copy.dynamic.svg';
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
+import qrCodeIconURL from '../../assets/rn/assets/icons/imm28/qrcode-small.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { AvatarCropDialog } from '../../components/avatar/AvatarCropDialog.js';
+import { validateAvatarFile } from '../../components/avatar/avatar-crop.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
-import { GroupAvatarCropDialog } from './GroupAvatarCropDialog.js';
-import { validateGroupAvatarFile } from './group-avatar-crop.js';
 import { buildGroupProfileView, copyGroupProfileID } from './group-profile-view.js';
+import { loadGroupProfileSource, type GroupProfileSource } from './group-profile-source.js';
 import './group-profile-page.css';
-
-/** 群资料页恢复结果保留真实群会话和 shared 群快照。 */
-interface GroupProfileSource {
-  readonly conversation: Conversation;
-  readonly group: WebIMJoinedGroup;
-}
 
 /** RN 群资料页的 Web 垂直切片，开放 shared 群昵称与头像更新。 */
 export function GroupProfilePage() {
@@ -56,23 +51,7 @@ export function GroupProfilePage() {
     setLoading(true);
     setError(null);
     try {
-      // conversations 缺失时通过 canonical sync 恢复深链。
-      let conversations = await sync.conversations.listCached({ limit: 500 });
-      let conversation = conversations.find(item => item.conversationID === conversationID);
-      if (!conversation) {
-        conversations = await sync.conversations.sync({ pageSize: 100 });
-        conversation = conversations.find(item => item.conversationID === conversationID);
-      }
-      if (!conversation || conversation.type !== 'group') throw new Error('群聊不存在或尚未同步');
-      // cachedGroup 允许离线时先展示已有真实快照。
-      const cachedGroups = await sync.groups.listCached();
-      const cachedGroup = cachedGroups.find(item => item.groupID === conversation?.targetID);
-      if (cachedGroup) setSource({ conversation, group: cachedGroup });
-      // groups 刷新后必须再次精确匹配当前群。
-      const groups = await sync.groups.sync({ pageSize: 100 });
-      const group = groups.find(item => item.groupID === conversation?.targetID);
-      if (!group) throw new Error('群资料不存在或尚未同步');
-      setSource({ conversation, group });
+      setSource(await loadGroupProfileSource({ sync, conversationID, onCached: setSource }));
     } catch (cause) {
       setError(readGroupProfileError(cause, '群资料加载失败'));
     } finally {
@@ -141,7 +120,7 @@ export function GroupProfilePage() {
     if (avatarInputRef.current) avatarInputRef.current.value = '';
     if (!file) return;
     try {
-      validateGroupAvatarFile(file);
+      validateAvatarFile(file);
       setPendingAvatar(file);
       setError(null);
     } catch (cause) {
@@ -194,6 +173,8 @@ export function GroupProfilePage() {
   const view = source ? buildGroupProfileView(source.conversation, source.group) : null;
   // backURL 是当前群设置稳定返回目标。
   const backURL = `/conversations/${encodeURIComponent(conversationID)}/settings`;
+  // qrCodeURL 保持群二维码属于群资料子路由。
+  const qrCodeURL = `/conversations/${encodeURIComponent(conversationID)}/settings/qrcode`;
   // avatarStyle 使用群 ID 生成 RN 稳定 fallback 渐变。
   const avatarStyle = { '--group-profile-avatar-gradient': getRNAvatarGradient(view?.groupID ?? '') } as CSSProperties;
 
@@ -207,13 +188,14 @@ export function GroupProfilePage() {
           {view ? <div className="rn-group-profile-card">
             <button className="rn-group-profile-row" type="button" onClick={chooseAvatar}><span>群头像</span><span className="rn-group-profile-trailing"><span className="rn-group-profile-avatar" style={avatarStyle}><span>{getRNAvatarInitial(view.name, '群')}</span>{view.avatarURL ? <img src={view.avatarURL} alt="" onError={event => { event.currentTarget.hidden = true; }} /> : null}</span>{view.canEdit ? <RNAssetIcon assetURL={arrowIconURL} /> : null}</span></button>
             <button className="rn-group-profile-row" type="button" onClick={openNameEditor}><span>群昵称</span><span className="rn-group-profile-trailing"><span>{view.name}</span>{view.canEdit ? <RNAssetIcon assetURL={arrowIconURL} /> : null}</span></button>
+            <Link className="rn-group-profile-row" to={qrCodeURL}><span>群二维码</span><span className="rn-group-profile-trailing rn-group-profile-qr-trailing"><RNAssetIcon assetURL={qrCodeIconURL} /><RNAssetIcon assetURL={arrowIconURL} /></span></Link>
             <button className="rn-group-profile-row" type="button" onClick={() => { void copyGroupID(); }}><span>群ID</span><span className="rn-group-profile-trailing"><span>{view.groupID}</span><RNAssetIcon assetURL={copyIconURL} /></span></button>
           </div> : loading ? <p className="rn-group-profile-state">正在加载群资料</p> : null}
         </div>
       </section>
       <input ref={avatarInputRef} className="rn-group-profile-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="选择群头像" onChange={event => selectAvatar(event.currentTarget.files?.[0])} />
       {editorOpen ? <section className="rn-group-profile-dialog-backdrop" role="presentation" onPointerDown={event => { if (!saving && event.target === event.currentTarget) setEditorOpen(false); }}><div className="rn-group-profile-dialog" role="dialog" aria-modal="true" aria-labelledby="group-name-title"><h2 id="group-name-title">群昵称</h2><input aria-label="群昵称输入框" value={draft} disabled={saving} autoCapitalize="none" autoCorrect="off" onChange={event => setDraft(event.target.value)} /><div><button type="button" disabled={saving} onClick={() => setEditorOpen(false)}>取消</button><button type="button" disabled={saving} onClick={() => { void saveName(); }}>{saving ? '保存中' : '保存'}</button></div></div></section> : null}
-      {pendingAvatar ? <GroupAvatarCropDialog file={pendingAvatar} uploading={uploadingAvatar} onCancel={() => { if (!uploadingAvatar) setPendingAvatar(null); }} onConfirm={saveAvatar} onError={setError} /> : null}
+      {pendingAvatar ? <AvatarCropDialog file={pendingAvatar} uploading={uploadingAvatar} imageAlt="待裁剪群头像" errorMessage="群头像裁剪失败" onCancel={() => { if (!uploadingAvatar) setPendingAvatar(null); }} onConfirm={saveAvatar} onError={setError} /> : null}
     </main>
   );
 }

@@ -11,10 +11,10 @@ export interface AuthOnboardingProfileDraft {
   readonly avatarURL: string;
 }
 
-/** 子路由允许修改的资料草稿字段。 */
-export type AuthOnboardingProfileDraftPatch = Partial<Pick<AuthOnboardingProfileDraft, 'nickname' | 'gender' | 'bio'>>;
+/** 页面与子路由允许修改的非敏感资料草稿字段。 */
+export type AuthOnboardingProfileDraftPatch = Partial<Pick<AuthOnboardingProfileDraft, 'nickname' | 'gender' | 'bio' | 'avatarURL'>>;
 
-/** 合并可编辑字段，同时保持账号、联系方式和头像基线不可被子路由覆盖。 */
+/** 合并可编辑字段，同时保持账号与联系方式基线不可被页面覆盖。 */
 export function mergeAuthOnboardingProfileDraft(
   current: AuthOnboardingProfileDraft,
   patch: AuthOnboardingProfileDraftPatch,
@@ -24,5 +24,6 @@ export function mergeAuthOnboardingProfileDraft(
     ...(patch.nickname === undefined ? {} : { nickname: patch.nickname }),
     ...(patch.gender === undefined ? {} : { gender: patch.gender }),
     ...(patch.bio === undefined ? {} : { bio: patch.bio }),
+    ...(patch.avatarURL === undefined ? {} : { avatarURL: patch.avatarURL }),
   };
 }

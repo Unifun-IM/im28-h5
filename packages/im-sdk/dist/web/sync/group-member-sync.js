@@ -143,8 +143,28 @@ async function mapCachedMembers(database, members) {
             avatarURL: profile.avatarURL,
             role: memberRole(member.roleLevel),
             roleLevel: member.roleLevel ?? 0,
+            isMuted: readMemberMuted(member),
+            muteUntil: readMemberMuteUntil(member),
         };
     });
+}
+/** 从成员 raw payload 读取禁言到期时间。 */
+function readMemberMuteUntil(member) {
+    /** payload 保存 Gateway 成员禁言事实。 */
+    const payload = member.payload && typeof member.payload === 'object' && !Array.isArray(member.payload)
+        ? member.payload
+        : {};
+    return typeof payload.mute_until === 'string' ? payload.mute_until.trim() : '';
+}
+/** 结合显式状态和未来到期时间判断成员是否仍被禁言。 */
+function readMemberMuted(member) {
+    /** payload 保存 Gateway 显式禁言状态。 */
+    const payload = member.payload && typeof member.payload === 'object' && !Array.isArray(member.payload)
+        ? member.payload
+        : {};
+    /** muteUntil 用于兼容服务端未返回 is_muted 的快照。 */
+    const muteUntil = readMemberMuteUntil(member);
+    return payload.is_muted === true || Boolean(muteUntil && Date.parse(muteUntil) > Date.now());
 }
 /** 将 Gateway 字符串或数值角色转换为 Repository 数值。 */
 function roleLevel(role) {

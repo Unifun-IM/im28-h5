@@ -1,0 +1,134 @@
+.rn-avatar-crop {
+  position: fixed;
+  z-index: 100;
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  inset: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  color: #ffffff;
+  background: #000000;
+}
+
+.rn-avatar-crop-header {
+  display: grid;
+  min-height: 56px;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  align-items: center;
+  padding: calc(var(--im-safe-top) + 8px) 16px 8px;
+}
+
+.rn-avatar-crop-header button {
+  display: grid;
+  width: 48px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  place-items: start;
+  color: #ffffff;
+  background: transparent;
+  cursor: pointer;
+}
+
+.rn-avatar-crop-header .rn-asset-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.rn-avatar-crop-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 27px;
+  text-align: center;
+}
+
+.rn-avatar-crop-body {
+  display: flex;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.rn-avatar-crop-stage {
+  position: relative;
+  width: min(82vw, 360px);
+  overflow: hidden;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  background: #151515;
+  cursor: grab;
+  touch-action: none;
+}
+
+.rn-avatar-crop-stage:active {
+  cursor: grabbing;
+}
+
+.rn-avatar-crop-stage > img {
+  position: absolute;
+  max-width: none;
+  max-height: none;
+  inset: 50% auto auto 50%;
+  object-fit: cover;
+  transform-origin: center;
+  translate: -50% -50%;
+  user-select: none;
+}
+
+.rn-avatar-crop-mask {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  inset: 0;
+  pointer-events: none;
+}
+
+.rn-avatar-crop-zoom {
+  display: grid;
+  width: min(82vw, 360px);
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  color: rgba(255, 255, 255, 0.72);
+  gap: 12px;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.rn-avatar-crop-zoom input {
+  width: 100%;
+  accent-color: var(--im-brand-primary);
+}
+
+.rn-avatar-crop-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px calc(var(--im-safe-bottom) + 16px);
+}
+
+.rn-avatar-crop-footer button {
+  min-width: 72px;
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.rn-avatar-crop-footer button:last-child {
+  background: var(--im-brand-primary);
+}
+
+.rn-avatar-crop-footer button:disabled,
+.rn-avatar-crop-header button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}

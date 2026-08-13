@@ -28,6 +28,11 @@ import { ChatClearHistorySheet } from './ChatClearHistorySheet.js';
 import { ChatGroupAnnouncementSettingsCard } from './ChatGroupAnnouncementSettingsCard.js';
 import { ChatGroupProfileSettingsCard } from './ChatGroupProfileSettingsCard.js';
 import {
+  GroupLifecycleConfirmModal,
+  GroupLifecycleSettingsCard,
+  type GroupLifecycleAction,
+} from './GroupLifecycleSettings.js';
+import {
   clearChatHistory,
   type ChatClearHistoryScope,
 } from './chat-clear-history.js';
@@ -64,6 +69,12 @@ export function ChatSettingsPage() {
   const [clearSheetOpen, setClearSheetOpen] = useState(false);
   // clearing 阻止确认层重复提交真实 mutation。
   const [clearing, setClearing] = useState(false);
+  // lifecycleAction 控制退群或解散的显式二次确认。
+  const [lifecycleAction, setLifecycleAction] = useState<GroupLifecycleAction | null>(null);
+  // lifecycleSubmitting 阻止破坏性操作重复提交。
+  const [lifecycleSubmitting, setLifecycleSubmitting] = useState(false);
+  // lifecycleBlocked 在远端已成功但本地未收敛时阻止当前页面重放动作。
+  const [lifecycleBlocked, setLifecycleBlocked] = useState(false);
 
   useEffect(() => {
     if (!sync || !snapshot.userID || !conversationID) return;
@@ -73,6 +84,9 @@ export function ChatSettingsPage() {
     setError(null);
     setNotice(null);
     setClearSheetOpen(false);
+    setLifecycleAction(null);
+    setLifecycleSubmitting(false);
+    setLifecycleBlocked(false);
     setConversation(null);
     setGroup(null);
     setMembers([]);
@@ -147,6 +161,31 @@ export function ChatSettingsPage() {
     }
   }
 
+  /** 确认后只调用 shared lifecycle facade，远端成功后不得在页面重放。 */
+  async function confirmGroupLifecycle(): Promise<void> {
+    if (!sync || !conversation || !lifecycleAction || lifecycleSubmitting || lifecycleBlocked) return;
+    setLifecycleSubmitting(true);
+    setError(null);
+    setNotice(null);
+    try {
+      /** result 区分本地已收敛和远端已成功但本地待同步。 */
+      const result = lifecycleAction === 'leave'
+        ? await sync.groupLifecycle.leave({ groupID: conversation.targetID })
+        : await sync.groupLifecycle.dismiss({ groupID: conversation.targetID });
+      setLifecycleAction(null);
+      if (result.cacheState === 'remote-only') {
+        setLifecycleBlocked(true);
+        setError('群操作已在服务端完成，本地缓存同步失败；为避免重复操作，请返回会话列表刷新');
+        return;
+      }
+      navigate('/conversations', { replace: true });
+    } catch (cause) {
+      setError(readChatSettingsError(cause));
+    } finally {
+      setLifecycleSubmitting(false);
+    }
+  }
+
   if (restoring) return <ChatSettingsPageState label="正在恢复聊天设置" />;
   if (!runtime) return <ChatSettingsPageState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
@@ -213,10 +252,20 @@ export function ChatSettingsPage() {
               {view.canShowAnnouncement ? (
                 <ChatGroupAnnouncementSettingsCard view={view} />
               ) : null}
+              {view.canOpenGroupManage ? (
+                <ChatGroupManageSettingsRow conversationID={view.conversationID} />
+              ) : null}
               <ChatClearHistorySettingsCard
                 clearing={clearing}
                 onOpen={() => setClearSheetOpen(true)}
               />
+              {view.canQuitGroup || view.canDismissGroup ? (
+                <GroupLifecycleSettingsCard
+                  action={view.canDismissGroup ? 'dismiss' : 'leave'}
+                  submitting={lifecycleSubmitting || lifecycleBlocked}
+                  onOpen={setLifecycleAction}
+                />
+              ) : null}
             </>
           ) : loading ? (
             <p className="rn-chat-settings-state">正在加载聊天设置</p>
@@ -232,7 +281,28 @@ export function ChatSettingsPage() {
           onConfirm={scope => { void confirmClearHistory(scope); }}
         />
       ) : null}
+      <GroupLifecycleConfirmModal
+        action={lifecycleAction}
+        groupName={view?.title ?? ''}
+        submitting={lifecycleSubmitting}
+        onCancel={() => { if (!lifecycleSubmitting) setLifecycleAction(null); }}
+        onConfirm={() => { void confirmGroupLifecycle(); }}
+      />
     </main>
+  );
+}
+
+/** 群管理入口只在 shared capability 允许时进入 SPA 子路由。 */
+function ChatGroupManageSettingsRow({ conversationID }: { readonly conversationID: string }) {
+  /** manageURL 指向当前真实群会话的唯一管理路由。 */
+  const manageURL = `/conversations/${encodeURIComponent(conversationID)}/settings/manage`;
+  return (
+    <div className="rn-chat-settings-card">
+      <Link className="rn-chat-settings-row" to={manageURL}>
+        <span>群管理</span>
+        <RNAssetIcon assetURL={arrowIconURL} />
+      </Link>
+    </div>
   );
 }
 

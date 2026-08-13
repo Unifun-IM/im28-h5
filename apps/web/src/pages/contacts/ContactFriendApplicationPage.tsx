@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { WebIMPeerProfile } from '@im28/im-sdk/web';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { buildContactProfileRoute } from './contact-profile-view.js';
@@ -20,6 +20,8 @@ export function ContactFriendApplicationPage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // routeParams 提供申请目标用户 ID。
   const routeParams = useParams<{ userID: string }>();
+  /** location 提供扫码入口传递的受控申请来源。 */
+  const location = useLocation();
   // userID 清理无效 deep link。
   const userID = routeParams.userID?.trim() ?? '';
   // profile 只来自真实资料 facade。
@@ -57,14 +59,18 @@ export function ContactFriendApplicationPage() {
     setSubmitting(true);
     setError(null);
     try {
-      await runtime.getSync().peerProfile.applyFriend(profile.userID, message);
+      await runtime.getSync().peerProfile.applyFriend(
+        profile.userID,
+        message,
+        readFriendApplicationSourceType(location.state) ?? undefined,
+      );
       setSubmitted(true);
     } catch (cause) {
       setError(readApplicationError(cause, '好友申请发送失败'));
     } finally {
       setSubmitting(false);
     }
-  }, [message, profile, runtime, submitted, submitting]);
+  }, [location.state, message, profile, runtime, submitted, submitting]);
 
   if (restoring) return <ApplicationPageState label="正在恢复好友申请" />;
   if (!runtime) return <ApplicationPageState label="运行配置不可用" detail={startupError} />;
@@ -132,4 +138,10 @@ function ApplicationPageState({ label, detail }: ApplicationPageStateProps) {
 /** 将未知申请异常转换为不含凭据的页面文案。 */
 function readApplicationError(cause: unknown, fallback: string): string {
   return cause instanceof Error && cause.message ? cause.message : fallback;
+}
+
+/** 只接受扫码页登记的 qrcode 好友申请来源。 */
+function readFriendApplicationSourceType(state: unknown): 'qrcode' | null {
+  if (!state || typeof state !== 'object') return null;
+  return Reflect.get(state, 'sourceType') === 'qrcode' ? 'qrcode' : null;
 }

@@ -63,10 +63,40 @@ const GroupAnnouncementPage = lazy(() => import('../pages/chat/GroupAnnouncement
 const GroupCardSharePage = lazy(() => import('../pages/chat/GroupCardSharePage.js'));
 /** 群资料页按群设置子路由加载，只开放已收敛的群昵称 mutation。 */
 const GroupProfilePage = lazy(() => import('../pages/chat/GroupProfilePage.js'));
+/** 群管理首页按 capability 子路由加载。 */
+const GroupManagementPage = lazy(() => import('../pages/chat/GroupManagementPage.js'));
+/** 群管理员列表按独立管理子路由加载。 */
+const GroupAdminsPage = lazy(() => import('../pages/chat/GroupAdminsPage.js'));
+/** 添加管理员选择按独立管理动作路由加载。 */
+const GroupAddAdminsPage = lazy(() => import('../pages/chat/GroupAddAdminsPage.js'));
+/** 群主转让选择按独立管理动作路由加载。 */
+const GroupOwnerTransferPage = lazy(() => import('../pages/chat/GroupOwnerTransferPage.js'));
+/** 群禁言页按群管理子路由加载，不进入聊天首包。 */
+const GroupMutePage = lazy(() => import('../pages/chat/GroupMutePage.js'));
+/** 发言频率页按群管理子路由加载，不进入聊天首包。 */
+const GroupSpeechFrequencyPage = lazy(() => import('../pages/chat/GroupSpeechFrequencyPage.js'));
 /** 定时删除选择页按设置子路由加载。 */
 const ChatAutoDeletePage = lazy(() => import('../pages/chat/ChatAutoDeletePage.js'));
 /** LiveKit 通话页按交互路由加载，避免浏览器媒体引擎进入主列表首包。 */
 const ActiveCallPage = lazy(() => import('../pages/calls/ActiveCallPage.js'));
+/** 发起群聊页按独立 SPA 路由加载，不进入会话与通讯录首包。 */
+const CreateGroupPage = lazy(() => import('../pages/groups/CreateGroupPage.js'));
+/** 查找群聊页按建群子路由加载，不进入首页或建群首包。 */
+const GroupSearchPage = lazy(() => import('../pages/groups/GroupSearchPage.js'));
+/** 群发目标选择页按独立 SPA 路由加载，不进入首页首包。 */
+const BroadcastTargetSelectPage = lazy(() => import('../pages/broadcast/BroadcastTargetSelectPage.js'));
+/** 群发 compose 页按独立 SPA 路由加载，不进入首页首包。 */
+const BroadcastComposePage = lazy(() => import('../pages/broadcast/BroadcastComposePage.js'));
+/** 扫码页按独立 SPA 路由加载，ZXing 不进入首页首包。 */
+const QRCodeScanPage = lazy(() => import('../pages/qr/QRCodeScanPage.js'));
+/** 群二维码申请页按识别结果路由加载。 */
+const GroupQRCodeApplyPage = lazy(() => import('../pages/qr/GroupQRCodeApplyPage.js'));
+/** 个人二维码页按动作路由加载，QR 生成器不进入个人中心首包。 */
+const ProfileQRCodePage = lazy(() => import('../pages/qr/ProfileQRCodePage.js'));
+/** 群二维码页按群资料动作路由加载，共用二维码生成器。 */
+const GroupQRCodePage = lazy(() => import('../pages/qr/GroupQRCodePage.js'));
+/** 二维码应用内分享页按确认动作路由加载，不进入展示页首包。 */
+const QRCodeSharePage = lazy(() => import('../pages/qr/QRCodeSharePage.js'));
 
 /** Web 应用根组件只负责装配浏览器路由，页面能力由对应 page owner 承担。 */
 export function App() {
@@ -132,6 +162,70 @@ export function App() {
           <Route path="/contacts/group-applications" element={<Navigate to="/contacts/verifications/group" replace />} />
           <Route path="/contacts/group-applications/:groupID" element={<GroupApplicationsPage />} />
           <Route path="/contacts/groups" element={<JoinedGroupsPage />} />
+          <Route
+            path="/groups/create"
+            element={(
+              <Suspense fallback={<ContactsRouteLoadingState />}>
+                <CreateGroupPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/groups/search"
+            element={(
+              <Suspense fallback={<ContactsRouteLoadingState />}>
+                <GroupSearchPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/broadcast/select"
+            element={(
+              <Suspense fallback={<ContactsRouteLoadingState />}>
+                <BroadcastTargetSelectPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/broadcast/compose"
+            element={(
+              <Suspense fallback={<ContactsRouteLoadingState />}>
+                <BroadcastComposePage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/scan"
+            element={(
+              <Suspense fallback={<ContactsRouteLoadingState />}>
+                <QRCodeScanPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/groups/:groupID/apply"
+            element={(
+              <Suspense fallback={<ContactsRouteLoadingState />}>
+                <GroupQRCodeApplyPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/me/qrcode"
+            element={(
+              <Suspense fallback={<ContactsRouteLoadingState />}>
+                <ProfileQRCodePage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/me/qrcode/share"
+            element={(
+              <Suspense fallback={<ContactsRouteLoadingState />}>
+                <QRCodeSharePage kind="user" />
+              </Suspense>
+            )}
+          />
           <Route path="/contacts/search" element={<ContactSearchPage />} />
           <Route
             path="/contacts/users/:userID/share"
@@ -192,6 +286,70 @@ export function App() {
             element={(
               <Suspense fallback={<ChatSettingsRouteLoadingState />}>
                 <GroupProfilePage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/qrcode"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupQRCodePage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/qrcode/share"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <QRCodeSharePage kind="group" />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/manage"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupManagementPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/manage/mute"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupMutePage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/manage/admins"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupAdminsPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/manage/admins/add"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupAddAdminsPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/manage/owner-transfer"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupOwnerTransferPage />
+              </Suspense>
+            )}
+          />
+          <Route
+            path="/conversations/:conversationID/settings/manage/speech-frequency"
+            element={(
+              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
+                <GroupSpeechFrequencyPage />
               </Suspense>
             )}
           />

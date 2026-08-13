@@ -6,7 +6,7 @@
 }
 
 .rn-conversation-search-surface {
-  width: min(100%, 480px);
+  width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0 auto;
@@ -67,6 +67,24 @@
   display: none;
 }
 
+.rn-conversation-search-input button {
+  display: grid;
+  width: 24px;
+  height: 32px;
+  flex: 0 0 24px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: var(--im-icon-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.rn-conversation-search-input button .rn-asset-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .rn-conversation-search-header > button {
   min-width: 32px;
   min-height: 40px;
@@ -84,6 +102,22 @@
 .rn-conversation-search-content {
   min-height: calc(100dvh - var(--im-safe-top) - 64px);
   padding-bottom: calc(var(--im-safe-bottom) + 16px);
+}
+
+.rn-conversation-search-pull {
+  display: grid;
+  height: 0;
+  overflow: hidden;
+  place-items: center;
+  color: var(--im-text-muted);
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 18px;
+  transition: height 160ms ease;
+}
+
+.rn-conversation-search-pull.is-armed {
+  color: var(--im-brand-primary);
 }
 
 .rn-conversation-search-history {
@@ -189,6 +223,15 @@
   color: var(--im-text-muted);
   font-size: 12px;
   line-height: 17px;
+}
+
+.rn-conversation-search-copy mark {
+  color: inherit;
+  background: transparent;
+}
+
+.rn-conversation-search-copy mark.is-highlighted {
+  color: var(--im-brand-primary);
 }
 
 .rn-conversation-search-more {

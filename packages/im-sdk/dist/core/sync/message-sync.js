@@ -1,5 +1,6 @@
 import { ConversationRepository, MessageRepository, } from '@im28/im-sdk/core';
 import { sendWebIMAudioMessage, } from './message-audio-send.js';
+import { sendWebIMCardMessage, } from './message-card-send.js';
 import { sendWebIMFileMessage, sendWebIMImageMessage, } from './message-media-send.js';
 import { sendWebIMCustomEmojiMessage, } from './message-custom-emoji-send.js';
 import { sendWebIMQuoteMessage, } from './message-quote-send.js';
@@ -122,6 +123,12 @@ class WebIMMessageSyncImpl {
             ...this.dependencies,
             mutationQueue: this.mutationQueue,
         });
+    }
+    /** 发送 type108 用户或群名片，并复用统一消息状态机。 */
+    async sendCard(options) {
+        /** context 在构造规范卡片 body 前固定账号和 SQLite owner。 */
+        const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
+        return this.mutationQueue.enqueue(() => sendWebIMCardMessage(context, options, this.dependencies));
     }
     /** 通过平台上传端口发送视频并保留浏览器解析的媒体元数据。 */
     async sendVideo(options) {

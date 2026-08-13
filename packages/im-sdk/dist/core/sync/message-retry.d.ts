@@ -2,7 +2,7 @@ import { serializePresetEmojiEntities, type GatewayClientMessageBody, type Messa
 import { type WebIMMessageSendDependencies } from './message-send-state.js';
 import { type WebIMSyncContext } from './sync-context.js';
 /** 当前可由持久化 payload 完整恢复的消息类型。 */
-export declare const WEB_IM_RETRYABLE_CONTENT_TYPES: readonly [101, 114, 102, 103, 104, 105, 115];
+export declare const WEB_IM_RETRYABLE_CONTENT_TYPES: readonly [101, 114, 108, 102, 103, 104, 105, 115];
 /** 单条失败消息重试参数只暴露稳定本地 ID 与 sending 通知。 */
 export interface WebIMRetryMessageOptions {
     readonly clientMsgID: string;

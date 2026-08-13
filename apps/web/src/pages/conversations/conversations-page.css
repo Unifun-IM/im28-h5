@@ -6,7 +6,7 @@
 }
 
 .rn-conversation-surface {
-  width: min(100%, 480px);
+  width: 100%;
   min-height: calc(100dvh - var(--im-primary-tab-bar-space, 0px));
   margin: 0 auto;
   background: var(--im-bg-app);

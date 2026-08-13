@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import type {
+  IMComposerSubmissionPlan,
   Message,
   MessageMention,
   PresetEmojiDocument,
@@ -28,8 +29,15 @@ interface ChatOutgoingMessageActions {
   ) => Promise<void>;
   readonly sendQuote: (sourceMessage: Message, text: string) => Promise<void>;
   readonly sendAlbum: (items: readonly ChatAlbumSelectionItem[]) => Promise<void>;
-  readonly sendFile: (file: File) => Promise<void>;
   readonly sendAudio: (file: File, durationSeconds: number) => Promise<void>;
+  readonly sendSubmission: (
+    plan: IMComposerSubmissionPlan,
+    document: PresetEmojiDocument,
+    mentions: readonly MessageMention[],
+    quoteMessage: Message | null,
+    media: ChatAlbumSelectionItem | null,
+    file: File | null,
+  ) => Promise<void>;
   readonly retry: (clientMsgID: string) => Promise<void>;
 }
 
@@ -44,11 +52,7 @@ export function useChatOutgoingMessageActions({
   const sendText = useCallback(
     (document: PresetEmojiDocument) =>
       runMessageOperation(async activeSync => {
-        await activeSync.messages.sendText({
-          conversationID,
-          text: document.text,
-          entities: document.entities,
-        });
+        await sendTextDocument(activeSync, conversationID, document);
       }),
     [conversationID, runMessageOperation],
   );
@@ -57,16 +61,13 @@ export function useChatOutgoingMessageActions({
   const sendMention = useCallback(
     (document: PresetEmojiDocument, mentions: readonly MessageMention[]) =>
       runMessageOperation(async activeSync => {
-        if (!groupID) {
-          throw new Error('群聊会话不存在或尚未同步');
-        }
-        await activeSync.groupMentions.send({
-          groupID,
+        await sendMentionDocument(
+          activeSync,
           conversationID,
-          text: document.text,
-          entities: document.entities,
+          groupID,
+          document,
           mentions,
-        });
+        );
       }),
     [conversationID, groupID, runMessageOperation],
   );
@@ -75,12 +76,13 @@ export function useChatOutgoingMessageActions({
   const sendQuote = useCallback(
     (sourceMessage: Message, text: string) =>
       runMessageOperation(async activeSync => {
-        await activeSync.messages.sendQuote({
+        await sendQuoteText(
+          activeSync,
           conversationID,
           sourceMessage,
           text,
           onSending,
-        });
+        );
       }),
     [conversationID, onSending, runMessageOperation],
   );
@@ -90,47 +92,8 @@ export function useChatOutgoingMessageActions({
     (items: readonly ChatAlbumSelectionItem[]) =>
       runMessageOperation(async activeSync => {
         for (const item of items) {
-          // file 保留浏览器选择顺序和原始 Blob 身份。
-          const { file } = item;
-          if (item.kind === 'image') {
-            await activeSync.messages.sendImage({
-              conversationID,
-              source: file,
-              name: file.name,
-              mimeType: file.type,
-              size: file.size,
-              onSending,
-            });
-            continue;
-          }
-          // metadata 由标准 video decoder 在 SDK I/O 前读取。
-          const metadata = await readChatVideoMetadata(file);
-          await activeSync.messages.sendVideo({
-            conversationID,
-            source: file,
-            name: file.name,
-            mimeType: file.type,
-            size: file.size,
-            ...metadata,
-            onSending,
-          });
+          await sendAlbumItem(activeSync, conversationID, item, onSending);
         }
-      }),
-    [conversationID, onSending, runMessageOperation],
-  );
-
-  /** 发送普通文件并保留浏览器报告的 MIME 与精确字节数。 */
-  const sendFile = useCallback(
-    (file: File) =>
-      runMessageOperation(async activeSync => {
-        await activeSync.messages.sendFile({
-          conversationID,
-          source: file,
-          name: file.name,
-          mimeType: file.type || 'application/octet-stream',
-          size: file.size,
-          onSending,
-        });
       }),
     [conversationID, onSending, runMessageOperation],
   );
@@ -152,6 +115,62 @@ export function useChatOutgoingMessageActions({
     [conversationID, onSending, runMessageOperation],
   );
 
+  /** 按共享 Composer 计划在同一 operation 内串行发送附件与文本。 */
+  const sendSubmission = useCallback(
+    (
+      plan: IMComposerSubmissionPlan,
+      document: PresetEmojiDocument,
+      mentions: readonly MessageMention[],
+      quoteMessage: Message | null,
+      media: ChatAlbumSelectionItem | null,
+      file: File | null,
+    ) => runMessageOperation(async activeSync => {
+      for (const step of plan.steps) {
+        if (step === 'media' && media) {
+          await sendAlbumItem(activeSync, conversationID, media, onSending);
+          continue;
+        }
+        if (step === 'file' && file) {
+          await activeSync.messages.sendFile({
+            conversationID,
+            source: file,
+            name: file.name,
+            mimeType: file.type || 'application/octet-stream',
+            size: file.size,
+            onSending,
+          });
+          continue;
+        }
+        if (step !== 'text') continue;
+        if (quoteMessage) {
+          await sendQuoteText(
+            activeSync,
+            conversationID,
+            quoteMessage,
+            plan.text,
+            onSending,
+          );
+          continue;
+        }
+        if (mentions.length) {
+          await sendMentionDocument(
+            activeSync,
+            conversationID,
+            groupID,
+            { text: plan.text, entities: document.entities },
+            mentions,
+          );
+          continue;
+        }
+        await sendTextDocument(activeSync, conversationID, {
+          text: plan.text,
+          entities: document.entities,
+        });
+      }
+    }),
+    [conversationID, groupID, onSending, runMessageOperation],
+  );
+
   /** 让 shared SDK 从同一 SQLite failed row 恢复安全请求。 */
   const retry = useCallback(
     (clientMsgID: string) =>
@@ -161,5 +180,93 @@ export function useChatOutgoingMessageActions({
     [onSending, runMessageOperation],
   );
 
-  return { sendText, sendMention, sendQuote, sendAlbum, sendFile, sendAudio, retry };
+  return {
+    sendText,
+    sendMention,
+    sendQuote,
+    sendAlbum,
+    sendAudio,
+    sendSubmission,
+    retry,
+  };
+}
+
+/** 发送普通文本，供单消息与组合提交共用同一 SDK 映射。 */
+async function sendTextDocument(
+  activeSync: WebIMSync,
+  conversationID: string,
+  document: PresetEmojiDocument,
+): Promise<void> {
+  await activeSync.messages.sendText({
+    conversationID,
+    text: document.text,
+    entities: document.entities,
+  });
+}
+
+/** 发送群提及文本，供单消息与组合提交共用同一身份校验。 */
+async function sendMentionDocument(
+  activeSync: WebIMSync,
+  conversationID: string,
+  groupID: string,
+  document: PresetEmojiDocument,
+  mentions: readonly MessageMention[],
+): Promise<void> {
+  if (!groupID) throw new Error('群聊会话不存在或尚未同步');
+  await activeSync.groupMentions.send({
+    groupID,
+    conversationID,
+    text: document.text,
+    entities: document.entities,
+    mentions,
+  });
+}
+
+/** 发送引用文本，供单消息与组合提交共用 type114 facade。 */
+async function sendQuoteText(
+  activeSync: WebIMSync,
+  conversationID: string,
+  sourceMessage: Message,
+  text: string,
+  onSending: (message: Message) => void,
+): Promise<void> {
+  await activeSync.messages.sendQuote({
+    conversationID,
+    sourceMessage,
+    text,
+    onSending,
+  });
+}
+
+/** 在组合提交和立即相册发送之间复用唯一媒体映射。 */
+async function sendAlbumItem(
+  activeSync: WebIMSync,
+  conversationID: string,
+  item: ChatAlbumSelectionItem,
+  onSending: (message: Message) => void,
+): Promise<void> {
+  // file 保留浏览器选择结果的原始 Blob 身份。
+  const { file } = item;
+  if (item.kind === 'image') {
+    await activeSync.messages.sendImage({
+      conversationID,
+      source: file,
+      name: file.name,
+      mimeType: file.type,
+      size: file.size,
+      onSending,
+    });
+    return;
+  }
+  // metadata 由标准 video decoder 在 SDK I/O 前读取。
+  const metadata = await readChatVideoMetadata(file);
+  await activeSync.messages.sendVideo({
+    conversationID,
+    source: file,
+    name: file.name,
+    mimeType: file.type,
+    size: file.size,
+    ...metadata,
+    onSending,
+  });
 }

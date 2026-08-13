@@ -1,0 +1,39 @@
+.rn-qr-share-page .rn-contact-card-share-sheet {
+  grid-template-rows: 56px 48px 42px minmax(0, 1fr) auto;
+}
+
+.rn-qr-share-tabs {
+  display: grid;
+  height: 42px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
+}
+
+.rn-qr-share-tabs button {
+  position: relative;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: var(--im-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.rn-qr-share-tabs button.is-active {
+  color: var(--im-text-primary);
+  font-weight: 600;
+}
+
+.rn-qr-share-tabs button.is-active::after {
+  position: absolute;
+  right: 34%;
+  bottom: 0;
+  left: 34%;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--im-brand-primary);
+  content: '';
+}

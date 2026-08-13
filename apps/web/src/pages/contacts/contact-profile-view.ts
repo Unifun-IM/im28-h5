@@ -62,6 +62,7 @@ export function resolveContactProfileBackHref(state: unknown): string {
   if (/^\/conversations\/[^/]+\/settings\/members$/.test(normalizedHref)) {
     return normalizedHref;
   }
+  if (normalizedHref === '/scan') return normalizedHref;
   if (normalizedHref.startsWith('/contacts')) return normalizedHref;
   return '/contacts';
 }

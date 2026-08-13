@@ -1,5 +1,321 @@
 # IM28 H5 Foundation Workset
 
+## Latest Closed Slice W6.a6.20.14
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-login-lock/data-gated` |
+| goal | 将 RN 群主转让从管理页 modal 对齐为独立 React Router SPA route |
+| shared owner | SDK `group-admin-owner.ts`/`WebIMSync.groupMembers.transferOwner` 唯一持有权限、候选、exactly-once 与角色缓存事务；H5 只消费 |
+| H5 owner | `GroupOwnerTransferPage` 持有搜索、角色/拼音分组、下拉刷新、选择和确认；管理员与群主页面共用 cache-first route data hook；旧管理页转让 modal 已删除 |
+| verification floor | H5 focused 3 files/10 tests；final full verify：SDK Web 85 files/357 tests、466 assets、boundary、SDK/H5 typecheck、1102-module build；浏览器登录按真实 SQLite 多标签互斥锁失败；RN protected worktree clean |
+| not authorized | 制造群数据、真实群主转让 mutation、RN consumer rewrite、RN/desktop builds、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN page/action/state 与 H5 route/owner 交叉检索，跳过已完成但仍 acceptance-gated 的能力。
+
+## Previous Closed Slice W6.a6.20.13
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass/data-gated` |
+| goal | 将 RN 群管理员列表与添加候选从管理页 modal 对齐为独立 React Router SPA route |
+| shared owner | SDK `group-admin-owner.ts` 唯一持有权限、候选、公开上限、set/cancel exactly-once 与角色缓存事务；H5 只消费 |
+| H5 owner | `GroupAdminsPage` 持有列表/移除确认，`GroupAddAdminsPage` 持有搜索/选择 UI，共用一个 cache-first route data hook；旧管理页管理员 modal 已删除 |
+| verification floor | SDK focused 5/5、H5 focused 4/4；final full verify：SDK Web 85 files/357 tests、466 assets、boundary、SDK/H5 typecheck、1099-module build；412px missing-group fail-closed/zero-overflow；RN protected worktree clean |
+| not authorized | 制造群数据、真实管理员 mutation、RN consumer rewrite、RN/desktop builds、`build:package:desktop:web` |
+
+## Previous Closed Slice W6.a6.20.12
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass` |
+| goal | 对齐 RN AppSearchBox 默认清除控件，并在清除结果状态后保持输入焦点 |
+| shared owner | SDK 继续持有缓存与搜索查询；本片无 SDK capability 变更 |
+| H5 owner | 独立 input 组件只翻译 input/Enter/clear；页面统一复位 request generation、结果、分页与错误态 |
+| verification floor | focused H5 2 files/7 tests；final full verify：SDK Web 85 files/356 tests、466 assets、boundary、SDK/H5 typecheck、1092-module build；412px authenticated clear/focus/history/zero-overflow；RN protected worktree clean |
+| not authorized | 任何 mutation、RN consumer rewrite、RN/desktop builds、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN page/action/state 与 H5 route/owner 交叉检索，跳过已完成但仍 acceptance-gated 的能力。
+
+## Previous Closed Slice W6.a6.20.11
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-readonly-pass/data-gated` |
+| goal | 对齐 RN 首页搜索好友/群聊结果的关键词高亮，并保持聊天记录汇总行原有无高亮分支 |
+| shared owner | SDK 继续持有缓存实体与搜索结果；本片 SDK 零源码改动 |
+| H5 owner | helper 只按 RN 规则切分展示文本；结果行仅翻译为语义标签与品牌色，不新增查询或业务 owner |
+| verification floor | focused H5 5/5；full verify：SDK Web 85 files/356 tests、466 assets、boundary、SDK/H5 typecheck、1091-module build；412px authenticated friend-highlight/message-no-highlight/zero-overflow；RN protected worktree clean |
+| not authorized | 制造群搜索数据、任何 mutation、RN consumer rewrite、RN/desktop builds、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN page/action/state 与 H5 route/owner 交叉检索，优先选择可真实只读证明或有明确 mutation 授权边界的缺口。
+
+## Previous Closed Slice W6.a6.20.10
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/converged-owner-consumed; browser-readonly-pass/data-gated` |
+| goal | 对齐 RN 首页全局搜索的 8 条消息分页、过期请求隔离和结果下拉重读，同时保持 shared search 单一 owner |
+| shared owner | SDK `messages.searchCached({ keyword, limit, offset })` 继续持有当前账号、查询校验、可见正文过滤和 SQLite 结果分页；本轮 SDK 零源码改动 |
+| H5 owner | 页面只持有 request generation、分页 UI、下拉手势和历史 preference；helper 只持有好友/群/消息 view projection 与跨页会话合并 |
+| verification floor | focused H5 4/4；full verify：SDK Web 85 files/356 tests、466 assets、boundary、SDK/H5 typecheck、1091-module build；412px authenticated history/friend/message/zero-overflow；RN protected worktree clean |
+| not authorized | 制造消息/群数据、发送或远端刷新 mutation、RN consumer rewrite、RN/desktop builds、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN page/action/state 与 H5 route/owner 交叉检索，优先选择可真实只读证明或有明确 mutation 授权边界的缺口。
+
+## Previous Closed Slice W6.a6.20.9
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pass/data-gated` |
+| goal | 让所有“已知群 ID 进入聊天”入口通过同一个 SDK owner 获取、校验并缓存规范群会话 |
+| shared owner | `openIMGroupConversation` 持有 cache-first、真实 conversation ID 获取、Gateway identity fail-closed、latest/conversation 缓存事务与账号切换保护 |
+| H5 owner | 我的群聊、共同群聊、查找群聊只持有 opening/error/React Router；不扫描会话列表、不猜 `sg_` ID、不映射 Gateway DTO |
+| verification floor | SDK focused sql.js 4/4；full verify：SDK Web 85 files/356 tests、466 assets、boundary、SDK/H5 typecheck、1091-module build；browser 空态/console 证据；RN protected worktree clean |
+| not authorized | 制造群数据、执行群申请/创建/发送 mutation、RN consumer convergence、RN/desktop builds、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN page/action/state 与 H5 route/owner 交叉检索，优先选择可真实只读证明或有明确 mutation 授权边界的缺口。
+
+## Earlier Closed Slice W6.a6.20.8
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pass/mutation-acceptance-gated` |
+| goal | 对齐 RN 通讯录与验证消息的好友未读、群待审核角标和单条好友申请已读资料链 |
+| shared owner | friend application facade 持有专用 unread、明确 IDs mark-read 与 fail-closed；group application facade 持有审核 `total` 语义 |
+| H5 owner | 共用 hook 只编排两个 facade；通讯录/双 tab 复用 `0/99+` badge；好友行只持有资料路由和 success-triggered refresh |
+| verification floor | SDK focused 2 files/15 tests；H5 focused 1/1；full verify：SDK Web 84 files/352 tests、466 assets、SDK/H5 typecheck、1091-module build；412px authenticated friend/group route、zero-overflow/console；RN protected worktree clean |
+| not authorized | 点击真实申请、mark-read/accept/reject、非零群审核样本制造、RN consumer convergence、RN/desktop builds |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN page/action/state 与 H5 route/owner 交叉检索，优先选择可真实只读证明或有明确 mutation 授权边界的缺口。
+
+## Earlier Closed Slice W6.a6.20.7
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pass/mutation-acceptance-gated` |
+| goal | 补齐 RN 个人资料头像编辑，同时保持个人资料与 onboarding 不同提交时序并收敛 H5 平台交互 owner |
+| shared owner | `WebIMSync.profile.updateAvatar` 原子统一静态图片/10MB、Web OSS、上传阶段账号保护、avatar-only profile update 与响应身份；`uploadAvatar` 仅服务 onboarding 内存草稿 |
+| H5 owner | `/me/profile` 只持有头像行、共用相册/拍照来源 sheet、文件 input、共享 Canvas crop 和 success-only 展示；不编排 Gateway 或 blob URL 成功态 |
+| verification floor | SDK focused 1 file/8 tests；H5 focused 3 files/5 tests；full verify：SDK Web 84 files/349 tests、466 assets、SDK/H5 typecheck、1089-module build；boundary/diff-check；412px authenticated open/cancel；RN protected worktree clean |
+| not authorized | 真实文件选择、OSS/profile mutation、刷新/第二终端回读、RN consumer convergence、RN/desktop build scripts |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN page/action/state 与 H5 route/owner 交叉检索，优先选择可真实只读证明或有明确 mutation 授权边界的缺口。
+
+## Previous Closed Slice W6.a6.20.6
+
+Onboarding 头像已完成 shared 上传 owner、共用来源/裁剪与内存草稿时序；有效新账号、真实上传/update 和响应式矩阵保持 acceptance-gated。
+
+## Earlier Closed Slice W6.a6.20.5
+
+群服务端搜索已完成 shared 三态 owner、独立 `/groups/search` route 和真实账号空态验收；真实可加入结果、申请与加入后 list-back 保持 data-gated。
+
+## Earlier Closed Slice W6.a6.20.4
+
+- shared owner:
+  - `../im28-sdk/src/modules/message/composer-submission.ts` 只持有平台中立事实：有草稿且单选媒体时进入待发送态，编辑消息不得附带附件，一次提交按 `media -> file -> text` 排序。
+  - H5 `useChatOutgoingMessageActions.sendSubmission` 在一个 `runMessageOperation` 内消费计划并复用现有 image/video/file/text/mention/quote facade；前序 reject 会阻断后续步骤。
+- Web presentation:
+  - `useChatComposerAttachments` 只持有浏览器 File input、校验和瞬时 pending state；普通文件始终等待显式发送，单媒体仅按 shared 判定等待。
+  - `ChatComposerPendingFile` 复刻 RN 文件栏的名称、类别、大小与移除动作；`ChatComposerAttachmentControls` 集中附件面板和三个浏览器 input；媒体不新增 RN 不存在的顶部缩略图。
+- evidence:
+  - SDK focused `3/3`；H5 focused `3 files/10 tests`；`npm run verify` 通过 `84 files/343 tests + 466 assets + typecheck + 1081 modules`。
+  - 412x820 真实单聊只选择仓库内测试文件：pending/移除/按钮门禁/零溢出/零 console error 均通过；未点击发送。
+  - `im28-phone/src/**` 零改动；未运行 RN build/sync，未修改 desktop build scripts。
+- residual:
+  - 真实普通文件上传、带草稿单媒体组合发送、失败阻断及第二账号 realtime/list-back 仍需独立授权验收。
+
+## Previous Closed Slice W6.a6.20.3
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/shared-owner-consumed` |
+| goal | 补齐 RN 聊天附件“拍照/音视频通话”，保持相册、拍照、RTC、文件、名片顺序，不建立 Web-only 图片或通话业务链 |
+| camera owner | H5 浏览器 input 只持有 `capture=environment` platform I/O；选择结果进入既有 album MIME/size 校验与 `messages.sendImage` owner |
+| RTC owner | `CallTypeActionSheet` 是联系人/聊天共享纯 UI；ChatPage 只传 canonical conversation 展示快照并调用唯一 `WebIMCallProvider`，鉴权/信令/LiveKit 继续由 SDK/Web platform owner 持有 |
+| visibility | RTC 只在 `Conversation.type=single` 显示，群聊 fail-closed 隐藏；拍照对单聊/群聊均可用 |
+| verification floor | H5 focused 3 files/10 tests、typecheck；full verify：SDK Web 83 files/340 tests、466 assets、1078-module build；412x820 authenticated action order/sheet/camera-contract/zero-overflow/zero-console；RN worktree clean |
+| not authorized | camera chooser/permission、真实图片上传发送、语音/视频 final selection、Gateway call、LiveKit room、second-account RTC、RN 业务修改 |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN page/action/state 与 H5 route/owner 交叉检索，优先选择真实 API/平台能力齐备且无副作用的下一条缺口。
+
+## Previous Closed Slice W6.a6.20.2
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 补齐 RN 聊天附件“名片”：用户/群选择、当前会话 type108 发送和失败重试，不复用语义不同的联系人跨会话分享 API |
+| shared owner | SDK `message-card-send.ts` 校验 user/group card、冻结展示快照并复用统一 `sending -> sent/failed`、Gateway、SQLite 状态机；type108 可从持久化 payload 重试 |
+| H5 owner | `ChatCardPickerDialog` 复用好友/群 cache-first source，单聊排除本人和当前对端；`ChatPage` 只调用 `sync.messages.sendCard` 并重读当前会话 cache |
+| compatibility | 隐藏发送人转发继续拒绝 type108，失败重试支持矩阵与转发支持矩阵显式解耦；RN 现有 `sendCardMessage` 路径冻结不改 |
+| verification floor | SDK focused 3 files/11 tests、Web full 83 files/340 tests；H5 focused 2 files/5 tests、466 assets/typecheck/1074-module build；412px authenticated user/group/search/select/disabled/zero-overflow proof；RN worktree clean |
+| not authorized | 最终发送点击、第二账号 realtime/list-back、真实失败重试、拍照/RTC 附件入口、RN consumer convergence |
+
+该 residual 已由 `.20.3-chat-composer-camera-rtc-entries` 关闭；`.20.4` 继续关闭附件待发送/组合提交偏差，下一片继续全局 RN parity inventory。
+
+## Previous Closed Slice W6.a6.20.1
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/rn-parity` |
+| goal | 修复账号登录“忘记密码”用错误文案代替 RN 交互的问题；Gateway 端点已下线时只提供手机号/邮箱替代登录和客服说明 |
+| owner | H5 `ForgotPasswordMethodsDialog` 复用全局 `InteractionModal`；手机号/邮箱使用既有 `/auth/phone`、`/auth/email` 路由，SDK 无新增 API |
+| platform boundary | RN 网络设置依赖原生 HTTP/OpenIM HTTP/SOCKS proxy；浏览器 `fetch/WebSocket` 无等价 per-app proxy 注入，登记 `web-not-applicable`，禁止创建保存后不生效的假设置 |
+| verification floor | H5 focused 2 files/6 tests + full verify：SDK Web 82 files/337 tests、466 assets/typecheck/1071-module build；412px phone/email/support branches、modal replacement、route cleanup、zero overflow；退出后已恢复 donk 当前账号 |
+| not authorized | 忘记密码 API、客服请求、密码修改、验证码请求、浏览器代理注入、RN 业务修改 |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN 页面入口、交互、状态和真实 API 对照，优先处理仍缺失且 Web 有真实等价能力的下一项。
+
+## Previous Closed Slice W6.a6.18.3.19
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 对齐 RN 二维码“发送给好友/群”语义，统一个人/群二维码的应用内图片分享，不用 Web Share 替代业务动作 |
+| shared owner | 既有 `WebIMSync.contacts/groups/conversations/peerProfile/messages.sendImage`；SDK 无新增业务路径 |
+| H5 owner | `forward-target-source` 统一普通转发与二维码分享的 cache-first 目标加载、投影和真实会话解析；`QRCodeSharePage` 只保留 React Router、单选 UI 与显式确认 |
+| route/data contract | `/me/qrcode/share`、`/conversations/:conversationID/settings/qrcode/share`；路由仅携带稳定来源 ID，确认后从 shared payload 生成 320x320 PNG，不跨路由携带 Blob/消息正文/凭据 |
+| verification floor | H5 focused 6 files/13 tests + full verify：SDK Web 82 files/337 tests、466 assets/typecheck/1070-module build；412px authenticated friend/group tabs、single-select、disabled gate、safe return、zero overflow；RN source zero change |
+| not authorized | 最终“分享”点击、真实 PNG 上传/消息发送、第二账号 realtime/list-back、RN consumer convergence |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；重新按 RN 页面入口、交互、状态和真实 API 检索未迁移功能，优先选择不修改 RN 业务且可独立验收的下一条垂直切片。
+
+## Previous Closed Slice W6.a6.18.3.18
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 从 RN 群资料层级补齐群二维码 SPA 展示，并将个人/群 Canvas、PNG 下载和 Web Share 收敛为同一 H5 platform owner |
+| shared owner | `../im28-sdk/src/modules/qr-code/buildIM28GroupQRCodePayload` + 既有 `WebIMSync.conversations/groups` |
+| production consumer | `/conversations/:conversationID/settings/profile` -> `/settings/qrcode`；`/scan` 可严格返回同一群二维码 route |
+| platform owner | `QRCodeDisplay` + `browser-qr-image`；用户/群共用高纠错 Canvas、头像 fallback、导出/分享和 async cleanup |
+| verification floor | H5 focused 5 files/13 tests + full verify：SDK Web 82 files/337 tests、466 assets/typecheck/1067-module build；412px personal QR zero-overflow + missing-group fail-visible；RN source zero change |
+| data gate | 当前认证账号会话列表只有两条单聊且“我的群聊”为空；历史群深链已失效，真实群卡片/二维码视觉未伪造 |
+| not authorized | 实际下载/Web Share、应用内图片消息发送、物理扫码、群申请/群 mutation、RN consumer convergence |
+
+Next bounded slice: `W6.a6.18.3.19-qrcode-in-app-share`；已由上方 latest slice 关闭。
+
+## Previous Closed Slice W6.a6.18.3.17
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 复用 shared 用户二维码 payload，在 H5 交付 RN 对应的个人二维码展示、PNG 下载与浏览器文件分享，页面不复制二维码协议 |
+| shared owner | `../im28-sdk/src/modules/qr-code/buildIM28UserQRCodePayload` + `WebIMSync.profile.getCurrent` |
+| production consumer | `/me`、`/me/profile`、`/scan` -> `/me/qrcode`；React Router state 只保存白名单返回来源 |
+| platform owner | H5 `qrcode` Canvas renderer；高纠错等级、居中头像 fallback、同一 Canvas PNG 下载/Web Share、unsupported fail-visible |
+| verification floor | H5 focused 5/5 + full verify：SDK Web 82 files/337 tests、466 assets/typecheck/1064-module build；412x786/1280x800 authenticated zero-overflow；RN source zero change |
+| not authorized | 实际下载/系统分享弹窗、物理相机/相册识别、好友/群申请 mutation、RN consumer convergence |
+
+Next bounded slice: `W6.a6.18.3.18-group-qrcode-display`；复用 shared group payload 与现有群详情/cache owner，从群设置补齐只读群二维码展示，不执行分享、申请或群 mutation。
+
+## Previous Closed Slice W6.a6.18.3.16
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | IM28 二维码协议归 shared SDK；H5 用浏览器 adapter 承担解码/权限/cleanup，并接入既有用户资料和真实公开群申请链 |
+| shared owner | `../im28-sdk/src/modules/qr-code` + `GatewayHTTPClient.getPublicGroup` + `WebIMSync.groupApplications.getPublicGroup/apply` |
+| production consumer | 首页 `HomeActionMenu -> /scan`；用户码 -> `/contacts/users/:userID`；群码 -> `/groups/:groupID/apply` |
+| verification floor | SDK focused 9/9 + Web 82 files/337 tests + build:web/sync:web；H5 focused 7/7 + typecheck/1031-module build；412x786 no-permission readonly；RN source zero change |
+| not authorized | physical camera permission、album chooser、real QR decode、friend/group mutation、second-account list-back、RN consumer convergence |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；按 RN 页面/入口/状态/真实 API 重新检索 H5 遗漏，选择下一条非破坏性垂直切片。
+
+## Previous Closed Slice W6.a6.18.3.15.2
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 语音群发复用普通音频 prepared owner 与 H5 现有 MediaRecorder/按住说话 owner，不建立第二套录音或 body 逻辑 |
+| shared owner | `../im28-sdk/src/sync/message-audio-send.ts` + `message-broadcast*.ts` + `WebIMSync.messageBroadcast.sendAudio` |
+| production consumer | `/broadcast/compose` -> `useChatVoiceRecorder` -> `ChatVoiceInput` -> `sendAudio` |
+| verification floor | SDK focused 9/9 + full 82 files/335 tests + build:web/sync:web；H5 recorder 6/6 + 466 assets/typecheck/797-module build；412x786 mode toggle；RN source zero change |
+| not authorized | microphone permission、record/upload/send、second-account realtime/list-back、RN business convergence |
+
+Next bounded slice: `W6.a6.18.3.16-qr-scanner-platform-contract`；冻结浏览器 HTTPS/camera permission/decoder/route payload 与 cleanup，先不请求摄像头权限。
+
+## Previous Closed Slice W6.a6.18.3.15.1
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 图片/视频/文件群发复用普通消息媒体 owner，整批只上传一次并只 batch-send 一次，H5 只保留浏览器 I/O 和结果 UI |
+| shared owner | `../im28-sdk/src/sync/message-broadcast*.ts` + `prepareWebIMImage/Video/FileUpload` + `WebIMSync.messageBroadcast` |
+| production consumer | `/broadcast/compose` -> `sendImage/sendVideo/sendFile`；页面复用聊天 attachment/video metadata helper |
+| verification floor | SDK focused 6/6 + full 82 files/334 tests + build:web/sync:web；H5 helper 8/8 + 466 assets/typecheck/796-module build；412x786 authenticated media actions、zero overflow/console；RN source zero change |
+| not authorized | final file selection/upload/send、second-account realtime/list-back、RN business convergence |
+
+Next bounded slice: `W6.a6.18.3.15.2-message-broadcast-voice`；复用 shared audio upload/body owner，Web 只实现 MediaRecorder/按住说话与临时预览，不请求真实权限或发送。
+
+## Previous Closed Slice W6.a6.18.3.15
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 文本群发由 shared owner 单批执行并逐目标收敛，H5 只保留好友/群选择、文本编辑和 SPA 导航，RN 保持冻结 |
+| shared owner | `../im28-sdk/src/sync/message-broadcast.ts` + `message-broadcast-result.ts` + `WebIMSync.messageBroadcast` |
+| production consumer | 会话/通讯录 `HomeActionMenu` -> `/broadcast/select` -> `/broadcast/compose` -> `runtime.getSync().messageBroadcast.sendText` |
+| verification floor | SDK sql.js 3/3 + full 82 files/331 tests + typecheck:web/build:web；H5 route/view 4/4 + 466 assets/typecheck/793-module build；412x786 authenticated selection/compose/exit、zero overflow/console；RN source zero change |
+| not authorized | final send、second-account realtime/list-back、RN business convergence |
+
+Next bounded slice: `W6.a6.18.3.15.1-message-broadcast-media-contract-refresh`；追踪 RN 图片/视频/文件群发并复用现有 shared upload/body/checkpoint owner，不执行真实发送。扫码作为独立浏览器 platform slice 后续处理。
+
+## Previous Closed Slice W6.a6.18.3.14
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 发起群聊由 shared owner exactly-once 执行并原子缓存服务端群/会话，H5 只保留好友选择和 SPA 导航，RN 保持冻结 |
+| shared owner | `../im28-sdk/src/sync/group-creation.ts` + `WebIMJoinedGroupSync.create` + `GroupRepository.applyCreation` |
+| production consumer | 会话/通讯录 `HomeActionMenu` -> `/groups/create` -> `runtime.getSync().groups.create` |
+| verification floor | SDK creation 4/4、creation+lifecycle 10/10、typecheck:web；H5 creation+lifecycle view 6/6、typecheck/build；RN source zero change |
+| not authorized | final create、second-account member/realtime/list-back、RN business convergence |
+
+该 residual inventory 已由 `.15-message-broadcast-text` 关闭；下一片进入媒体群发合同，不执行真实发送。
+
+## Previous Closed Slice W6.a6.18.3.13.6
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 普通成员退群、群主解散由 Web shared owner exactly-once 执行，远端成功后原子删除群域缓存，H5 只保留确认与导航，RN 保持冻结 |
+| shared owner | `../im28-sdk/src/sync/group-lifecycle.ts` + `createIMGroupLifecycleSync` + `GroupRepository.removeLifecycleState` |
+| frozen contract | cached group/current member/shared capability -> one leave/dismiss Gateway write -> strict group response -> attachments/messages/group conversations/members/group transaction -> `local\|remote-only`；no replay |
+| production consumer | `/conversations/:conversationID/settings` -> `runtime.getSync().groupLifecycle`；shared capability 决定退出/解散入口 |
+| verification floor | SDK group-management related 27/27 + Web typecheck/build:web/sync:web；H5 focused 12/12 + typecheck/build；RN source zero change |
+| not authorized | final leave/dismiss、server-denial sample、second-account realtime/list-back、RN business convergence |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；按 RN 功能域/caller/页面/状态重新生成剩余缺口，不执行 mutation，不改 RN 业务逻辑。
+
+## Previous Closed Slice W6.a6.18.3.13.5
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 群设置、群禁言与成员禁言由 Web shared owner exactly-once 执行，H5 只保留 SPA presentation，RN 保持冻结 |
+| shared owner | `../im28-sdk/src/sync/group-settings-mute.ts` + `createIMGroupManagementSync` |
+| frozen contract | field capability/target preflight -> one explicit Gateway patch -> strict group/member identity merge -> `local\|remote-only`；no replay |
+| production consumer | `/settings/manage`、`/settings/manage/mute`、`/settings/manage/speech-frequency` -> `runtime.getSync().groupManagement` |
+| verification floor | SDK focused 28/28 + Web typecheck/build；H5 focused 14/14 + typecheck/build；RN source zero change |
+| not authorized | final toggle/mute、server-denial sample、second-account realtime/list-back、RN business convergence |
+
+该切片已由上方 `.13.6-group-lifecycle` 关闭；当前 next bounded slice 为 `W6-rn-parity-residual-inventory-refresh`。
+
+## Latest Closed Slice W6.a6.18.3.13.4
+
+| field | value |
+| :--- | :--- |
+| status | `shared-core-ready/web-consumed/rn-frozen` |
+| goal | 管理员设置/取消与群主转让由 Web shared owner exactly-once 执行，H5 只保留 SPA presentation，RN 保持冻结 |
+| shared owner | `../im28-sdk/src/sync/group-admin-owner.ts` + `createIMGroupMentionSync.setAdmins/cancelAdmins/transferOwner` |
+| frozen contract | owner/capability/target/admin-limit preflight -> one Gateway write -> group/member transaction -> independent authoritative refresh；no replay |
+| production consumer | `/conversations/:conversationID/settings/manage` -> `runtime.getSync().groupMembers`；候选过滤也消费 shared helper |
+| verification floor | SDK related 16/16 + new 4/4 + build:web/typecheck；H5 focused 11/11 + typecheck/build；RN source zero change |
+| not authorized | final admin/owner mutation、second-account realtime/list-back、RN business convergence |
+
+该切片已由上方 `.13.5-group-settings-and-mute` 关闭，且 `.13.6-group-lifecycle` 已继续关闭；当前 next bounded slice 为 `W6-rn-parity-residual-inventory-refresh`。
+
 ## Latest Closed Slice W6.a7.1
 
 | field | value |
@@ -12,7 +328,7 @@
 | verification floor | H5 typecheck/build + 466 assets + authenticated React Router tabs/zero-console + 390x844 zero-overflow |
 | residual | 当前登录账号会话为空，真实会话 delete modal 与 realtime appended bubble 视觉证据 data-gated；不制造/删除真实数据 |
 
-Next bounded slice remains `W6.a6.18.3.13.4-admin-owner-contract-core`；本次 presentation slice 不改变 shared mutation 队列优先级。
+该 presentation slice 后续已由 `.13.4-admin-owner`、`.13.5-settings-mute` 和 `.13.6-group-lifecycle` 关闭；当前 next bounded slice 为 `W6-rn-parity-residual-inventory-refresh`。
 
 ## Previous Closed Slice W6.a6.18.3.13.3
 
@@ -31,8 +347,8 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 | field | value |
 | :--- | :--- |
 | status | `active` |
-| active_slice | `W6.a6.18.3.13.4-admin-owner-contract-core (queued)` |
-| verification_floor | `read-only API/source trace -> shared remote-once/failure/cache tests -> RN/H5 caller/source gates；real admin/owner mutation prohibited` |
+| active_slice | `W6-rn-parity-residual-inventory-refresh` |
+| verification_floor | `RN route/page/action inventory -> H5 production route/API owner cross-check -> missing/detail/deferred register；no RN business change, mock success or inferred parity` |
 
 ## Workstream Ledger
 
@@ -120,7 +436,8 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 | `W6.a5.2.8-invite-complete-profile-contract-freeze` | contract/design | auth onboarding + sdk/runtime | RN invite/profile route、operation and post-register state matrix | source/API/caller trace + anti-placeholder/anti-fake review | `done` | closed 2026-08-10；decomposed into route-state/invite/profile children plus explicit avatar/contact blockers |
 | `W6.a5.2.8.1-onboarding-route-state` | code/verification | web auth routing + onboarding state | register/login split、memory-only pending registration、account-scoped marker and route guards | 4 state tests + caller tests + full verify + missing-marker browser guards | `done-local/acceptance-gated` | valid register context proof joins `.8.3` acceptance；no credential persistence |
 | `W6.a5.2.8.2-invite-page` | code/verification | web auth invite + runtime register | RN invite UI and retry through existing register optional `invite_code` | register body/error tests + responsive/history proof | `done-local/acceptance-gated` | approved invite-required response + valid-context visuals；no standalone invite validation |
-| `W6.a5.2.8.3-complete-profile-core` | code/verification | web auth profile + existing profile facade | RN profile core、memory draft、gender/bio SPA subroutes and real current-detail/update | 10 focused app tests + full 27/81 verify + base/gender/bio anonymous guards passed；valid-context matrix pending | `implemented-local/acceptance-gated` | active until approved register/profile Network/result + responsive/light/dark/history proof；avatar/contact actions omitted |
+| `W6.a5.2.8.3-complete-profile-core` | code/verification | web auth profile + existing profile facade | RN profile core、memory draft、gender/bio SPA subroutes and real current-detail/update | 10 focused app tests + full 27/81 verify + base/gender/bio anonymous guards passed；valid-context matrix pending | `implemented-local/acceptance-gated` | active until approved register/profile Network/result + responsive/light/dark/history proof；contact action remains omitted |
+| `W6.a6.20.6-onboarding-avatar` | code/verification | shared profile sync + web auth avatar platform/UI | RN album/camera/crop/upload/draft/final profile timing | H5 4 files/10 tests + full SDK Web 84 files/347 tests + 466 assets/typecheck/1089-module build + route guard | `shared-core-ready/web-consumed/rn-frozen` | valid new-account source/crop/upload/update visual and Network proof blocked-external；RN consumer frozen |
 | `W6.a5.2.8.4-onboarding-real-acceptance` | deployment verification | web auth + deployment owner | approved register/optional invite/profile mutation and valid-context visual/history evidence | Network/result + 390x844/760x900 light/dark/back/forward/reload | `blocked-external` | approved disposable new account and mutation authorization available；never fabricate marker/session |
 | `W6.a5.2.9-blacklist-core` | code/verification | web me + sdk sync | RN blacklist list/search/remove/confirm route through shared Gateway operations | 4 view tests + authenticated real empty/search-empty + 567x786 system-light/dark/direct/history/reload/zero-console proof + full verify | `accepted-empty-read/chromium/mutation-gated` | non-empty enrichment/search、approved remove Network/result and Safari/Firefox proof；no unsupported add flow |
 | `W6.a5.2.10-friend-applications-core` | code/verification | web contacts + sdk sync | RN standalone friend application list/search/group/status/accept through shared Gateway operations | facade/view tests + real 5-row list + 390x844/760x900 light/dark/direct/history/reload + zero-console | `accepted-readonly/mutation-gated` | pending-state sample and approved accept remain；no fake session or unsupported unread/group/profile/reject path |

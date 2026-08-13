@@ -7,31 +7,30 @@ export const WEB_IM_AUDIO_MAX_DURATION_SECONDS = 60;
 const WEB_IM_AUDIO_MAX_SAFE_BYTES = Number.MAX_SAFE_INTEGER;
 /** 发送语音并复用媒体上传和 optimistic SQLite 状态机。 */
 export async function sendWebIMAudioMessage(context, options, dependencies) {
-    // durationSeconds 在落库和上传前按 Gateway/RN 范围归一化。
+    // prepared 保证普通聊天与群发使用同一语音约束和 Gateway body。
+    const prepared = prepareWebIMAudioUpload(options);
+    return executeWebIMUploadedMessageSend(context, {
+        conversationID: options.conversationID,
+        ...prepared,
+        ...(options.onSending ? { onSending: options.onSending } : {}),
+    }, dependencies);
+}
+/** 构造可由普通聊天或群发复用的语音上传定义。 */
+export function prepareWebIMAudioUpload(options) {
+    // durationSeconds 在上传前按 Gateway/RN 范围归一化。
     const durationSeconds = normalizeWebIMAudioDuration(options.durationSeconds);
     // input 保留浏览器录音器实际 MIME、扩展名与精确字节数。
     const input = normalizeWebIMMediaInput(options, WEB_IM_AUDIO_MAX_SAFE_BYTES, 'audio');
-    // metadata 让 sending/failed 气泡无需临时 Blob URL 也可展示时长。
-    const metadata = {
-        duration_seconds: durationSeconds,
-        size_bytes: String(input.size),
-    };
-    // localBody 不持久化麦克风 Blob 或本地 object URL。
-    const localBody = { audio: metadata };
-    return executeWebIMUploadedMessageSend(context, {
-        conversationID: options.conversationID,
+    // metadata 让本地与远端 body 共享时长和精确字节数。
+    const metadata = { duration_seconds: durationSeconds, size_bytes: String(input.size) };
+    return {
         contentType: 103,
-        localBody,
         input,
-        ...(options.onSending ? { onSending: options.onSending } : {}),
+        localBody: { audio: metadata },
         createRemoteBody: uploaded => ({
-            audio: {
-                media_id: uploaded.objectKey,
-                url: uploaded.url,
-                ...metadata,
-            },
+            audio: { media_id: uploaded.objectKey, url: uploaded.url, ...metadata },
         }),
-    }, dependencies);
+    };
 }
 /** 将语音时长限制为 Gateway 可接受的 1–60 秒整数。 */
 function normalizeWebIMAudioDuration(value) {

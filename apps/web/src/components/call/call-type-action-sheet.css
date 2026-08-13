@@ -1,0 +1,52 @@
+.rn-call-type-modal {
+  width: min(calc(100vw - 16px), 464px);
+  max-width: min(calc(100vw - 16px), 464px);
+  margin-block: auto calc(var(--im-safe-bottom) + 8px);
+}
+
+.rn-call-type-sheet {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+  flex-direction: column;
+}
+
+.rn-call-type-group,
+.rn-call-type-sheet > button {
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--im-bg-card);
+}
+
+.rn-call-type-group p {
+  margin: 0;
+  padding: 16px;
+  color: var(--im-text-secondary);
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: 19px;
+  text-align: center;
+}
+
+.rn-call-type-sheet button {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 0;
+  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: var(--im-status-danger);
+  background: var(--im-bg-card);
+  cursor: pointer;
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0;
+  line-height: 24px;
+}
+
+.rn-call-type-sheet > button {
+  border-top: 0;
+  color: var(--im-text-primary);
+}
+
+.rn-call-type-sheet button:active:not(:disabled) { background: var(--im-bg-pressed); }
+.rn-call-type-sheet button:disabled { cursor: default; opacity: 0.55; }

@@ -1,0 +1,217 @@
+.rn-group-management-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--im-text-primary);
+  background: var(--im-bg-page);
+}
+
+.rn-group-management-surface {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--im-bg-app);
+  box-shadow: 0 0 36px rgba(31, 38, 46, 0.07);
+}
+
+.rn-group-management-header {
+  display: grid;
+  height: calc(var(--im-safe-top) + 56px);
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  align-items: end;
+  padding: var(--im-safe-top) 16px 0;
+}
+
+.rn-group-management-header > a,
+.rn-group-management-header > span {
+  display: grid;
+  height: 56px;
+  place-items: center start;
+  color: var(--im-icon-primary);
+}
+
+.rn-group-management-header .rn-asset-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.rn-group-management-header h1 {
+  align-self: center;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 27px;
+  text-align: center;
+}
+
+.rn-group-management-content {
+  display: flex;
+  padding: 16px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rn-group-management-card {
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--im-bg-card);
+}
+
+.rn-group-management-switch,
+.rn-group-management-link {
+  position: relative;
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  color: var(--im-text-primary);
+  text-decoration: none;
+}
+
+.rn-group-management-switch.is-divided::after,
+.rn-group-management-link.is-divided::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 16px;
+  height: var(--im-hairline-width);
+  background: var(--im-border-subtle);
+  content: '';
+}
+
+.rn-group-management-switch > button {
+  position: relative;
+  width: 50px;
+  height: 30px;
+  flex: 0 0 50px;
+  border: 0;
+  border-radius: 15px;
+  background: var(--im-border-strong);
+  cursor: pointer;
+}
+
+.rn-group-management-switch > button > span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  transition: transform 160ms ease;
+}
+
+.rn-group-management-switch > button[aria-checked='true'] {
+  background: var(--im-brand-primary);
+}
+
+.rn-group-management-switch > button[aria-checked='true'] > span {
+  transform: translateX(20px);
+}
+
+.rn-group-management-switch > button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.rn-group-management-link > span:last-child {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.rn-group-management-link small {
+  overflow: hidden;
+  color: var(--im-text-muted);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-group-management-link .rn-asset-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: var(--im-icon-muted);
+}
+
+.rn-group-management-confirm button {
+  border: 0;
+  color: var(--im-brand-primary);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: 0;
+}
+
+.rn-group-management-error,
+.rn-group-management-notice,
+.rn-group-management-empty {
+  margin: 0;
+  color: var(--im-status-danger);
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 20px;
+  text-align: center;
+}
+
+.rn-group-management-notice,
+.rn-group-management-empty {
+  color: var(--im-text-muted);
+}
+
+.rn-group-management-confirm {
+  width: min(320px, calc(100vw - 48px));
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--im-bg-card);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+}
+
+.rn-group-management-confirm h2 {
+  margin: 0;
+  padding: 22px 20px 8px;
+  font-size: 18px;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.rn-group-management-confirm p {
+  margin: 0;
+  padding: 0 20px 22px;
+  color: var(--im-text-secondary);
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 21px;
+  text-align: center;
+}
+
+.rn-group-management-confirm > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+}
+
+.rn-group-management-confirm button {
+  min-height: 48px;
+  color: var(--im-text-primary);
+}
+
+.rn-group-management-confirm button + button {
+  border-left: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: var(--im-brand-primary);
+}
+
+.rn-group-management-state {
+  display: grid;
+  min-height: 100dvh;
+  place-content: center;
+  gap: 8px;
+  color: var(--im-text-primary);
+  background: var(--im-bg-page);
+  text-align: center;
+}

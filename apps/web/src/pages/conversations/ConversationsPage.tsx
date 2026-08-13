@@ -6,6 +6,7 @@ import emptyChatIconURL from '../../assets/rn/assets/icons/empty-chat.svg';
 import archiveIconURL from '../../assets/rn/assets/icons/imm28/file.collection.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { HomeActionMenu } from '../../components/home-actions/HomeActionMenu.js';
 import { usePrimaryTabBadges } from '../../components/primary-tabs/index.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
@@ -202,7 +203,7 @@ export function ConversationsPage() {
           <div className="rn-conversation-header-top">
             <span className="rn-conversation-header-side" aria-hidden="true" />
             <h1>{headerTitle}</h1>
-            <span className="rn-conversation-header-side" aria-hidden="true" />
+            <div className="rn-conversation-header-side"><HomeActionMenu /></div>
           </div>
           <button
             type="button"

@@ -5,7 +5,7 @@
 }
 
 .rn-me-security-surface {
-  width: min(100%, 480px);
+  width: 100%;
   min-height: 100dvh;
   margin: 0 auto;
   background: var(--im-profile-page-alt-background);

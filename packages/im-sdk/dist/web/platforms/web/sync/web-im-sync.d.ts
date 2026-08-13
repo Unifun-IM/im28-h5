@@ -9,11 +9,14 @@ import { type IMGroupMentionSync } from '../../../sync/group-mention.js';
 import { type WebIMPeerProfileSync } from '../../../sync/peer-profile-sync.js';
 import { type WebIMConversationSync } from '../../../sync/conversation-sync.js';
 import { type WebIMMessageSync } from '../../../sync/message-sync.js';
+import { type IMMessageBroadcastSync } from '../../../sync/message-broadcast.js';
 import { type WebIMRealtimeSync } from '../../../sync/realtime-sync.js';
 import type { WebIMSyncContextDependencies } from '../../../sync/sync-context.js';
 import type { IMMediaUploadPort } from '../../../sync/message-media-send.js';
 import { type WebIMContactSync } from '../../../sync/contact-sync.js';
 import { type WebIMProfileSync } from '../../../sync/profile-sync.js';
+import { type IMGroupManagementSync } from '../../../sync/group-settings-mute.js';
+import { type IMGroupLifecycleSync } from '../../../sync/group-lifecycle.js';
 /** Runtime 对页面公开的聚合数据同步入口。 */
 export interface WebIMSync {
     readonly blacklist: WebIMBlacklistSync;
@@ -25,6 +28,9 @@ export interface WebIMSync {
     readonly groupApplications: WebIMGroupApplicationSync;
     readonly groups: WebIMJoinedGroupSync;
     readonly groupMentions: IMGroupMentionSync;
+    readonly groupManagement: IMGroupManagementSync;
+    /** 群生命周期只通过 shared exactly-once facade 对外。 */
+    readonly groupLifecycle: IMGroupLifecycleSync;
     /** 兼容非 mention 群成员页面；实现委托同一 neutral facade。 */
     readonly groupMembers: {
         listCached(groupID: string): ReturnType<IMGroupMentionSync['listMembers']>;
@@ -32,8 +38,13 @@ export interface WebIMSync {
         updateSelfNickname(groupID: string, nickname: string): ReturnType<IMGroupMentionSync['updateSelfNickname']>;
         inviteMembers(options: Parameters<IMGroupMentionSync['inviteMembers']>[0]): ReturnType<IMGroupMentionSync['inviteMembers']>;
         removeMembers(options: Parameters<IMGroupMentionSync['removeMembers']>[0]): ReturnType<IMGroupMentionSync['removeMembers']>;
+        setAdmins(options: Parameters<IMGroupMentionSync['setAdmins']>[0]): ReturnType<IMGroupMentionSync['setAdmins']>;
+        cancelAdmins(options: Parameters<IMGroupMentionSync['cancelAdmins']>[0]): ReturnType<IMGroupMentionSync['cancelAdmins']>;
+        transferOwner(options: Parameters<IMGroupMentionSync['transferOwner']>[0]): ReturnType<IMGroupMentionSync['transferOwner']>;
     };
     readonly messages: WebIMMessageSync;
+    /** 文本群发使用 shared batch-send 与逐目标收敛 owner。 */
+    readonly messageBroadcast: IMMessageBroadcastSync;
     readonly peerProfile: WebIMPeerProfileSync;
     readonly profile: WebIMProfileSync;
     readonly realtime: WebIMRealtimeSync;

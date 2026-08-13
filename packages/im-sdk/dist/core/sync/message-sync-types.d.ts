@@ -4,6 +4,7 @@ import type { WebIMEditTextMessageOptions } from './message-edit.js';
 import type { IMGroupMentionSync } from './group-mention.js';
 import type { WebIMForwardMessagesOptions, WebIMForwardMessagesResult } from './message-forward.js';
 import type { WebIMSendAudioMessageOptions } from './message-audio-send.js';
+import type { WebIMSendCardMessageOptions } from './message-card-send.js';
 import type { WebIMSendCustomEmojiMessageOptions } from './message-custom-emoji-send.js';
 import type { WebIMSendMentionMessageOptions } from './message-mention-send.js';
 import type { IMMediaUploadPort, WebIMSendFileMessageOptions, WebIMSendImageMessageOptions } from './message-media-send.js';
@@ -32,6 +33,7 @@ export interface WebIMMessageSync {
     sendQuote(options: WebIMSendQuoteMessageOptions): Promise<Message>;
     sendCustomEmoji(options: WebIMSendCustomEmojiMessageOptions): Promise<Message>;
     sendAudio(options: WebIMSendAudioMessageOptions): Promise<Message>;
+    sendCard(options: WebIMSendCardMessageOptions): Promise<Message>;
     sendImage(options: WebIMSendImageMessageOptions): Promise<Message>;
     sendVideo(options: WebIMSendVideoMessageOptions): Promise<Message>;
     sendFile(options: WebIMSendFileMessageOptions): Promise<Message>;

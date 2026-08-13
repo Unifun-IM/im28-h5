@@ -1,4 +1,5 @@
 import { type Message, type MessageMention, type PresetEmojiEntity } from '@im28/im-sdk/core';
+import { type IMGroupAdminChangeOptions, type IMGroupOwnerTransferOptions, type IMGroupRoleMutationCacheState } from './group-admin-owner.js';
 import { type WebIMGroupMemberSyncDependencies, type WebIMGroupMemberSyncOptions } from './group-member-sync.js';
 import { type IMGroupMemberInvitationCacheState, type IMGroupMemberInvitationMode, type IMInviteGroupMembersOptions } from './group-member-invitation.js';
 import { type IMGroupMemberRemovalCacheState, type IMRemoveGroupMembersOptions } from './group-member-removal.js';
@@ -44,6 +45,22 @@ export interface IMInviteGroupMembersResult {
     readonly memberCount: number;
     readonly cacheState: IMGroupMemberInvitationCacheState | 'authoritative';
 }
+/** 管理员变更完成后返回权威成员快照和缓存收敛状态。 */
+export interface IMGroupAdminChangeResult {
+    readonly groupID: string;
+    readonly changedUserIDs: readonly string[];
+    readonly role: 'admin' | 'member';
+    readonly members: readonly IMGroupMentionMember[];
+    readonly cacheState: IMGroupRoleMutationCacheState | 'authoritative';
+}
+/** 群主转让完成后返回新旧群主和权威成员快照。 */
+export interface IMGroupOwnerTransferResult {
+    readonly groupID: string;
+    readonly previousOwnerUserID: string;
+    readonly newOwnerUserID: string;
+    readonly members: readonly IMGroupMentionMember[];
+    readonly cacheState: IMGroupRoleMutationCacheState | 'authoritative';
+}
 /** 群成员 cache/sync 与提及发送的唯一共享业务入口。 */
 export interface IMGroupMentionSync {
     listMembers(groupID: string): Promise<readonly IMGroupMentionMember[]>;
@@ -51,6 +68,9 @@ export interface IMGroupMentionSync {
     updateSelfNickname(groupID: string, nickname: string): Promise<IMGroupMentionMember>;
     inviteMembers(options: IMInviteGroupMembersOptions): Promise<IMInviteGroupMembersResult>;
     removeMembers(options: IMRemoveGroupMembersOptions): Promise<IMRemoveGroupMembersResult>;
+    setAdmins(options: IMGroupAdminChangeOptions): Promise<IMGroupAdminChangeResult>;
+    cancelAdmins(options: IMGroupAdminChangeOptions): Promise<IMGroupAdminChangeResult>;
+    transferOwner(options: IMGroupOwnerTransferOptions): Promise<IMGroupOwnerTransferResult>;
     send(options: IMSendGroupMentionOptions): Promise<Message>;
 }
 /** 群提及 facade 复用同一账号库、Gateway、ID 与 mutation queue。 */

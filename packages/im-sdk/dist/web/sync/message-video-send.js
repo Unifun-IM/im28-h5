@@ -4,18 +4,24 @@ import { executeWebIMUploadedMessageSend } from './message-upload-send-state.js'
 export const WEB_IM_VIDEO_MAX_BYTES = 500 * 1024 * 1024;
 /** 发送视频并复用媒体上传和 optimistic SQLite 状态机。 */
 export async function sendWebIMVideoMessage(context, options, dependencies) {
-    // input 在本地消息落库前校验 source、MIME 和 500 MB 上限。
-    const input = normalizeWebIMMediaInput(options, WEB_IM_VIDEO_MAX_BYTES, 'video');
-    // metadata 统一归一化时长和显示尺寸。
-    const metadata = buildWebIMVideoMetadata(options, input.size);
-    // localBody 不持久化临时 blob URL，刷新后仍可展示稳定视频占位。
-    const localBody = { video: metadata };
+    // prepared 保证单聊与群发使用同一视频校验和 Gateway body。
+    const prepared = prepareWebIMVideoUpload(options);
     return executeWebIMUploadedMessageSend(context, {
         conversationID: options.conversationID,
-        contentType: 104,
-        localBody,
-        input,
+        ...prepared,
         ...(options.onSending ? { onSending: options.onSending } : {}),
+    }, dependencies);
+}
+/** 构造可由单聊或群发复用的视频上传定义。 */
+export function prepareWebIMVideoUpload(options) {
+    // input 在任何本地写入或平台上传前校验 MIME 和 500 MB 上限。
+    const input = normalizeWebIMMediaInput(options, WEB_IM_VIDEO_MAX_BYTES, 'video');
+    // metadata 统一归一化时长、显示尺寸和精确字节数。
+    const metadata = buildWebIMVideoMetadata(options, input.size);
+    return {
+        contentType: 104,
+        input,
+        localBody: { video: metadata },
         createRemoteBody: uploaded => ({
             video: {
                 media_id: uploaded.objectKey,
@@ -24,7 +30,7 @@ export async function sendWebIMVideoMessage(context, options, dependencies) {
                 ...metadata,
             },
         }),
-    }, dependencies);
+    };
 }
 /** 构造与 RN 一致的 OSS 7 秒视频快照 URL。 */
 export function buildWebIMVideoSnapshotURL(videoURL, dimensions) {

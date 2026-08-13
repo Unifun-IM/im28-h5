@@ -13,6 +13,8 @@ export interface WebIMGroupMember {
     readonly avatarURL: string;
     readonly role: WebIMGroupMemberRole;
     readonly roleLevel: number;
+    readonly isMuted?: boolean;
+    readonly muteUntil?: string;
 }
 /** 群成员全量同步参数。 */
 export interface WebIMGroupMemberSyncOptions {

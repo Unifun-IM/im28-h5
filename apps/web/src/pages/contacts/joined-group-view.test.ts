@@ -1,10 +1,9 @@
-import type { Conversation, WebIMJoinedGroup } from '@im28/im-sdk/web';
+import type { WebIMJoinedGroup } from '@im28/im-sdk/web';
 import { describe, expect, it } from 'vitest';
 import { createGroupPermissionsFixture } from '../../test-fixtures/group-permissions.js';
 
 import {
   filterJoinedGroups,
-  findJoinedGroupConversationID,
   getJoinedGroupBadges,
   getJoinedGroupDescription,
   getJoinedGroupStatusLabel,
@@ -77,21 +76,4 @@ describe('joined group view', () => {
     })).toEqual([]);
   });
 
-  it('优先按 conversation ID，再按群 target ID 解析会话', () => {
-    // conversations 覆盖 exact 和 target fallback。
-    const conversations = [
-      { conversationID: 'sg_g1', type: 'group', targetID: 'other' },
-      { conversationID: 'sg_g2', type: 'group', targetID: 'g2' },
-    ] as Conversation[];
-    expect(findJoinedGroupConversationID(createGroup(), conversations))
-      .toBe('sg_g1');
-    expect(findJoinedGroupConversationID(
-      createGroup({ groupID: 'g2', conversationID: '' }),
-      conversations,
-    )).toBe('sg_g2');
-    expect(findJoinedGroupConversationID(
-      createGroup({ groupID: 'missing', conversationID: '' }),
-      conversations,
-    )).toBe('');
-  });
 });

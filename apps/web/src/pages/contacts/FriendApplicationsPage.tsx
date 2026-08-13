@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { WebIMFriendApplication } from '@im28/im-sdk/web';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { FriendApplicationConfirmDialog } from './FriendApplicationConfirmDialog.js';
@@ -9,7 +9,9 @@ import { buildFriendApplicationEntries } from './friend-application-view.js';
 import './friend-applications-page.css';
 
 /** RN 好友验证面板通过 Web SDK facade 读写真实申请。 */
-export function FriendApplicationsPage() {
+export function FriendApplicationsPage({ onUnreadChanged }: FriendApplicationsPageProps) {
+  // navigate 只负责申请资料的 SPA 路由切换。
+  const navigate = useNavigate();
   // runtime context 是页面唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // applications 保留 facade 已排序的完整申请。
@@ -22,6 +24,27 @@ export function FriendApplicationsPage() {
   const [confirmApplication, setConfirmApplication] = useState<WebIMFriendApplication | null>(null);
   // handlingID 阻止重复接受申请。
   const [handlingID, setHandlingID] = useState<string | null>(null);
+
+  /** 对齐 RN：未读 incoming 申请先本地标记并尝试单条已读，失败不阻断资料页。 */
+  const openApplication = useCallback(async (
+    application: WebIMFriendApplication,
+  ): Promise<void> => {
+    if (!runtime || !application.userID) return;
+    if (application.direction === 'incoming' && !application.isRead) {
+      setApplications(current => current.map(item => item.applicationID === application.applicationID
+        ? { ...item, isRead: true }
+        : item));
+      try {
+        await runtime.getSync().friendApplications.markRead([application.applicationID]);
+        await onUnreadChanged?.();
+      } catch {
+        // 已读失败不冒充成功，也不阻断 RN 既有资料导航行为。
+      }
+    }
+    navigate(`/contacts/users/${encodeURIComponent(application.userID)}`, {
+      state: { backHref: '/contacts/verifications/friend' },
+    });
+  }, [navigate, onUnreadChanged, runtime]);
 
   /** 从聚合 sync facade 拉取完整好友申请。 */
   const loadApplications = useCallback(async (): Promise<void> => {
@@ -76,7 +99,7 @@ export function FriendApplicationsPage() {
       <div className="rn-friend-applications-list" role="list">
         {entries.map(entry => entry.type === 'section'
           ? <h2 key={entry.key}>{entry.title}</h2>
-          : <FriendApplicationRow key={entry.key} application={entry.application} handling={handlingID === entry.application.applicationID} onAccept={() => setConfirmApplication(entry.application)} />)}
+          : <FriendApplicationRow key={entry.key} application={entry.application} handling={handlingID === entry.application.applicationID} onOpen={() => void openApplication(entry.application)} onAccept={() => setConfirmApplication(entry.application)} />)}
         {!loading && entries.length === 0 ? <p className="rn-friend-applications-empty">暂无好友验证记录</p> : null}
       </div>
   </>;
@@ -84,6 +107,11 @@ export function FriendApplicationsPage() {
   const confirmDialog = confirmApplication ? <FriendApplicationConfirmDialog application={confirmApplication} pending={handlingID === confirmApplication.applicationID} onCancel={() => setConfirmApplication(null)} onConfirm={() => void acceptApplication()} /> : null;
 
   return <section className="rn-friend-applications-embedded" aria-busy={loading}>{pageContent}{confirmDialog}</section>;
+}
+
+/** 好友验证嵌入页参数。 */
+interface FriendApplicationsPageProps {
+  readonly onUnreadChanged?: () => void | Promise<void>;
 }
 
 /** 收敛好友申请异常且不泄漏凭据。 */

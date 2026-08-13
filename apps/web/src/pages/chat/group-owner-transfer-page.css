@@ -1,0 +1,294 @@
+.rn-group-owner-transfer-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--im-text-primary);
+  background: var(--im-bg-page);
+}
+
+.rn-group-owner-transfer-surface {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--im-bg-app);
+  box-shadow: 0 0 36px rgba(31, 38, 46, 0.07);
+}
+
+.rn-group-owner-transfer-header {
+  display: grid;
+  height: calc(var(--im-safe-top) + 56px);
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  align-items: end;
+  padding: var(--im-safe-top) 16px 0;
+}
+
+.rn-group-owner-transfer-header > a,
+.rn-group-owner-transfer-header > span {
+  display: grid;
+  height: 56px;
+  place-items: center start;
+  color: var(--im-icon-primary);
+}
+
+.rn-group-owner-transfer-header .rn-asset-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.rn-group-owner-transfer-header h1 {
+  align-self: center;
+  margin: 0;
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 27px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-group-owner-transfer-search {
+  display: flex;
+  height: 40px;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 8px;
+  padding: 0 12px;
+  border: var(--im-hairline-width) solid var(--im-border-input);
+  border-radius: 6px;
+  color: var(--im-icon-muted);
+  background: var(--im-bg-input);
+}
+
+.rn-group-owner-transfer-search .rn-asset-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.rn-group-owner-transfer-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--im-text-primary);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.rn-group-owner-transfer-error,
+.rn-group-owner-transfer-notice {
+  margin: 8px 16px;
+  color: var(--im-status-danger);
+  font-size: 13px;
+  letter-spacing: 0;
+  line-height: 18px;
+}
+
+.rn-group-owner-transfer-notice {
+  color: var(--im-text-secondary);
+}
+
+.rn-group-owner-transfer-list {
+  padding-bottom: max(24px, var(--im-safe-bottom));
+}
+
+.rn-group-owner-transfer-list > h2 {
+  min-height: 36px;
+  margin: 0;
+  padding: 9px 16px 7px;
+  color: var(--im-text-secondary);
+  background: var(--im-bg-page);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 20px;
+}
+
+.rn-group-owner-transfer-list > p {
+  margin: 0;
+  padding: 80px 24px 0;
+  color: var(--im-text-muted);
+  text-align: center;
+}
+
+.rn-group-owner-transfer-row {
+  display: flex;
+  width: 100%;
+  min-height: 64px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border: 0;
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: inherit;
+  background: var(--im-bg-app);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rn-group-owner-transfer-row:active {
+  background: var(--im-bg-pressed);
+}
+
+.rn-group-owner-transfer-row:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.rn-group-owner-transfer-avatar {
+  position: relative;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 20px;
+  color: #ffffff;
+  background: var(--group-owner-transfer-avatar-gradient, var(--im-bg-input));
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.rn-group-owner-transfer-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rn-group-owner-transfer-row > span:nth-child(2) {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rn-group-owner-transfer-row strong,
+.rn-group-owner-transfer-row small {
+  overflow: hidden;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-group-owner-transfer-row strong {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 22px;
+}
+
+.rn-group-owner-transfer-row small {
+  color: var(--im-text-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.rn-group-owner-transfer-row em {
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--im-brand-primary);
+  background: color-mix(in srgb, var(--im-brand-primary) 12%, transparent);
+  font-size: 11px;
+  font-style: normal;
+  letter-spacing: 0;
+}
+
+.rn-group-owner-transfer-pull {
+  display: grid;
+  height: 0;
+  overflow: hidden;
+  place-items: center;
+  color: var(--im-text-muted);
+  font-size: 12px;
+  letter-spacing: 0;
+  transition: height 120ms ease;
+}
+
+.rn-group-owner-transfer-pull.is-armed {
+  color: var(--im-brand-primary);
+}
+
+.rn-group-owner-transfer-confirm {
+  position: fixed;
+  right: max(0px, calc((100vw - 480px) / 2));
+  bottom: 0;
+  left: max(0px, calc((100vw - 480px) / 2));
+  overflow: hidden;
+  border-radius: 8px 8px 0 0;
+  background: var(--im-bg-page);
+}
+
+.rn-group-owner-transfer-confirm > div {
+  display: flex;
+  min-height: 150px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px 20px;
+  background: var(--im-bg-card);
+  flex-direction: column;
+}
+
+.rn-group-owner-transfer-confirm > div > strong {
+  margin-top: 10px;
+  font-size: 17px;
+  letter-spacing: 0;
+}
+
+.rn-group-owner-transfer-confirm > div > p {
+  margin: 6px 0 0;
+  color: var(--im-text-secondary);
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+.rn-group-owner-transfer-confirm > button {
+  display: block;
+  width: 100%;
+  min-height: 54px;
+  border: 0;
+  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: var(--im-brand-primary);
+  background: var(--im-bg-card);
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.rn-group-owner-transfer-confirm > button:last-child {
+  margin-top: 8px;
+  color: var(--im-text-primary);
+}
+
+.rn-group-owner-transfer-confirm > button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.rn-group-owner-transfer-state {
+  display: grid;
+  min-height: 100dvh;
+  place-content: center;
+  color: var(--im-text-primary);
+  background: var(--im-bg-page);
+}
+
+.rn-group-owner-transfer-state.is-compact {
+  min-height: 180px;
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rn-group-owner-transfer-pull {
+    transition: none;
+  }
+}

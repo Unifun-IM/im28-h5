@@ -6,6 +6,7 @@ import voiceIconURL from '../../assets/rn/assets/icons/imm28/voice.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { shouldCancelChatVoiceGesture } from './chat-voice-contract.js';
 import type { ChatVoiceRecordingStatus } from './useChatVoiceRecorder.js';
+import './chat-voice-input.css';
 
 /** RN voice/text mode 和 pointer 录音手势的展示参数。 */
 interface ChatVoiceInputProps {

@@ -1,11 +1,11 @@
-/** Web 群头像允许的最大原文件字节数。 */
-export const GROUP_AVATAR_MAX_BYTES = 10 * 1024 * 1024;
+/** Web 头像允许的最大原文件字节数。 */
+export const AVATAR_MAX_BYTES = 10 * 1024 * 1024;
 
 /** RN 头像裁剪输出固定为 512 像素正方形。 */
-const GROUP_AVATAR_OUTPUT_SIZE = 512;
+const AVATAR_OUTPUT_SIZE = 512;
 
 /** 浏览器裁剪计算需要的图片和视口尺寸。 */
-export interface GroupAvatarCropInput {
+export interface AvatarCropInput {
   readonly sourceWidth: number;
   readonly sourceHeight: number;
   readonly stageSize: number;
@@ -15,26 +15,26 @@ export interface GroupAvatarCropInput {
 }
 
 /** Canvas drawImage 消费的源图片正方形区域。 */
-export interface GroupAvatarCropRect {
+export interface AvatarCropRect {
   readonly x: number;
   readonly y: number;
   readonly size: number;
 }
 
-/** 校验浏览器所选群头像，避免不支持格式进入裁剪和上传。 */
-export function validateGroupAvatarFile(file: File): void {
-  // mimeType 只接受 SDK 群头像合同支持的静态图片。
+/** 校验浏览器所选头像，避免不支持格式进入裁剪和上传。 */
+export function validateAvatarFile(file: File): void {
+  // mimeType 只接受 SDK 头像合同支持的静态图片。
   const mimeType = file.type.trim().toLowerCase();
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(mimeType)) {
-    throw new Error('群头像仅支持 JPEG、PNG 或 WEBP 图片');
+    throw new Error('头像仅支持 JPEG、PNG 或 WEBP 图片');
   }
-  if (!Number.isFinite(file.size) || file.size <= 0 || file.size > GROUP_AVATAR_MAX_BYTES) {
-    throw new Error('群头像图片不能超过 10MB');
+  if (!Number.isFinite(file.size) || file.size <= 0 || file.size > AVATAR_MAX_BYTES) {
+    throw new Error('头像图片不能超过 10MB');
   }
 }
 
 /** 将 RN 同语义 cover、缩放和位移转换为源图裁剪区域。 */
-export function resolveGroupAvatarCropRect(input: GroupAvatarCropInput): GroupAvatarCropRect {
+export function resolveAvatarCropRect(input: AvatarCropInput): AvatarCropRect {
   // sourceWidth 与 sourceHeight 必须来自解码成功的真实图片。
   const sourceWidth = requirePositive(input.sourceWidth, '图片宽度无效');
   const sourceHeight = requirePositive(input.sourceHeight, '图片高度无效');
@@ -69,24 +69,24 @@ export function resolveGroupAvatarCropRect(input: GroupAvatarCropInput): GroupAv
 }
 
 /** 将用户确认的浏览器裁剪状态编码成 RN 同规格 512x512 JPEG。 */
-export async function cropGroupAvatarFile(
+export async function cropAvatarFile(
   file: File,
-  input: GroupAvatarCropInput,
+  input: AvatarCropInput,
 ): Promise<Blob> {
-  validateGroupAvatarFile(file);
+  validateAvatarFile(file);
   // bitmap 使用浏览器解码后的真实像素尺寸，避免依赖不可信文件元数据。
   const bitmap = await createImageBitmap(file);
   try {
     // rect 以真实解码尺寸重新计算最终源图裁剪区域。
-    const rect = resolveGroupAvatarCropRect({
+    const rect = resolveAvatarCropRect({
       ...input,
       sourceWidth: bitmap.width,
       sourceHeight: bitmap.height,
     });
     // canvas 固定输出尺寸，保持 RN 上传与缓存形态一致。
     const canvas = document.createElement('canvas');
-    canvas.width = GROUP_AVATAR_OUTPUT_SIZE;
-    canvas.height = GROUP_AVATAR_OUTPUT_SIZE;
+    canvas.width = AVATAR_OUTPUT_SIZE;
+    canvas.height = AVATAR_OUTPUT_SIZE;
     // context 缺失属于浏览器能力失败，禁止回退上传原图伪装成功。
     const context = canvas.getContext('2d');
     if (!context) throw new Error('当前浏览器不支持头像裁剪');
@@ -98,14 +98,14 @@ export async function cropGroupAvatarFile(
       rect.size,
       0,
       0,
-      GROUP_AVATAR_OUTPUT_SIZE,
-      GROUP_AVATAR_OUTPUT_SIZE,
+      AVATAR_OUTPUT_SIZE,
+      AVATAR_OUTPUT_SIZE,
     );
     // blob 是平台上传 adapter 消费的唯一裁剪结果。
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(result => {
         if (result) resolve(result);
-        else reject(new Error('群头像裁剪失败'));
+        else reject(new Error('头像裁剪失败'));
       }, 'image/jpeg', 0.9);
     });
     return blob;

@@ -5,6 +5,8 @@ import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { FriendApplicationsPage } from './FriendApplicationsPage.js';
 import { GroupVerificationPage } from './GroupVerificationPage.js';
+import { VerificationCountBadge } from './VerificationCountBadge.js';
+import { useVerificationUnreadCounts } from './use-verification-unread.js';
 import './verification-messages-page.css';
 
 /** 验证消息双 tab 的稳定路由值。 */
@@ -16,6 +18,8 @@ export function VerificationMessagesPage() {
   const { tab = 'friend' } = useParams<{ tab?: string }>();
   // runtime 只在容器层处理启动和登录守卫，业务读写仍归子页面 facade。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  // counts 与通讯录入口复用同一 shared 计数 owner。
+  const { counts, refresh } = useVerificationUnreadCounts();
 
   if (tab !== 'friend' && tab !== 'group') return <Navigate to="/contacts/verifications/friend" replace />;
   if (restoring) return <VerificationMessagesState label="正在恢复验证消息" />;
@@ -31,11 +35,11 @@ export function VerificationMessagesPage() {
         <h1>验证消息</h1><span aria-hidden="true" />
       </header>
       <nav className="rn-verification-messages-tabs" role="tablist" aria-label="验证消息类型">
-        <Link role="tab" aria-selected={activeTab === 'friend'} className={activeTab === 'friend' ? 'is-active' : ''} replace to="/contacts/verifications/friend">好友验证</Link>
-        <Link role="tab" aria-selected={activeTab === 'group'} className={activeTab === 'group' ? 'is-active' : ''} replace to="/contacts/verifications/group">群聊验证</Link>
+        <Link role="tab" aria-selected={activeTab === 'friend'} className={activeTab === 'friend' ? 'is-active' : ''} replace to="/contacts/verifications/friend"><span>好友验证</span><VerificationCountBadge count={counts.friend} /></Link>
+        <Link role="tab" aria-selected={activeTab === 'group'} className={activeTab === 'group' ? 'is-active' : ''} replace to="/contacts/verifications/group"><span>群聊验证</span><VerificationCountBadge count={counts.group} /></Link>
       </nav>
       <section className="rn-verification-messages-body">
-        {activeTab === 'friend' ? <FriendApplicationsPage /> : <GroupVerificationPage />}
+        {activeTab === 'friend' ? <FriendApplicationsPage onUnreadChanged={refresh} /> : <GroupVerificationPage />}
       </section>
     </section>
   </main>;

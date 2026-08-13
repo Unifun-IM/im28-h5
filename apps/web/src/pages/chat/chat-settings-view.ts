@@ -21,8 +21,11 @@ export interface ChatSettingsView {
   readonly canEditGroupProfile: boolean;
   readonly canInviteMembers: boolean;
   readonly canRemoveMembers: boolean;
+  readonly canOpenGroupManage: boolean;
   readonly canManageAutoDelete: boolean;
   readonly canClearForAll: boolean;
+  readonly canQuitGroup: boolean;
+  readonly canDismissGroup: boolean;
 }
 
 /** 群设置首卡可展示的稳定成员身份。 */
@@ -92,8 +95,17 @@ export function buildChatSettingsView(
     canRemoveMembers: Boolean(
       isGroup && group?.groupID === targetID && group.permissions.canRemoveMembers,
     ),
+    canOpenGroupManage: Boolean(
+      isGroup && group?.groupID === targetID && group.permissions.canOpenGroupManage,
+    ),
     canManageAutoDelete: !isGroup || canManageGroupMessages,
     canClearForAll: !isGroup || canManageGroupMessages,
+    canQuitGroup: Boolean(
+      isGroup && group?.groupID === targetID && group.permissions.canQuitGroup,
+    ),
+    canDismissGroup: Boolean(
+      isGroup && group?.groupID === targetID && group.permissions.canDismissGroup,
+    ),
   };
 }
 

@@ -1,16 +1,19 @@
-import { useMemo, useState, type CSSProperties, type FormEvent } from 'react';
+import { useCallback, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
-import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
-import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
+import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import {
   buildConversationHomeSearchSections,
+  isCurrentConversationSearchRequest,
+  mergeConversationHomeSearchMessageSections,
+  splitConversationSearchHighlightedText,
   updateConversationSearchHistory,
   type ConversationHomeSearchItem,
   type ConversationHomeSearchSection,
 } from './conversation-home-search.js';
+import { ConversationSearchInput } from './ConversationSearchInput.js';
 import './conversation-search-page.css';
 
 /** 搜索历史沿用 RN AsyncStorage 的业务 key。 */
@@ -36,33 +39,53 @@ export function ConversationSearchPage() {
   const [sections, setSections] = useState<readonly ConversationHomeSearchSection[]>([]);
   /** visibleLimits 保存各分区“查看更多”的展示进度。 */
   const [visibleLimits, setVisibleLimits] = useState<Record<string, number>>({});
+  /** messageOffset 保存 SDK 下一页基于原始消息结果的偏移。 */
+  const [messageOffset, setMessageOffset] = useState(0);
+  /** messageHasMore 只由完整八条 SDK 页决定。 */
+  const [messageHasMore, setMessageHasMore] = useState(false);
+  /** loadingMoreMessage 区分首次搜索和聊天记录增量页。 */
+  const [loadingMoreMessage, setLoadingMoreMessage] = useState(false);
   /** loading 覆盖一次本地 SQLite 聚合读取。 */
   const [loading, setLoading] = useState(false);
   /** error 只展示真实 auth/cache 失败。 */
   const [error, setError] = useState('');
+  /** searchRequestIDRef 使输入变化和后续提交能隔离过期异步结果。 */
+  const searchRequestIDRef = useRef(0);
 
   /** runSearch 从当前账号四个共享 cache owner 读取并聚合结果。 */
-  async function runSearch(nextQuery = query, saveHistory = true) {
+  async function runSearch(nextQuery = query, saveHistory = true, preserveResults = false) {
     if (!sync || loading) return;
+    /** requestID 标识本次提交，后续输入或搜索会使旧结果失效。 */
+    const requestID = searchRequestIDRef.current + 1;
+    searchRequestIDRef.current = requestID;
     /** normalizedQuery 禁止空白查询进入 SDK。 */
     const normalizedQuery = nextQuery.trim();
     setQuery(nextQuery);
     setSearchedQuery(normalizedQuery);
     setError('');
     setVisibleLimits({});
+    setLoadingMoreMessage(false);
     if (!normalizedQuery) {
       setSections([]);
+      setMessageOffset(0);
+      setMessageHasMore(false);
       return;
     }
     setLoading(true);
+    if (!preserveResults) setSections([]);
     try {
       /** sources 全部来自当前账号 SQLite，不触发远端搜索或页面 SQL。 */
       const [contacts, groups, conversations, messages] = await Promise.all([
         sync.contacts.listCached(),
         sync.groups.listCached(),
         sync.conversations.listCachedItems({ limit: 500 }),
-        sync.messages.searchCached({ keyword: normalizedQuery, limit: 100 }),
+        sync.messages.searchCached({
+          keyword: normalizedQuery,
+          limit: CONVERSATION_SEARCH_SECTION_STEP,
+          offset: 0,
+        }),
       ]);
+      if (!isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) return;
       setSections(buildConversationHomeSearchSections({
         query: normalizedQuery,
         contacts,
@@ -70,24 +93,90 @@ export function ConversationSearchPage() {
         conversations,
         messages,
       }));
+      setMessageOffset(messages.length);
+      setMessageHasMore(messages.length === CONVERSATION_SEARCH_SECTION_STEP);
       if (saveHistory) {
-        /** nextHistory 维护 RN 同款最近优先和十条上限。 */
-        const nextHistory = updateConversationSearchHistory(history, normalizedQuery);
-        setHistory(nextHistory);
-        writeSearchHistory(nextHistory);
+        setHistory(current => {
+          /** nextHistory 维护 RN 同款最近优先和十条上限。 */
+          const nextHistory = updateConversationSearchHistory(current, normalizedQuery);
+          writeSearchHistory(nextHistory);
+          return nextHistory;
+        });
       }
     } catch (cause) {
+      if (!isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) return;
       setSections([]);
+      setMessageOffset(0);
+      setMessageHasMore(false);
       setError(readConversationSearchError(cause));
     } finally {
-      setLoading(false);
+      if (isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) setLoading(false);
     }
   }
+
+  /** loadMoreMessages 按 RN 八条步长读取并合并下一页聊天记录。 */
+  async function loadMoreMessages(): Promise<void> {
+    if (!sync || !searchedQuery || !messageHasMore || loadingMoreMessage || loading) return;
+    /** requestID 绑定当前已提交查询，输入变化会丢弃本页结果。 */
+    const requestID = searchRequestIDRef.current;
+    /** offset 冻结本次 SDK 分页起点。 */
+    const offset = messageOffset;
+    setLoadingMoreMessage(true);
+    setError('');
+    try {
+      /** messages 由 shared facade 按可见正文和结果偏移分页。 */
+      const messages = await sync.messages.searchCached({
+        keyword: searchedQuery,
+        limit: CONVERSATION_SEARCH_SECTION_STEP,
+        offset,
+      });
+      if (!isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) return;
+      /** conversations 为下一页消息提供规范路由和会话标题。 */
+      const conversations = await sync.conversations.listCachedItems({ limit: 500 });
+      if (!isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) return;
+      /** incoming 只构建聊天记录分区，不重复加载好友和群资料。 */
+      const incoming = buildConversationHomeSearchSections({
+        query: searchedQuery,
+        contacts: [],
+        groups: [],
+        conversations,
+        messages,
+      });
+      setSections(current => mergeConversationHomeSearchMessageSections(current, incoming));
+      setMessageOffset(offset + messages.length);
+      setMessageHasMore(messages.length === CONVERSATION_SEARCH_SECTION_STEP);
+    } catch (cause) {
+      if (isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) setError(readConversationSearchError(cause));
+    } finally {
+      if (isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) setLoadingMoreMessage(false);
+    }
+  }
+
+  /** refreshSearch 对齐 RN 下拉刷新，只重读当前提交关键词且不重复写历史。 */
+  const refreshSearch = useCallback(async (): Promise<void> => {
+    if (!searchedQuery) return;
+    await runSearch(searchedQuery, false, true);
+  }, [searchedQuery, sync, loading]);
+  /** pullRefresh 只翻译浏览器手势，搜索和缓存规则仍由页面/facade 持有。 */
+  const pullRefresh = usePullRefresh({ refreshing: loading, onRefresh: refreshSearch });
 
   /** submitSearch 阻止浏览器表单导航并执行本地搜索。 */
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void runSearch();
+  }
+
+  /** updateQuery 与 RN onChangeText 一致清除旧提交、分页和错误状态。 */
+  function updateQuery(nextQuery: string): void {
+    searchRequestIDRef.current += 1;
+    setQuery(nextQuery);
+    setSearchedQuery('');
+    setSections([]);
+    setMessageOffset(0);
+    setMessageHasMore(false);
+    setLoadingMoreMessage(false);
+    setError('');
+    setLoading(false);
   }
 
   /** openResult 将稳定会话和消息 ID 写入现有 SPA route。 */
@@ -105,32 +194,29 @@ export function ConversationSearchPage() {
   /** hasResults 区分真实空结果和含至少一个分区。 */
   const hasResults = sections.some(section => section.items.length > 0);
   return (
-    <main className="rn-conversation-search-page">
+    <main
+      className="rn-conversation-search-page"
+      onTouchStart={pullRefresh.onTouchStart}
+      onTouchMove={pullRefresh.onTouchMove}
+      onTouchEnd={pullRefresh.onTouchEnd}
+      onTouchCancel={pullRefresh.onTouchCancel}
+    >
       <section className="rn-conversation-search-surface">
         <form className="rn-conversation-search-header" onSubmit={submitSearch}>
-          <label className="rn-conversation-search-input">
-            <span className="sr-only">搜索</span>
-            <RNAssetIcon assetURL={searchIconURL} />
-            <input
-              type="search"
-              autoFocus
-              value={query}
-              placeholder="搜索"
-              onChange={event => {
-                setQuery(event.target.value);
-                setSearchedQuery('');
-                setSections([]);
-                setError('');
-              }}
-              onKeyDown={event => {
-                if (event.key !== 'Enter') return;
-                event.preventDefault();
-                void runSearch();
-              }}
-            />
-          </label>
+          <ConversationSearchInput
+            value={query}
+            onChange={updateQuery}
+            onSubmit={() => { void runSearch(); }}
+          />
           <button type="button" onClick={() => navigate(-1)}>取消</button>
         </form>
+        <div
+          className={`rn-conversation-search-pull${pullRefresh.armed ? ' is-armed' : ''}`}
+          style={{ height: loading && searchedQuery ? 36 : pullRefresh.pullDistance }}
+          aria-hidden={!loading && pullRefresh.pullDistance === 0}
+        >
+          <span>{loading ? '正在刷新' : pullRefresh.armed ? '松开刷新' : '下拉刷新'}</span>
+        </div>
         <section className="rn-conversation-search-content" aria-busy={loading} aria-live="polite">
           {error ? <ConversationSearchState label={error} compact /> : null}
           {!error && !searchedQuery ? (
@@ -148,16 +234,30 @@ export function ConversationSearchPage() {
           ) : null}
           {!error && searchedQuery && !loading ? sections.map(section => {
             /** visibleLimit 是当前分区稳定的已展开数量。 */
-            const visibleLimit = visibleLimits[section.key] ?? CONVERSATION_SEARCH_SECTION_STEP;
+            const visibleLimit = section.key === 'message'
+              ? section.items.length
+              : visibleLimits[section.key] ?? CONVERSATION_SEARCH_SECTION_STEP;
             /** visibleItems 保持共享缓存和聚合后的原始顺序。 */
             const visibleItems = section.items.slice(0, visibleLimit);
             return (
               <section className="rn-conversation-search-section" key={section.key}>
                 <h2>{section.title}</h2>
                 {visibleItems.map(item => (
-                  <ConversationSearchResultRow key={item.key} item={item} onOpen={() => openResult(item)} />
+                  <ConversationSearchResultRow
+                    key={item.key}
+                    item={item}
+                    keyword={searchedQuery}
+                    onOpen={() => openResult(item)}
+                  />
                 ))}
-                {visibleItems.length < section.items.length ? (
+                {section.key === 'message' ? (messageHasMore || loadingMoreMessage ? (
+                  <button
+                    type="button"
+                    className="rn-conversation-search-more"
+                    disabled={loadingMoreMessage}
+                    onClick={() => { void loadMoreMessages(); }}
+                  >{loadingMoreMessage ? '加载中...' : '查看更多'}</button>
+                ) : null) : visibleItems.length < section.items.length ? (
                   <button
                     type="button"
                     className="rn-conversation-search-more"
@@ -177,8 +277,9 @@ export function ConversationSearchPage() {
 }
 
 /** 单条搜索结果复用 RN 40px 头像和两行信息层级。 */
-function ConversationSearchResultRow({ item, onOpen }: {
+function ConversationSearchResultRow({ item, keyword, onOpen }: {
   readonly item: ConversationHomeSearchItem;
+  readonly keyword: string;
   readonly onOpen: () => void;
 }) {
   /** avatarStyle 复用 RN fallback 头像渐变。 */
@@ -192,10 +293,40 @@ function ConversationSearchResultRow({ item, onOpen }: {
         {item.avatarURL ? <img src={item.avatarURL} alt="" loading="lazy" /> : null}
       </span>
       <span className="rn-conversation-search-copy">
-        <strong>{item.title}</strong>
-        <span>{item.subtitle}</span>
+        {item.type === 'message' ? (
+          <>
+            <strong>{item.title}</strong>
+            <span>{item.subtitle}</span>
+          </>
+        ) : (
+          <>
+            <ConversationSearchHighlightedText text={item.title} keyword={keyword} title />
+            <ConversationSearchHighlightedText text={item.subtitle} keyword={keyword} />
+          </>
+        )}
       </span>
     </button>
+  );
+}
+
+/** 好友和群聊搜索结果按 RN 规则为命中片段着品牌色。 */
+function ConversationSearchHighlightedText({ text, keyword, title = false }: {
+  readonly text: string;
+  readonly keyword: string;
+  readonly title?: boolean;
+}) {
+  /** segments 来自与 RN 同构的纯文本切片规则。 */
+  const segments = splitConversationSearchHighlightedText(text, keyword);
+  /** Tag 保持标题与副标题原有语义和字体层级。 */
+  const Tag = title ? 'strong' : 'span';
+  return (
+    <Tag>
+      {segments.map((segment, index) => (
+        <mark key={`${segment.text}-${index}`} className={segment.highlighted ? 'is-highlighted' : undefined}>
+          {segment.text}
+        </mark>
+      ))}
+    </Tag>
   );
 }
 

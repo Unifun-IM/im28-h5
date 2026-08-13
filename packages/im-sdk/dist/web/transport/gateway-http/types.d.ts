@@ -109,6 +109,13 @@ export interface GatewayGroup {
     readonly created_at?: string;
     readonly updated_at?: string;
 }
+/** 群搜索 endpoint 的单项，包装公开群和命中/关系字段。 */
+export interface GatewayGroupSearchItem {
+    readonly group: GatewayGroup;
+    readonly source_type?: 'group_id' | 'title' | string;
+    readonly membership_status?: 'none' | 'active' | 'left' | 'removed' | 'banned';
+    readonly application_status?: string;
+}
 export interface GatewayGroupUserPermission {
     readonly role?: 20 | 60 | 100 | 'owner' | 'admin' | 'member' | string;
     readonly role_level?: number;
@@ -1114,6 +1121,12 @@ export interface GatewayCreateGroupRequest {
 export interface GatewayGetGroupRequest {
     readonly group_id: string;
 }
+/** 陌生人可读取的群公开资料与当前账号关系状态。 */
+export interface GatewayPublicGroupDetail {
+    readonly group?: GatewayGroup;
+    readonly membership_status?: 'none' | 'active' | 'left' | 'removed' | 'banned';
+    readonly application_status?: string;
+}
 export interface GatewaySearchGroupsRequest {
     readonly keyword: string;
 }
@@ -1276,6 +1289,10 @@ export interface GatewayListGroupsData {
     readonly groups?: readonly GatewayGroup[];
     readonly next_page_token?: string;
     readonly total?: number;
+}
+/** 群搜索响应保留端点特有的 wrapper 字段。 */
+export interface GatewaySearchGroupsData {
+    readonly list?: readonly GatewayGroupSearchItem[];
 }
 export interface GatewayGroupMemberData {
     readonly member?: GatewayGroupMember;

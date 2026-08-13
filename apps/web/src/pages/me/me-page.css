@@ -8,7 +8,7 @@
 
 .rn-me-surface,
 .rn-me-settings-surface {
-  width: min(100%, 480px);
+  width: 100%;
   min-height: calc(100dvh - var(--im-primary-tab-bar-space, 0px));
   margin: 0 auto;
   background: var(--im-profile-page-alt-background);
@@ -54,8 +54,17 @@
   flex: 1;
 }
 
-.rn-me-identity strong {
+.rn-me-name-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.rn-me-name-row strong {
   display: block;
+  min-width: 0;
+  flex: 0 1 auto;
   overflow: hidden;
   font-size: 20px;
   font-weight: 500;
@@ -64,6 +73,17 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.rn-me-name-row a {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  color: inherit;
+}
+
+.rn-me-name-row a .rn-asset-icon { width: 16px; height: 16px; }
 
 .rn-me-identity button {
   display: flex;
@@ -87,7 +107,7 @@
   white-space: nowrap;
 }
 
-.rn-me-identity .rn-asset-icon {
+.rn-me-identity button .rn-asset-icon {
   width: 16px;
   height: 16px;
 }

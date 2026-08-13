@@ -1,7 +1,7 @@
 # Group Management Mutations
 
 > TYPE: CONTRACT / AUDIT
-> STATUS: `permission-owner-converged / member-removal-converged / member-invite-web-converged / remaining-mutations-pending`
+> STATUS: `permission-owner-converged / member-removal-converged / member-invite-web-converged / admin-owner-web-converged / settings-mute-web-converged / lifecycle-web-converged`
 > SLICE: `W6.a6.18.3.13`
 
 ## Axioms
@@ -10,7 +10,7 @@
 - one action -> one Gateway write；Gateway 或后置 cache sync 失败均不得回退 OpenIM 再写一次。
 - remote success + local convergence failure = partial-success；只能重试 cache convergence，禁止重放 remote mutation。
 - permission source: explicit `group.user_permission` -> cached self member role fallback -> fail-closed。
-- H5 当前已迁移成员移除与邀请 caller；其他群管理 mutation caller 仍为 `0`，transport method 存在不等于能力已迁移。
+- H5 已迁移成员移除、邀请、管理员设置/取消、群主转让、设置/禁言和群生命周期 caller；transport method 存在仍不等于能力已迁移。
 - 本合同不授权真实邀请、移除、角色变更、转让、退群或解散。
 
 ## Current Inventory
@@ -19,12 +19,12 @@
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | invite members | `GroupAddFriendsScreen` | RN `openIMService.inviteUsersToGroup` 保持冻结基线 | neutral Web owner: `inviteIMGroupMembers` -> one application/direct write -> strict response -> optional member refresh | `/settings/members/invite` -> `groupMembers.inviteMembers` | `shared-core-ready/web-consumed/rn-frozen`；真实邀请未执行 |
 | remove members | `GroupRemoveMembersScreen` | `openIMService.kickGroupMembers` -> shared `createIMGroupMentionSync.removeMembers` | neutral owner: permission/target validation -> one `removeGroupMember` -> cross-table transaction -> authoritative refresh | `/settings/members/remove` -> `groupMembers.removeMembers` | `converged/destructive-acceptance-gated`；无 OpenIM fallback，真实移除未执行 |
-| admin role | `GroupAdminsScreen`; `GroupAddAdminsScreen` | `updateGroupMemberRole` -> set/cancel admin -> OpenIM fallback | transport only | no route/caller | Gateway success 后不收敛 member role cache；任意 error 可触发第二次写 |
-| group settings | `GroupManageScreen`; `GroupSpeechFrequencyScreen` | `updateGroupAdminPermissions`; `updateGroupSettings` | transport only: `updateGroupSetting` | no mutation caller | RN 持有权限字段映射、group cache merge 与事件语义，跨端会漂移 |
-| group/member mute | `GroupMuteScreen`; `UserProfileScreen` | `changeGroupMute`; `updateGroupMemberMute` | transport only | no route/caller | 全群 mute 仍有 OpenIM fallback；成员 mute 只有 Gateway，但成员 cache 未收敛 |
-| transfer owner | `GroupTransferOwnerScreen`; owner-exit selection flow | `transferGroupOwner` -> Gateway/OpenIM fallback | transport only | no route/caller | owner/admin role snapshot 未同步；失败回退可能重复转让 |
-| leave group | `GroupSettingsScreen`; `GroupRowActionMenu` | `quitGroup` -> Gateway/OpenIM fallback -> RN conversation cleanup | transport only: `leaveGroup` | no route/caller | destructive lifecycle；任意 Gateway error 可触发第二次 leave；conversation/group/member cleanup 非 shared transaction |
-| dismiss group | `GroupSettingsScreen` | `dismissGroup` -> Gateway/OpenIM fallback -> RN conversation cleanup | transport only: `dismissGroup` | no route/caller | destructive owner-only lifecycle；双写风险与跨表 cleanup 不原子 |
+| admin role | `GroupAdminsScreen`; `GroupAddAdminsScreen` | RN `updateGroupMemberRole` 保持冻结基线 | neutral Web owner: owner/target/limit preflight -> one batch set/cancel -> group/member transaction -> independent refresh | `/settings/manage` -> `groupMembers.setAdmins/cancelAdmins` | `shared-core-ready/web-consumed/rn-frozen`；真实角色变更未执行 |
+| group settings | `GroupManageScreen`; `GroupSpeechFrequencyScreen` | RN `updateGroupAdminPermissions/updateGroupSettings` 冻结 | neutral Web owner: `createIMGroupManagementSync.updateSettings` -> field permission -> one explicit patch -> strict group merge | `/settings/manage`、`/manage/speech-frequency` | `shared-core-ready/web-consumed/rn-frozen`；真实 toggle 未执行 |
+| group/member mute | `GroupMuteScreen`; `UserProfileScreen` | RN `changeGroupMute/updateGroupMemberMute` 冻结 | neutral Web owner: `updateMute/updateMemberMute` -> capability/target preflight -> one write -> strict group/member merge | `/settings/manage/mute` | `shared-core-ready/web-consumed/rn-frozen`；真实 mute 未执行 |
+| transfer owner | `GroupTransferOwnerScreen`; owner-exit selection flow | RN `transferGroupOwner` 保持冻结基线 | neutral Web owner: owner/active-target preflight -> one transfer -> atomic role swap/group owner update -> independent refresh | `/settings/manage` -> `groupMembers.transferOwner` | `shared-core-ready/web-consumed/rn-frozen`；真实转让未执行 |
+| leave group | `GroupSettingsScreen`; `GroupRowActionMenu` | RN `quitGroup` 保持冻结基线 | neutral Web owner: `groupLifecycle.leave` -> permission -> one Gateway write -> group-domain transaction | 群设置确认层 -> `groupLifecycle.leave` | `shared-core-ready/web-consumed/rn-frozen`；真实退群未执行 |
+| dismiss group | `GroupSettingsScreen` | RN `dismissGroup` 保持冻结基线 | neutral Web owner: `groupLifecycle.dismiss` -> owner permission -> one Gateway write -> group-domain transaction | 群设置确认层 -> `groupLifecycle.dismiss` | `shared-core-ready/web-consumed/rn-frozen`；真实解散未执行 |
 
 ## Frozen Behavior
 
@@ -53,13 +53,42 @@
 | `.13.1-shared-group-management-permissions` | read-only permission projection | one neutral permission DTO consumed by RN/H5 group settings | `done-local`；explicit-field/role/fail-closed tests；RN helper 与 H5 joined-group actual consumers；zero page raw-payload parser |
 | `.13.2-shared-member-removal` | remove members | shared validation/Gateway/cache state + RN caller adoption + H5 SPA selection route | `done-local`；one remote write、no OpenIM fallback、failure/partial-success/cache tests；no real removal |
 | `.13.3-invite-contract-and-core` | invite members | backend semantic freeze, shared Web core, H5 caller；RN frozen | `done-local`；direct/application strict response；no fake success；no real invite |
-| `.13.4-admin-and-owner` | set admin; cancel admin; transfer owner | shared role state machine and member/group cache convergence | max three operations; owner/target/failure tests; no real mutation |
+| `.13.4-admin-and-owner` | set admin; cancel admin; transfer owner | shared role state machine and member/group cache convergence | `done-local`；owner/target/limit/failure/exactly-once tests；H5 SPA caller；no real mutation |
 | `.13.5-group-settings-and-mute` | group settings patch; group mute; member mute | field-specific permission and strict response merge | no duplicate patch mapper; no real toggle |
-| `.13.6-group-lifecycle` | leave; dismiss | destructive shared lifecycle and cross-table cleanup | explicit confirmation contract + transactional/partial-success tests; real action remains separately authorized |
+| `.13.6-group-lifecycle` | leave; dismiss | destructive shared lifecycle and cross-table cleanup | `done-local`；explicit confirmation、exactly-once、transaction/rollback、partial-success；real action remains separately authorized |
 
 ## Audit Verdict
 
-`W6.a6.18.3.13 = active`；`.13.1 = shared-core-ready/web-consumed/rn-frozen`；`.13.2 = shared-core-ready/web-consumed/rn-frozen`；`.13.3 = shared-core-ready/web-consumed/rn-frozen`。成员移除与邀请的 H5 caller 消费 shared owner，RN production caller 保持冻结基线，不宣称双端 convergence。真实移除/邀请与第二账号 realtime/list-back 仍需单独授权；下一切片是 `.13.4 admin and owner`。
+`W6.a6.18.3.13 = closed-local`；`.13.1-.13.6 = shared-core-ready/web-consumed/rn-frozen`。H5 caller 消费 shared owner，RN production caller 保持冻结基线，不宣称双端 convergence。全部真实群管理 mutation 与第二账号 realtime/list-back 仍需单独授权。
+
+## Lifecycle Contract Resolution (2026-08-13)
+
+| operation | preflight | one allowed write | local convergence |
+| :--- | :--- | :--- | :--- |
+| leave | cached group/current member；reject owner；`canQuitGroup=true` | one `leaveGroup`；`clear_history` only when explicit | strict group ID -> transaction deletes attachments/messages/all group conversations/members/group；failure=`remote-only` |
+| dismiss | cached group/current member；owner role + `canDismissGroup=true` | one `dismissGroup` | same transaction；single conversation with same target ID is preserved |
+
+H5 设置页只消费 `WebIMJoinedGroup.permissions` 和 `WebIMSync.groupLifecycle`。native dialog 提供二次确认；`remote-only` 关闭 modal、显示远端已成功，并锁定当前页面危险按钮，禁止重放。真实退群/解散未执行；当前账号仅有两个单聊，认证群确认层视觉验收 data-gated。
+
+## Settings And Mute Contract Resolution (2026-08-13)
+
+| operation | permission/preflight | one allowed write | local convergence |
+| :--- | :--- | :--- | :--- |
+| group settings | `canManageAdmins`；patch 至少一个显式字段；frequency 为 `30/60/180/300/600/1800/3600` | one `updateGroupSetting` | strict group ID；merge old raw + remote + explicit patch；错群/SQLite failure=`remote-only` |
+| group mute | `canMuteAll`；`mute_all/mute_member` 至少一个显式字段 | one `updateGroupMute` | strict group ID；preserve unrelated group raw fields |
+| member mute | `canMuteMembers`；target=active normal member；reject self/owner/admin；empty expiry=unmute，non-empty=future RFC3339 | one `updateGroupMemberMute` | strict group/member ID；single-member upsert preserves role/profile raw fields |
+
+H5 三页只消费 `WebIMSync.groupManagement`，所有开关/mute 使用 confirmation，发言频率使用显式“确定”；页面不导入 Gateway/Repository/SQL/OpenIM，也不复制角色权限。真实 mutation、server-denial 和 second-account realtime/list-back 保留授权门。
+
+## Admin And Owner Contract Resolution (2026-08-13)
+
+| operation | preflight | one allowed write | local convergence |
+| :--- | :--- | :--- | :--- |
+| set admins | current owner + explicit/fallback `canManageAdmins`; targets are normal members; total admins <= 10 | one batch `setGroupAdmin` | merge group response + atomically upsert all confirmed target roles, then independent full member refresh |
+| cancel admins | current owner + `canManageAdmins`; targets are current admins | one batch `cancelGroupAdmin` | remove admin role/adminSince in the same group/member transaction, then independent refresh |
+| transfer owner | current owner + `canTransferOwner`; target is active admin/member and not self | one `transferGroupOwner` | atomically downgrade previous owner, promote target, update `owner_user_id`; missing returned permission becomes member fail-closed; then independent refresh |
+
+H5 候选过滤调用 SDK `filterIMGroupAdminCandidates/filterIMGroupOwnerTransferCandidates`，页面不复制角色表。远端返回错群、本地事务失败或后置刷新失败均不得重放 mutation；返回 `remote-only|local|authoritative` 供页面显式反馈。
 
 ## Invite Contract Resolution (2026-08-12)
 

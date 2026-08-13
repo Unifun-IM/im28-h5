@@ -4,7 +4,6 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
-import { findCommonGroupConversationID } from './contact-common-group-view.js';
 import { ContactProfileHeader } from './ContactProfileShared.js';
 import './contact-common-groups-page.css';
 
@@ -46,22 +45,18 @@ export function ContactCommonGroupsPage() {
 
   useEffect(() => { void loadGroups(); }, [loadGroups]);
 
-  /** 从缓存或远端会话列表定位真实群会话后进入聊天页。 */
+  /** 通过 shared 会话 facade 打开规范群会话后进入聊天页。 */
   const openGroup = useCallback(async (group: IMContactCommonGroup): Promise<void> => {
     if (!runtime || openingGroupID) return;
     setOpeningGroupID(group.groupID);
     setError(null);
     try {
-      /** cached 先覆盖已有会话的无网络路径。 */
-      let conversations = await runtime.getSync().conversations.listCached({ limit: 500 });
-      /** conversationID 只接受 helper 在当前账号会话集合中的真实命中。 */
-      let conversationID = findCommonGroupConversationID(group, conversations);
-      if (!conversationID) {
-        conversations = await runtime.getSync().conversations.sync({ pageSize: 100 });
-        conversationID = findCommonGroupConversationID(group, conversations);
-      }
-      if (!conversationID) throw new Error('群会话尚未建立');
-      navigate(`/conversations/${encodeURIComponent(conversationID)}`);
+      /** conversation 由 SDK 统一完成 cache、Gateway 身份校验和 SQLite 收敛。 */
+      const conversation = await runtime.getSync().conversations.openGroup({
+        groupID: group.groupID,
+        conversationID: group.conversationID,
+      });
+      navigate(`/conversations/${encodeURIComponent(conversation.conversationID)}`);
     } catch (cause) {
       setError(readCommonGroupsError(cause, '打开群聊失败'));
     } finally {

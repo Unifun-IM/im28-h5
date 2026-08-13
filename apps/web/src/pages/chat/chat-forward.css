@@ -7,7 +7,7 @@
 }
 
 .rn-chat-forward-target-surface {
-  width: min(100%, 480px);
+  width: 100%;
   min-height: 100dvh;
   margin: 0 auto;
   background: var(--im-bg-app);
@@ -350,7 +350,7 @@
 .rn-chat-forward-composer > button .rn-asset-icon { width: 20px; height: 20px; }
 
 .rn-chat-forward-sheet-backdrop { position: fixed; z-index: 50; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: var(--im-bg-overlay); }
-.rn-chat-forward-sheet { display: flex; width: min(100%, 480px); height: min(60dvh, 620px); min-height: 360px; overflow: hidden; border-radius: 12px 12px 0 0; color: var(--im-text-primary); background: var(--im-bg-card); flex-direction: column; }
+.rn-chat-forward-sheet { display: flex; width: 100%; height: min(60dvh, 620px); min-height: 360px; overflow: hidden; border-radius: 12px 12px 0 0; color: var(--im-text-primary); background: var(--im-bg-card); flex-direction: column; }
 .rn-chat-forward-sheet > header { display: grid; min-height: 52px; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; border-bottom: var(--im-hairline-width) solid var(--im-border-subtle); }
 .rn-chat-forward-sheet > header h2 { margin: 0; overflow: hidden; font-size: 17px; font-weight: 600; letter-spacing: 0; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .rn-chat-forward-sheet > header button { height: 44px; padding: 0; border: 0; color: var(--im-brand-primary); background: transparent; cursor: pointer; font: inherit; font-size: 14px; letter-spacing: 0; }

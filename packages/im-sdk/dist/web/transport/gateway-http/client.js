@@ -185,8 +185,9 @@ export function createGatewayHTTPClient(options) {
             method: 'POST',
             data: params,
         }))),
-        searchGroups: async (params) => normalizeListGroupsData(await unwrapData(groupOpenAPI.postV1GroupSearch(params, requestOptions()))),
+        searchGroups: async (params) => normalizeSearchGroupsData(await unwrapData(groupOpenAPI.postV1GroupSearch(params, requestOptions()))),
         getGroup: async (params) => readGroup(await unwrapData(groupOpenAPI.postV1GroupDetail(params, requestOptions()))),
+        getPublicGroup: async (params) => normalizePublicGroupDetail(await unwrapData(groupOpenAPI.postV1GroupPublicDetail(params, requestOptions()))),
         updateGroup: async (params) => readGroup(await unwrapData(groupOpenAPI.postV1GroupsUpdate(params, requestOptions()))),
         updateGroupSetting: async (params) => readGroup(await unwrapData(groupOpenAPI.postV1GroupSettingUpdate(params, requestOptions()))),
         updateGroupAdminPermission: async (params) => readGroup(await unwrapData(groupOpenAPI.postV1GroupAdminPermissionUpdate(params, requestOptions()))),
@@ -489,6 +490,35 @@ function readGroupList(data, key) {
     })
         .filter((item) => item !== null);
 }
+/** 将群搜索专属 wrapper 收窄并保留命中来源与账号关系。 */
+function normalizeSearchGroupsData(data) {
+    /** list 只接纳包含公开群对象的搜索单项。 */
+    const list = readArray(data, 'list')
+        ?.flatMap(item => {
+        if (!isRecord(item.group))
+            return [];
+        /** sourceType 保留 ID 精确或标题匹配来源。 */
+        const sourceType = readString(item, 'source_type');
+        /** membershipStatus 保留服务端未来扩展的关系字段。 */
+        const membershipStatus = readGroupSearchMembershipStatus(item);
+        /** applicationStatus 保留待审核防重状态。 */
+        const applicationStatus = readString(item, 'application_status');
+        return [{
+                group: item.group,
+                ...(sourceType ? { source_type: sourceType } : {}),
+                ...(membershipStatus ? { membership_status: membershipStatus } : {}),
+                ...(applicationStatus ? { application_status: applicationStatus } : {}),
+            }];
+    });
+    return { list: list ?? [] };
+}
+/** 将搜索关系字段收窄到公开合同枚举。 */
+function readGroupSearchMembershipStatus(item) {
+    /** value 只接受 Gateway 声明的五种关系。 */
+    const value = readString(item, 'membership_status');
+    return value === 'none' || value === 'active' || value === 'left' ||
+        value === 'removed' || value === 'banned' ? value : undefined;
+}
 function getGroupConversationFromListItem(item) {
     if (isRecord(item.group_conversation)) {
         return item.group_conversation;
@@ -519,6 +549,24 @@ function normalizeListGroupApplicationsData(data) {
     return {
         ...(applications ? { applications } : {}),
         ...(total === undefined ? {} : { total }),
+    };
+}
+/** 将陌生人群公开资料 envelope 收窄为稳定 Gateway contract。 */
+function normalizePublicGroupDetail(data) {
+    /** rawGroup 保留 OpenAPI 返回的公开字段。 */
+    const rawGroup = isRecord(data.group) ? data.group : null;
+    /** membershipStatus 只接受服务端声明的关系枚举。 */
+    const membershipStatus = readString(data, 'membership_status');
+    /** applicationStatus 保留服务端申请状态供页面防重。 */
+    const applicationStatus = readString(data, 'application_status');
+    return {
+        ...(rawGroup ? { group: rawGroup } : {}),
+        ...(membershipStatus === 'none' || membershipStatus === 'active' ||
+            membershipStatus === 'left' || membershipStatus === 'removed' ||
+            membershipStatus === 'banned'
+            ? { membership_status: membershipStatus }
+            : {}),
+        ...(applicationStatus ? { application_status: applicationStatus } : {}),
     };
 }
 function normalizeListGroupApplicationAuditData(data) {

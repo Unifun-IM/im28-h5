@@ -3,10 +3,12 @@ import { completeWebIMMessageSend, failWebIMMessageSend, } from './message-send-
 import { WEB_IM_UPLOADED_MEDIA_RETRY_CONTENT_TYPES, canRetryWebIMUploadedMediaMessage, normalizeWebIMUploadedMediaBody, } from './message-media-retry.js';
 import { createWebIMSyncError } from './sync-context.js';
 import { normalizeWebIMQuoteBody } from './message-quote-send.js';
+import { normalizeWebIMCardBody } from './message-card-send.js';
 /** 当前可由持久化 payload 完整恢复的消息类型。 */
 export const WEB_IM_RETRYABLE_CONTENT_TYPES = [
     101,
     114,
+    108,
     ...WEB_IM_UPLOADED_MEDIA_RETRY_CONTENT_TYPES,
     115,
 ];
@@ -94,6 +96,9 @@ export function buildWebIMPersistedMessageRequest(message) {
         return buildTextRetryRequest(message);
     if (message.contentType === 114) {
         return { body: normalizeWebIMQuoteBody(message.payload) };
+    }
+    if (message.contentType === 108) {
+        return { body: normalizeWebIMCardBody(message.payload) };
     }
     if (WEB_IM_UPLOADED_MEDIA_RETRY_CONTENT_TYPES.some(contentType => contentType === message.contentType)) {
         return {

@@ -1,6 +1,7 @@
 import { statement } from '../../db/database.js';
 import { Repository } from '../../db/repository.js';
 import { parseJsonColumn, readOptionalNumber, readOptionalString, readRequiredString } from '../../db/row.js';
+import { createConversationUpsertStatement } from '../conversation/repository.js';
 export class GroupRepository extends Repository {
     constructor(database) {
         super(database);
@@ -50,6 +51,16 @@ export class GroupRepository extends Repository {
         const rows = await this.query(statement('SELECT * FROM groups WHERE group_id = ?', [groupID]));
         return rows[0] ? mapGroupRow(rows[0]) : null;
     }
+    /** 原子保存新建群与服务端返回的真实群会话，避免页面看到半完成创建结果。 */
+    async applyCreation(group, conversation) {
+        if (conversation.type !== 'group' || conversation.targetID !== group.groupID) {
+            throw new Error('Group creation transaction requires a matching group conversation.');
+        }
+        await this.transaction(async (tx) => {
+            await tx.execute(createGroupUpsertStatement(group));
+            await tx.execute(createConversationUpsertStatement(conversation));
+        });
+    }
     /** 原子收敛成员移除后的群资料和成员行，避免跨表半成功。 */
     async applyMemberRemoval(group, removedUserIDs) {
         if (!removedUserIDs.length) {
@@ -80,6 +91,40 @@ export class GroupRepository extends Repository {
             for (const member of members) {
                 await tx.execute(createGroupMemberUpsertStatement(member));
             }
+        });
+    }
+    /** 原子写回角色变更后的群资料和受影响成员，避免跨表出现半成功。 */
+    async applyMemberRoleChanges(group, members) {
+        if (!members.length) {
+            throw new Error('Group member role transaction requires at least one member.');
+        }
+        await this.transaction(async (tx) => {
+            await tx.execute(createGroupUpsertStatement(group));
+            for (const member of members) {
+                await tx.execute(createGroupMemberUpsertStatement(member));
+            }
+        });
+    }
+    /** 原子删除群生命周期结束后的群、成员、会话、消息与消息附件缓存。 */
+    async removeLifecycleState(groupID) {
+        /** normalizedGroupID 防止空身份扩大跨表删除范围。 */
+        const normalizedGroupID = groupID.trim();
+        if (!normalizedGroupID) {
+            throw new Error('Group lifecycle cleanup requires a stable group ID.');
+        }
+        return this.transaction(async (tx) => {
+            /** conversationRows 只选择当前群目标下的群会话，禁止误删同 ID 单聊。 */
+            const conversationRows = await tx.query(statement("SELECT conversation_id FROM conversations WHERE type = 'group' AND target_id = ? ORDER BY updated_at ASC, conversation_id ASC", [normalizedGroupID]));
+            /** conversationIDs 是本事务消息和会话删除的精确边界。 */
+            const conversationIDs = conversationRows.map(row => readRequiredString(row, 'conversation_id'));
+            for (const conversationID of conversationIDs) {
+                await tx.execute(statement('DELETE FROM attachments WHERE message_id IN (SELECT client_msg_id FROM messages WHERE conversation_id = ?)', [conversationID]));
+                await tx.execute(statement('DELETE FROM messages WHERE conversation_id = ?', [conversationID]));
+            }
+            await tx.execute(statement("DELETE FROM conversations WHERE type = 'group' AND target_id = ?", [normalizedGroupID]));
+            await tx.execute(statement('DELETE FROM group_members WHERE group_id = ?', [normalizedGroupID]));
+            await tx.execute(statement('DELETE FROM groups WHERE group_id = ?', [normalizedGroupID]));
+            return conversationIDs;
         });
     }
 }

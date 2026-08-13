@@ -1,7 +1,4 @@
-import type {
-  Conversation,
-  WebIMJoinedGroup,
-} from '@im28/im-sdk/web';
+import type { WebIMJoinedGroup } from '@im28/im-sdk/web';
 
 /** 群列表右侧展示的 RN 身份标签。 */
 export type JoinedGroupBadge = 'creator' | 'owner' | 'admin';
@@ -50,23 +47,6 @@ export function getJoinedGroupBadges(
   if (group.currentUserRole === 'owner') badges.push('owner');
   if (group.currentUserRole === 'admin') badges.push('admin');
   return badges;
-}
-
-/** 从当前账号会话 cache 中解析目标群的真实 conversation ID。 */
-export function findJoinedGroupConversationID(
-  group: Pick<WebIMJoinedGroup, 'groupID' | 'conversationID'>,
-  conversations: readonly Conversation[],
-): string {
-  // exact 优先匹配服务端群列表直接提供的会话 ID。
-  const exact = group.conversationID
-    ? conversations.find(item => item.conversationID === group.conversationID)
-    : undefined;
-  if (exact) return exact.conversationID;
-  // byTarget 兼容群列表没有 conversation_id 的旧数据。
-  const byTarget = conversations.find(
-    item => item.type === 'group' && item.targetID === group.groupID,
-  );
-  return byTarget?.conversationID ?? '';
 }
 
 /** 为角色标签返回稳定中文文案。 */

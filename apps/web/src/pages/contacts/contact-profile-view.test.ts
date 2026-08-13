@@ -52,6 +52,7 @@ describe('contact profile view', () => {
     })).toBe('/conversations/group%2F1/settings/members');
     expect(resolveContactProfileBackHref({ backHref: '/contacts/search' }))
       .toBe('/contacts/search');
+    expect(resolveContactProfileBackHref({ backHref: '/scan' })).toBe('/scan');
     expect(resolveContactProfileBackHref({ backHref: 'https://example.test' }))
       .toBe('/contacts');
     expect(resolveContactProfileBackHref(null)).toBe('/contacts');

@@ -34,9 +34,28 @@
 
 .rn-friend-application-row {
   display: flex;
+  min-height: 72px;
+  align-items: center;
+}
+
+.rn-friend-application-open {
+  display: flex;
+  min-width: 0;
+  min-height: 72px;
+  flex: 1;
   align-items: center;
   gap: 16px;
-  padding-left: 16px;
+  padding: 0 0 0 16px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.rn-friend-application-open:active {
+  background: var(--im-bg-pressed);
 }
 
 .rn-friend-application-avatar-wrap {
@@ -75,22 +94,14 @@
   object-fit: cover;
 }
 
-.rn-friend-application-body {
+.rn-friend-application-copy {
   display: flex;
   min-width: 0;
   min-height: 72px;
   flex: 1;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 16px 16px 0;
-  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
-}
-
-.rn-friend-application-copy {
-  display: flex;
-  min-width: 0;
-  flex: 1;
+  justify-content: center;
   gap: 4px;
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
   flex-direction: column;
 }
 
@@ -116,8 +127,12 @@
 .rn-friend-application-operation {
   display: flex;
   min-width: 72px;
+  min-height: 72px;
   flex: 0 0 auto;
+  align-items: center;
   justify-content: flex-end;
+  padding-right: 16px;
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
 }
 
 .rn-friend-application-operation > button {
