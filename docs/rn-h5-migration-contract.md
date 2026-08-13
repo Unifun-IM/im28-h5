@@ -1550,3 +1550,35 @@ Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pa
 | acceptance | helper 行为与 route contract 已自动证明；真实浏览器登录受 SQLite 多标签互斥锁阻塞，非空候选、确认视觉、真实转让、权威回读和第二账号角色变化仍 data-gated/未授权 |
 
 Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-login-lock/data-gated`。H5 focused 3 files/10 tests；full verify 包含 SDK Web 85 files/357 tests、466 assets、boundary/typecheck 与 1102-module build。SDK source 与 RN business 均未修改，RN worktree clean，未运行 RN/desktop build 或 `build:package:desktop:web`。
+
+## 71. W6.a6.20.15 Joined Group Row Actions Contract
+
+> OWNER AXIOM: 群列表长按只负责选择既有能力；Conversation 身份、群资料 mutation、退群权限与生命周期收敛仍由 SDK 单一持有，H5 不得复制 RN 的 Gateway/角色编排。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `ContactGroupListScreen + GroupRowActionMenu` 的 `300ms` 长按、`8px` 移动取消、分享群名片、退出群聊和 manager 改名为视觉/入口基线；RN source 只读冻结 |
+| capability | 菜单只读取 `WebIMJoinedGroup.permissions.canEditGroupInfo/canQuitGroup/canTransferOwner`；不得读取 `roleLevel/myRoleLevel` 或本地猜测 owner/admin |
+| conversation | 分享、改名、群主转让必须先调用 `conversations.openGroup`，随后仅用其 canonical `conversationID` 构造 React Router URL；群 ID 不得冒充会话 ID |
+| routes | 分享复用 `/settings/share-group-card`；改名复用 `/settings/profile?edit=name`；群主退出入口复用 `/settings/manage/owner-transfer?from=joined-groups` |
+| lifecycle | 普通成员显示 `退出群聊` 与 `退出, 并删除我发的群消息`，分别调用 `groupLifecycle.leave({clearHistory:false|true})`；`remote-only` 必须阻止重放并显示可见错误 |
+| owner difference | RN 当前 owner flow 在客户端选 earliest admin 后调用旧 `quitGroup`；H5 不复制该 orchestration。群主先显式转让，返回群列表后由用户再次发起退群，禁止转让成功后自动串联 destructive leave |
+| fail-closed | runtime、登录、真实群、canonical Conversation 或 capability 缺失时不得伪造 route/mutation；群设置中的解散入口保持独立，不进入群列表菜单 |
+| acceptance | view/route contract 已证明动作顺序、定位、路由和无业务双轨；当前账号群列表为空，只完成真实空态，非空菜单、触屏、分享/改名/退群/转让及第二账号回读均 data-gated/未授权 |
+
+Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-empty-data-gated`。H5 focused 3 files/10 tests；full verify 包含 SDK Web 85 files/357 tests、466 assets、boundary/typecheck 与 1106-module build。SDK 业务源码与 RN business 均未修改，未运行 RN/desktop build 或 `build:package:desktop:web`。
+
+## 72. W6.a6.20.16 Chat Text Link Actions Contract
+
+> OWNER AXIOM: 消息正文 URL 边界与打开地址规范化属于 shared SDK；H5 只适配浏览器手势、开页、clipboard 和反馈，普通消息菜单不得拥有第二份 URL 解析。
+
+| layer | contract |
+| :--- | :--- |
+| RN truth | `PresetEmojiTextContent -> splitMessageTextSegments -> openLinkActions`；点击打开，长按仅“打开/复制”，复制原始 URL；RN source 只读冻结 |
+| shared SDK | `splitIMMessageTextLinks` 固定 HTTP(S)/www、尾随标点和原文；`normalizeIMMessageLinkURL` 仅将 www 补为 HTTPS；core/rn/web/desktop 显式导出 |
+| H5 rendering | `PresetEmojiTextContent` 只在消息气泡传入 copy owner 时把普通文本区间投影为链接；预设表情实体、composer 和单行摘要语义不变 |
+| interaction | 普通点击通过 browser port 打开 `_blank + noopener,noreferrer`；500ms 长按与右键只显示打开/复制；链接 pointer/context 事件必须停止冒泡，禁止同时打开普通消息菜单 |
+| clipboard | 打开动作使用规范化 URL；复制动作使用 trim 后原始 URL，只有 `navigator.clipboard.writeText` resolve 才显示“复制成功” |
+| fail-closed | 非 HTTP(S) 打开地址拒绝；clipboard 失败保留菜单并显示真实错误；不得产生 Gateway、SQLite 或消息 mutation |
+| convergence | H5 production caller 已消费 shared owner；RN 等价 helper 按冻结矩阵登记，独立 RN 授权前状态为 `shared-core-ready/web-consumed/rn-frozen` |
+| acceptance | shared/H5 聚焦测试与类型检查通过；412px 已登录真实群聊健康、无溢出/console error，但 cache 无链接消息，真实点击/长按/复制视觉 data-gated，未发送测试消息 |

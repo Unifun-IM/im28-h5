@@ -33,6 +33,16 @@ export async function copyChatMessage(
 ): Promise<void> {
   // text 是与 RN 消息动作一致的纯文本 fallback。
   const text = getChatMessageCopyText(view).trim();
-  if (!text) throw new Error('该消息没有可复制的内容。');
-  await clipboard.writeText(text);
+  await copyChatMessageText(text, clipboard);
+}
+
+/** 复用聊天页唯一 clipboard 端口复制链接或其他已投影纯文本。 */
+export async function copyChatMessageText(
+  text: string,
+  clipboard: ChatMessageClipboardPort = browserChatMessageClipboard,
+): Promise<void> {
+  /** normalizedText 保持 RN 复制链接前后的首尾空白处理。 */
+  const normalizedText = text.trim();
+  if (!normalizedText) throw new Error('该消息没有可复制的内容。');
+  await clipboard.writeText(normalizedText);
 }

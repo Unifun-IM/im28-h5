@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import copyIconURL from '../../assets/rn/assets/icons/imm28/copy.dynamic.svg';
@@ -18,6 +18,8 @@ import './group-profile-page.css';
 export function GroupProfilePage() {
   // conversationID 来自可刷新 React Router path。
   const { conversationID = '' } = useParams();
+  // searchParams 支持群列表长按直接进入原有群名称编辑层。
+  const [searchParams] = useSearchParams();
   // navigate 负责返回群设置，不依赖 location state。
   const navigate = useNavigate();
   // runtime 是会话、群资料和群昵称 mutation 的唯一应用入口。
@@ -38,6 +40,8 @@ export function GroupProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   // avatarInputRef 触发浏览器平台文件选择器。
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  // autoOpenedGroupRef 保证同一群的 query 动作只触发一次。
+  const autoOpenedGroupRef = useRef('');
   // error 呈现真实读取、复制或更新失败。
   const [error, setError] = useState<string | null>(null);
   // notice 只在真实平台或 shared operation 成功后展示。
@@ -60,6 +64,23 @@ export function GroupProfilePage() {
   }, [conversationID, runtime, snapshot.userID]);
 
   useEffect(() => { void load(); }, [load]);
+
+  // editNameRequested 仅接受稳定 query 值，不从 history state 读取业务参数。
+  const editNameRequested = searchParams.get('edit') === 'name';
+  useEffect(() => {
+    if (!editNameRequested || !source || autoOpenedGroupRef.current === source.group.groupID) return;
+    autoOpenedGroupRef.current = source.group.groupID;
+    /** view 在自动打开时仍执行 shared capability 校验。 */
+    const view = buildGroupProfileView(source.conversation, source.group);
+    if (!view.canEdit) {
+      setError('仅群主或管理员可以编辑群资料');
+      return;
+    }
+    setDraft(view.name);
+    setError(null);
+    setNotice(null);
+    setEditorOpen(true);
+  }, [editNameRequested, source]);
 
   /** 打开编辑层时从 shared 最新群昵称初始化草稿。 */
   function openNameEditor(): void {

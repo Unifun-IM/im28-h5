@@ -25,6 +25,7 @@ interface ChatMessageListProps {
   readonly onRetryMessage: (clientMsgID: string) => Promise<void>;
   readonly onQuoteMessage: (message: Message) => void;
   readonly onCopyMessage: (view: ChatMessageView) => Promise<boolean>;
+  readonly onCopyLink: (url: string) => Promise<boolean>;
   readonly multiSelecting: boolean;
   readonly selectedMessageIDs: ReadonlySet<string>;
   readonly onToggleSelectedMessage: (message: Message) => void;
@@ -48,6 +49,7 @@ export function ChatMessageList({
   onRetryMessage,
   onQuoteMessage,
   onCopyMessage,
+  onCopyLink,
   multiSelecting,
   selectedMessageIDs,
   onToggleSelectedMessage,
@@ -115,6 +117,7 @@ export function ChatMessageList({
             }
             onQuoteMessage={onQuoteMessage}
             onCopyMessage={onCopyMessage}
+            onCopyLink={onCopyLink}
             onOpenQuotedMessage={handleOpenQuotedMessage}
             multiSelecting={multiSelecting}
             selected={selectedMessageIDs.has(entry.message.clientMsgID)}

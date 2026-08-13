@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   copyChatMessage,
+  copyChatMessageText,
   getChatMessageCopyText,
   type ChatMessageClipboardPort,
 } from './chat-message-copy.js';
@@ -39,5 +40,12 @@ describe('chat message copy', () => {
     await expect(
       copyChatMessage({ kind: 'text', text: '不可复制' }, clipboard),
     ).rejects.toBe(failure);
+  });
+
+  it('copies the original link text through the same browser port', async () => {
+    // writeText 证明 www 原文不会在复制时被改写为 HTTPS。
+    const writeText = vi.fn(async () => undefined);
+    await copyChatMessageText(' www.example.com ', { writeText });
+    expect(writeText).toHaveBeenCalledWith('www.example.com');
   });
 });

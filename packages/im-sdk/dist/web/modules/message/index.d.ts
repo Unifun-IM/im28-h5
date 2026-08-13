@@ -14,4 +14,8 @@ export type { PresetEmojiDescriptor, PresetEmojiDocument, PresetEmojiDocumentEdi
 export type { MessageHistoryOptions, MessageSearchOptions } from './repository.js';
 /** 导出未读 mention 查询边界。 */
 export type { LatestUnreadMentionOptions } from './unread-mention.js';
+/** 导出跨端一致的消息正文链接识别与打开地址规范化。 */
+export { normalizeIMMessageLinkURL, splitIMMessageTextLinks, } from './text-link.js';
+/** 导出消息正文链接片段契约。 */
+export type { IMMessageTextLinkSegment } from './text-link.js';
 //# sourceMappingURL=index.d.ts.map

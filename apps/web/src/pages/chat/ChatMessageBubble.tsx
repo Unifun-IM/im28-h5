@@ -44,6 +44,7 @@ interface ChatMessageBubbleProps {
   readonly quoteSource: ChatQuoteSourceView | null;
   readonly onQuoteMessage: (message: Message) => void;
   readonly onCopyMessage: (view: ChatMessageView) => Promise<boolean>;
+  readonly onCopyLink: (url: string) => Promise<boolean>;
   readonly onOpenQuotedMessage: (message: Message) => void;
   readonly multiSelecting: boolean;
   readonly selected: boolean;
@@ -66,6 +67,7 @@ export function ChatMessageBubble({
   quoteSource,
   onQuoteMessage,
   onCopyMessage,
+  onCopyLink,
   onOpenQuotedMessage,
   multiSelecting,
   selected,
@@ -142,6 +144,7 @@ export function ChatMessageBubble({
         mine={mine}
         quoteSource={quoteSource}
         onOpenQuotedMessage={onOpenQuotedMessage}
+        onCopyLink={onCopyLink}
       />
       <time>{formatChatMessageTimeText(message)}</time>
       {entry.groupPosition === 'single' || entry.groupPosition === 'last' ? (

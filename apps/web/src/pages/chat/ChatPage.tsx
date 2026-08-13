@@ -12,8 +12,6 @@ import { ChatMessageDeleteSheet } from './ChatMessageDeleteSheet.js';
 import { ChatPageFeedback } from './ChatPageFeedback.js';
 import { ChatPageFooter } from './ChatPageFooter.js';
 import { ChatGroupAnnouncementBanner } from './ChatGroupAnnouncementBanner.js';
-import { copyChatMessage } from './chat-message-copy.js';
-import type { ChatMessageView } from './chat-message-view.js';
 import { ChatPageState, readChatPageError, readInitialChatMessageWindow, upsertVisibleMessage } from './chat-page-helpers.js';
 import { useChatVoiceRecorder } from './useChatVoiceRecorder.js';
 import { useChatCustomEmojiActions } from './useChatCustomEmojiActions.js';
@@ -23,6 +21,7 @@ import { useChatMessageDeleteFlow } from './useChatMessageDeleteFlow.js';
 import { useChatMessageEditFlow } from './useChatMessageEditFlow.js';
 import { useChatMentionMembers } from './useChatMentionMembers.js';
 import { useChatGroupAnnouncement } from './useChatGroupAnnouncement.js';
+import { useChatMessageClipboard } from './useChatMessageClipboard.js';
 import { focusChatMessageRow, readFocusedChatMessageWindow } from './chat-message-focus.js';
 import './chat-page.css';
 /** RN chat detail 页面只编排 Web SDK cache/pull/send/realtime facade。 */
@@ -55,6 +54,8 @@ export function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   // notice 只呈现已完成的真实非消息 mutation 结果。
   const [notice, setNotice] = useState<string | null>(null);
+  // clipboardActions 统一消息与链接复制的真实浏览器结果反馈。
+  const clipboardActions = useChatMessageClipboard({ setError, setNotice });
   // cardPickerVisible 控制当前聊天唯一名片选择弹层。
   const [cardPickerVisible, setCardPickerVisible] = useState(false);
   // callPickerVisible 只控制单聊语音/视频二次选择层。
@@ -198,19 +199,6 @@ export function ChatPage() {
     });
     return () => cancelAnimationFrame(frame);
   }, [focusedMessageID, messages.length]);
-  /** 复制真实消息投影，并只在 clipboard 完成后展示成功反馈。 */
-  async function handleCopyMessage(view: ChatMessageView): Promise<boolean> {
-    setError(null);
-    setNotice(null);
-    try {
-      await copyChatMessage(view);
-      setNotice('复制成功');
-      return true;
-    } catch (cause) {
-      setError(readChatPageError(cause));
-      return false;
-    }
-  }
   /** 接收 SDK 已落库的 sending 实体，不在页面生成消息身份。 */
   function handleLocalSendingMessage(message: Message) {
     setMessages(current => upsertVisibleMessage(current, message));
@@ -311,7 +299,8 @@ export function ChatPage() {
               editFlow.cancelEdit();
               setQuoteMessage(message);
             }}
-            onCopyMessage={handleCopyMessage}
+            onCopyMessage={clipboardActions.copyMessage}
+            onCopyLink={clipboardActions.copyLink}
             multiSelecting={forwardFlow.multiSelecting}
             selectedMessageIDs={forwardFlow.selectedIDs}
             onToggleSelectedMessage={forwardFlow.toggleSelectedMessage}

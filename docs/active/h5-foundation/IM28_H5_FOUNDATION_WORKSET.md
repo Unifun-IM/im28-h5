@@ -1,6 +1,32 @@
 # IM28 H5 Foundation Workset
 
-## Latest Closed Slice W6.a6.20.14
+## Latest Closed Slice W6.a6.20.16
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-link-data-gated` |
+| goal | 对齐 RN 文本消息链接点击，以及长按/右键仅显示“打开/复制” |
+| shared owner | SDK `splitIMMessageTextLinks/normalizeIMMessageLinkURL` 唯一持有 HTTP(S)/www 边界、尾随标点与 www->HTTPS；RN caller 冻结 |
+| H5 owner | `PresetEmojiTextContent` 消费 shared 片段；`ChatMessageLinkAction` 只持有 500ms 手势/菜单；browser adapter 与已有 clipboard owner 执行真实 I/O |
+| verification floor | focused SDK 1 file/3 tests、H5 3 files/10 tests；full verify：466 assets、boundary、SDK/H5 typecheck、SDK Web 86 files/360 tests、1111-module build；已登录 412px 群聊页无溢出/console error，但真实 cache 无链接消息 |
+| not authorized | 发送测试链接消息、修改 RN business/caller、RN/desktop builds、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN page/action/state 与 H5 route/owner 交叉检索，跳过已完成但仍 acceptance-gated 的能力。
+
+## Previous Closed Slice W6.a6.20.15
+
+| field | value |
+| :--- | :--- |
+| status | `done-local/clean; browser-empty-data-gated` |
+| goal | 将 RN 我的群聊行长按菜单接到既有群名片、群资料和 shared lifecycle 主链 |
+| shared owner | `WebIMJoinedGroup.permissions` 决定动作；`conversations.openGroup` 解析 canonical Conversation；`groupLifecycle.leave(clearHistory)` 唯一持有普通退群业务；群主先进入 shared 群主转让 route |
+| H5 owner | `JoinedGroupRow` 持有 `300ms/8px` 手势；`JoinedGroupActionMenu` 持有气泡与确认展示；`JoinedGroupsPage` 只编排 SPA route/shared facade；群资料 `?edit=name` 复用既有 editor |
+| verification floor | focused 3 files/10 tests；final full verify：466 assets、SDK runtime boundary、SDK/H5 typecheck、SDK Web 85 files/357 tests、1106-module build；已登录浏览器群列表为空，交互视觉 data-gated |
+| not authorized | 制造群数据、真实分享/改名/退群/转让 mutation、RN consumer rewrite、RN/desktop builds、`build:package:desktop:web` |
+
+Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN page/action/state 与 H5 route/owner 交叉检索，跳过已完成但仍 acceptance-gated 的能力。
+
+## Previous Closed Slice W6.a6.20.14
 
 | field | value |
 | :--- | :--- |

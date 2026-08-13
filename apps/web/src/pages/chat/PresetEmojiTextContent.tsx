@@ -1,9 +1,11 @@
 import {
   getIllustratedPresetEmoji,
   resolvePresetEmojiEntities,
+  splitIMMessageTextLinks,
   type PresetEmojiEntity,
 } from '@im28/im-sdk/web';
 
+import { ChatMessageLinkAction } from './ChatMessageLinkAction.js';
 import { getIllustratedPresetEmojiAsset } from './illustrated-preset-emoji-assets.js';
 import './chat-preset-emoji.css';
 
@@ -25,6 +27,7 @@ interface PresetEmojiTextContentProps {
   readonly className?: string;
   readonly largeEmoji?: boolean;
   readonly singleLine?: boolean;
+  readonly onCopyLink?: (url: string) => Promise<boolean>;
 }
 
 /** 将合法实体分割成稳定 DOM 片段，资源缺失时保留 Unicode。 */
@@ -95,6 +98,7 @@ export function PresetEmojiTextContent({
   className = '',
   largeEmoji = false,
   singleLine = false,
+  onCopyLink,
 }: PresetEmojiTextContentProps) {
   /** segments 是当前组件唯一可信的渲染输入。 */
   const segments = buildPresetEmojiTextSegments(text, entities);
@@ -113,10 +117,43 @@ export function PresetEmojiTextContent({
             alt={segment.fallback}
             draggable="false"
           />
+        ) : onCopyLink ? (
+          <TextLinkSegments
+            key={segment.key}
+            text={segment.text}
+            keyPrefix={segment.key}
+            onCopyLink={onCopyLink}
+          />
         ) : (
           <span key={segment.key}>{segment.text}</span>
         ),
       )}
     </span>
+  );
+}
+
+/** 在普通文本区间内按 shared 规则渲染可交互链接。 */
+function TextLinkSegments({
+  text,
+  keyPrefix,
+  onCopyLink,
+}: {
+  readonly text: string;
+  readonly keyPrefix: string;
+  readonly onCopyLink: (url: string) => Promise<boolean>;
+}) {
+  /** segments 与 RN 共用同一 URL 边界和尾随标点规则。 */
+  const segments = splitIMMessageTextLinks(text);
+  return segments.map(segment =>
+    segment.kind === 'link' ? (
+      <ChatMessageLinkAction
+        key={`${keyPrefix}-${segment.key}`}
+        text={segment.text}
+        url={segment.url}
+        onCopy={onCopyLink}
+      />
+    ) : (
+      <span key={`${keyPrefix}-${segment.key}`}>{segment.text}</span>
+    ),
   );
 }

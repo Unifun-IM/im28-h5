@@ -8,4 +8,6 @@ export { normalizeMessageMentions } from './mention.js';
 export { assertMessageStatusTransition, canTransitionMessageStatus, isTerminalMessageStatus } from './status.js';
 export { ILLUSTRATED_PRESET_EMOJIS, ILLUSTRATED_PRESET_EMOJI_PACK_ID, getIllustratedPresetEmoji, } from './illustrated-preset-emojis.js';
 export { decodePresetEmojiID, encodePresetEmojiID, insertPresetEmojiAtSelection, normalizePresetEmojiEntities, projectPresetEmojiEntitiesToDisplayText, reconcilePresetEmojiEntitiesAfterTextChange, resolvePresetEmojiEntities, serializePresetEmojiEntities, trimPresetEmojiDocument, } from './preset-emoji.js';
+/** 导出跨端一致的消息正文链接识别与打开地址规范化。 */
+export { normalizeIMMessageLinkURL, splitIMMessageTextLinks, } from './text-link.js';
 //# sourceMappingURL=index.js.map

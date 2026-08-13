@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { resolveIMGroupMemberDisplayName, type WebIMGroupMember } from '@im28/im-sdk/web';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import closeIconURL from '../../assets/rn/assets/icons/imm28/xmark.dynamic.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
@@ -20,6 +20,8 @@ import './group-owner-transfer-page.css';
 export function GroupOwnerTransferPage() {
   /** conversationID 来自群管理子路由。 */
   const { conversationID = '' } = useParams();
+  /** searchParams 只允许选择群列表返回上下文，不携带业务身份。 */
+  const [searchParams] = useSearchParams();
   /** navigate 在转让成功后离开已失效的群管理权限页。 */
   const navigate = useNavigate();
   /** data 统一提供真实群权限、成员快照和 shared mutation。 */
@@ -32,6 +34,12 @@ export function GroupOwnerTransferPage() {
   const manageURL = `/conversations/${encodeURIComponent(conversationID)}/settings/manage`;
   /** settingsURL 是转让成功后返回的群设置页。 */
   const settingsURL = `/conversations/${encodeURIComponent(conversationID)}/settings`;
+  /** fromJoinedGroups 保留群列表发起动作的可恢复 UI 上下文。 */
+  const fromJoinedGroups = searchParams.get('from') === 'joined-groups';
+  /** closeURL 在群列表动作中避免跳入无关的群管理页面。 */
+  const closeURL = fromJoinedGroups ? '/contacts/groups' : manageURL;
+  /** successURL 转让成功后离开已经失效的群主管理范围。 */
+  const successURL = fromJoinedGroups ? '/contacts/groups' : settingsURL;
   /** entries 保持 SDK 候选资格并复刻 RN 角色/拼音分组。 */
   const entries = useMemo(
     () => buildGroupOwnerTransferEntries(data.members, data.currentUserID, keyword),
@@ -60,7 +68,7 @@ export function GroupOwnerTransferPage() {
     if (!selectedMember || data.submitting) return;
     /** success 仅表示 shared 已取得权威或本地可用收敛结果。 */
     const success = await data.transferOwner(selectedMember.userID);
-    if (success) navigate(settingsURL, { replace: true });
+    if (success) navigate(successURL, { replace: true });
   }
 
   if (data.restoring) return <GroupOwnerTransferState label="正在恢复群成员" />;
@@ -75,7 +83,7 @@ export function GroupOwnerTransferPage() {
     <main className="rn-group-owner-transfer-page" aria-busy={data.loading || data.submitting}>
       <section className="rn-group-owner-transfer-surface">
         <header className="rn-group-owner-transfer-header">
-          <Link to={manageURL} aria-label="关闭选择新群主"><RNAssetIcon assetURL={closeIconURL} /></Link>
+          <Link to={closeURL} aria-label="关闭选择新群主"><RNAssetIcon assetURL={closeIconURL} /></Link>
           <h1>选择新群主</h1><span />
         </header>
         {canTransferOwner ? <label className="rn-group-owner-transfer-search"><RNAssetIcon assetURL={searchIconURL} /><span className="sr-only">搜索成员</span><input type="search" value={keyword} placeholder="搜索" onChange={event => setKeyword(event.target.value)} /></label> : null}

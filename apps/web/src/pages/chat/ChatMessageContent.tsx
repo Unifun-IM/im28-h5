@@ -30,6 +30,7 @@ interface ChatMessageContentProps {
   readonly mine: boolean;
   readonly quoteSource: ChatQuoteSourceView | null;
   readonly onOpenQuotedMessage: (message: Message) => void;
+  readonly onCopyLink: (url: string) => Promise<boolean>;
 }
 
 /** 根据展示模型呈现文本、媒体、文件、名片和表情内容。 */
@@ -39,6 +40,7 @@ export function ChatMessageContent({
   mine,
   quoteSource,
   onOpenQuotedMessage,
+  onCopyLink,
 }: ChatMessageContentProps) {
   // media 提供当前聊天页唯一的预览和音频 owner。
   const media = useChatMediaInteraction();
@@ -201,7 +203,13 @@ export function ChatMessageContent({
     const largeEmoji = isSinglePresetEmojiText(view.text, view.entities);
     return (
       <>
-        <PresetEmojiTextContent text={view.text} entities={view.entities} className="rn-chat-message-text" largeEmoji={largeEmoji} />
+        <PresetEmojiTextContent
+          text={view.text}
+          entities={view.entities}
+          className="rn-chat-message-text"
+          largeEmoji={largeEmoji}
+          onCopyLink={onCopyLink}
+        />
       </>
     );
   }

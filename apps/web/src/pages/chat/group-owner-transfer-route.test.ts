@@ -25,6 +25,8 @@ describe('group owner transfer route contract', () => {
 
   it('提交前有明确确认且成功后退出群主管理范围', () => {
     expect(ownerTransferSource).toContain('ariaLabel="确认选择新群主"');
-    expect(ownerTransferSource).toContain('navigate(settingsURL, { replace: true })');
+    expect(ownerTransferSource).toContain("searchParams.get('from') === 'joined-groups'");
+    expect(ownerTransferSource).toContain("fromJoinedGroups ? '/contacts/groups' : settingsURL");
+    expect(ownerTransferSource).toContain('navigate(successURL, { replace: true })');
   });
 });

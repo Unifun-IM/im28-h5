@@ -1,8 +1,31 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a6.20.14 群主转让已迁为独立 React Router SPA 页面`
+- current_step: `W6.a6.20.16 聊天文本链接投影与打开/复制交互已对齐 RN`
 - next_step: `执行 W6-rn-parity-residual-inventory-refresh；按 RN page/action/state 与 H5 route/owner 重新检索剩余缺口`
+
+## W6.a6.20.16 Chat Text Link Actions Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| shared projection | `shared-core-ready/web-consumed/rn-frozen` | SDK 统一 HTTP(S)/www 分段、RN 尾随标点规则和 www->HTTPS；core/rn/web/desktop 显式导出，H5 生产组件实际消费 | RN 现有 `splitMessageTextSegments/normalizeBrowserUrl` 保持冻结，未宣称 convergence |
+| H5 interaction | `done-local` | 普通点击打开隔离新标签；500ms 长按/右键只显示“打开/复制”；复制保留 URL 原文；链接 pointer/context 事件阻止外层普通消息菜单 | 真实移动端长按、弹窗拦截和 Safari/Firefox |
+| rich text compatibility | `pass-local` | 链接在预设表情 entity 之间的普通文本区间投影；无 copy owner 的 composer/摘要保持纯文本；DOM contract 锁定可访问标签 | 当前真实 cache 无链接消息，未取得运行态链接 DOM/菜单视觉 |
+| structure | `clean` | shared 纯函数、H5 browser port、链接组件与 clipboard hook 分层；无第二 URL parser、页面 Gateway/SQL、fake-success、TODO/debug log；新增文件均 `<300` 行 | `ChatPage` 为既有 383 行页面，未在本片扩大 owner |
+| verification | `green-local/data-gated` | SDK focused 3/3、H5 focused 10/10；full verify 含 466 assets、runtime boundary、SDK/H5 typecheck、SDK Web 86 files/360 tests、1111-module build；412px 真实群聊 `scrollWidth=clientWidth=412`、console warning/error=0 | build 仅有既有 large-chunk warning；真实链接运行态 data-gated |
+| freeze | `pass` | `im28-phone/src/**`、测试、App/native 零改动；仅构建/同步 Web package | RN/desktop build 与 `build:package:desktop:web` 未修改或执行 |
+
+## W6.a6.20.15 Joined Group Row Actions Closeout (2026-08-13)
+
+| capability | result | proven scope | still gated |
+| :--- | :--- | :--- | :--- |
+| RN interaction parity | `done-local` | 群行支持 `300ms` 长按、移动超过 `8px` 取消、右键等价入口；菜单顺序为分享群名片、退出群聊、管理角色修改群名称，位置按动作数量翻转并限制在视口 | 当前真实账号返回空群列表，非空菜单视觉和触屏实机手势未取得运行态证据 |
+| shared owner | `shared-core-ready/web-consumed/rn-frozen` | 菜单只消费 `WebIMJoinedGroup.permissions`；分享/改名先调用 `conversations.openGroup` 获得 canonical Conversation；普通退群只调用 `groupLifecycle.leave({clearHistory})`，不复制 Gateway/SQL/角色数字 | RN `GroupRowActionMenu`、owner auto-transfer/quit 业务保持冻结；未宣称双端 convergence |
+| owner quit semantics | `explicit-two-step` | 群主点击退出时进入既有 `/owner-transfer?from=joined-groups`，取消或成功均回 `/contacts/groups`；不隐式串联第二次 destructive leave | 转让后需由用户重新长按并确认退出；真实转让、权限刷新、再退出和第二账号回读未授权 |
+| route reuse | `done-local` | 分享复用 `/settings/share-group-card`；改名复用 `/settings/profile?edit=name` 并继续执行原 capability 校验和 `groups.updateName`；没有新增业务 route owner | 真实分享、改名 mutation 未执行 |
+| structure | `clean` | 纯 view helper、菜单/modal、群行手势和页面 orchestration 各自分层；无页面 Gateway/SQL/OpenIM、role magic、fake-success、TODO/debug log，触及文件均 `<300` 行 | 自动 convergence script 不存在 |
+| verification | `green-local/data-gated` | focused 3 files/10 tests；full verify 包含 466 assets、runtime boundary、SDK/H5 typecheck、SDK Web 85 files/357 tests、1106-module build；diff-check 通过 | build 仅有既有 large-chunk warning；浏览器只证明已登录空群态 |
+| freeze | `pass` | `im28-phone` clean；SDK 业务源码未改，只更新 consumer matrix；verify 仅运行 `build:web/sync:web` | RN/desktop build 与 `build:package:desktop:web` 未执行 |
 
 ## W6.a6.20.14 Group Owner Transfer Route Closeout (2026-08-13)
 

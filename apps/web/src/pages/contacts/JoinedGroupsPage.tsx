@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { WebIMJoinedGroup } from '@im28/im-sdk/web';
+import type { Conversation, WebIMJoinedGroup } from '@im28/im-sdk/web';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
@@ -7,10 +7,22 @@ import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { buildGroupCardShareRoute } from '../chat/group-card-share-route.js';
+import { JoinedGroupActionMenu, JoinedGroupQuitModal } from './JoinedGroupActionMenu.js';
 import { JoinedGroupRow } from './JoinedGroupRow.js';
 import {
   filterJoinedGroups,
 } from './joined-group-view.js';
+import {
+  buildJoinedGroupOwnerTransferRoute,
+  buildJoinedGroupProfileRoute,
+  getJoinedGroupActionMenuState,
+  getJoinedGroupQuitMode,
+  type JoinedGroupActionKey,
+  type JoinedGroupActionMenuState,
+  type JoinedGroupActionPoint,
+  type JoinedGroupQuitMode,
+} from './joined-group-actions-view.js';
 import './joined-groups-page.css';
 
 /** RN 我的群聊页面使用 cache-first groups facade 和真实会话 facade。 */
@@ -27,6 +39,16 @@ export function JoinedGroupsPage() {
   const [loading, setLoading] = useState(false);
   // openingGroupID 阻止重复打开群会话。
   const [openingGroupID, setOpeningGroupID] = useState('');
+  // actionMenu 保存当前长按群和 RN 气泡位置。
+  const [actionMenu, setActionMenu] = useState<JoinedGroupActionMenuState | null>(null);
+  // quitTarget 保存等待退出确认的真实群快照。
+  const [quitTarget, setQuitTarget] = useState<WebIMJoinedGroup | null>(null);
+  // quitMode 只消费 shared lifecycle capability。
+  const [quitMode, setQuitMode] = useState<JoinedGroupQuitMode | null>(null);
+  // lifecycleSubmitting 阻止破坏性群动作重复提交。
+  const [lifecycleSubmitting, setLifecycleSubmitting] = useState(false);
+  // lifecycleBlockedGroupID 阻止远端已成功动作被页面重放。
+  const [lifecycleBlockedGroupID, setLifecycleBlockedGroupID] = useState('');
   // error 显示真实数据库、Gateway 或会话失败。
   const [error, setError] = useState<string | null>(null);
 
@@ -53,9 +75,11 @@ export function JoinedGroupsPage() {
 
   useEffect(() => { void loadGroups(); }, [loadGroups]);
 
-  /** 通过 shared 会话 facade 打开规范群会话后进入聊天页。 */
-  const openGroup = useCallback(async (group: WebIMJoinedGroup): Promise<void> => {
-    if (!runtime || openingGroupID) return;
+  /** 通过 shared 会话 facade 解析规范群会话身份。 */
+  const resolveGroupConversation = useCallback(async (
+    group: WebIMJoinedGroup,
+  ): Promise<Conversation | null> => {
+    if (!runtime || openingGroupID) return null;
     setOpeningGroupID(group.groupID);
     setError(null);
     try {
@@ -64,13 +88,86 @@ export function JoinedGroupsPage() {
         groupID: group.groupID,
         conversationID: group.conversationID,
       });
-      navigate(`/conversations/${encodeURIComponent(conversation.conversationID)}`);
+      return conversation;
     } catch (cause) {
       setError(readJoinedGroupError(cause, '打开群聊失败'));
+      return null;
     } finally {
       setOpeningGroupID('');
     }
-  }, [navigate, openingGroupID, runtime]);
+  }, [openingGroupID, runtime]);
+
+  /** 解析 canonical Conversation 后进入聊天页。 */
+  const openGroup = useCallback(async (group: WebIMJoinedGroup): Promise<void> => {
+    /** conversation 只能来自 shared openGroup facade。 */
+    const conversation = await resolveGroupConversation(group);
+    if (conversation) navigate(`/conversations/${encodeURIComponent(conversation.conversationID)}`);
+  }, [navigate, resolveGroupConversation]);
+
+  /** 按长按点和 shared capability 打开群列表动作气泡。 */
+  function openGroupActions(group: WebIMJoinedGroup, point: JoinedGroupActionPoint): void {
+    setActionMenu(getJoinedGroupActionMenuState({
+      group,
+      point,
+      viewportWidth: globalThis.innerWidth,
+      viewportHeight: globalThis.innerHeight,
+    }));
+  }
+
+  /** 菜单动作只进入现有 SPA 路由或 shared lifecycle 前置确认。 */
+  async function handleGroupAction(action: JoinedGroupActionKey): Promise<void> {
+    /** group 在关闭菜单前冻结，避免异步期间目标漂移。 */
+    const group = actionMenu?.group;
+    setActionMenu(null);
+    if (!group) return;
+    if (action === 'quit') {
+      setQuitTarget(group);
+      setQuitMode(getJoinedGroupQuitMode(group));
+      return;
+    }
+    /** conversation 为分享和资料路由提供 canonical 身份。 */
+    const conversation = await resolveGroupConversation(group);
+    if (!conversation) return;
+    navigate(action === 'share-card'
+      ? buildGroupCardShareRoute(conversation.conversationID)
+      : buildJoinedGroupProfileRoute(conversation.conversationID, true));
+  }
+
+  /** 普通成员确认后仅调用 shared groupLifecycle.leave。 */
+  async function leaveGroup(clearHistory: boolean): Promise<void> {
+    if (!runtime || !quitTarget || lifecycleSubmitting || lifecycleBlockedGroupID === quitTarget.groupID) return;
+    setLifecycleSubmitting(true);
+    setError(null);
+    try {
+      /** result 区分本地收敛和远端成功但本地待同步。 */
+      const result = await runtime.getSync().groupLifecycle.leave({
+        groupID: quitTarget.groupID,
+        clearHistory,
+      });
+      setQuitMode(null);
+      if (result.cacheState === 'remote-only') {
+        setLifecycleBlockedGroupID(quitTarget.groupID);
+        setError('退群已在服务端完成，本地缓存同步失败；为避免重复操作，请刷新群列表');
+        return;
+      }
+      setGroups(current => current.filter(group => group.groupID !== quitTarget.groupID));
+      setQuitTarget(null);
+    } catch (cause) {
+      setError(readJoinedGroupError(cause, '退出群聊失败'));
+    } finally {
+      setLifecycleSubmitting(false);
+    }
+  }
+
+  /** 群主退出入口解析真实会话后进入既有群主转让页。 */
+  async function transferOwnerBeforeLeave(): Promise<void> {
+    if (!quitTarget) return;
+    /** conversation 防止群 ID 被错误拼成会话路由。 */
+    const conversation = await resolveGroupConversation(quitTarget);
+    if (!conversation) return;
+    setQuitMode(null);
+    navigate(buildJoinedGroupOwnerTransferRoute(conversation.conversationID));
+  }
 
   // visibleGroups 保持 SDK 服务端顺序并应用本地搜索。
   const visibleGroups = useMemo(
@@ -122,6 +219,7 @@ export function JoinedGroupsPage() {
               group={group}
               opening={openingGroupID === group.groupID}
               onOpen={() => void openGroup(group)}
+              onOpenActions={openGroupActions}
             />
           ))}
           {loading && groups.length === 0 ? (
@@ -136,6 +234,25 @@ export function JoinedGroupsPage() {
           ) : null}
         </section>
       </section>
+      <JoinedGroupActionMenu
+        menu={actionMenu}
+        pending={Boolean(openingGroupID) || lifecycleSubmitting}
+        onClose={() => setActionMenu(null)}
+        onAction={action => { void handleGroupAction(action); }}
+      />
+      <JoinedGroupQuitModal
+        groupName={quitTarget?.name ?? ''}
+        mode={quitMode}
+        submitting={lifecycleSubmitting}
+        onCancel={() => {
+          if (!lifecycleSubmitting) {
+            setQuitMode(null);
+            setQuitTarget(null);
+          }
+        }}
+        onLeave={clearHistory => { void leaveGroup(clearHistory); }}
+        onTransferOwner={() => { void transferOwnerBeforeLeave(); }}
+      />
     </main>
   );
 }

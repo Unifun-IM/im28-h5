@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { PresetEmojiEntity } from '@im28/im-sdk/web';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 import {
   buildPresetEmojiTextSegments,
   isSinglePresetEmojiText,
+  PresetEmojiTextContent,
 } from './PresetEmojiTextContent.js';
 
 /** 构造一个指向内置 sunglasses 资源的合法实体。 */
@@ -58,5 +61,20 @@ describe('preset emoji text projection', () => {
   it('detects only a fully covered renderable entity as large emoji', () => {
     expect(isSinglePresetEmojiText('😎', [createSunglassesEntity(0)])).toBe(true);
     expect(isSinglePresetEmojiText(`A😎`, [createSunglassesEntity(1)])).toBe(false);
+  });
+
+  /** 验证气泡模式消费 shared 链接片段，其他文本保持原样。 */
+  it('renders RN-compatible link actions only when a copy owner is provided', () => {
+    /** markup 是生产富文本组件的静态 DOM contract。 */
+    const markup = renderToStaticMarkup(
+      createElement(PresetEmojiTextContent, {
+        text: '前 www.example.com 后',
+        onCopyLink: async () => true,
+      }),
+    );
+    expect(markup).toContain('aria-label="打开链接 www.example.com"');
+    expect(markup).toContain('>www.example.com</button>');
+    expect(markup).toContain('前 ');
+    expect(markup).toContain(' 后');
   });
 });
