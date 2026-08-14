@@ -1,5 +1,7 @@
 import type { Conversation, WebIMConversationSync } from '@im28/im-sdk/web';
 
+import { getConversationTitle } from '../conversations/conversation-list-view.js';
+
 /** H5 清空 scope 直接从共享 facade 推导，禁止复制协议枚举。 */
 export type ChatClearHistoryScope = Parameters<
   WebIMConversationSync['clear']
@@ -20,7 +22,7 @@ export function buildChatClearHistorySheetView(
   canClearForAll: boolean,
 ): ChatClearHistorySheetView {
   /** title 只用于单聊确认文案，缺失时保持稳定回退。 */
-  const title = conversation.name?.trim() || conversation.targetID.trim() || '该会话';
+  const title = getConversationTitle(conversation);
   if (conversation.type === 'group') {
     return {
       hint: '你确定要清空当前群聊记录 ?',

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { ForwardOrigin } from '@im28/im-sdk/web';
+import { formatIMUserDisplayName, type ForwardOrigin } from '@im28/im-sdk/web';
 
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import './chat-forward.css';
@@ -12,8 +12,9 @@ interface ChatForwardOriginProps {
 
 /** 对齐 RN 气泡内“转发自 + 头像 + 名称”结构。 */
 export function ChatForwardOrigin({ origin, mine }: ChatForwardOriginProps) {
-  // displayName 优先服务端来源昵称并以稳定用户 ID 回退。
-  const displayName = origin.name?.trim() || origin.userID || '未知用户';
+  // displayName 优先服务端来源昵称并以 RN 匿名用户 ID 回退。
+  const displayName = origin.name?.trim() ||
+    formatIMUserDisplayName(origin.userID) || '未知用户';
   // avatarStyle 仅在图片不可用时呈现稳定 RN fallback。
   const avatarStyle = {
     '--forward-origin-avatar-gradient': getRNAvatarGradient(origin.userID),

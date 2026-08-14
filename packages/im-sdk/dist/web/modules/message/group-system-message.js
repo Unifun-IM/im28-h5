@@ -2,6 +2,15 @@
 const GROUP_DESCRIPTION_CHANGED_EVENT = 'group_description_changed';
 /** 群发言频率更新事件的稳定协议标识。 */
 const GROUP_SEND_FREQUENCY_CHANGED_EVENT = 'group_send_frequency_changed';
+/** RN/Web 共用的群系统消息 contentType 集合。 */
+const IM_GROUP_SYSTEM_MESSAGE_TYPES = new Set([
+    1501, 1502, 1504, 1507, 1508, 1509, 1510, 1511, 1512, 1513, 1514,
+    1515, 1519, 1520, 1521, 1701,
+]);
+/** 判断消息类型是否属于跨端统一的群系统消息集合。 */
+export function isIMGroupSystemMessageType(contentType) {
+    return IM_GROUP_SYSTEM_MESSAGE_TYPES.has(contentType);
+}
 /** 从 canonical、Gateway 或 RN 兼容消息读取结构化群系统文案。 */
 export function parseIMGroupSystemMessagePresentation(value, currentUserID = '') {
     /** message 只接受单条普通消息记录。 */

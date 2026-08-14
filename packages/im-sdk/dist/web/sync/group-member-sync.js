@@ -1,4 +1,5 @@
 import { GroupMemberRepository, GroupRepository, } from '@im28/im-sdk/core';
+import { formatIMUserDisplayName } from '../modules/user/display-name.js';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { refreshGroupMemberUserProfiles, resolveGroupMemberDisplayProfiles, } from './group-member-profile.js';
 import { updateSelfGroupNicknameRecord } from './group-member-nickname.js';
@@ -131,7 +132,7 @@ async function mapCachedMembers(database, members) {
         .map(member => {
         /** profile 总是由相同成员集合生成。 */
         const profile = profiles.get(member.userID) ?? {
-            nickname: member.userID,
+            nickname: formatIMUserDisplayName(member.userID),
             avatarURL: '',
         };
         return {

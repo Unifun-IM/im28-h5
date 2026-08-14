@@ -1,5 +1,7 @@
 import {
+  formatIMUserDisplayName,
   getIMFriendAddedMessageText,
+  isIMGroupSystemMessageType,
   parseIMCallMessagePresentation,
   parseIMGroupSystemMessagePresentation,
   type IMCallMessageMediaType,
@@ -39,12 +41,6 @@ export interface ChatMessageView {
   readonly callUnanswered?: boolean;
   readonly entities?: readonly PresetEmojiEntity[];
 }
-
-/** RN 居中呈现的群系统消息类型集合。 */
-const GROUP_SYSTEM_MESSAGE_TYPES = new Set([
-  1501, 1502, 1504, 1507, 1508, 1509, 1510, 1511, 1512, 1513, 1514,
-  1515, 1519, 1520, 1521, 1701,
-]);
 
 /** 缺少完整成员资料时仍可稳定展示的 RN 系统文案。 */
 const SYSTEM_MESSAGE_FALLBACKS: Readonly<Record<number, string>> = {
@@ -99,7 +95,7 @@ export function getChatMessageView(
     };
   }
   if (
-    isGroup && GROUP_SYSTEM_MESSAGE_TYPES.has(message.contentType)
+    isGroup && isIMGroupSystemMessageType(message.contentType)
   ) {
     return {
       kind: 'system',
@@ -258,7 +254,8 @@ function readCardMessageView(
   const user = asRecord(card.user);
   return {
     kind: 'card',
-    text: readString(user.nickname) || readString(user.user_id) || '个人名片',
+    text: readString(user.nickname) ||
+      formatIMUserDisplayName(readString(user.user_id)) || '个人名片',
     detail: readString(user.user_id),
     mediaURL: readString(user.avatar_url),
   };

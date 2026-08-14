@@ -10,6 +10,7 @@ import {
   getRNAvatarGradient,
   getRNAvatarInitial,
 } from '../../components/rn-avatar-view.js';
+import { getConversationTitle } from '../conversations/conversation-list-view.js';
 
 /** RN chat detail header 只消费会话缓存中已存在的身份字段。 */
 interface ChatHeaderProps {
@@ -18,9 +19,8 @@ interface ChatHeaderProps {
 
 /** 呈现 RN 头像、标题、静音状态和 React Router 返回入口。 */
 export function ChatHeader({ conversation }: ChatHeaderProps) {
-  // title 对齐 RN name -> target ID -> 会话的回退顺序。
-  const title =
-    conversation?.name?.trim() || conversation?.targetID || '会话';
+  // title 复用单聊匿名显示和群聊标题的唯一页面投影。
+  const title = conversation ? getConversationTitle(conversation) : '会话';
   // identity 为 fallback 头像提供跨刷新稳定的颜色键。
   const identity = conversation?.targetID || title;
   // avatarStyle 复用 RN FNV-1a 渐变算法。

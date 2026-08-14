@@ -1,5 +1,6 @@
 import { FriendshipRepository, GroupRepository, } from '@im28/im-sdk/core';
 import { statement } from '../db/database.js';
+import { normalizeIMUserNickname } from '../modules/user/display-name.js';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
 import { openAndCacheWebIMDirectConversation } from './peer-profile-sync.js';
@@ -234,7 +235,7 @@ function mapContactFriendProfile(friend, fallbackUserID) {
     return {
         userID,
         remark: friend.alias?.trim() || friend.remark?.trim() || '',
-        nickname: user?.nickname?.trim() || user?.account?.trim() || userID,
+        nickname: normalizeIMUserNickname(user?.nickname, userID),
         avatarURL: user?.avatar_url?.trim() ?? '',
         isStarred: friend.is_starred === true,
         raw: friend,

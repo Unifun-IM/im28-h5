@@ -13,6 +13,8 @@ export interface WebIMConversationSyncOptions {
 export interface WebIMConversationListItem {
     readonly conversation: Conversation;
     readonly latestMessage: Message | null;
+    /** latestSenderDisplayName 为群最新消息提供 RN 优先级的缓存展示名。 */
+    readonly latestSenderDisplayName?: string;
     readonly unreadMention: WebIMUnreadMentionSnapshot | null;
 }
 /** 页面可消费的 cache-first 会话能力。 */

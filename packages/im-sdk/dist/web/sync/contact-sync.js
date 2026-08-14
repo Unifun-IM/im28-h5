@@ -1,4 +1,5 @@
 import { FriendshipRepository, UserRepository, } from '@im28/im-sdk/core';
+import { formatIMUserDisplayName, normalizeIMUserNickname, } from '../modules/user/display-name.js';
 import { createWebIMSyncError } from './sync-context.js';
 import { replaceWebIMContactCache } from './contact-cache.js';
 import { createIMContactActionsSync, } from './contact-actions.js';
@@ -146,7 +147,7 @@ function normalizeWebIMContactSearchUser(user) {
     if (!userID)
         return null;
     // nickname 保留远端原始昵称供匹配摘要使用。
-    const nickname = user.nickname?.trim() ?? '';
+    const nickname = normalizeIMUserNickname(user.nickname, userID);
     // account 是账号搜索命中的可见候选字段。
     const account = user.account?.trim() ?? '';
     // phone 保留服务端已允许公开的手机号字段。
@@ -155,7 +156,7 @@ function normalizeWebIMContactSearchUser(user) {
     const email = user.email?.trim() ?? '';
     return {
         userID,
-        displayName: nickname || account || phone || email || userID,
+        displayName: nickname || formatIMUserDisplayName(userID),
         nickname,
         account,
         phone,
@@ -176,10 +177,9 @@ function normalizeWebIMContact(friend) {
     // remark 对齐 RN alias 优先显示语义。
     const remark = friend.alias?.trim() ?? '';
     // nickname 保留联系人原始昵称供副标题使用。
-    const nickname = (user?.nickname ?? '').trim();
-    // displayName 按 RN remark -> nickname -> account -> phone -> ID 回退。
-    const displayName = remark || nickname || user?.account?.trim() ||
-        user?.phone?.trim() || userID;
+    const nickname = normalizeIMUserNickname(user?.nickname, userID);
+    // displayName 按 RN remark -> nickname -> im-ID 规则回退。
+    const displayName = remark || nickname || formatIMUserDisplayName(userID);
     /** allowGroupInvite 保留服务端缺失与明确 false 的差异。 */
     const allowGroupInvite = readBoolean(friend.permission?.allow_group_invite);
     return {
@@ -207,8 +207,8 @@ function mapCachedWebIMContact(userID, friendshipPayload, user) {
     /** remark 延续 RN 备注优先规则。 */
     const remark = readString(friendship.alias);
     /** nickname 优先使用 users 表规范字段，再回退 raw 快照。 */
-    const nickname = user?.nickname?.trim() || readString(userPayload.nickname) ||
-        readString(nestedUser.nickname);
+    const nickname = normalizeIMUserNickname(user?.nickname?.trim() || readString(userPayload.nickname) ||
+        readString(nestedUser.nickname), userID);
     /** account 保留可见账号字段供搜索命中摘要使用。 */
     const account = readString(userPayload.account) || readString(nestedUser.account);
     /** phone 保留服务端允许缓存的手机号字段。 */
@@ -219,7 +219,7 @@ function mapCachedWebIMContact(userID, friendshipPayload, user) {
     const allowGroupInvite = readBoolean(asRecord(friendship.permission).allow_group_invite);
     return {
         userID,
-        displayName: remark || nickname || account || phone || userID,
+        displayName: remark || nickname || formatIMUserDisplayName(userID),
         nickname,
         remark,
         account,

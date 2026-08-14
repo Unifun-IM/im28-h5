@@ -6,6 +6,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import emptyChatIconURL from '../../assets/rn/assets/icons/empty-chat.svg';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
+import { HomeActionMenu } from '../../components/home-actions/HomeActionMenu.js';
 import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
@@ -14,11 +15,13 @@ import { useWebIMRuntime } from '../../runtime/index.js';
 import { ConversationActionMenu } from './ConversationActionMenu.js';
 import { ConversationDeleteSheet } from './ConversationDeleteSheet.js';
 import { ConversationRow } from './ConversationRow.js';
+import { getConversationPresenceUserID } from './conversation-presence-view.js';
 import {
   filterArchivedConversationItems,
   mergeArchivedConversationItems,
 } from './conversation-archive-view.js';
 import { useConversationActions } from './useConversationActions.js';
+import { useConversationPresence } from './useConversationPresence.js';
 import './conversations-page.css';
 import './archived-conversations-page.css';
 
@@ -47,6 +50,15 @@ export function ArchivedConversationsPage() {
   const [hasMore, setHasMore] = useState(true);
   /** error 展示真实同步或缓存错误。 */
   const [error, setError] = useState<string | null>(null);
+  /** 归档行延续 RN 与主列表相同的单聊在线状态。 */
+  const {
+    onlineByID,
+    refresh: refreshPresence,
+  } = useConversationPresence({
+    runtime,
+    accountUserID: snapshot.userID,
+    items,
+  });
 
   /** readFirstPage 从当前账号 SQLite 重置归档首屏。 */
   const readFirstPage = useCallback(async () => {
@@ -86,12 +98,13 @@ export function ArchivedConversationsPage() {
     try {
       await sync.conversations.syncArchived();
       await readFirstPage();
+      await refreshPresence();
     } catch (cause) {
       setError(readArchivePageError(cause));
     } finally {
       setRefreshing(false);
     }
-  }, [readFirstPage, refreshing, snapshot.userID, sync]);
+  }, [readFirstPage, refreshPresence, refreshing, snapshot.userID, sync]);
 
   /** loadMore 只追加下一页 SQLite，不触发网络。 */
   const loadMore = useCallback(async () => {
@@ -185,7 +198,7 @@ export function ArchivedConversationsPage() {
               <RNAssetIcon assetURL={backIconURL} />
             </Link>
             <h1>归档会话</h1>
-            <span className="rn-conversation-header-side" aria-hidden="true" />
+            <div className="rn-conversation-header-side"><HomeActionMenu /></div>
           </PageNavbar>
           <label className="rn-conversation-search">
             <RNAssetIcon assetURL={searchIconURL} />
@@ -212,6 +225,9 @@ export function ArchivedConversationsPage() {
                 key={item.conversation.conversationID}
                 item={item}
                 currentUserID={snapshot.userID ?? ''}
+                online={Boolean(onlineByID[
+                  getConversationPresenceUserID(item.conversation)
+                ])}
                 onOpenActions={actions.openActionMenu}
               />
             ))

@@ -1,16 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { WebIMPublicGroup } from '@im28/im-sdk/web';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  DEFAULT_IM_GROUP_APPLICATION_MESSAGE,
+  IM_GROUP_APPLICATION_MESSAGE_MAX_LENGTH,
+  buildIMSelfGroupApplicationMessage,
+  type WebIMPublicGroup,
+} from '@im28/im-sdk/web';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
-import { readGroupApplyRouteState } from '../groups/group-search-route.js';
+import { buildConversationRoute } from '../conversations/conversation-route.js';
+import {
+  createGroupApplyReturnState,
+  readGroupApplyRouteState,
+} from '../groups/group-search-route.js';
+import { resolveApplicationMessageUpdate } from '../contacts/application-message-view.js';
 import './qr-code-page.css';
-
-/** RN 申请加入群缺省验证消息。 */
-const DEFAULT_GROUP_APPLICATION_MESSAGE = '申请加入群聊';
 
 /** 群二维码识别后的公开资料与真实入群申请页。 */
 export default function GroupQRCodeApplyPage() {
@@ -29,13 +36,13 @@ export default function GroupQRCodeApplyPage() {
   /** group 保存 public/get 的真实群公开资料。 */
   const [group, setGroup] = useState<WebIMPublicGroup | null>(null);
   /** message 保存用户可编辑的入群验证内容。 */
-  const [message, setMessage] = useState(DEFAULT_GROUP_APPLICATION_MESSAGE);
+  const [message, setMessage] = useState(DEFAULT_IM_GROUP_APPLICATION_MESSAGE);
+  /** defaultMessageRef 识别本人资料返回前用户是否已经编辑。 */
+  const defaultMessageRef = useRef(DEFAULT_IM_GROUP_APPLICATION_MESSAGE);
   /** loading 覆盖群资料读取。 */
   const [loading, setLoading] = useState(false);
   /** submitting 阻止重复提交入群申请。 */
   const [submitting, setSubmitting] = useState(false);
-  /** submitted 只在 Gateway 成功后置为真。 */
-  const [submitted, setSubmitted] = useState(false);
   /** error 公开真实读取或 mutation 失败。 */
   const [error, setError] = useState<string | null>(null);
 
@@ -55,9 +62,37 @@ export default function GroupQRCodeApplyPage() {
 
   useEffect(() => { void loadGroup(); }, [loadGroup]);
 
+  useEffect(() => {
+    if (!runtime || !snapshot.userID) return undefined;
+    /** active 阻止卸载或切号后的旧资料结果覆盖新页面草稿。 */
+    let active = true;
+    /** loadSelfApplicationMessage 用 shared 规则更新仍未编辑的缺省验证语。 */
+    const loadSelfApplicationMessage = async (): Promise<void> => {
+      try {
+        /** selfProfile 只用于生成验证语，不参与群关系判断。 */
+        const selfProfile = await runtime.getSync().profile.getCurrent();
+        if (!active) return;
+        /** nextDefaultMessage 由跨端 shared owner 统一生成。 */
+        const nextDefaultMessage = buildIMSelfGroupApplicationMessage(selfProfile.nickname);
+        /** previousDefaultMessage 是异步读取开始前的页面缺省基线。 */
+        const previousDefaultMessage = defaultMessageRef.current;
+        defaultMessageRef.current = nextDefaultMessage;
+        setMessage(currentMessage => resolveApplicationMessageUpdate({
+          currentMessage,
+          previousDefaultMessage,
+          nextDefaultMessage,
+        }).message);
+      } catch {
+        // 本人资料增强失败时保留稳定缺省文案，不阻断群资料和申请操作。
+      }
+    };
+    void loadSelfApplicationMessage();
+    return () => { active = false; };
+  }, [runtime, snapshot.userID]);
+
   /** 提交 qrcode 来源的真实群申请，成功前不改变完成态。 */
   const submitApplication = useCallback(async (): Promise<void> => {
-    if (!runtime || !group || submitting || submitted) return;
+    if (!runtime || !group || submitting) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -66,13 +101,16 @@ export default function GroupQRCodeApplyPage() {
         message,
         sourceType: routeState.sourceType,
       });
-      setSubmitted(true);
+      navigate(routeState.backHref, {
+        replace: true,
+        state: createGroupApplyReturnState(routeState),
+      });
     } catch (cause) {
       setError(readGroupApplyError(cause, '入群申请发送失败'));
     } finally {
       setSubmitting(false);
     }
-  }, [group, message, routeState.sourceType, runtime, submitted, submitting]);
+  }, [group, message, navigate, routeState, runtime, submitting]);
 
   /** 已入群账号进入现有群会话，不重复提交申请。 */
   const openJoinedGroup = useCallback(async (): Promise<void> => {
@@ -80,34 +118,35 @@ export default function GroupQRCodeApplyPage() {
     setLoading(true);
     setError(null);
     try {
-      /** cachedGroups 优先避免无意义远端刷新。 */
-      const cachedGroups = await runtime.getSync().groups.listCached();
-      /** joinedGroup 从本地缺失时再执行真实全量同步。 */
-      const joinedGroup = cachedGroups.find(item => item.groupID === group.groupID)
-        ?? (await runtime.getSync().groups.sync()).find(item => item.groupID === group.groupID);
-      if (!joinedGroup?.conversationID) throw new Error('该群聊暂不可进入');
-      navigate(`/conversations/${encodeURIComponent(joinedGroup.conversationID)}`);
+      /** conversation 由 shared owner 校验群/会话身份并收敛当前账号缓存。 */
+      const conversation = await runtime.getSync().conversations.openGroup({
+        groupID: group.groupID,
+      });
+      /** route 只为搜索来源关闭申请层，扫码来源保留既有 push 语义。 */
+      const route = buildConversationRoute(conversation.conversationID, routeState.sourceType === 'search');
+      if (!route) throw new Error('该群聊暂不可进入');
+      navigate(route.href, { replace: route.replace });
     } catch (cause) {
       setError(readGroupApplyError(cause, '该群聊暂不可进入'));
     } finally {
       setLoading(false);
     }
-  }, [group, navigate, runtime]);
+  }, [group, navigate, routeState.sourceType, runtime]);
 
   if (restoring) return <GroupApplyState label="正在恢复群资料" />;
   if (!runtime) return <GroupApplyState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
   if (!groupID) return <Navigate to={routeState.backHref} replace />;
 
-  /** alreadyApplied 将服务端 pending 与本地成功态统一为不可重复提交。 */
-  const alreadyApplied = submitted || group?.applicationStatus === 'pending';
+  /** alreadyApplied 只依据服务端 pending 关系阻止重复提交。 */
+  const alreadyApplied = group?.applicationStatus === 'pending';
   /** alreadyJoined 只依据 public/get 返回的当前账号关系。 */
   const alreadyJoined = group?.membershipStatus === 'active';
   return (
     <main className="rn-group-qr-apply-page" aria-busy={loading || submitting}>
       <section className="rn-group-qr-apply-surface">
         <PageNavbar className="rn-group-qr-apply-header">
-          <button type="button" aria-label={routeState.sourceType === 'search' ? '返回查找群聊' : '返回扫码'} onClick={() => navigate(routeState.backHref, { state: routeState.sourceType === 'search' ? { ...routeState.createState, searchKeyword: routeState.searchKeyword } : undefined })}><RNAssetIcon assetURL={backIconURL} /></button>
+          <button type="button" aria-label={routeState.sourceType === 'search' ? '返回查找群聊' : '返回扫码'} onClick={() => navigate(routeState.backHref, { replace: routeState.sourceType === 'search', state: createGroupApplyReturnState(routeState) })}><RNAssetIcon assetURL={backIconURL} /></button>
           <h1>申请加入群聊</h1><span aria-hidden="true" />
         </PageNavbar>
         {error ? <p className="rn-group-qr-error" role="alert">{error}<button type="button" onClick={() => void loadGroup()}>重试</button></p> : null}
@@ -126,7 +165,7 @@ export default function GroupQRCodeApplyPage() {
             {!alreadyJoined ? (
               <label className="rn-group-qr-message">
                 <span>验证消息</span>
-                <textarea value={message} maxLength={80} disabled={alreadyApplied} onChange={event => setMessage(event.target.value)} />
+                <textarea value={message} maxLength={IM_GROUP_APPLICATION_MESSAGE_MAX_LENGTH} disabled={alreadyApplied} onChange={event => setMessage(event.target.value)} />
               </label>
             ) : null}
             <button

@@ -5,6 +5,8 @@ import type {
   WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
 
+import { getConversationTitle } from './conversation-list-view.js';
+
 /** 首页搜索单项只携带稳定 route 所需的共享实体。 */
 export type ConversationHomeSearchItem =
   | {
@@ -55,6 +57,25 @@ export interface BuildConversationHomeSearchSectionsInput {
 export interface ConversationSearchTextSegment {
   readonly text: string;
   readonly highlighted: boolean;
+}
+
+/** 首页搜索结果路由固定替换搜索页历史项。 */
+export interface ConversationHomeSearchRoute {
+  readonly href: string;
+  readonly replace: true;
+}
+
+/** 把搜索结果投影为可刷新且关闭搜索层的会话路由。 */
+export function buildConversationHomeSearchRoute(
+  item: ConversationHomeSearchItem,
+): ConversationHomeSearchRoute {
+  /** baseURL 对会话身份编码，避免目标 ID 改变路由层级。 */
+  const baseURL = `/conversations/${encodeURIComponent(item.conversationID)}`;
+  /** href 仅消息结果追加稳定定位参数。 */
+  const href = item.type === 'message'
+    ? `${baseURL}?messageID=${encodeURIComponent(item.messageID)}`
+    : baseURL;
+  return { href, replace: true };
 }
 
 /** 按 RN 规则把好友、群聊和消息缓存聚合为三个结果分区。 */
@@ -130,9 +151,8 @@ export function buildConversationHomeSearchSections(
       const conversation = conversationByID.get(conversationID)!;
       /** target 选择最早命中，保持 RN 点击后定位更远消息的行为。 */
       const target = [...messages].sort(compareMessagePosition)[0]!;
-      /** title 延续会话 name 到 targetID 的回退顺序。 */
-      const title = conversation.conversation.name?.trim() ||
-        conversation.conversation.targetID || '会话';
+      /** title 复用单聊匿名名称与群名的唯一展示投影。 */
+      const title = getConversationTitle(conversation.conversation);
       return {
         type: 'message',
         key: `message-${conversationID}`,
@@ -212,14 +232,6 @@ export function updateConversationSearchHistory(
   if (!normalizedQuery) return history;
   return [normalizedQuery, ...history.filter(item => item !== normalizedQuery)]
     .slice(0, Math.max(0, limit));
-}
-
-/** 判断异步搜索结果是否仍属于页面最新请求。 */
-export function isCurrentConversationSearchRequest(
-  currentRequestID: number,
-  candidateRequestID: number,
-): boolean {
-  return currentRequestID === candidateRequestID;
 }
 
 /** 按 RN 规则进行大小写不敏感、支持多处命中的文本切片。 */

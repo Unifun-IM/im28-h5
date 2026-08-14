@@ -110,10 +110,10 @@ export function ChatAutoDeletePage() {
         conversation.conversationID,
         selectedSeconds,
       );
-      navigate(
-        '/conversations/' + encodeURIComponent(conversation.conversationID) + '/settings',
-        { replace: true },
-      );
+      /** successURL 对齐入口层级：群聊返回群管理，单聊返回聊天设置。 */
+      const successURL = '/conversations/' + encodeURIComponent(conversation.conversationID)
+        + (conversation.type === 'group' ? '/settings/manage' : '/settings');
+      navigate(successURL, { replace: true });
     } catch (cause) {
       setError(readAutoDeleteError(cause, '定时删除设置保存失败'));
     } finally {
@@ -125,8 +125,8 @@ export function ChatAutoDeletePage() {
   if (!runtime) return <AutoDeletePageState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
   /** settingsURL 是返回当前会话设置页的稳定目标。 */
-  const settingsURL =
-    '/conversations/' + encodeURIComponent(conversationID) + '/settings';
+  const settingsURL = '/conversations/' + encodeURIComponent(conversationID)
+    + (conversation?.type === 'group' ? '/settings/manage' : '/settings');
   /** authorized 保护渲染阶段不暴露群成员操作表单。 */
   const authorized = conversation
     ? canManageChatAutoDelete(conversation, group)

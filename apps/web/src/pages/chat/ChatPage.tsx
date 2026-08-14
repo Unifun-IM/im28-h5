@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Conversation, IMMessageCard, Message, PresetEmojiDocument, WebIMGroupMember, WebIMSync } from '@im28/im-sdk/web';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CallTypeActionSheet } from '../../components/call/CallTypeActionSheet.js';
-import { ChatTargetPickerModal } from '../../components/chat-target-picker/index.js';
+import {
+  ChatTargetPickerModal,
+  type ChatTargetPickerItem,
+} from '../../components/chat-target-picker/index.js';
 import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
 import { ChatComposer } from './ChatComposer.js';
-import { ChatCardPickerDialog } from './ChatCardPickerDialog.js';
 import { ChatHeader } from './ChatHeader.js';
 import { ChatMediaInteractionProvider } from './ChatMediaInteractionProvider.js';
 import { ChatMessageList } from './ChatMessageList.js';
@@ -28,8 +30,10 @@ import { useChatHistoryPagination } from './useChatHistoryPagination.js';
 import { useChatQuoteSources } from './useChatQuoteSources.js';
 import { useChatMessageDeleteExit } from './useChatMessageDeleteExit.js';
 import { useChatDirectRelationship } from './useChatDirectRelationship.js';
+import { getConversationTitle } from '../conversations/conversation-list-view.js';
 import type { ChatComposerMentionRequest } from './chat-composer-types.js';
 import { buildChatMessageFocusURL, focusChatMessageRow, readFocusedChatMessageWindow } from './chat-message-focus.js';
+import { toIMMessageCard } from './chat-card-picker.js';
 import './chat-page.css';
 /** RN chat detail 页面只编排 Web SDK cache/pull/send/realtime facade。 */
 export function ChatPage() {
@@ -363,6 +367,15 @@ export function ChatPage() {
     });
     return completed;
   }
+  /** 全局弹窗单选后只在 type108 真实发送成功时关闭。 */
+  async function handleSendSelectedCard(
+    targets: readonly ChatTargetPickerItem[],
+  ): Promise<void> {
+    /** target 只接受单选模式交付的第一个真实目标。 */
+    const target = targets[0];
+    if (!target || sending) return;
+    if (await handleSendCard(toIMMessageCard(target))) setCardPickerVisible(false);
+  }
   /** 当前单聊直接复用 canonical conversation 身份启动全局通话 owner。 */
   async function handleStartCall(mediaType: 'audio' | 'video'): Promise<void> {
     if (!conversation || conversation.type !== 'single' || callStarting) return;
@@ -372,7 +385,7 @@ export function ChatPage() {
     try {
       await callOwner.startOutgoing({
         conversationID: conversation.conversationID,
-        peerName: conversation.name?.trim() || conversation.targetID,
+        peerName: getConversationTitle(conversation),
         peerAvatarURL: conversation.faceURL?.trim() || '',
         mediaType,
       });
@@ -545,20 +558,23 @@ export function ChatPage() {
         />
         <CallTypeActionSheet
           open={callPickerVisible && conversation?.type === 'single'}
-          peerName={conversation?.name?.trim() || conversation?.targetID || ''}
+          peerName={conversation ? getConversationTitle(conversation) : ''}
           pending={callStarting}
           onClose={() => setCallPickerVisible(false)}
           onSelect={mediaType => { void handleStartCall(mediaType); }}
         />
-        <ChatCardPickerDialog
-          visible={cardPickerVisible}
+        <ChatTargetPickerModal
+          open={cardPickerVisible}
           sync={sync}
-          conversation={conversation}
-          currentUserID={snapshot.userID}
-          sending={sending}
+          selectionMode="single"
+          excludeUserIDs={conversation?.type === 'single'
+            ? [snapshot.userID, conversation.targetID]
+            : [snapshot.userID]}
+          actionLabel="分享"
+          pending={sending}
           operationError={error}
           onClose={() => setCardPickerVisible(false)}
-          onSend={handleSendCard}
+          onConfirm={targets => { void handleSendSelectedCard(targets); }}
         />
       </section>
     </main>

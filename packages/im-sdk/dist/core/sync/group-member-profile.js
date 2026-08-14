@@ -1,4 +1,5 @@
 import { FriendshipRepository, UserRepository, } from '@im28/im-sdk/core';
+import { formatIMUserDisplayName, normalizeIMUserNickname, } from '../modules/user/display-name.js';
 import { resolveFriendshipDisplayProfile } from './friendship-display-profile.js';
 /** 单次用户详情请求保持在可控批量，兼容普通群最多 200 人。 */
 const GROUP_MEMBER_PROFILE_BATCH_SIZE = 100;
@@ -63,15 +64,16 @@ export async function resolveGroupMemberDisplayProfiles(database, members) {
         /** friendshipProfile 分字段保留好友备注和历史公开资料。 */
         const friendshipProfile = resolveFriendshipDisplayProfile(friendship);
         /** publicNickname 不读取好友备注，避免改变群成员昵称语义。 */
-        const publicNickname = user?.nickname?.trim() || friendshipProfile.nickname;
+        const publicNickname = normalizeIMUserNickname(user?.nickname, userID) ||
+            normalizeIMUserNickname(friendshipProfile.nickname, userID);
         /** avatarURL 优先真实成员头像扩展，再使用公开用户头像。 */
         const avatarURL = member.faceURL?.trim() || user?.faceURL?.trim() ||
             friendshipProfile.avatarURL;
-        /** profile 对页面保证稳定昵称，身份只作为最终可见兜底。 */
+        /** profile 对页面保证稳定昵称，最终身份按 RN 匿名规则投影。 */
         const profile = {
             ...(friendshipProfile.remark ? { remark: friendshipProfile.remark } : {}),
             ...(groupNickname ? { groupNickname } : {}),
-            nickname: groupNickname || publicNickname || userID,
+            nickname: groupNickname || publicNickname || formatIMUserDisplayName(userID),
             avatarURL,
         };
         return [userID, profile];

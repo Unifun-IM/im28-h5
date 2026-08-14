@@ -1,9 +1,9 @@
 import { ConversationRepository, MessageRepository, mapGatewayConversationToCore, } from '@im28/im-sdk/core';
+import { DEFAULT_IM_FRIEND_APPLICATION_MESSAGE } from '../modules/friendship/friend-application-message.js';
+import { formatIMUserDisplayName, normalizeIMUserNickname, } from '../modules/user/display-name.js';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
 import { formatIMFriendSourceType } from './friend-source.js';
-/** 好友申请缺省验证消息与 RN 保持一致。 */
-const DEFAULT_FRIEND_APPLICATION_MESSAGE = '你好，我想添加你为好友';
 /** 创建联系人资料、单聊创建和好友申请 facade。 */
 export function createWebIMPeerProfileSync(dependencies) {
     return new WebIMPeerProfileSyncImpl(dependencies);
@@ -65,7 +65,7 @@ class WebIMPeerProfileSyncImpl {
             throw createWebIMSyncError('PEER_PROFILE_SELF_APPLICATION_UNAVAILABLE', 'A friend application cannot target the current user.');
         }
         // normalizedMessage 对齐 RN trim、缺省文案和 80 字符约束。
-        const normalizedMessage = message.trim() || DEFAULT_FRIEND_APPLICATION_MESSAGE;
+        const normalizedMessage = message.trim() || DEFAULT_IM_FRIEND_APPLICATION_MESSAGE;
         if (Array.from(normalizedMessage).length > 80) {
             throw createWebIMSyncError('PEER_PROFILE_APPLICATION_MESSAGE_TOO_LONG', 'Friend application message cannot exceed 80 characters.');
         }
@@ -117,12 +117,11 @@ function normalizePeerProfile(user, friend, relationship) {
     // remark 优先使用好友 alias，并兼容共享 Gateway remark 字段。
     const remark = friend?.alias?.trim() || friend?.remark?.trim() || '';
     // nickname 保留公开昵称供 RN 二级名称显示。
-    const nickname = user.nickname?.trim() ?? '';
+    const nickname = normalizeIMUserNickname(user.nickname, userID);
     // sourceType 保留服务端来源码，sourceLabel 复用跨端唯一展示规则。
     const sourceType = friend?.source_type?.trim() ?? '';
-    // displayName 按 RN remark、nickname、account、phone、ID 回退。
-    const displayName = remark || nickname || user.account?.trim() ||
-        user.phone?.trim() || userID;
+    // displayName 按 RN remark、nickname、im-ID 规则回退。
+    const displayName = remark || nickname || formatIMUserDisplayName(userID);
     return {
         userID,
         displayName,

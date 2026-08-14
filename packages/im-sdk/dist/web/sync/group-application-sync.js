@@ -1,3 +1,5 @@
+import { formatIMUserDisplayName, normalizeIMUserNickname, } from '../modules/user/display-name.js';
+import { DEFAULT_IM_GROUP_APPLICATION_MESSAGE, IM_GROUP_APPLICATION_MESSAGE_MAX_LENGTH, } from '../modules/group/group-application-message.js';
 import { createWebIMSyncError } from './sync-context.js';
 /** 创建群申请 Web facade。 */
 export function createWebIMGroupApplicationSync(dependencies) {
@@ -117,14 +119,17 @@ class WebIMGroupApplicationSyncImpl {
         this.requireAuthenticatedUser();
         /** groupID 在 mutation 前执行统一非空校验。 */
         const groupID = normalizeRequiredGroupID(options.groupID);
-        /** message 避免将纯空白申请理由发送给 Gateway。 */
-        const message = options.message?.trim() ?? '';
+        /** message 对齐 RN trim、稳定缺省文案和 50 字符约束。 */
+        const message = options.message?.trim() || DEFAULT_IM_GROUP_APPLICATION_MESSAGE;
+        if (Array.from(message).length > IM_GROUP_APPLICATION_MESSAGE_MAX_LENGTH) {
+            throw createWebIMSyncError('GROUP_APPLICATION_MESSAGE_TOO_LONG', `Group application message cannot exceed ${IM_GROUP_APPLICATION_MESSAGE_MAX_LENGTH} characters.`);
+        }
         /** sourceType 允许扫码页显式登记 qrcode 来源。 */
         const sourceType = options.sourceType?.trim() || 'search';
         await this.dependencies.gatewayClient.applyGroupApplication({
             group_id: groupID,
             source_type: sourceType,
-            ...(message ? { message } : {}),
+            message,
         });
     }
     /** 校验申请 ID 后调用唯一 shared mutation。 */
@@ -201,9 +206,9 @@ function normalizeGroupApplication(item) {
     const requester = item.requester_user ?? raw.requester_user;
     // requesterUserID 用于头像、搜索和审核文案。
     const requesterUserID = requester?.user_id?.trim() || raw.requester_user_id?.trim() || '';
-    // requesterName 遵循 RN nickname/account/contact/ID 回退。
-    const requesterName = requester?.nickname?.trim() || requester?.account?.trim() ||
-        requester?.phone?.trim() || requester?.email?.trim() || requesterUserID || '申请用户';
+    // requesterName 遵循 RN nickname -> im-ID 展示回退，账号与联系方式不冒充昵称。
+    const requesterName = normalizeIMUserNickname(requester?.nickname, requesterUserID) ||
+        formatIMUserDisplayName(requesterUserID) || '申请用户';
     return {
         applicationID,
         groupID,

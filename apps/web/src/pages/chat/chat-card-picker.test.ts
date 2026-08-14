@@ -1,17 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ChatForwardTarget } from './forward-target-view.js';
-import { toIMMessageCard } from './ChatCardPickerDialog.js';
+import type { ChatTargetPickerItem } from '../../components/chat-target-picker/index.js';
+import { toIMMessageCard } from './chat-card-picker.js';
 
 /** 构造选择器目标并允许测试覆盖客户端类型。 */
 function createTarget(
-  input: Partial<ChatForwardTarget>,
-): ChatForwardTarget {
+  input: Partial<ChatTargetPickerItem>,
+): ChatTargetPickerItem {
   return {
     key: 'friend:user-2',
     kind: 'friend',
     id: 'user-2',
-    conversationID: '',
     title: '用户二',
     description: '好友 · user-2',
     avatarURL: 'https://cdn.example/user.png',
@@ -37,7 +36,6 @@ describe('chat card picker', () => {
       key: 'group:group-2',
       kind: 'group',
       id: 'group-2',
-      conversationID: 'sg_group-2',
       title: '第二群',
       description: '群聊 · 3人',
       avatarURL: '',
@@ -47,11 +45,5 @@ describe('chat card picker', () => {
       groupName: '第二群',
       avatarURL: '',
     });
-  });
-
-  /** 最近会话目标不能绕过用户和群两类名片边界。 */
-  it('rejects a recent conversation target', () => {
-    expect(() => toIMMessageCard(createTarget({ kind: 'conversation' })))
-      .toThrow('名片目标类型不可用');
   });
 });

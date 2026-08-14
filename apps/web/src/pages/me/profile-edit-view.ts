@@ -10,6 +10,29 @@ export type ProfileEditMode = 'nickname' | 'gender' | 'bio';
 /** Gateway 与 RN 共用的性别枚举。 */
 export type ProfileGender = 0 | 1 | 2;
 
+/** 个人资料总览仅接收由应用内部发起的受控快捷动作。 */
+export interface MeProfileRouteState {
+  readonly openAvatarSource: boolean;
+}
+
+/** 昵称输入完成键判定只依赖浏览器键盘事件的稳定字段。 */
+export interface ProfileNicknameKeyInput {
+  readonly key: string;
+  readonly isComposing: boolean;
+  readonly repeat: boolean;
+}
+
+/** 将未知 React Router state 收敛为安全的个人资料快捷动作。 */
+export function readMeProfileRouteState(value: unknown): MeProfileRouteState {
+  if (!value || typeof value !== 'object') return { openAvatarSource: false };
+  return { openAvatarSource: Reflect.get(value, 'openAvatarSource') === true };
+}
+
+/** 只允许非组合、非重复的 Enter 复用 RN 昵称完成动作。 */
+export function shouldSubmitProfileNicknameKey(input: ProfileNicknameKeyInput): boolean {
+  return input.key === 'Enter' && !input.isComposing && !input.repeat;
+}
+
 /** 将未知性别收敛为 RN 支持的三个值。 */
 export function normalizeProfileGender(value: unknown): ProfileGender {
   // numeric 兼容 Gateway 数字与字符串投影。

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { formatIMUserDisplayName } from '@im28/im-sdk/web';
 import { useNavigate } from 'react-router-dom';
 
 import arrowRightURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.dynamic.svg';
@@ -63,7 +64,9 @@ export function AuthCompleteProfilePage() {
       const nextProfile = await runtime.getSync().profile.getCurrent();
       initializeProfileDraft({
         userID: snapshot.userID,
-        nickname: nextProfile.nickname?.trim() || nextProfile.user_id?.trim() || snapshot.userID,
+        nickname: nextProfile.nickname?.trim() || formatIMUserDisplayName(
+          nextProfile.user_id?.trim() || snapshot.userID,
+        ),
         gender: normalizeProfileGender(nextProfile.gender),
         bio: normalizeProfileBio(nextProfile.bio),
         phone: nextProfile.phone?.trim() || '',

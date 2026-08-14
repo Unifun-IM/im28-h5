@@ -8,6 +8,7 @@ import {
   formatChatAutoDeleteValue,
   normalizeChatAutoDeleteSelection,
 } from './chat-auto-delete-view.js';
+import autoDeletePageSource from './ChatAutoDeletePage.tsx?raw';
 
 /** 构造权限投影测试使用的共享会话。 */
 function createConversation(type: Conversation['type']): Conversation {
@@ -53,11 +54,11 @@ describe('chat auto delete view', () => {
     ]);
   });
 
-  /** 单聊可设置，群聊仅群主和管理员可设置。 */
+  /** 单聊可设置，群聊仅群主可设置。 */
   it('fails closed for group member and unknown group cache', () => {
     expect(canManageChatAutoDelete(createConversation('single'), null)).toBe(true);
     expect(canManageChatAutoDelete(createConversation('group'), createGroup('owner'))).toBe(true);
-    expect(canManageChatAutoDelete(createConversation('group'), createGroup('admin'))).toBe(true);
+    expect(canManageChatAutoDelete(createConversation('group'), createGroup('admin'))).toBe(false);
     expect(canManageChatAutoDelete(createConversation('group'), createGroup('member'))).toBe(false);
     expect(canManageChatAutoDelete(createConversation('group'), null)).toBe(false);
   });
@@ -67,5 +68,11 @@ describe('chat auto delete view', () => {
     expect(formatChatAutoDeleteValue(604_800)).toBe('7天');
     expect(formatChatAutoDeleteValue(1_296_000)).toBe('未设置');
     expect(normalizeChatAutoDeleteSelection(1_296_000)).toBeNull();
+  });
+
+  /** 群聊保存或返回后必须回到入口所属的群管理页。 */
+  it('returns group conversations to group management', () => {
+    expect(autoDeletePageSource).toContain("conversation.type === 'group' ? '/settings/manage' : '/settings'");
+    expect(autoDeletePageSource).toContain("conversation?.type === 'group' ? '/settings/manage' : '/settings'");
   });
 });

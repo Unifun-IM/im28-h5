@@ -3,6 +3,7 @@ import type {
   WebIMContact,
   WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
+import { formatIMUserDisplayName } from '@im28/im-sdk/web';
 
 /** 群发选择页的浏览器展示目标。 */
 export interface BroadcastDisplayTarget extends IMBroadcastTarget {
@@ -18,7 +19,7 @@ export function contactToBroadcastTarget(contact: WebIMContact): BroadcastDispla
     key: `friend:${contact.userID}`,
     kind: 'friend',
     targetID: contact.userID,
-    title: contact.displayName || contact.userID,
+    title: contact.displayName || formatIMUserDisplayName(contact.userID),
     description: contact.userID,
     avatarURL: contact.avatarURL,
   };

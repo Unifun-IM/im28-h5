@@ -7,9 +7,10 @@ import type {
 import { describe, expect, it } from 'vitest';
 import { createGroupPermissionsFixture } from '../../test-fixtures/group-permissions.js';
 
+import { isCurrentInteractionRequest } from '../../components/interaction/index.js';
 import {
+  buildConversationHomeSearchRoute,
   buildConversationHomeSearchSections,
-  isCurrentConversationSearchRequest,
   mergeConversationHomeSearchMessageSections,
   splitConversationSearchHighlightedText,
   updateConversationSearchHistory,
@@ -94,6 +95,39 @@ function createMessage(
 
 // 首页搜索 contract 锁定 RN 的分区、真实会话约束和消息定位语义。
 describe('conversation home search', () => {
+  /** 验证普通结果替换搜索路由，使聊天返回时回到会话列表。 */
+  it('replaces the search route when opening a conversation result', () => {
+    expect(buildConversationHomeSearchRoute({
+      type: 'friend',
+      key: 'friend-user-2',
+      title: 'donk二大爷',
+      subtitle: 'ID：user-2',
+      avatarURL: '',
+      conversationID: 'single/user-2',
+    })).toEqual({
+      href: '/conversations/single%2Fuser-2',
+      replace: true,
+    });
+  });
+
+  /** 验证消息结果保留稳定定位参数并同样替换搜索路由。 */
+  it('replaces the search route while preserving message focus', () => {
+    expect(buildConversationHomeSearchRoute({
+      type: 'message',
+      key: 'message-group-1',
+      title: 'donk的群聊',
+      subtitle: '共1条相关聊天记录',
+      avatarURL: '',
+      conversationID: 'group/group-1',
+      messageID: 'message/earlier',
+      matchCount: 1,
+      messagePosition: 3,
+    })).toEqual({
+      href: '/conversations/group%2Fgroup-1?messageID=message%2Fearlier',
+      replace: true,
+    });
+  });
+
   /** 验证好友、群聊、聊天记录固定顺序及最远消息定位。 */
   it('builds RN sections from current account cache', () => {
     /** conversations 提供可打开的单聊和群聊稳定身份。 */
@@ -186,8 +220,8 @@ describe('conversation home search', () => {
 
   /** 验证输入变化后旧异步请求不能再提交页面结果。 */
   it('accepts only the latest search request generation', () => {
-    expect(isCurrentConversationSearchRequest(7, 7)).toBe(true);
-    expect(isCurrentConversationSearchRequest(8, 7)).toBe(false);
+    expect(isCurrentInteractionRequest(7, 7)).toBe(true);
+    expect(isCurrentInteractionRequest(8, 7)).toBe(false);
   });
 
   /** 验证结果高亮与 RN 一样忽略大小写并保留全部命中。 */

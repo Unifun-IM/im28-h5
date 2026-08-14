@@ -15,8 +15,8 @@ export type { IMMessageHistoryWindow } from './history-pagination.js';
 export { formatIMCallMessageText, parseIMCallMessagePresentation, } from './call-message.js';
 /** 导出历史通话气泡的稳定展示契约。 */
 export type { IMCallMessageMediaType, IMCallMessagePresentation, IMCallMessageStatus, } from './call-message.js';
-/** 导出跨端一致的群简介与发言频率系统文案解析。 */
-export { parseIMGroupSystemMessagePresentation } from './group-system-message.js';
+/** 导出跨端一致的群系统类型与结构化文案解析。 */
+export { isIMGroupSystemMessageType, parseIMGroupSystemMessagePresentation, } from './group-system-message.js';
 /** 导出群系统消息的稳定展示契约。 */
 export type { IMGroupSystemMessageKind, IMGroupSystemMessagePresentation, } from './group-system-message.js';
 /** 导出好友关系建立通知的跨端类型与文案。 */

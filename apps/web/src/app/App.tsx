@@ -113,10 +113,10 @@ export function App() {
           <Route path="/auth/complete-profile/gender" element={<AuthOnboardingProfileEditorPage mode="gender" />} />
           <Route path="/auth/complete-profile/bio" element={<AuthOnboardingProfileEditorPage mode="bio" />} />
           <Route element={<PrimaryTabsLayout />}>
-            <Route path="/conversations" />
-            <Route path="/contacts" />
-            <Route path="/calls" />
-            <Route path="/me" />
+            <Route path="/conversations" element={<></>} />
+            <Route path="/contacts" element={<></>} />
+            <Route path="/calls" element={<></>} />
+            <Route path="/me" element={<></>} />
           </Route>
           <Route
             path="/conversations/search"

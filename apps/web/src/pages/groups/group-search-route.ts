@@ -1,3 +1,8 @@
+import {
+  readContactSearchBackHref,
+  type ContactSearchBackHref,
+} from '../contacts/contact-search-route.js';
+
 /** 查找群聊页允许恢复的建群选择上下文。 */
 export interface GroupSearchCreateState {
   readonly selectedUserIDs: readonly string[];
@@ -7,9 +12,17 @@ export interface GroupSearchCreateState {
 /** 群申请页允许的来源和返回上下文。 */
 export interface GroupApplyRouteState {
   readonly sourceType: 'qrcode' | 'search';
-  readonly backHref: '/scan' | '/groups/search';
+  readonly backHref: '/scan' | '/groups/search' | '/contacts/search';
   readonly searchKeyword: string;
+  readonly searchBackHref: ContactSearchBackHref;
   readonly createState: GroupSearchCreateState;
+}
+
+/** 群申请成功后允许恢复的搜索页 presentation state。 */
+export interface GroupApplyReturnState extends GroupSearchCreateState {
+  readonly searchKeyword: string;
+  readonly serverTab?: 'groups';
+  readonly searchBackHref?: ContactSearchBackHref;
 }
 
 /** 从未知 Router state 恢复稳定、去重且有界的用户 ID。 */
@@ -43,12 +56,36 @@ export function readGroupApplyRouteState(state: unknown): GroupApplyRouteState {
     state && typeof state === 'object' ? Reflect.get(state, 'createState') : null,
   );
   if (!state || typeof state !== 'object' || Reflect.get(state, 'sourceType') !== 'search') {
-    return { sourceType: 'qrcode', backHref: '/scan', searchKeyword: '', createState };
+    return {
+      sourceType: 'qrcode',
+      backHref: '/scan',
+      searchKeyword: '',
+      searchBackHref: '/contacts',
+      createState,
+    };
   }
   return {
     sourceType: 'search',
-    backHref: '/groups/search',
+    backHref: Reflect.get(state, 'backHref') === '/contacts/search'
+      ? '/contacts/search'
+      : '/groups/search',
     searchKeyword: readGroupSearchKeyword(state),
+    searchBackHref: readContactSearchBackHref(Reflect.get(state, 'searchBackHref')),
     createState,
+  };
+}
+
+/** 为搜索来源构造成功返回 state，扫码来源不透传无意义上下文。 */
+export function createGroupApplyReturnState(
+  routeState: GroupApplyRouteState,
+): GroupApplyReturnState | undefined {
+  if (routeState.sourceType !== 'search') return undefined;
+  return {
+    ...routeState.createState,
+    searchKeyword: routeState.searchKeyword,
+    ...(routeState.backHref === '/contacts/search' ? {
+      serverTab: 'groups' as const,
+      searchBackHref: routeState.searchBackHref,
+    } : {}),
   };
 }

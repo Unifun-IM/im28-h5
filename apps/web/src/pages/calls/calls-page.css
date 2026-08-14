@@ -114,6 +114,7 @@
 }
 
 .rn-call-list { padding-bottom: 12px; }
+.rn-calls-surface.is-editing .rn-call-list { padding-bottom: calc(84px + var(--im-safe-bottom)); }
 .rn-call-row {
   position: relative;
   display: flex;
@@ -196,7 +197,7 @@
 .rn-calls-loading { display: grid; padding-top: 64px; place-items: center; }
 .rn-calls-loading span { width: 24px; height: 24px; border: 2px solid var(--im-border-subtle); border-top-color: var(--im-brand-primary); border-radius: 50%; animation: rn-calls-spin .8s linear infinite; }
 .rn-calls-more { display: block; min-width: 120px; height: 40px; margin: 12px auto; border: 0; color: var(--im-brand-primary); background: transparent; cursor: pointer; }
-.rn-call-edit-bar { position: fixed; z-index: 18; right: 0; bottom: var(--im-primary-tab-bar-height); left: 0; display: flex; width: 100%; min-height: 72px; align-items: center; justify-content: space-between; margin: 0 auto; padding: 8px 24px; border-top: var(--im-hairline-width) solid var(--im-border-subtle); background: var(--im-bg-app); }
+.rn-call-edit-bar { position: fixed; z-index: 18; right: 0; bottom: 0; left: 0; display: flex; width: 100%; min-height: calc(72px + var(--im-safe-bottom)); align-items: center; justify-content: space-between; margin: 0 auto; padding: 8px 24px calc(8px + var(--im-safe-bottom)); border-top: var(--im-hairline-width) solid var(--im-border-subtle); background: var(--im-bg-app); }
 .rn-call-edit-bar button { min-width: 96px; height: 48px; padding: 0; border: 0; color: var(--im-text-primary); background: transparent; cursor: pointer; font-size: 16px; letter-spacing: 0; }
 .rn-call-edit-bar button:last-child { text-align: right; }
 .rn-call-edit-bar button.is-danger, .rn-call-sheet button.is-danger { color: var(--im-status-danger); }

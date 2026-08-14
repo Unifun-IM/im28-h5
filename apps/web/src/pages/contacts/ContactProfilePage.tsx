@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { WebIMPeerProfile } from '@im28/im-sdk/web';
+import { formatIMUserDisplayName, type WebIMPeerProfile } from '@im28/im-sdk/web';
 import {
   Link,
   Navigate,
@@ -15,6 +15,7 @@ import phoneIconURL from '../../assets/rn/assets/icons/imm28/phone.regular.svg';
 import starIconURL from '../../assets/rn/assets/icons/imm28/star.regular.svg';
 import starSelectedIconURL from '../../assets/rn/assets/icons/imm28/star.solid.svg';
 import videoIconURL from '../../assets/rn/assets/icons/imm28/video-camera.regular.svg';
+import { copyUserIDToClipboard } from '../../components/clipboard/user-id-clipboard.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
 import { ContactDeleteSheet } from './ContactActionSheets.js';
@@ -39,6 +40,7 @@ import {
   readContactProfileGroupConversationID,
 } from './contact-profile-view.js';
 import { createContactCardShareLocationState } from './contact-action-view.js';
+import { createContactProfileChildRouteState } from './contact-profile-route-state.js';
 import {
   ContactProfileAvatar,
   ContactProfileBlacklistStatus,
@@ -63,6 +65,8 @@ export function ContactProfilePage() {
   const userID = routeParams.userID?.trim() ?? '';
   // backHref 拒绝外部或任意 Router state，默认回通讯录。
   const backHref = resolveContactProfileBackHref(location.state);
+  /** profileRouteState 只延续资料子路由返回来源所需的白名单 context。 */
+  const profileRouteState = createContactProfileChildRouteState(location.state);
   // groupConversationID 只是候选，权限和成员关系仍由 shared facades 校验。
   const groupConversationID = readContactProfileGroupConversationID(location.state);
   // navigate 仅负责真实 operation 成功后的 SPA 切换。
@@ -87,6 +91,8 @@ export function ContactProfilePage() {
   const [confirmBlacklist, setConfirmBlacklist] = useState(false);
   /** deleteOpen 控制好友删除范围确认层。 */
   const [deleteOpen, setDeleteOpen] = useState(false);
+  /** copiedUserID 只保存平台写入成功后的短暂反馈。 */
+  const [copiedUserID, setCopiedUserID] = useState('');
   // error 显示真实 SDK/Gateway/clipboard 失败。
   const [error, setError] = useState<string | null>(null);
 
@@ -157,9 +163,13 @@ export function ContactProfilePage() {
   const copyUserID = useCallback(async (): Promise<void> => {
     if (!profile) return;
     try {
-      await navigator.clipboard.writeText(profile.userID);
-    } catch {
-      setError('复制用户ID失败');
+      await copyUserIDToClipboard(profile.userID);
+      setError(null);
+      setCopiedUserID('复制ID成功');
+      window.setTimeout(() => setCopiedUserID(''), 1200);
+    } catch (cause) {
+      setCopiedUserID('');
+      setError(readContactProfileError(cause, '复制用户ID失败'));
     }
   }, [profile]);
 
@@ -217,7 +227,8 @@ export function ContactProfilePage() {
       setProfile(current => current ? {
         ...current,
         remark: result.remark,
-        displayName: result.remark || result.nickname || current.userID,
+        displayName: result.remark || result.nickname ||
+          formatIMUserDisplayName(current.userID),
       } : current);
       setRemarkOpen(false);
     } catch (cause) {
@@ -317,6 +328,7 @@ export function ContactProfilePage() {
         ) : profile ? (
           <div className="rn-contact-profile-content">
             {error ? <ContactProfileError error={error} onRetry={loadProfile} /> : null}
+            {copiedUserID ? <p className="rn-contact-profile-copy-state" role="status">{copiedUserID}</p> : null}
             <div className="rn-contact-profile-hero">
               <ContactProfileAvatar {...profile} displayName={displayName} />
               <div className="rn-contact-profile-name-row">
@@ -375,9 +387,7 @@ export function ContactProfilePage() {
               <Link
                 className="rn-contact-profile-primary"
                 to={buildContactFriendApplicationRoute(profile.userID)}
-                state={readContactProfileSourceType(location.state) ? {
-                  sourceType: readContactProfileSourceType(location.state),
-                } : undefined}
+                state={profileRouteState}
               >
                 加好友
               </Link>
@@ -397,7 +407,9 @@ export function ContactProfilePage() {
                   <ContactProfileRow
                     label="共同的群聊"
                     value={commonGroupsCount ? String(commonGroupsCount) : ''}
-                    onClick={() => navigate(`/contacts/users/${encodeURIComponent(profile.userID)}/groups`)}
+                    onClick={() => navigate(`/contacts/users/${encodeURIComponent(profile.userID)}/groups`, {
+                      state: profileRouteState,
+                    })}
                   />
                   <ContactProfileRow
                     label="分享好友名片"
@@ -450,10 +462,4 @@ export function ContactProfilePage() {
       />
     </main>
   );
-}
-
-/** 从扫码资料路由读取受控好友来源。 */
-function readContactProfileSourceType(state: unknown): 'qrcode' | null {
-  if (!state || typeof state !== 'object') return null;
-  return Reflect.get(state, 'sourceType') === 'qrcode' ? 'qrcode' : null;
 }

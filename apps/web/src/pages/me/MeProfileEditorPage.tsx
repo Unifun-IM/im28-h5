@@ -1,16 +1,25 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { GatewayUser, WebIMProfileUpdate } from '@im28/im-sdk/web';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import {
+  formatIMUserDisplayName,
+  type GatewayUser,
+  type WebIMProfileUpdate,
+} from '@im28/im-sdk/web';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { MeProfileHeader } from './MeProfileHeader.js';
 import {
+  readMeProfileEditorRouteState,
+  resolveMeProfileEditorReturn,
+} from './me-profile-editor-route.js';
+import {
   PROFILE_BIO_MAX_LENGTH,
   PROFILE_NICKNAME_MAX_LENGTH,
   normalizeProfileBio,
   normalizeProfileGender,
+  shouldSubmitProfileNicknameKey,
   type ProfileEditMode,
   type ProfileGender,
 } from './profile-edit-view.js';
@@ -27,6 +36,13 @@ export function MeProfileEditorPage({ mode }: MeProfileEditorPageProps) {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // navigate 在成功或未变更时返回总览页。
   const navigate = useNavigate();
+  // location 只读取资料页写入的受控返回标记。
+  const location = useLocation();
+  // routeState 对深链、首页快捷入口和未知 state 统一 fail-closed。
+  const routeState = useMemo(
+    () => readMeProfileEditorRouteState(location.state),
+    [location.state],
+  );
   // profile 保存当前远端资料基线。
   const [profile, setProfile] = useState<GatewayUser | null>(null);
   // nicknameDraft 对应 RN 32 字符单行输入。
@@ -51,7 +67,9 @@ export function MeProfileEditorPage({ mode }: MeProfileEditorPageProps) {
       // nextProfile 是编辑时的不可伪造基线。
       const nextProfile = await runtime.getSync().profile.getCurrent();
       setProfile(nextProfile);
-      setNicknameDraft(nextProfile.nickname?.trim() || nextProfile.user_id?.trim() || snapshot.userID);
+      setNicknameDraft(nextProfile.nickname?.trim() || formatIMUserDisplayName(
+        nextProfile.user_id?.trim() || snapshot.userID,
+      ));
       setBioDraft(normalizeProfileBio(nextProfile.bio));
       setGenderDraft(normalizeProfileGender(nextProfile.gender));
     } catch (cause) {
@@ -73,30 +91,54 @@ export function MeProfileEditorPage({ mode }: MeProfileEditorPageProps) {
       : { bio: normalizeProfileBio(bioDraft) }, [bioDraft, genderDraft, mode, nicknameDraft]);
   // isUnchanged 避免无变化时伪造保存请求。
   const isUnchanged = mode === 'nickname'
-    ? updatePatch.nickname === (profile?.nickname?.trim() || profile?.user_id?.trim() || snapshot.userID)
+    ? updatePatch.nickname === (profile?.nickname?.trim() || formatIMUserDisplayName(
+      profile?.user_id?.trim() || snapshot.userID,
+    ))
     : mode === 'gender'
       ? updatePatch.gender === normalizeProfileGender(profile?.gender)
       : updatePatch.bio === normalizeProfileBio(profile?.bio);
   // actionDisabled 对齐 RN 昵称非空与所有页面 saving 门禁。
   const actionDisabled = loading || saving || !profile || (mode === 'nickname' && !nicknameDraft.trim());
 
+  /** 返回、未变更和保存成功共用同一条非循环退出链。 */
+  const returnFromEditor = useCallback(() => {
+    // returnAction 只可能是历史后退或 replace 到资料总览。
+    const returnAction = resolveMeProfileEditorReturn(routeState);
+    if (returnAction.destination === -1) {
+      navigate(-1);
+      return;
+    }
+    navigate(returnAction.destination, { replace: returnAction.replace });
+  }, [navigate, routeState]);
+
   /** 等待真实 update-profile 成功后返回总览页。 */
   const saveProfile = useCallback(async () => {
     if (!runtime || actionDisabled) return;
     if (isUnchanged) {
-      navigate('/me/profile', { replace: true });
+      returnFromEditor();
       return;
     }
     setSaving(true);
     setError(null);
     try {
       await runtime.getSync().profile.update(updatePatch);
-      navigate('/me/profile', { replace: true });
+      returnFromEditor();
     } catch (cause) {
       setError(readEditorError(cause));
       setSaving(false);
     }
-  }, [actionDisabled, isUnchanged, navigate, runtime, updatePatch]);
+  }, [actionDisabled, isUnchanged, returnFromEditor, runtime, updatePatch]);
+
+  /** 将软键盘 Done 和物理 Enter 委托给既有昵称保存链。 */
+  const submitNicknameFromKeyboard = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if (!shouldSubmitProfileNicknameKey({
+      key: event.key,
+      isComposing: event.nativeEvent.isComposing,
+      repeat: event.repeat,
+    })) return;
+    event.preventDefault();
+    void saveProfile();
+  }, [saveProfile]);
 
   if (restoring) return <EditorPageState label="正在恢复个人资料" />;
   if (!runtime) return <EditorPageState label="运行配置不可用" detail={startupError} />;
@@ -107,12 +149,12 @@ export function MeProfileEditorPage({ mode }: MeProfileEditorPageProps) {
   return (
     <main className="rn-me-profile-page">
       <section className="rn-me-profile-surface">
-        <MeProfileHeader title={title} backHref="/me/profile" actionLabel={saving ? '保存中' : '完成'} actionDisabled={actionDisabled} onAction={() => void saveProfile()} />
+        <MeProfileHeader title={title} backHref="/me/profile" onBack={returnFromEditor} backLabel={mode === 'nickname' ? undefined : '取消'} backDisabled={saving} actionLabel="完成" actionDisabled={actionDisabled} actionPending={saving && mode !== 'nickname'} onAction={() => void saveProfile()} />
         {error ? <p className="rn-me-editor-error" role="status">{error}</p> : null}
         {mode === 'nickname' ? (
           <div className="rn-me-nickname-content"><label className="rn-me-nickname-input">
             <span className="sr-only">昵称</span>
-            <input autoFocus value={nicknameDraft} maxLength={PROFILE_NICKNAME_MAX_LENGTH} disabled={saving} placeholder="请输入昵称" onChange={event => setNicknameDraft(event.target.value)} />
+            <input autoFocus value={nicknameDraft} maxLength={PROFILE_NICKNAME_MAX_LENGTH} disabled={saving} enterKeyHint="done" placeholder="请输入昵称" onChange={event => setNicknameDraft(event.target.value)} onKeyDown={submitNicknameFromKeyboard} />
             {nicknameDraft ? <button type="button" aria-label="清空昵称" onClick={() => setNicknameDraft('')}><RNAssetIcon assetURL={clearIconURL} /></button> : null}
           </label></div>
         ) : mode === 'gender' ? (
@@ -120,6 +162,7 @@ export function MeProfileEditorPage({ mode }: MeProfileEditorPageProps) {
         ) : (
           <div className="rn-me-bio-content"><textarea autoFocus aria-label="个性签名输入框" value={bioDraft} maxLength={PROFILE_BIO_MAX_LENGTH} disabled={saving} placeholder="填写个性签名" onChange={event => setBioDraft(Array.from(event.target.value).slice(0, PROFILE_BIO_MAX_LENGTH).join(''))} /><span>{Array.from(bioDraft).length}/{PROFILE_BIO_MAX_LENGTH}</span></div>
         )}
+        {mode === 'nickname' && saving ? <div className="rn-me-nickname-saving-overlay" role="status" aria-label="正在保存昵称"><span /></div> : null}
       </section>
     </main>
   );

@@ -1,13 +1,16 @@
 import { useCallback, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
-import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import {
+  isCurrentInteractionRequest,
+  PullRefreshIndicator,
+} from '../../components/interaction/index.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import {
+  buildConversationHomeSearchRoute,
   buildConversationHomeSearchSections,
-  isCurrentConversationSearchRequest,
   mergeConversationHomeSearchMessageSections,
   splitConversationSearchHighlightedText,
   updateConversationSearchHistory,
@@ -86,7 +89,7 @@ export function ConversationSearchPage() {
           offset: 0,
         }),
       ]);
-      if (!isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) return;
+      if (!isCurrentInteractionRequest(searchRequestIDRef.current, requestID)) return;
       setSections(buildConversationHomeSearchSections({
         query: normalizedQuery,
         contacts,
@@ -105,13 +108,13 @@ export function ConversationSearchPage() {
         });
       }
     } catch (cause) {
-      if (!isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) return;
+      if (!isCurrentInteractionRequest(searchRequestIDRef.current, requestID)) return;
       setSections([]);
       setMessageOffset(0);
       setMessageHasMore(false);
       setError(readConversationSearchError(cause));
     } finally {
-      if (isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) setLoading(false);
+      if (isCurrentInteractionRequest(searchRequestIDRef.current, requestID)) setLoading(false);
     }
   }
 
@@ -131,10 +134,10 @@ export function ConversationSearchPage() {
         limit: CONVERSATION_SEARCH_SECTION_STEP,
         offset,
       });
-      if (!isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) return;
+      if (!isCurrentInteractionRequest(searchRequestIDRef.current, requestID)) return;
       /** conversations 为下一页消息提供规范路由和会话标题。 */
       const conversations = await sync.conversations.listCachedItems({ limit: 500 });
-      if (!isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) return;
+      if (!isCurrentInteractionRequest(searchRequestIDRef.current, requestID)) return;
       /** incoming 只构建聊天记录分区，不重复加载好友和群资料。 */
       const incoming = buildConversationHomeSearchSections({
         query: searchedQuery,
@@ -147,9 +150,9 @@ export function ConversationSearchPage() {
       setMessageOffset(offset + messages.length);
       setMessageHasMore(messages.length === CONVERSATION_SEARCH_SECTION_STEP);
     } catch (cause) {
-      if (isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) setError(readConversationSearchError(cause));
+      if (isCurrentInteractionRequest(searchRequestIDRef.current, requestID)) setError(readConversationSearchError(cause));
     } finally {
-      if (isCurrentConversationSearchRequest(searchRequestIDRef.current, requestID)) setLoadingMoreMessage(false);
+      if (isCurrentInteractionRequest(searchRequestIDRef.current, requestID)) setLoadingMoreMessage(false);
     }
   }
 
@@ -180,13 +183,11 @@ export function ConversationSearchPage() {
     setLoading(false);
   }
 
-  /** openResult 将稳定会话和消息 ID 写入现有 SPA route。 */
+  /** openResult 对齐 RN 先关闭搜索层再进入会话的返回栈语义。 */
   function openResult(item: ConversationHomeSearchItem) {
-    /** baseURL 是好友、群聊和聊天记录共用的会话路由。 */
-    const baseURL = `/conversations/${encodeURIComponent(item.conversationID)}`;
-    navigate(item.type === 'message'
-      ? `${baseURL}?messageID=${encodeURIComponent(item.messageID)}`
-      : baseURL);
+    /** route 保留消息定位参数并替换当前搜索页历史项。 */
+    const route = buildConversationHomeSearchRoute(item);
+    navigate(route.href, { replace: route.replace });
   }
 
   if (restoring) return <ConversationSearchState label="正在恢复会话" />;

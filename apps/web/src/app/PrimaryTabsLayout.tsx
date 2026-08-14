@@ -4,10 +4,12 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
+  type UIEventHandler,
 } from 'react';
 import type { WebIMSync } from '@im28/im-sdk/web';
 import { useLocation } from 'react-router-dom';
@@ -23,6 +25,7 @@ import { ConversationsPage } from '../pages/conversations/ConversationsPage.js';
 import { useVerificationUnreadCounts } from '../pages/contacts/use-verification-unread.js';
 import { MePage } from '../pages/me/MePage.js';
 import { useWebIMRuntime } from '../runtime/index.js';
+import { getPrimaryTabBarVisible } from './primary-tab-chrome.js';
 
 /** 通讯录主场景保持按需下载，首次切换后由 Activity 保留状态。 */
 const ContactsPage = lazy(() => import('../pages/contacts/ContactsPage.js'));
@@ -43,6 +46,8 @@ export function PrimaryTabsLayout() {
   );
   // verificationUnread 复用验证中心的 shared 计数语义，为通讯录页和底栏提供同一快照。
   const verificationUnread = useVerificationUnreadCounts();
+  // callsChromeHidden 只接收通话编辑页对主壳底栏的可见性请求。
+  const [callsChromeHidden, setCallsChromeHidden] = useState(false);
   /** conversationTabReselectRef 只保存当前消息页注册的只读滚动动作。 */
   const conversationTabReselectRef = useRef<(() => boolean) | null>(null);
   // activeTab 只映射当前已经具备真实路由的主页面。
@@ -66,8 +71,14 @@ export function PrimaryTabsLayout() {
     conversationTabReselectRef.current?.() ?? false
   ), []);
 
-  // showTabBar 阻止匿名、恢复中和配置失败页面短暂显示认证导航。
-  const showTabBar = Boolean(runtime && snapshot.userID && !restoring);
+  // showTabBar 阻止匿名、恢复中、配置失败和通话编辑页显示认证导航。
+  const showTabBar = getPrimaryTabBarVisible({
+    activeTab,
+    callsChromeHidden,
+    restoring,
+    runtimeReady: Boolean(runtime),
+    userID: snapshot.userID,
+  });
   return (
     <PrimaryTabBadgeProvider
       verificationUnreadCounts={verificationUnread.counts}
@@ -89,7 +100,7 @@ export function PrimaryTabsLayout() {
             </Suspense>
           </PrimaryTabScene>
           <PrimaryTabScene tab="calls" activeTab={activeTab}>
-            <CallsPage />
+            <CallsPage onChromeHiddenChange={setCallsChromeHidden} />
           </PrimaryTabScene>
           <PrimaryTabScene tab="me" activeTab={activeTab}>
             <MePage />
@@ -117,13 +128,30 @@ interface PrimaryTabSceneProps {
 
 /** React Activity 隐藏时保留页面状态，并暂停该场景副作用。 */
 function PrimaryTabScene({ tab, activeTab, children }: PrimaryTabSceneProps) {
+  /** sceneRef 指向当前 Tab 唯一滚动容器。 */
+  const sceneRef = useRef<HTMLDivElement | null>(null);
+  /** savedScrollTopRef 保存 Activity 隐藏子树前的滚动位置。 */
+  const savedScrollTopRef = useRef(0);
   /** visible 决定当前场景是否参与布局和交互。 */
   const visible = tab === activeTab;
+  /** handleSceneScroll 只保存用户在可见场景产生的真实滚动位置。 */
+  const handleSceneScroll = useCallback<UIEventHandler<HTMLDivElement>>(event => {
+    if (visible) savedScrollTopRef.current = event.currentTarget.scrollTop;
+  }, [visible]);
+  useLayoutEffect(() => {
+    if (!visible) return;
+    /** scene 在 Activity 恢复内容高度后还原上次滚动位置。 */
+    const scene = sceneRef.current;
+    if (!scene) return;
+    scene.scrollTop = savedScrollTopRef.current;
+  }, [visible]);
   return (
     <div
+      ref={sceneRef}
       className="rn-primary-tab-scene"
       data-primary-tab-scene={visible ? 'active' : 'inactive'}
       aria-hidden={!visible}
+      onScroll={handleSceneScroll}
     >
       <Activity name={`primary-tab-${tab}`} mode={visible ? 'visible' : 'hidden'}>
         {children}

@@ -5,6 +5,8 @@ import type {
   WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
 
+import { getConversationTitle } from '../conversations/conversation-list-view.js';
+
 /** 判断 RN 删除层是否允许展示“为所有人删除”。 */
 export function canDeleteChatMessagesForAll(
   conversation: Conversation | null,
@@ -24,7 +26,7 @@ export function getChatDeleteForAllLabel(
 ): string {
   if (conversation?.type === 'group') return '为我和所有群成员删除';
   // title 优先使用会话展示名，其次使用稳定目标 ID。
-  const title = conversation?.name?.trim() || conversation?.targetID || '对方';
+  const title = conversation ? getConversationTitle(conversation) : '对方';
   return `为我和 ${title} 删除`;
 }
 

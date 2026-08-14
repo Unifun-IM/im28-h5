@@ -11,6 +11,7 @@ import { InteractionModal } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { ChatAutoDeleteSettingsRow } from './ChatAutoDeleteSettingsRow.js';
 import './group-management-page.css';
 
 /** 群设置开关动作只保存 shared patch 字段与下一布尔值。 */
@@ -151,6 +152,13 @@ export function GroupManagementPage() {
               {group.permissions.canMuteAll || group.permissions.canMuteMembers ? <ManagementLink label="群禁言" value={group.muteAll ? '全员禁言' : group.muteMember ? '普通成员禁言' : '关闭'} to={muteURL} /> : null}
               {group.permissions.canManageAdmins ? <ManagementLink label="发言频率" value={formatSpeechFrequency(group.speechFrequencyEnabled === true, group.speechFrequencySeconds)} to={speechURL} divided={false} /> : null}
             </section>
+          ) : null}
+          {!loading && group?.permissions.canManageAdmins && conversation ? (
+            <ChatAutoDeleteSettingsRow
+              conversationID={conversation.conversationID}
+              placement="group-management"
+              autoDeleteSeconds={conversation.autoDeleteSeconds}
+            />
           ) : null}
           {!loading && group?.permissions.canManageAdmins ? (
             <section className="rn-group-management-card">

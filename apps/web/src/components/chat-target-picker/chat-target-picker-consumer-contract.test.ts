@@ -15,6 +15,13 @@ describe('chat target picker consumer contract', () => {
     }
   });
 
+  it('聊天转发和名片共用同一弹窗的多选与单选模式', () => {
+    expect(chatSource.match(/<ChatTargetPickerModal/g)).toHaveLength(2);
+    expect(chatSource).toContain('selectionMode="multiple"');
+    expect(chatSource).toContain('selectionMode="single"');
+    expect(chatSource).not.toContain('ChatCardPickerDialog');
+  });
+
   it('keeps the legacy path redirect-only without restoring a target page', () => {
     expect(appSource).not.toContain('ChatForwardTargetPage');
     expect(appSource).toContain('path="/conversations/:conversationID/forward"');

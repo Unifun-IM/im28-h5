@@ -1,18 +1,24 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { WebIMPeerProfile } from '@im28/im-sdk/web';
-import { Navigate, useLocation, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  buildIMSelfFriendApplicationMessage,
+  DEFAULT_IM_FRIEND_APPLICATION_MESSAGE,
+  type WebIMPeerProfile,
+} from '@im28/im-sdk/web';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { buildContactProfileRoute } from './contact-profile-view.js';
+import {
+  createContactProfileChildRouteState,
+  readContactProfileApplicationSourceType,
+} from './contact-profile-route-state.js';
+import { resolveApplicationMessageUpdate } from './application-message-view.js';
 import {
   ContactProfileAvatar,
   ContactProfileHeader,
 } from './ContactProfileShared.js';
 import './contact-profile-page.css';
 import './contact-friend-application-page.css';
-
-/** RN 好友申请缺省验证消息。 */
-const DEFAULT_APPLICATION_MESSAGE = '你好，我想添加你为好友';
 
 /** RN 添加朋友全屏状态通过真实 peerProfile mutation 提交。 */
 export function ContactFriendApplicationPage() {
@@ -22,18 +28,22 @@ export function ContactFriendApplicationPage() {
   const routeParams = useParams<{ userID: string }>();
   /** location 提供扫码入口传递的受控申请来源。 */
   const location = useLocation();
+  /** profileRouteState 只回传资料页继续恢复来源所需的白名单 context。 */
+  const profileRouteState = createContactProfileChildRouteState(location.state);
+  /** navigate 只在真实申请成功后替换回资料页。 */
+  const navigate = useNavigate();
   // userID 清理无效 deep link。
   const userID = routeParams.userID?.trim() ?? '';
   // profile 只来自真实资料 facade。
   const [profile, setProfile] = useState<WebIMPeerProfile | null>(null);
   // message 对齐 RN 80 字符验证输入。
-  const [message, setMessage] = useState(DEFAULT_APPLICATION_MESSAGE);
+  const [message, setMessage] = useState(DEFAULT_IM_FRIEND_APPLICATION_MESSAGE);
+  /** defaultMessageRef 识别本人资料返回前用户是否已经编辑。 */
+  const defaultMessageRef = useRef(DEFAULT_IM_FRIEND_APPLICATION_MESSAGE);
   // loading 覆盖资料读取。
   const [loading, setLoading] = useState(false);
   // submitting 阻止重复申请。
   const [submitting, setSubmitting] = useState(false);
-  // submitted 只在 Gateway mutation 成功后置为 true。
-  const [submitted, setSubmitted] = useState(false);
   // error 显示真实读取或 mutation 失败。
   const [error, setError] = useState<string | null>(null);
 
@@ -53,31 +63,68 @@ export function ContactFriendApplicationPage() {
 
   useEffect(() => { void loadProfile(); }, [loadProfile]);
 
+  useEffect(() => {
+    if (!runtime || !snapshot.userID) return undefined;
+    /** active 阻止卸载或切号后的旧资料结果覆盖新页面草稿。 */
+    let active = true;
+    /** loadSelfApplicationMessage 用 shared 规则更新仍未编辑的缺省验证语。 */
+    const loadSelfApplicationMessage = async (): Promise<void> => {
+      try {
+        /** selfProfile 只用于生成验证语，不参与目标关系判断。 */
+        const selfProfile = await runtime.getSync().profile.getCurrent();
+        if (!active) return;
+        /** nextDefaultMessage 由跨端 shared owner 统一生成。 */
+        const nextDefaultMessage = buildIMSelfFriendApplicationMessage(selfProfile.nickname);
+        /** previousDefaultMessage 是异步读取开始前的页面缺省基线。 */
+        const previousDefaultMessage = defaultMessageRef.current;
+        defaultMessageRef.current = nextDefaultMessage;
+        setMessage(currentMessage => resolveApplicationMessageUpdate({
+          currentMessage,
+          previousDefaultMessage,
+          nextDefaultMessage,
+        }).message);
+      } catch {
+        // 本人资料增强失败时保留稳定缺省文案，不阻断目标资料和申请操作。
+      }
+    };
+    void loadSelfApplicationMessage();
+    return () => { active = false; };
+  }, [runtime, snapshot.userID]);
+
   /** 提交好友申请，成功前不改变页面完成态。 */
   const submitApplication = useCallback(async (): Promise<void> => {
-    if (!runtime || !profile || submitting || submitted) return;
+    if (!runtime || !profile || submitting) return;
     setSubmitting(true);
     setError(null);
     try {
       await runtime.getSync().peerProfile.applyFriend(
         profile.userID,
         message,
-        readFriendApplicationSourceType(location.state) ?? undefined,
+        readContactProfileApplicationSourceType(location.state) ?? undefined,
       );
-      setSubmitted(true);
+      navigate(buildContactProfileRoute(profile.userID), {
+        replace: true,
+        state: profileRouteState,
+      });
     } catch (cause) {
       setError(readApplicationError(cause, '好友申请发送失败'));
     } finally {
       setSubmitting(false);
     }
-  }, [location.state, message, profile, runtime, submitted, submitting]);
+  }, [location.state, message, navigate, profile, profileRouteState, runtime, submitting]);
 
   if (restoring) return <ApplicationPageState label="正在恢复好友申请" />;
   if (!runtime) return <ApplicationPageState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
   if (!userID) return <Navigate to="/contacts" replace />;
   if (profile?.relationship === 'self' || profile?.relationship === 'friend') {
-    return <Navigate to={buildContactProfileRoute(userID)} replace />;
+    return (
+      <Navigate
+        to={buildContactProfileRoute(userID)}
+        replace
+        state={profileRouteState}
+      />
+    );
   }
 
   return (
@@ -104,7 +151,7 @@ export function ContactFriendApplicationPage() {
               <textarea
                 value={message}
                 maxLength={80}
-                disabled={submitted}
+                disabled={submitting}
                 placeholder="输入打招呼内容"
                 onChange={event => setMessage(event.target.value)}
               />
@@ -112,10 +159,10 @@ export function ContactFriendApplicationPage() {
             <button
               type="button"
               className="rn-contact-profile-primary"
-              disabled={submitting || submitted}
+              disabled={submitting}
               onClick={() => void submitApplication()}
             >
-              {submitted ? '申请已发送' : submitting ? '正在发送' : '加朋友'}
+              {submitting ? '正在发送' : '加朋友'}
             </button>
           </div>
         ) : null}
@@ -138,10 +185,4 @@ function ApplicationPageState({ label, detail }: ApplicationPageStateProps) {
 /** 将未知申请异常转换为不含凭据的页面文案。 */
 function readApplicationError(cause: unknown, fallback: string): string {
   return cause instanceof Error && cause.message ? cause.message : fallback;
-}
-
-/** 只接受扫码页登记的 qrcode 好友申请来源。 */
-function readFriendApplicationSourceType(state: unknown): 'qrcode' | null {
-  if (!state || typeof state !== 'object') return null;
-  return Reflect.get(state, 'sourceType') === 'qrcode' ? 'qrcode' : null;
 }

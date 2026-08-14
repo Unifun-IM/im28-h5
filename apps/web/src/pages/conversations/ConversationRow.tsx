@@ -16,12 +16,15 @@ import {
   getConversationDisplayPreview,
   getConversationTitle,
 } from './conversation-list-view.js';
+import { getConversationPresenceUserID } from './conversation-presence-view.js';
+import { shouldShowConversationUnreadBadge } from './conversation-unread-view.js';
 import type { ConversationActionAnchor } from './ConversationActionMenu.js';
 
 /** RN 会话行只接收 Web SDK 已组合的稳定缓存项。 */
 interface ConversationRowProps {
   readonly item: WebIMConversationListItem;
   readonly currentUserID: string;
+  readonly online: boolean;
   readonly onOpenActions: (
     item: WebIMConversationListItem,
     anchor: ConversationActionAnchor,
@@ -29,7 +32,7 @@ interface ConversationRowProps {
 }
 
 /** 渲染 RN 72px 会话行及其头像、摘要、时间和未读状态。 */
-export function ConversationRow({ item, currentUserID, onOpenActions }: ConversationRowProps) {
+export function ConversationRow({ item, currentUserID, online, onOpenActions }: ConversationRowProps) {
   /** longPressTimerRef 保存 300ms RN 长按阈值定时器。 */
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** pointerStartRef 用于移动阈值取消长按。 */
@@ -46,6 +49,8 @@ export function ConversationRow({ item, currentUserID, onOpenActions }: Conversa
   const unread = Math.max(0, Math.trunc(conversation.unreadCount));
   /** manualUnreadOnly 对齐 RN 手动未读但服务端未读数为零的红点。 */
   const manualUnreadOnly = conversation.manualUnread === true && unread === 0;
+  /** showUnreadBadge 保留静音 @我会话的高优先级数字提醒。 */
+  const showUnreadBadge = shouldShowConversationUnreadBadge(conversation, preview.text);
   // avatarStyle 复用 RN fallback 渐变算法。
   const avatarStyle = {
     '--conversation-avatar-gradient': getRNAvatarGradient(
@@ -122,19 +127,26 @@ export function ConversationRow({ item, currentUserID, onOpenActions }: Conversa
       }}
       onDragStart={event => event.preventDefault()}
     >
-      <span className="rn-conversation-avatar" style={avatarStyle}>
-        <span className="rn-conversation-avatar-fallback">
-          {getRNAvatarInitial(title)}
+      <span className="rn-conversation-avatar-shell">
+        <span className="rn-conversation-avatar" style={avatarStyle}>
+          <span className="rn-conversation-avatar-fallback">
+            {getRNAvatarInitial(title)}
+          </span>
+          {conversation.faceURL ? (
+            <img
+              src={conversation.faceURL}
+              alt=""
+              loading="lazy"
+              onError={event => {
+                event.currentTarget.hidden = true;
+              }}
+            />
+          ) : null}
         </span>
-        {conversation.faceURL ? (
-          <img
-            src={conversation.faceURL}
-            alt=""
-            loading="lazy"
-            onError={event => {
-              event.currentTarget.hidden = true;
-            }}
-          />
+        {online && getConversationPresenceUserID(conversation) ? (
+          <span className="rn-conversation-online-dot-border" aria-label="在线">
+            <span className="rn-conversation-online-dot" />
+          </span>
         ) : null}
       </span>
 
@@ -171,7 +183,7 @@ export function ConversationRow({ item, currentUserID, onOpenActions }: Conversa
             />
           ) : null}
           {unread > 0 || manualUnreadOnly ? (
-            conversation.isMuted || manualUnreadOnly ? (
+            !showUnreadBadge || manualUnreadOnly ? (
               <span
                 className="rn-conversation-unread-dot"
                 aria-label={manualUnreadOnly ? '已标记未读' : `${unread} 条未读`}

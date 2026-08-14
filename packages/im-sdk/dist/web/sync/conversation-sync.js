@@ -9,6 +9,7 @@ import { readUnreadMentionSnapshot, } from './conversation-unread-mention.js';
 import { syncIMGatewayDifference } from './gateway-difference-sync.js';
 import { openIMGroupConversation, } from './group-conversation-open.js';
 import { createIMConversationDraftSync, } from './conversation-draft.js';
+import { resolveGroupSenderDisplayName } from './sender-display-name.js';
 /** 创建认证账号绑定的浏览器会话同步服务。 */
 export function createWebIMConversationSync(dependencies) {
     return new WebIMConversationSyncImpl(dependencies);
@@ -78,9 +79,19 @@ class WebIMConversationSyncImpl {
             const latestMessage = conversation.latestMessageID
                 ? await messageRepository.getByClientMsgID(conversation.latestMessageID)
                 : null;
+            /** latestSenderDisplayName 只为群收到的最新消息组合现有缓存，不触发网络同步。 */
+            const latestSenderDisplayName = conversation.type === 'group' &&
+                latestMessage?.direction === 'incoming'
+                ? await resolveGroupSenderDisplayName(context.database, conversation.targetID, latestMessage.senderID)
+                : undefined;
             /** unreadMention 由共享 SQLite 未读窗口查询提供，不扫描页面 history。 */
             const unreadMention = await readUnreadMentionSnapshot(context, conversation);
-            return { conversation, latestMessage, unreadMention };
+            return {
+                conversation,
+                latestMessage,
+                ...(latestSenderDisplayName ? { latestSenderDisplayName } : {}),
+                unreadMention,
+            };
         }));
     }
     /** 全分页拉取 Gateway 会话后替换当前账号 cache。 */

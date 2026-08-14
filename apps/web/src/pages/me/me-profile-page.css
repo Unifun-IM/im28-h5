@@ -5,6 +5,7 @@
 }
 
 .rn-me-profile-surface {
+  position: relative;
   width: 100%;
   min-height: 100dvh;
   margin: 0 auto;
@@ -34,10 +35,50 @@
   text-decoration: none;
 }
 
-.rn-me-profile-header button {
-  color: var(--im-profile-primary);
+.rn-me-profile-header .rn-me-profile-back-action,
+.rn-me-profile-header .rn-me-profile-save-action {
   font-size: 16px;
   line-height: 24px;
+}
+
+.rn-me-profile-header .rn-me-profile-back-action {
+  color: var(--im-profile-text-primary);
+}
+
+.rn-me-profile-header .rn-me-profile-save-action {
+  color: var(--im-profile-primary);
+}
+
+.rn-me-profile-save-spinner,
+.rn-me-nickname-saving-overlay > span {
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in srgb, var(--im-profile-primary) 28%, transparent);
+  border-top-color: var(--im-profile-primary);
+  border-radius: 50%;
+  animation: rn-me-profile-spin 700ms linear infinite;
+}
+
+.rn-me-profile-header .rn-me-profile-save-action.is-pending:disabled {
+  opacity: 1;
+}
+
+.rn-me-profile-header .rn-me-profile-back-action:disabled {
+  opacity: 1;
+}
+
+.rn-me-nickname-saving-overlay {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: grid;
+  background: var(--im-profile-saving-overlay);
+  place-items: center;
+}
+
+.rn-me-nickname-saving-overlay > span {
+  border-color: color-mix(in srgb, var(--im-profile-text-primary) 28%, transparent);
+  border-top-color: var(--im-profile-text-primary);
 }
 
 .rn-me-profile-header button:disabled {
@@ -140,8 +181,8 @@ button.rn-me-profile-row:disabled {
   color: var(--im-profile-text-muted);
 }
 
-.rn-me-profile-row.is-static {
-  cursor: text;
+.rn-me-profile-id-row {
+  cursor: pointer;
 }
 
 .rn-me-profile-avatar-row {
@@ -175,12 +216,13 @@ button.rn-me-profile-row:disabled {
   font-size: 13px;
 }
 
-.rn-me-profile-row:active:not(.is-static) {
+.rn-me-profile-row:active {
   background: var(--im-profile-row-pressed);
 }
 
 .rn-me-profile-error,
-.rn-me-editor-error {
+.rn-me-editor-error,
+.rn-me-profile-copy-state {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -188,6 +230,11 @@ button.rn-me-profile-row:disabled {
   margin: 0 0 12px;
   color: var(--im-profile-danger);
   font-size: 13px;
+}
+
+.rn-me-profile-copy-state {
+  justify-content: center;
+  color: var(--im-profile-text-secondary);
 }
 
 .rn-me-profile-error button {
@@ -301,8 +348,19 @@ button.rn-me-profile-row:disabled {
   text-align: right;
 }
 
+@keyframes rn-me-profile-spin {
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 480px) {
   .rn-me-profile-surface {
     box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rn-me-profile-save-spinner,
+  .rn-me-nickname-saving-overlay > span {
+    animation: none;
   }
 }

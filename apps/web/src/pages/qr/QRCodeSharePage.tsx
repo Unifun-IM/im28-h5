@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   buildIM28GroupQRCodePayload,
   buildIM28UserQRCodePayload,
+  formatIMUserDisplayName,
   IM_BROADCAST_MAX_TARGETS,
   type GatewayUser,
   type WebIMSync,
@@ -123,7 +124,12 @@ async function loadQRCodeShareSource(sync: WebIMSync, kind: QRCodeShareKind, con
     /** userID 必须由权威详情返回。 */
     const userID = profile.user_id?.trim() ?? '';
     if (!userID) throw new Error('二维码身份不可用');
-    return { kind, identity: userID, displayName: profile.nickname?.trim() || userID, payload: buildIM28UserQRCodePayload(userID) };
+    return {
+      kind,
+      identity: userID,
+      displayName: profile.nickname?.trim() || formatIMUserDisplayName(userID),
+      payload: buildIM28UserQRCodePayload(userID),
+    };
   }
   /** groupSource 复用群资料页的会话与群 ID 双重校验。 */
   const groupSource = await loadGroupProfileSource({ sync, conversationID });

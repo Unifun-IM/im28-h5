@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { buildIM28UserQRCodePayload, type GatewayUser } from '@im28/im-sdk/web';
+import {
+  buildIM28UserQRCodePayload,
+  formatIMUserDisplayName,
+  type GatewayUser,
+} from '@im28/im-sdk/web';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
@@ -25,8 +29,8 @@ export default function ProfileQRCodePage() {
   const backHref = readProfileQRCodeBackHref(location.state);
   /** userID 以资料返回值为主并以当前认证身份保底。 */
   const userID = profile?.user_id?.trim() || snapshot.userID || '';
-  /** displayName 对齐 RN 昵称到用户 ID 的回退。 */
-  const displayName = profile?.nickname?.trim() || userID;
+  /** displayName 对齐 RN 昵称到匿名用户 ID 的回退。 */
+  const displayName = profile?.nickname?.trim() || formatIMUserDisplayName(userID);
   /** 加载真实当前资料，二维码渲染交给唯一展示组件。 */
   const loadProfileQRCode = useCallback(async (): Promise<void> => {
     if (!runtime || !snapshot.userID) return;

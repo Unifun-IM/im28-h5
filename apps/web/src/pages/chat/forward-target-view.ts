@@ -3,6 +3,9 @@ import type {
   WebIMContact,
   WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
+import { formatIMUserDisplayName } from '@im28/im-sdk/web';
+
+import { getConversationTitle } from '../conversations/conversation-list-view.js';
 
 /** 转发选择器的三个 RN 数据源。 */
 export type ChatForwardTargetKind = 'conversation' | 'friend' | 'group';
@@ -29,7 +32,7 @@ export function conversationToChatForwardTarget(
     kind: 'conversation',
     id: conversation.targetID,
     conversationID: conversation.conversationID,
-    title: conversation.name?.trim() || conversation.targetID || '未命名会话',
+    title: getConversationTitle(conversation),
     description: isGroup ? `群聊 · ${conversation.targetID}` : `好友 · ${conversation.targetID}`,
     avatarURL: conversation.faceURL?.trim() ?? '',
   };
@@ -42,7 +45,7 @@ export function contactToChatForwardTarget(contact: WebIMContact): ChatForwardTa
     kind: 'friend',
     id: contact.userID,
     conversationID: '',
-    title: contact.displayName || contact.userID,
+    title: contact.displayName || formatIMUserDisplayName(contact.userID),
     description: `好友 · ${contact.userID}`,
     avatarURL: contact.avatarURL,
   };

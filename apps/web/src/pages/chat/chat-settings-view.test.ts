@@ -65,6 +65,7 @@ describe('chat settings view', () => {
       canShowAnnouncement: false,
       canEditGroupProfile: false,
       canRemoveMembers: false,
+      canShowAutoDeleteInChatSettings: true,
       canClearForAll: true,
       canQuitGroup: false,
       canDismissGroup: false,
@@ -96,6 +97,7 @@ describe('chat settings view', () => {
       canShowAnnouncement: true,
       canEditGroupProfile: true,
       canRemoveMembers: true,
+      canShowAutoDeleteInChatSettings: false,
       canClearForAll: true,
       canQuitGroup: true,
       canDismissGroup: false,
@@ -123,8 +125,8 @@ describe('chat settings view', () => {
     )).toMatchObject({ canQuitGroup: false, canDismissGroup: false });
   });
 
-  it('only exposes the announcement row through the matching shared capability', () => {
-    /** conversation 是公告权限投影当前绑定的真实群会话。 */
+  it('shows the announcement row to matching owners and admins independently of edit permission', () => {
+    /** conversation 是公告入口角色投影当前绑定的真实群会话。 */
     const conversation = createConversation({
       conversationID: 'conversation-group-1',
       type: 'group',
@@ -132,15 +134,23 @@ describe('chat settings view', () => {
     });
     expect(buildChatSettingsView(
       conversation,
-      createGroup({ currentUserRole: 'member', canEditAnnouncement: true }),
+      createGroup({ currentUserRole: 'owner', canEditAnnouncement: false }),
     ).canShowAnnouncement).toBe(true);
     expect(buildChatSettingsView(
       conversation,
       createGroup({ currentUserRole: 'admin', canEditAnnouncement: false }),
+    ).canShowAnnouncement).toBe(true);
+    expect(buildChatSettingsView(
+      conversation,
+      createGroup({ currentUserRole: 'member', canEditAnnouncement: true }),
     ).canShowAnnouncement).toBe(false);
     expect(buildChatSettingsView(
       conversation,
-      createGroup({ groupID: 'other-group', canEditAnnouncement: true }),
+      createGroup({
+        groupID: 'other-group',
+        currentUserRole: 'owner',
+        canEditAnnouncement: true,
+      }),
     ).canShowAnnouncement).toBe(false);
   });
 
@@ -230,7 +240,7 @@ describe('chat settings view', () => {
     ];
     expect(buildChatSettingsMemberViews(members)).toEqual([
       { userID: 'u1', name: '好友备注', avatarURL: '' },
-      { userID: 'u2', name: 'u2', avatarURL: '' },
+      { userID: 'u2', name: 'im-u2', avatarURL: '' },
     ]);
   });
 

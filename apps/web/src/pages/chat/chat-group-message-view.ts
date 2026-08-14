@@ -2,7 +2,10 @@ import type {
   Message,
   WebIMGroupMember,
 } from '@im28/im-sdk/web';
-import { resolveIMGroupMemberDisplayName } from '@im28/im-sdk/web';
+import {
+  formatIMUserDisplayName,
+  resolveIMGroupMemberDisplayName,
+} from '@im28/im-sdk/web';
 
 /** 群消息发送人视图只消费 SDK 已按备注、群昵称、公开昵称解析的成员快照。 */
 export interface ChatGroupSenderView {
@@ -94,8 +97,8 @@ export function resolveChatMentionDisplayText(
     /** displayName 使用 SDK 的唯一 RN 优先级 owner。 */
     const displayName = member
       ? resolveIMGroupMemberDisplayName(member, userID)
-      : mention.nickname?.trim() || userID;
-    if (!displayName || displayName === userID) continue;
+      : mention.nickname?.trim() || formatIMUserDisplayName(userID);
+    if (!displayName) continue;
     displayText = displayText.replaceAll(`@${userID}`, `@${displayName}`);
     /** snapshotName 兼容历史消息正文保存旧群昵称的情况。 */
     const snapshotName = mention.nickname?.trim() || '';

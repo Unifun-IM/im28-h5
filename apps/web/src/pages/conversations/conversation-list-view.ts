@@ -5,11 +5,14 @@ import type {
   WebIMConversationListItem,
 } from '@im28/im-sdk/web';
 import {
+  formatIMUserDisplayName,
   getIMFriendAddedMessageText,
+  isIMGroupSystemMessageType,
   parseIMGroupSystemMessagePresentation,
   projectPresetEmojiEntitiesToDisplayText,
   readIMConversationDraftDocument,
 } from '@im28/im-sdk/web';
+import { isConversationAtSelfPreview } from './conversation-unread-view.js';
 
 /** 会话列表摘要同时标记草稿语义，供行组件使用 RN 对应颜色。 */
 export interface ConversationListPreview {
@@ -34,7 +37,12 @@ const MESSAGE_PREVIEW_LABELS: Readonly<Record<number, string>> = {
 
 /** 使用 RN 相同的 name -> title 回退顺序。 */
 export function getConversationTitle(conversation: Conversation): string {
-  return conversation.name?.trim() || conversation.targetID || '会话';
+  /** cachedName 允许旧缓存中保留完整用户 ID，但不把它直接暴露给用户。 */
+  const cachedName = conversation.name?.trim() ?? '';
+  if (conversation.type === 'single' && (!cachedName || cachedName === conversation.targetID)) {
+    return formatIMUserDisplayName(conversation.targetID) || '会话';
+  }
+  return cachedName || conversation.targetID || '会话';
 }
 
 /** 将会话草稿和最新消息转换为 RN 会话行摘要。 */
@@ -66,7 +74,15 @@ export function getConversationListPreview(
       ? { entities: message.entities }
       : {}),
   };
-  return projectMentionPreview(item, message, preview, currentUserID);
+  /** mentionPreview 继续优先承载 RN 的 @我/所有人专用前缀。 */
+  const mentionPreview = projectMentionPreview(
+    item,
+    message,
+    preview,
+    currentUserID,
+  );
+  if (mentionPreview !== preview) return mentionPreview;
+  return projectGroupSenderPreview(item, message, preview, currentUserID);
 }
 
 /** 静音会话用条数前缀表达未读，保持 RN 行内信息层级。 */
@@ -80,7 +96,7 @@ export function getConversationDisplayPreview(
   const unread = Math.max(0, Math.trunc(item.conversation.unreadCount));
   if (
     preview.isDraft ||
-    isMentionConversationPreview(preview.text) ||
+    isConversationAtSelfPreview(preview.text) ||
     !item.conversation.isMuted ||
     unread <= 0
   ) {
@@ -120,10 +136,18 @@ function projectMentionPreview(
   const bodyText = mention.type === 'user' && mention.nickname
     ? replaceMentionNickname(preview.text, mention.nickname)
     : preview.text;
-  /** senderDisplayName 只属于同一未读 mention 快照，缺失时不猜名称。 */
-  const senderDisplayName = item.unreadMention?.message.clientMsgID === message.clientMsgID
+  /** unreadSenderDisplayName 只属于同一未读 mention 快照。 */
+  const unreadSenderDisplayName = item.unreadMention?.message.clientMsgID === message.clientMsgID
     ? item.unreadMention.senderDisplayName?.trim()
     : '';
+  /** latestSenderDisplayName 只在当前消息就是最新消息时作为 shared 缓存回退。 */
+  const latestSenderDisplayName = item.latestMessage?.clientMsgID === message.clientMsgID
+    ? message.senderID.trim() === userID
+      ? '我'
+      : item.latestSenderDisplayName?.trim()
+    : '';
+  /** senderDisplayName 优先使用未读窗口对应的精确发送人快照。 */
+  const senderDisplayName = unreadSenderDisplayName || latestSenderDisplayName;
   /** messageText 对齐 RN 群摘要的“发送人：正文”格式。 */
   const messageText = senderDisplayName
     ? `${senderDisplayName}：${bodyText}`
@@ -147,16 +171,52 @@ function projectMentionPreview(
   };
 }
 
+/** 为普通群最新消息补入 RN 的发送人前缀并同步表情区间。 */
+function projectGroupSenderPreview(
+  item: WebIMConversationListItem,
+  message: Message | null,
+  preview: ConversationListPreview,
+  currentUserID: string,
+): ConversationListPreview {
+  if (
+    item.conversation.type !== 'group' ||
+    !message ||
+    message.contentType === 0 ||
+    message.status === 'revoked' ||
+    isIMGroupSystemMessageType(message.contentType) ||
+    parseIMGroupSystemMessagePresentation(message, currentUserID) ||
+    getIMFriendAddedMessageText(message.contentType)
+  ) {
+    return preview;
+  }
+  /** senderName 对本人固定显示“我”，其他成员只消费 SDK 已解析名称。 */
+  const senderName = message.senderID.trim() === currentUserID.trim() &&
+    currentUserID.trim()
+    ? '我'
+    : item.latestSenderDisplayName?.trim() ?? '';
+  if (!senderName) return preview;
+  /** text 是群会话行最终展示的发送人和正文组合。 */
+  const text = `${senderName}：${preview.text}`;
+  return {
+    ...preview,
+    text,
+    ...(preview.entities?.length
+      ? {
+          entities: projectPresetEmojiEntitiesToDisplayText({
+            sourceText: preview.text,
+            sourceEntities: preview.entities,
+            displayText: text,
+          }),
+        }
+      : {}),
+  };
+}
+
 /** 将当前用户的 mention 昵称快照替换为统一 @我 文案。 */
 function replaceMentionNickname(text: string, nickname: string): string {
   /** token 只替换带 @ 前缀的完整快照，避免误改普通正文昵称。 */
   const token = `@${nickname.trim()}`;
   return token === '@' ? text : text.split(token).join('@我');
-}
-
-/** 判断摘要是否已经包含 RN mention 优先前缀。 */
-function isMentionConversationPreview(text: string): boolean {
-  return text.startsWith('[有人@我]') || text.startsWith('[所有人]');
 }
 
 /** 汇总非静音会话未读数，供 RN 标题“聊天(n)”展示。 */

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { GatewayUser } from '@im28/im-sdk/web';
+import { formatIMUserDisplayName, type GatewayUser } from '@im28/im-sdk/web';
 import { Link, Navigate } from 'react-router-dom';
 
 import backgroundImageURL from '../../assets/rn/assets/my/bg.jpg';
@@ -12,6 +12,7 @@ import securityIconURL from '../../assets/rn/assets/icons/imm28/lock.svg';
 import qrCodeIconURL from '../../assets/rn/assets/icons/imm28/qrcode-small.svg';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { copyUserIDToClipboard } from '../../components/clipboard/user-id-clipboard.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import './me-page.css';
 
@@ -54,7 +55,7 @@ export function MePage() {
     const userID = profile?.user_id?.trim() || snapshot.userID || '';
     if (!userID) return;
     try {
-      await navigator.clipboard.writeText(userID);
+      await copyUserIDToClipboard(userID);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1200);
     } catch (cause) {
@@ -62,10 +63,10 @@ export function MePage() {
     }
   }, [profile?.user_id, snapshot.userID]);
 
-  // displayName 对齐 RN nickname -> user ID 的回退顺序。
-  const displayName = profile?.nickname?.trim() || profile?.user_id?.trim() || snapshot.userID || '';
   // userID 仅显示服务端或认证 runtime 的真实身份。
   const userID = profile?.user_id?.trim() || snapshot.userID || '';
+  // displayName 对齐 RN nickname -> im-ID 的回退顺序。
+  const displayName = profile?.nickname?.trim() || formatIMUserDisplayName(userID);
   // avatarStyle 复用 RN 稳定头像渐变。
   const avatarStyle = useMemo(() => ({
     '--me-avatar-gradient': getRNAvatarGradient(userID),
@@ -81,16 +82,24 @@ export function MePage() {
     <main className="rn-me-page">
       <section className="rn-me-surface" aria-busy={loading}>
         <header className="rn-me-hero" style={heroStyle}>
-          <span className="rn-me-avatar" style={avatarStyle}>
+          <Link
+            className="rn-me-avatar rn-me-avatar-action"
+            style={avatarStyle}
+            aria-label="修改头像"
+            to="/me/profile"
+            state={{ openAvatarSource: true }}
+          >
             <span>{getRNAvatarInitial(displayName)}</span>
             {profile?.avatar_url?.trim() ? (
               <img src={profile.avatar_url} alt="" onError={event => { event.currentTarget.hidden = true; }} />
             ) : null}
-          </span>
+          </Link>
           <div className="rn-me-identity">
             <span className="rn-me-name-row">
-              <strong>{displayName || '加载中'}</strong>
-              <Link aria-label="我的二维码" to="/me/qrcode" state={{ backHref: '/me' }}>
+              <Link className="rn-me-name-action" aria-label="编辑昵称" to="/me/profile/nickname">
+                <strong>{displayName || '加载中'}</strong>
+              </Link>
+              <Link className="rn-me-qr-action" aria-label="我的二维码" to="/me/qrcode" state={{ backHref: '/me' }}>
                 <RNAssetIcon assetURL={qrCodeIconURL} />
               </Link>
             </span>
@@ -108,21 +117,23 @@ export function MePage() {
               <button type="button" onClick={() => void loadProfile()}>重试</button>
             </div>
           ) : null}
-          {copied ? <p className="rn-me-copy-state" role="status">已复制</p> : null}
+          {copied ? <p className="rn-me-copy-state" role="status">已复制ID</p> : null}
           <div className="rn-me-menu-card">
             <Link className="rn-me-menu-row" to="/me/profile">
               <RNAssetIcon assetURL={profileIconURL} />
               <span>个人资料</span>
               <RNAssetIcon assetURL={arrowIconURL} />
             </Link>
-            <Link className="rn-me-menu-row" to="/me/security">
-              <RNAssetIcon assetURL={securityIconURL} />
-              <span>账号安全</span>
-              <RNAssetIcon assetURL={arrowIconURL} />
-            </Link>
             <Link className="rn-me-menu-row" to="/me/settings">
               <RNAssetIcon assetURL={settingsIconURL} />
               <span>通用设置</span>
+              <RNAssetIcon assetURL={arrowIconURL} />
+            </Link>
+          </div>
+          <div className="rn-me-menu-card">
+            <Link className="rn-me-menu-row" to="/me/security">
+              <RNAssetIcon assetURL={securityIconURL} />
+              <span>账号安全</span>
               <RNAssetIcon assetURL={arrowIconURL} />
             </Link>
           </div>

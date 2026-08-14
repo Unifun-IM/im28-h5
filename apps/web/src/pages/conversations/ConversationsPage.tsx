@@ -16,11 +16,14 @@ import {
   ConversationActionMenu,
 } from './ConversationActionMenu.js';
 import { ConversationDeleteSheet } from './ConversationDeleteSheet.js';
+import { shouldUsePinnedArchiveBackground } from './conversation-archive-view.js';
+import { getConversationPresenceUserID } from './conversation-presence-view.js';
 import {
   getConversationUnreadTotal,
   getNextUnreadConversationID,
 } from './conversation-list-view.js';
 import { useConversationActions } from './useConversationActions.js';
+import { useConversationPresence } from './useConversationPresence.js';
 import './conversations-page.css';
 
 /** RN 会话列表页复用 Web SDK cache-first 同步链和 React Router 路由。 */
@@ -46,6 +49,15 @@ export function ConversationsPage() {
   const [refreshing, setRefreshing] = useState(false);
   // error 显示真实 sync 错误，不回退 fake-success。
   const [error, setError] = useState<string | null>(null);
+  /** onlineByID 和 refreshPresence 共用 SDK presence owner。 */
+  const {
+    onlineByID,
+    refresh: refreshPresence,
+  } = useConversationPresence({
+    runtime,
+    accountUserID: snapshot.userID,
+    items,
+  });
   /** listRef 提供当前真实会话行的可见位置和滚动容器。 */
   const listRef = useRef<HTMLElement | null>(null);
   /** lastUnreadTargetIDRef 让连续双击按 RN 规则循环未读会话。 */
@@ -116,12 +128,13 @@ export function ConversationsPage() {
       /** 归档端点失败不覆盖普通会话刷新结果，但成功时同步更新入口。 */
       await sync.conversations.syncArchived().catch(() => undefined);
       await reloadCachedConversations();
+      await refreshPresence();
     } catch (cause) {
       setError(readConversationPageError(cause));
     } finally {
       setRefreshing(false);
     }
-  }, [refreshing, reloadCachedConversations, snapshot.userID, sync]);
+  }, [refreshPresence, refreshing, reloadCachedConversations, snapshot.userID, sync]);
 
   /** pullRefresh 把触屏下拉手势映射为一次只读远端刷新。 */
   const pullRefresh = usePullRefresh({
@@ -206,6 +219,11 @@ export function ConversationsPage() {
     () => items.some(item => Boolean(item.conversation.isPinned)),
     [items],
   );
+  /** archiveUsesPinnedBackground 对齐 RN 任一列表存在置顶时的通栏背景。 */
+  const archiveUsesPinnedBackground = useMemo(
+    () => shouldUsePinnedArchiveBackground(items, archivedItems),
+    [archivedItems, items],
+  );
   // headerTitle 对齐 RN 999+ 的总未读标题上限。
   const headerTitle = unreadTotal
     ? `聊天(${unreadTotal > 999 ? '999+' : unreadTotal})`
@@ -285,7 +303,7 @@ export function ConversationsPage() {
               {archivedItems.length ? (
                 <button
                   type="button"
-                  className="rn-conversation-archive-row"
+                  className={`rn-conversation-archive-row${archiveUsesPinnedBackground ? ' is-pinned' : ''}`}
                   aria-label="归档会话"
                   onClick={() => navigate('/conversations/archived')}
                 >
@@ -306,6 +324,9 @@ export function ConversationsPage() {
                 key={item.conversation.conversationID}
                 item={item}
                 currentUserID={snapshot.userID ?? ''}
+                online={Boolean(onlineByID[
+                  getConversationPresenceUserID(item.conversation)
+                ])}
                 onOpenActions={actions.openActionMenu}
               />
               ))}

@@ -8,8 +8,12 @@ import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 interface MeProfileHeaderProps {
   readonly title: string;
   readonly backHref: string;
+  readonly onBack?: () => void;
+  readonly backLabel?: string | undefined;
+  readonly backDisabled?: boolean;
   readonly actionLabel?: string;
   readonly actionDisabled?: boolean;
+  readonly actionPending?: boolean;
   readonly onAction?: () => void;
 }
 
@@ -17,19 +21,29 @@ interface MeProfileHeaderProps {
 export function MeProfileHeader({
   title,
   backHref,
+  onBack,
+  backLabel,
+  backDisabled = false,
   actionLabel,
   actionDisabled = false,
+  actionPending = false,
   onAction,
 }: MeProfileHeaderProps) {
   return (
     <PageNavbar className="rn-me-profile-header">
-      <Link to={backHref} aria-label="返回">
-        <RNAssetIcon assetURL={backIconURL} />
-      </Link>
+      {onBack ? (
+        <button className="rn-me-profile-back-action" type="button" aria-label={backLabel ?? '返回'} disabled={backDisabled} onClick={onBack}>
+          {backLabel ? <span>{backLabel}</span> : <RNAssetIcon assetURL={backIconURL} />}
+        </button>
+      ) : (
+        <Link className="rn-me-profile-back-action" to={backHref} aria-label="返回">
+          <RNAssetIcon assetURL={backIconURL} />
+        </Link>
+      )}
       {title ? <h1>{title}</h1> : <span aria-hidden="true" />}
       {actionLabel && onAction ? (
-        <button type="button" disabled={actionDisabled} onClick={onAction}>
-          {actionLabel}
+        <button className={`rn-me-profile-save-action${actionPending ? ' is-pending' : ''}`} type="button" disabled={actionDisabled} onClick={onAction}>
+          {actionPending ? <span className="rn-me-profile-save-spinner" role="status" aria-label="正在保存" /> : actionLabel}
         </button>
       ) : <span />}
     </PageNavbar>

@@ -1,3 +1,4 @@
+import { formatIMUserDisplayName, normalizeIMUserNickname, } from '../modules/user/display-name.js';
 import { executeWebIMMessageSend, } from './message-send-state.js';
 import { createWebIMSyncError } from './sync-context.js';
 /** 校验名片身份并复用统一 optimistic、Gateway 与 SQLite 状态机。 */
@@ -23,7 +24,8 @@ export function createWebIMCardBody(card) {
                 type: 'user',
                 user: {
                     user_id: userID,
-                    nickname: card.nickname.trim() || userID,
+                    nickname: normalizeIMUserNickname(card.nickname, userID) ||
+                        formatIMUserDisplayName(userID),
                     avatar_url: card.avatarURL?.trim() ?? '',
                 },
             },

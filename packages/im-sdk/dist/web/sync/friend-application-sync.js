@@ -1,3 +1,4 @@
+import { formatIMUserDisplayName, normalizeIMUserNickname, } from '../modules/user/display-name.js';
 import { createWebIMSyncError } from './sync-context.js';
 /** 创建好友申请 Web facade。 */
 export function createWebIMFriendApplicationSync(dependencies) {
@@ -95,9 +96,9 @@ function normalizeFriendApplication(item) {
     const direction = item.type === 'sent' ? 'outgoing' : 'incoming';
     // userID 优先使用 Gateway 返回的对方资料 ID。
     const userID = item.user?.user_id?.trim() || (direction === 'incoming' ? requesterID : targetID);
-    // displayName 遵循 RN nickname/account/contact/ID 回退。
-    const displayName = item.user?.nickname?.trim() || item.user?.account?.trim() ||
-        item.user?.phone?.trim() || item.user?.email?.trim() || userID || '未命名用户';
+    // displayName 遵循 RN nickname -> im-ID 回退，账号和联系方式只用于搜索摘要。
+    const displayName = normalizeIMUserNickname(item.user?.nickname, userID) ||
+        formatIMUserDisplayName(userID) || '未命名用户';
     return {
         applicationID,
         requesterID,

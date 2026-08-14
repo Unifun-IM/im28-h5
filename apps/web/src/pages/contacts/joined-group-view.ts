@@ -4,10 +4,12 @@ import type { WebIMJoinedGroup } from '@im28/im-sdk/web';
 export type JoinedGroupBadge = 'creator' | 'owner' | 'admin';
 
 /** 按群名和群 ID 执行本地搜索。 */
-export function filterJoinedGroups(
-  groups: readonly WebIMJoinedGroup[],
+export function filterJoinedGroups<
+  Group extends Pick<WebIMJoinedGroup, 'groupID' | 'name'>,
+>(
+  groups: readonly Group[],
   keyword: string,
-): readonly WebIMJoinedGroup[] {
+): readonly Group[] {
   // query 统一大小写和首尾空白，不改变 SDK 顺序。
   const query = keyword.trim().toLocaleLowerCase();
   if (!query) return groups;

@@ -28,6 +28,7 @@ import {
 import { shouldShowGroupMemberPresence } from './group-members-view.js';
 import { useGroupMemberPresence } from './useGroupMemberPresence.js';
 import { ChatConversationSettingsControls } from './ChatConversationSettingsControls.js';
+import { ChatAutoDeleteSettingsRow } from './ChatAutoDeleteSettingsRow.js';
 import { ChatClearHistorySheet } from './ChatClearHistorySheet.js';
 import { ChatGroupAnnouncementSettingsCard } from './ChatGroupAnnouncementSettingsCard.js';
 import { ChatGroupProfileSettingsCard } from './ChatGroupProfileSettingsCard.js';
@@ -40,7 +41,6 @@ import {
   clearChatHistory,
   type ChatClearHistoryScope,
 } from './chat-clear-history.js';
-import { formatChatAutoDeleteValue } from './chat-auto-delete-view.js';
 import type {
   ChatSettingsMemberView,
   ChatSettingsView,
@@ -262,10 +262,10 @@ export function ChatSettingsPage() {
                   initialPinned={conversation?.isPinned ?? false}
                 />
               ) : null}
-              {view.canManageAutoDelete ? (
+              {view.canShowAutoDeleteInChatSettings ? (
                 <ChatAutoDeleteSettingsRow
                   conversationID={view.conversationID}
-                  isGroup={view.isGroup}
+                  placement="chat-settings"
                   autoDeleteSeconds={conversation?.autoDeleteSeconds}
                 />
               ) : null}
@@ -345,32 +345,6 @@ function ChatClearHistorySettingsCard({
         <span>清空聊天记录</span>
         {clearing ? <span className="rn-chat-settings-row-trailing">清空中</span> : null}
       </button>
-    </div>
-  );
-}
-
-/** 自动删除入口只在权限投影允许时进入独立 React Router 页面。 */
-function ChatAutoDeleteSettingsRow({
-  conversationID,
-  isGroup,
-  autoDeleteSeconds,
-}: {
-  readonly conversationID: string;
-  readonly isGroup: boolean;
-  readonly autoDeleteSeconds: number | undefined;
-}) {
-  /** autoDeleteURL 指向当前会话唯一设置子路由。 */
-  const autoDeleteURL =
-    '/conversations/' + encodeURIComponent(conversationID) + '/settings/auto-delete';
-  return (
-    <div className="rn-chat-settings-card">
-      <Link className="rn-chat-settings-row" to={autoDeleteURL}>
-        <span>{isGroup ? '定时删除消息' : '定时删除'}</span>
-        <span className="rn-chat-settings-row-trailing">
-          <span>{formatChatAutoDeleteValue(autoDeleteSeconds)}</span>
-          <RNAssetIcon assetURL={arrowIconURL} />
-        </span>
-      </Link>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  formatIMUserDisplayName,
   IM_GROUP_CREATION_MAX_MEMBER_COUNT,
   type GatewayUser,
   type WebIMContact,
@@ -236,7 +237,8 @@ export function CreateGroupPage({ fromSingleSettings = false }: CreateGroupPageP
       /** result 保留远端和本地事务的真实完成状态。 */
       const result = await sync.groups.create({
         memberUserIDs: buildCreateGroupMemberUserIDs(selectedUserIDs, fixedUserIDs),
-        ownerDisplayName: profile?.nickname?.trim() || snapshot.userID || '',
+        ownerDisplayName: profile?.nickname?.trim() ||
+          formatIMUserDisplayName(snapshot.userID),
       });
       if (result.cacheState === 'remote-only') {
         setRemoteCompleted(true);
@@ -283,6 +285,7 @@ export function CreateGroupPage({ fromSingleSettings = false }: CreateGroupPageP
             disabled={submitting || remoteCompleted}
             open={selectedReviewOpen}
             onOpenSearch={() => navigate('/groups/search', {
+              replace: true,
               state: { selectedUserIDs: [...selectedUserIDs], backHref },
             })}
             onOpenReview={() => setSelectedReviewOpen(true)}
@@ -298,7 +301,7 @@ export function CreateGroupPage({ fromSingleSettings = false }: CreateGroupPageP
           </label>
         ) : (
           <>
-            <Link className="rn-create-group-search" to="/groups/search" state={{ selectedUserIDs: [...selectedUserIDs], backHref }}>
+            <Link className="rn-create-group-search" to="/groups/search" replace state={{ selectedUserIDs: [...selectedUserIDs], backHref }}>
               <RNAssetIcon assetURL={searchIconURL} />
               <span>查找群聊</span>
             </Link>

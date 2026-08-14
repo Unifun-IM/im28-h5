@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
@@ -8,6 +8,7 @@ import {
   getRNAvatarGradient,
   getRNAvatarInitial,
 } from '../../components/rn-avatar-view.js';
+import { getContactProfileHeaderBackState } from './contact-profile-route-state.js';
 import './contact-profile-shared.css';
 
 /** 联系人子页导航栏参数。 */
@@ -25,9 +26,18 @@ export function ContactProfileHeader({
   titleNode,
   trailing,
 }: ContactProfileHeaderProps) {
+  /** location 只提供当前联系人子页的受控返回上下文。 */
+  const location = useLocation();
+  /** backState 按目标路由选择搜索 presentation 或资料来源 context。 */
+  const backState = getContactProfileHeaderBackState(backHref, location.state);
   return (
     <PageNavbar className="rn-contact-profile-header">
-      <Link className="rn-contact-profile-back" to={backHref} aria-label="返回">
+      <Link
+        className="rn-contact-profile-back"
+        to={backHref}
+        state={backState}
+        aria-label="返回"
+      >
         <RNAssetIcon assetURL={backIconURL} />
       </Link>
       <span className="rn-contact-profile-header-center">

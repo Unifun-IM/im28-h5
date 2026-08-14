@@ -1,5 +1,6 @@
 import {
   filterIMInvitableGroupContacts,
+  formatIMUserDisplayName,
   type WebIMContact,
 } from '@im28/im-sdk/web';
 
@@ -21,7 +22,8 @@ export function buildGroupInviteMemberCandidates(
   const query = keyword.trim().toLocaleLowerCase();
   return candidates.flatMap(contact => {
     /** displayName 已由 shared contact DTO 执行备注名优先。 */
-    const displayName = contact.displayName.trim() || contact.userID;
+    const displayName = contact.displayName.trim() ||
+      formatIMUserDisplayName(contact.userID);
     /** searchable 对齐 RN 的好友名称和用户 ID 搜索。 */
     const searchable = `${displayName}\n${contact.userID}`.toLocaleLowerCase();
     return query && !searchable.includes(query) ? [] : [{ contact, displayName }];

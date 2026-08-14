@@ -42,6 +42,12 @@
   font-weight: 600;
 }
 
+.rn-me-avatar-action {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .rn-me-avatar img {
   position: absolute;
   width: 100%;
@@ -61,10 +67,17 @@
   gap: 8px;
 }
 
-.rn-me-name-row strong {
+.rn-me-name-action {
   display: block;
   min-width: 0;
   flex: 0 1 auto;
+  color: inherit;
+  text-decoration: none;
+}
+
+.rn-me-name-action strong {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   font-size: 20px;
   font-weight: 500;
@@ -74,7 +87,7 @@
   white-space: nowrap;
 }
 
-.rn-me-name-row a {
+.rn-me-qr-action {
   display: grid;
   width: 28px;
   height: 28px;
@@ -83,7 +96,7 @@
   color: inherit;
 }
 
-.rn-me-name-row a .rn-asset-icon { width: 16px; height: 16px; }
+.rn-me-qr-action .rn-asset-icon { width: 16px; height: 16px; }
 
 .rn-me-identity button {
   display: flex;
@@ -135,6 +148,10 @@
   overflow: hidden;
   border-radius: 12px;
   background: var(--im-profile-card-background);
+}
+
+.rn-me-menu-card + .rn-me-menu-card {
+  margin-top: 16px;
 }
 
 .rn-me-menu-row {

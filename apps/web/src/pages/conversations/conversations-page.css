@@ -134,6 +134,10 @@
   text-align: left;
 }
 
+.rn-conversation-archive-row.is-pinned {
+  background: var(--im-conversation-pinned-background);
+}
+
 .rn-conversation-archive-icon {
   display: grid;
   width: 56px;
@@ -195,12 +199,20 @@
   background: var(--im-conversation-pinned-background);
 }
 
-.rn-conversation-avatar {
+.rn-conversation-avatar-shell {
   position: relative;
   display: grid;
   width: 56px;
   height: 56px;
   flex: 0 0 56px;
+  place-items: center;
+}
+
+.rn-conversation-avatar {
+  position: relative;
+  display: grid;
+  width: 56px;
+  height: 56px;
   place-items: center;
   overflow: hidden;
   border-radius: 28px;
@@ -223,6 +235,26 @@
   border-radius: inherit;
   object-fit: cover;
   background: var(--im-bg-input);
+}
+
+.rn-conversation-online-dot-border {
+  position: absolute;
+  z-index: 2;
+  right: -4px;
+  bottom: -2px;
+  display: grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--im-bg-page);
+}
+
+.rn-conversation-online-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 8.5px;
+  background: var(--im-status-success);
 }
 
 .rn-conversation-row-body {

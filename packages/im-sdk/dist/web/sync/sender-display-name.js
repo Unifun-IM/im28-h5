@@ -1,6 +1,7 @@
 import { FriendshipRepository, GroupMemberRepository, UserRepository, } from '@im28/im-sdk/core';
+import { formatIMUserDisplayName } from '../modules/user/display-name.js';
 import { resolveFriendshipDisplayProfile } from './friendship-display-profile.js';
-/** 按 RN 的备注、群昵称、公开昵称和身份顺序解析群成员可见名称。 */
+/** 按 RN 的备注、群昵称、公开昵称和匿名身份顺序解析群成员可见名称。 */
 export function resolveIMGroupMemberDisplayName(source, fallback = '') {
     /** userID 是各昵称占位值的稳定判别身份。 */
     const userID = source.userID?.trim() ?? '';
@@ -13,7 +14,7 @@ export function resolveIMGroupMemberDisplayName(source, fallback = '') {
     return remark ||
         (groupNickname && groupNickname !== userID ? groupNickname : '') ||
         (nickname && nickname !== userID ? nickname : '') ||
-        userID || fallback;
+        formatIMUserDisplayName(userID) || fallback;
 }
 /** 按 RN 的备注、群昵称、用户昵称顺序解析群消息发送人名称。 */
 export async function resolveGroupSenderDisplayName(database, groupID, userID) {
@@ -38,6 +39,6 @@ export async function resolveGroupSenderDisplayName(database, groupID, userID) {
         ...(member?.nickname ? { groupNickname: member.nickname } : {}),
         nickname: user?.nickname?.trim() || friendshipProfile.nickname,
     });
-    return displayName === normalizedUserID ? undefined : displayName || undefined;
+    return displayName || undefined;
 }
 //# sourceMappingURL=sender-display-name.js.map

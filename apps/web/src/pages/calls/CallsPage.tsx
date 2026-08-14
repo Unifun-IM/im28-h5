@@ -24,8 +24,13 @@ import './calls-page.css';
 // PAGE_SIZE 对齐 RN 通话缓存分页大小。
 const PAGE_SIZE = 30;
 
+/** 通话页只向主布局报告全屏编辑态，不直接控制全局底栏。 */
+interface CallsPageProps {
+  readonly onChromeHiddenChange?: (hidden: boolean) => void;
+}
+
 /** RN 通话记录主页面使用 Web SDK cache-first 真实链路。 */
-export function CallsPage() {
+export function CallsPage({ onChromeHiddenChange }: CallsPageProps = {}) {
   // runtime context 是页面唯一 SDK facade owner。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // calls 只从聚合 sync facade 获取，不直接调用 Gateway 或数据库。
@@ -58,6 +63,15 @@ export function CallsPage() {
   const [selectingAll, setSelectingAll] = useState(false);
   // cacheRevision 在远端同步完成后驱动当前筛选重读。
   const [cacheRevision, setCacheRevision] = useState(0);
+
+  useEffect(() => {
+    onChromeHiddenChange?.(editing);
+  }, [editing, onChromeHiddenChange]);
+
+  useEffect(() => {
+    // Activity 隐藏或主布局卸载时必须归还全局底栏控制权。
+    return () => onChromeHiddenChange?.(false);
+  }, [onChromeHiddenChange]);
 
   /** 读取当前筛选的首个 SQLite 分页。 */
   const readFirstPage = useCallback(async (service: WebIMCallSync) => {
@@ -240,7 +254,10 @@ export function CallsPage() {
       onTouchEnd={pullRefresh.onTouchEnd}
       onTouchCancel={pullRefresh.onTouchCancel}
     >
-      <section className="rn-calls-surface" aria-busy={loading || refreshing}>
+      <section
+        className={`rn-calls-surface${editing ? ' is-editing' : ''}`}
+        aria-busy={loading || refreshing}
+      >
         <header className="rn-calls-header">
           <div className="rn-calls-header-top">
             {editing ? <span /> : (

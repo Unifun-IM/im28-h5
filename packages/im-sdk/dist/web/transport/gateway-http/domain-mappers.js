@@ -2,6 +2,7 @@ import { IMError } from '../../core/errors.js';
 import { normalizeConversationAutoDeleteSeconds } from '../../core/conversation-auto-delete.js';
 import { normalizePresetEmojiEntities } from '../../modules/message/preset-emoji.js';
 import { normalizeMessageMentions } from '../../modules/message/mention.js';
+import { formatIMUserDisplayName } from '../../modules/user/display-name.js';
 /** Gateway uint64 字段允许的最大十进制值。 */
 const GATEWAY_UINT64_MAX = 18446744073709551615n;
 /** 将 Gateway message 映射为跨平台 core message。 */
@@ -115,7 +116,7 @@ export function mapGatewayConversationToCore(input, currentUserID) {
     const updatedAt = readTimestamp(body.updated_at ?? body.created_at) ||
         latestMessage?.sendTime ||
         0;
-    // name 按显式标题、对象资料、target ID 顺序回退。
+    // name 按显式标题、对象昵称和匿名 target ID 顺序回退。
     const name = readConversationName(body, type, targetID);
     // faceURL 按显式头像和对象资料回退。
     const faceURL = readString(body.avatar_url) ||
@@ -216,9 +217,7 @@ function readConversationName(conversation, type, targetID) {
     }
     return (readString(conversation.title) ||
         readString(conversation.user?.nickname) ||
-        readString(conversation.user?.account) ||
-        readString(conversation.user?.user_id) ||
-        targetID);
+        formatIMUserDisplayName(readString(conversation.user?.user_id) || targetID));
 }
 /** 把 Gateway 消息状态收敛到 Repository 状态机。 */
 function mapMessageStatus(status, direction) {

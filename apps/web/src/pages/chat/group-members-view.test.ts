@@ -30,7 +30,7 @@ describe('group members view', () => {
       groupNickname: '群昵称',
     }))).toBe('好友备注');
     expect(getGroupMemberDisplayName(createMember({ remark: '', groupNickname: '群昵称' }))).toBe('群昵称');
-    expect(getGroupMemberDisplayName(createMember({ nickname: '', userID: 'user-2' }))).toBe('user-2');
+    expect(getGroupMemberDisplayName(createMember({ nickname: '', userID: 'user-2' }))).toBe('im-er-2');
   });
 
   it('按名称或用户 ID 搜索并按 RN 拼音生成分组', () => {

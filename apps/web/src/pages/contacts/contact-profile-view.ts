@@ -106,32 +106,8 @@ export function buildContactFriendApplicationRoute(userID: string): string {
   return `${buildContactProfileRoute(userID)}/add`;
 }
 
-/** 只接受群成员或联系人域内的内部资料返回路由。 */
-export function resolveContactProfileBackHref(state: unknown): string {
-  if (!state || typeof state !== 'object') return '/contacts';
-  /** backHref 从 Router state 读取，禁止外部 URL 和任意页面跳转。 */
-  const backHref = Reflect.get(state, 'backHref');
-  if (typeof backHref !== 'string') return '/contacts';
-  /** normalizedHref 只保留明确的应用内群成员页或通讯录子页。 */
-  const normalizedHref = backHref.trim();
-  if (/^\/conversations\/[^/]+\/settings\/members$/.test(normalizedHref)) {
-    return normalizedHref;
-  }
-  if (/^\/conversations\/[^/]+\/settings$/.test(normalizedHref)) {
-    return normalizedHref;
-  }
-  if (/^\/conversations\/[^/]+$/.test(normalizedHref)) {
-    return normalizedHref;
-  }
-  if (normalizedHref === '/scan') return normalizedHref;
-  if (normalizedHref.startsWith('/contacts')) return normalizedHref;
-  return '/contacts';
-}
-
-/** 只读取群成员入口提供的稳定会话身份候选。 */
-export function readContactProfileGroupConversationID(state: unknown): string {
-  if (!state || typeof state !== 'object') return '';
-  /** value 只作为后续 shared facade 校验候选，不直接授予权限。 */
-  const value = Reflect.get(state, 'groupConversationID');
-  return typeof value === 'string' ? value.trim() : '';
-}
+/** 兼容既有 view facade，实际 route-state owner 位于独立模块。 */
+export {
+  readContactProfileGroupConversationID,
+  resolveContactProfileBackHref,
+} from './contact-profile-route-state.js';

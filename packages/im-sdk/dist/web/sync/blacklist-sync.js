@@ -1,3 +1,4 @@
+import { formatIMUserDisplayName, normalizeIMUserNickname, } from '../modules/user/display-name.js';
 import { createWebIMSyncError } from './sync-context.js';
 /** 创建只通过 shared operations 读写黑名单的 Web facade。 */
 export function createWebIMBlacklistSync(dependencies) {
@@ -90,8 +91,9 @@ function normalizeBlacklistUser(item, friendIDs) {
     const user = item.user;
     // account 用于 RN 本地搜索副字段。
     const account = user?.account?.trim() ?? '';
-    // displayName 对齐 nickname -> account -> phone -> ID 回退。
-    const displayName = user?.nickname?.trim() || account || user?.phone?.trim() || userID;
+    // displayName 对齐 nickname -> im-ID 回退，账号继续保留为独立搜索字段。
+    const displayName = normalizeIMUserNickname(user?.nickname, userID) ||
+        formatIMUserDisplayName(userID);
     return {
         userID,
         displayName,

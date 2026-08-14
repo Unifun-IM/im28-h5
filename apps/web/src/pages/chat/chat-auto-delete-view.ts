@@ -30,7 +30,7 @@ export function canManageChatAutoDelete(
 ): boolean {
   if (conversation.type !== 'group') return true;
   if (!group || group.groupID !== conversation.targetID) return false;
-  return group.permissions.canClearMessages;
+  return group.permissions.canManageAdmins;
 }
 
 /** 将缓存秒数格式化为 RN 设置列表值。 */

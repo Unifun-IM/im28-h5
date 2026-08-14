@@ -1,5 +1,6 @@
 import {
   canCreateIMGroupWithMemberCount,
+  formatIMUserDisplayName,
   type Conversation,
   type WebIMContact,
 } from '@im28/im-sdk/web';
@@ -21,7 +22,8 @@ export function buildCreateGroupCandidates(
   return contacts.flatMap(contact => {
     if (excludedUserIDs.has(contact.userID)) return [];
     /** displayName 已由 shared contact DTO 处理备注名优先。 */
-    const displayName = contact.displayName.trim() || contact.userID;
+    const displayName = contact.displayName.trim() ||
+      formatIMUserDisplayName(contact.userID);
     /** searchable 同时覆盖展示名和稳定用户 ID。 */
     const searchable = `${displayName}\n${contact.userID}`.toLocaleLowerCase();
     return query && !searchable.includes(query) ? [] : [{ contact, displayName }];

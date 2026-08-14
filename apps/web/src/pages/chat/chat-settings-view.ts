@@ -5,6 +5,8 @@ import type {
 } from '@im28/im-sdk/web';
 import { resolveIMGroupMemberDisplayName } from '@im28/im-sdk/web';
 
+import { getConversationTitle } from '../conversations/conversation-list-view.js';
+
 /** 聊天设置页可验证的会话与群资料投影。 */
 export interface ChatSettingsView {
   readonly conversationID: string;
@@ -22,7 +24,7 @@ export interface ChatSettingsView {
   readonly canInviteMembers: boolean;
   readonly canRemoveMembers: boolean;
   readonly canOpenGroupManage: boolean;
-  readonly canManageAutoDelete: boolean;
+  readonly canShowAutoDeleteInChatSettings: boolean;
   readonly canClearForAll: boolean;
   readonly canQuitGroup: boolean;
   readonly canDismissGroup: boolean;
@@ -47,7 +49,7 @@ export function buildChatSettingsView(
   // groupName 只在群 facade 返回同一目标时覆盖会话快照。
   const groupName = isGroup && group?.groupID === targetID ? group.name.trim() : '';
   // title 保持群缓存、会话缓存、目标 ID 的可证明回退顺序。
-  const title = groupName || conversation.name?.trim() || targetID || '会话';
+  const title = groupName || getConversationTitle(conversation);
   // avatarURL 优先使用群 facade 的最新缓存，其次保留会话快照。
   const avatarURL = (isGroup && group?.groupID === targetID
     ? group.avatarURL.trim()
@@ -64,9 +66,11 @@ export function buildChatSettingsView(
   const announcement = isGroup && group?.groupID === targetID
     ? group.announcement.trim()
     : '';
-  // canShowAnnouncement 消费 shared 显式 capability，禁止页面按角色复制回退规则。
+  // canShowAnnouncement 对齐 RN 设置入口：owner/admin 可查看，发布权限仍由详情页独立判断。
   const canShowAnnouncement = Boolean(
-    isGroup && group?.groupID === targetID && group.canEditAnnouncement,
+    isGroup &&
+      group?.groupID === targetID &&
+      group.currentUserRole !== 'member',
   );
   // canEditGroupProfile 对齐 RN 当前 owner/admin 群资料编辑规则。
   const canEditGroupProfile = Boolean(
@@ -98,7 +102,7 @@ export function buildChatSettingsView(
     canOpenGroupManage: Boolean(
       isGroup && group?.groupID === targetID && group.permissions.canOpenGroupManage,
     ),
-    canManageAutoDelete: !isGroup || canManageGroupMessages,
+    canShowAutoDeleteInChatSettings: !isGroup,
     canClearForAll: !isGroup || canManageGroupMessages,
     canQuitGroup: Boolean(
       isGroup && group?.groupID === targetID && group.permissions.canQuitGroup,

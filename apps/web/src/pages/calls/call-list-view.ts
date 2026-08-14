@@ -1,4 +1,9 @@
-import type { GatewayCall, WebIMCallAnswerStatus, WebIMCallSync } from '@im28/im-sdk/web';
+import {
+  formatIMUserDisplayName,
+  type GatewayCall,
+  type WebIMCallAnswerStatus,
+  type WebIMCallSync,
+} from '@im28/im-sdk/web';
 
 /** 强制同步通话记录后读取当前筛选的首个缓存分页。 */
 export async function refreshCallListPage(
@@ -39,7 +44,8 @@ export function getCallPeerID(call: GatewayCall, selfID: string): string {
 
 /** 获取通话记录展示名称。 */
 export function getCallDisplayName(call: GatewayCall, selfID: string): string {
-  return call.nickname?.trim() || getCallPeerID(call, selfID) || '未知用户';
+  return call.nickname?.trim() ||
+    formatIMUserDisplayName(getCallPeerID(call, selfID)) || '未知用户';
 }
 
 /** 判断 Gateway 明确标记的未接记录。 */

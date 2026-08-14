@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   filterArchivedConversationItems,
   mergeArchivedConversationItems,
+  shouldUsePinnedArchiveBackground,
 } from './conversation-archive-view.js';
 
 /** 构造归档列表 helper 所需最小缓存项。 */
@@ -59,5 +60,23 @@ describe('conversation archive view', () => {
     expect(filterArchivedConversationItems(items, '评审')).toMatchObject([
       { conversation: { conversationID: 'two' } },
     ]);
+  });
+
+  /** 归档通栏在任一列表包含置顶会话时延续 RN 置顶背景。 */
+  it('uses pinned background when visible or archived conversations are pinned', () => {
+    /** regular 是未置顶会话。 */
+    const regular = createArchivedItem('regular', '普通会话');
+    /** pinned 是只改变置顶状态的会话。 */
+    const pinned = {
+      ...createArchivedItem('pinned', '置顶会话'),
+      conversation: {
+        ...createArchivedItem('pinned', '置顶会话').conversation,
+        isPinned: true,
+      },
+    };
+
+    expect(shouldUsePinnedArchiveBackground([pinned], [regular])).toBe(true);
+    expect(shouldUsePinnedArchiveBackground([regular], [pinned])).toBe(true);
+    expect(shouldUsePinnedArchiveBackground([regular], [regular])).toBe(false);
   });
 });

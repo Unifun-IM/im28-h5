@@ -10,18 +10,20 @@ describe('primary tab scene retention contract', () => {
     expect(layoutSource.match(/<PrimaryTabScene/g)).toHaveLength(4);
     expect(layoutSource).toContain('<ConversationsPage />');
     expect(layoutSource).toContain('<ContactsPage />');
-    expect(layoutSource).toContain('<CallsPage />');
+    expect(layoutSource).toContain('<CallsPage onChromeHiddenChange={setCallsChromeHidden} />');
     expect(layoutSource).toContain('<MePage />');
     expect(layoutSource).toContain('aria-hidden={!visible}');
     expect(layoutSource.indexOf('className="rn-primary-tab-scene"'))
       .toBeLessThan(layoutSource.indexOf('<Activity name={`primary-tab-${tab}`}'));
+    expect(layoutSource).toContain('scene.scrollTop = savedScrollTopRef.current');
+    expect(layoutSource).toContain('if (visible) savedScrollTopRef.current = event.currentTarget.scrollTop');
   });
 
   it('keeps React Router as the canonical SPA URL owner without route-owned page instances', () => {
-    expect(appSource).toContain('<Route path="/conversations" />');
-    expect(appSource).toContain('<Route path="/contacts" />');
-    expect(appSource).toContain('<Route path="/calls" />');
-    expect(appSource).toContain('<Route path="/me" />');
+    expect(appSource).toContain('<Route path="/conversations" element={<></>} />');
+    expect(appSource).toContain('<Route path="/contacts" element={<></>} />');
+    expect(appSource).toContain('<Route path="/calls" element={<></>} />');
+    expect(appSource).toContain('<Route path="/me" element={<></>} />');
   });
 
   it('gives retained scenes independent scrolling and refresh top detection', () => {

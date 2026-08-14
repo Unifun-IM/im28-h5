@@ -32,6 +32,10 @@ export function HomeActionMenu() {
   /** openRoute 先关闭气泡再执行稳定 SPA 导航。 */
   function openRoute(route: string): void {
     setOpen(false);
+    if (route === '/contacts/search') {
+      navigate(route, { state: { searchBackHref: location.pathname } });
+      return;
+    }
     navigate(route, route === '/groups/create' || route === '/broadcast/select' || route === '/scan' ? {
       state: { backHref: location.pathname === '/contacts' ? '/contacts' : '/conversations' },
     } : undefined);

@@ -6,6 +6,8 @@ export interface IMGroupSystemMessagePresentation {
     readonly eventType: string;
     readonly text: string;
 }
+/** 判断消息类型是否属于跨端统一的群系统消息集合。 */
+export declare function isIMGroupSystemMessageType(contentType: number): boolean;
 /** 从 canonical、Gateway 或 RN 兼容消息读取结构化群系统文案。 */
 export declare function parseIMGroupSystemMessagePresentation(value: unknown, currentUserID?: string): IMGroupSystemMessagePresentation | null;
 //# sourceMappingURL=group-system-message.d.ts.map

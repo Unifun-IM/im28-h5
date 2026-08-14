@@ -10,6 +10,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import type { ChatTargetPickerItem } from '../../components/chat-target-picker/index.js';
+import { getConversationTitle } from '../conversations/conversation-list-view.js';
 
 import {
   createChatForwardRouteState,
@@ -131,7 +132,7 @@ export function useChatForwardFlow({
     // forward 继续复用稳定身份校验，但不再进入独立选择页面。
     const forward = createChatForwardRouteState({
       sourceConversationID: conversation.conversationID,
-      sourceConversationTitle: conversation.name?.trim() || conversation.targetID || '聊天',
+      sourceConversationTitle: getConversationTitle(conversation),
       sourceClientMsgIDs,
     });
     setTargetSourceIDs(forward.sourceClientMsgIDs);

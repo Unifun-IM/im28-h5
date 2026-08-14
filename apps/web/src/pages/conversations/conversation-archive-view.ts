@@ -5,6 +5,16 @@ import {
   getConversationTitle,
 } from './conversation-list-view.js';
 
+/** 判断归档通栏是否需要延续 RN 的置顶会话背景。 */
+export function shouldUsePinnedArchiveBackground(
+  visibleItems: readonly WebIMConversationListItem[],
+  archivedItems: readonly WebIMConversationListItem[],
+): boolean {
+  return [...visibleItems, ...archivedItems].some(
+    item => item.conversation.isPinned === true,
+  );
+}
+
 /** 按稳定会话 ID 合并分页结果，新快照覆盖旧行且保留既有顺序。 */
 export function mergeArchivedConversationItems(
   current: readonly WebIMConversationListItem[],

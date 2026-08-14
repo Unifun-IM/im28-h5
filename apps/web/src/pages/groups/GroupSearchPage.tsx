@@ -10,6 +10,7 @@ import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-ava
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { buildConversationRoute } from '../conversations/conversation-route.js';
 import {
   readGroupSearchCreateState,
   readGroupSearchKeyword,
@@ -66,7 +67,7 @@ export function GroupSearchPage() {
 
   /** returnToCreation 保留已选好友并回到 RN 建群主页面。 */
   function returnToCreation(): void {
-    navigate('/groups/create', { state: createState });
+    navigate('/groups/create', { replace: true, state: createState });
   }
 
   /** openGroup 根据 shared 三态解析规范会话、进入申请页或保持不可操作。 */
@@ -82,7 +83,10 @@ export function GroupSearchPage() {
           groupID: group.groupID,
           conversationID: group.conversationID,
         });
-        navigate(`/conversations/${encodeURIComponent(conversation.conversationID)}`);
+        /** route 关闭建群覆盖层并复用唯一会话 ID 编码规则。 */
+        const route = buildConversationRoute(conversation.conversationID, true);
+        if (!route) throw new Error('群会话 ID 不可用');
+        navigate(route.href, { replace: route.replace });
       } catch (cause) {
         setError(readGroupSearchError(cause));
       } finally {
@@ -91,6 +95,7 @@ export function GroupSearchPage() {
       return;
     }
     navigate(`/groups/${encodeURIComponent(group.groupID)}/apply`, {
+      replace: true,
       state: {
         sourceType: 'search',
         searchKeyword: normalizedKeyword,

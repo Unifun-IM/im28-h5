@@ -6,7 +6,7 @@
 
 .rn-custom-emoji-manager-surface {
   position: relative;
-  width: 100%;
+  width: min(100%, 480px);
   min-height: 100dvh;
   margin: 0 auto;
   padding-bottom: calc(76px + env(safe-area-inset-bottom));
@@ -250,5 +250,6 @@
   .rn-custom-emoji-manager-surface {
     border-right: 1px solid var(--im-border-subtle);
     border-left: 1px solid var(--im-border-subtle);
+    box-shadow: 0 0 36px rgba(31, 38, 46, 0.07);
   }
 }

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import contactSearchPageSource from '../contacts/ContactSearchPage.tsx?raw';
+import groupApplyPageSource from '../qr/GroupQRCodeApplyPage.tsx?raw';
+import { buildConversationRoute } from '../conversations/conversation-route.js';
+import createGroupPageSource from './CreateGroupPage.tsx?raw';
+import groupSearchPageSource from './GroupSearchPage.tsx?raw';
 import {
+  createGroupApplyReturnState,
   readGroupApplyRouteState,
   readGroupSearchCreateState,
   readGroupSearchKeyword,
@@ -23,8 +29,57 @@ describe('group search route state', () => {
     });
     expect(result).toEqual({
       sourceType: 'search', backHref: '/groups/search', searchKeyword: 'g1',
+      searchBackHref: '/contacts',
       createState: { selectedUserIDs: ['u1'], backHref: '/contacts' },
     });
     expect(readGroupApplyRouteState({ sourceType: 'other' }).sourceType).toBe('qrcode');
+  });
+
+  it('允许联系人搜索作为群申请的受控返回地址', () => {
+    /** routeState 保留群搜索关键词并限定联系人搜索页签。 */
+    const routeState = readGroupApplyRouteState({
+      sourceType: 'search',
+      backHref: '/contacts/search',
+      searchKeyword: '群聊',
+      searchBackHref: '/conversations/archived',
+    });
+    expect(routeState).toMatchObject({
+      sourceType: 'search',
+      backHref: '/contacts/search',
+      searchKeyword: '群聊',
+      searchBackHref: '/conversations/archived',
+    });
+    expect(createGroupApplyReturnState(routeState)).toMatchObject({
+      searchKeyword: '群聊',
+      serverTab: 'groups',
+      searchBackHref: '/conversations/archived',
+    });
+  });
+
+  it('建群搜索流程内部页面只替换同一个历史项', () => {
+    expect(createGroupPageSource.match(/to="\/groups\/search"/g)).toHaveLength(1);
+    expect(createGroupPageSource).toContain('replace state={{ selectedUserIDs: [...selectedUserIDs], backHref }}');
+    expect(createGroupPageSource).toContain("navigate('/groups/search', {");
+    expect(createGroupPageSource).toContain('replace: true,');
+    expect(groupSearchPageSource).toContain("navigate('/groups/create', { replace: true, state: createState });");
+    expect(groupSearchPageSource).toContain("navigate(`/groups/${encodeURIComponent(group.groupID)}/apply`, {");
+    expect(groupSearchPageSource).toContain('replace: true,');
+    expect(contactSearchPageSource).toContain('replace: true,');
+    expect(groupApplyPageSource).toContain("replace: routeState.sourceType === 'search'");
+  });
+
+  it('已加入群复用唯一会话路由并关闭查群流程', () => {
+    expect(buildConversationRoute('group/group-1', true)).toEqual({
+      href: '/conversations/group%2Fgroup-1',
+      replace: true,
+    });
+    expect(groupSearchPageSource).toContain('buildConversationRoute(conversation.conversationID, true)');
+    expect(groupSearchPageSource).toContain('navigate(route.href, { replace: route.replace });');
+    expect(groupApplyPageSource).toContain('runtime.getSync().conversations.openGroup({');
+    expect(groupApplyPageSource).toContain('groupID: group.groupID,');
+    expect(groupApplyPageSource).toContain("buildConversationRoute(conversation.conversationID, routeState.sourceType === 'search')");
+    expect(groupApplyPageSource).toContain('navigate(route.href, { replace: route.replace });');
+    expect(groupApplyPageSource).not.toContain('runtime.getSync().groups.listCached()');
+    expect(groupApplyPageSource).not.toContain('runtime.getSync().groups.sync()');
   });
 });

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { WebIMContact } from '@im28/im-sdk/web';
+import { formatIMUserDisplayName, type WebIMContact } from '@im28/im-sdk/web';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 
 import bellIconURL from '../../assets/rn/assets/icons/imm28/bell.solid.svg';
@@ -199,7 +199,7 @@ export function ContactsPage() {
       const conversation = await runtime.getSync().peerProfile.openConversation(contact.userID);
       await callOwner.startOutgoing({
         conversationID: conversation.conversationID,
-        peerName: contact.displayName || contact.userID,
+        peerName: contact.displayName || formatIMUserDisplayName(contact.userID),
         peerAvatarURL: contact.avatarURL,
         mediaType,
       });
@@ -363,7 +363,8 @@ export function ContactsPage() {
         />
         <CallTypeActionSheet
           open={Boolean(callTarget)}
-          peerName={callTarget?.displayName || callTarget?.userID || ''}
+          peerName={callTarget?.displayName ||
+            formatIMUserDisplayName(callTarget?.userID)}
           pending={actionPending}
           onClose={() => setCallTarget(null)}
           onSelect={mediaType => void startContactCall(mediaType)}
