@@ -1,5 +1,286 @@
 # IM28 H5 Foundation Cleanup
 
+## W6.a6.20.148.1b Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/storage-reader-safe/not-consumed` |
+| P0/P1 | `0/0`；missing snapshot creates no IndexedDB container；writes reject in caller/Worker adapters |
+| canonical owner | shared cached projection/history functions + Web lifecycle/Worker/sql.js adapters + minimal reader |
+| anti-fake | no migrations/export/close persist、Gateway/token/realtime/mutation dependency or production restore exposure |
+| verification | focused 7 files/35；Web full 100/419；H5 typecheck/build；build:web/sync:web；diff checks |
+| protection | RN protected diff empty；no RN/Desktop/all or `build:package:desktop:web` command |
+| next | `.148.1c` runtime offline restore/reconnect orchestration |
+
+## W6.a6.20.148.1a Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/foundation-complete/not-consumed` |
+| P0/P1 | `0/0`；strict classifier does not convert HTTP/business/cancel/internal errors into offline eligibility |
+| canonical owner | SDK browser Gateway adapter + runtime lifecycle；storage/reader/H5 remain pending owners |
+| anti-fake | production restore and full sync exposure unchanged；no empty DB、offline queue、fake online or UI claim |
+| verification | SDK focused 2 files/10 tests；H5 typecheck/build + build:web/sync:web；RN protected diff empty |
+| protection | no RN business/generated change；no RN/Desktop/all or `build:package:desktop:web` command |
+| next | `.148.1b` existing-snapshot read-only storage and capability-minimal reader |
+
+## W6.a6.20.148 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/contract-frozen/implementation-pending` |
+| P0/P1 | `0/0`；未修改 production runtime，未把 design contract 冒充实现 |
+| canonical owner | SDK runtime/storage/offline reader；H5 only lifecycle UI；RN frozen |
+| anti-fake | no token bypass、navigator.onLine success、empty DB、full sync exposure、offline queue or fake online state |
+| delete-or-register | capability 已登记 matrix，实施前不存在第二 reader/writer/mutation path |
+| protection | H5/SDK/RN runtime source unchanged；no build/sync or prohibited scripts |
+| next | `.148.1` 先实现 SDK boundary and tests，再允许 H5 shell 接入 |
+
+## W6.a6.20.147 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/paused/no-safe-auto-activation/external-input-required` |
+| P0/P1 | `0/0`；未发现新的 runtime defect，本地 implementation inventory 已闭环 |
+| classification | natural data、mutation authorization、deployment/runtime、browser/device、contract/design 五类门禁均有显式恢复条件 |
+| anti-loop | 禁止在账号、数据、授权和环境均未变化时继续产生重复空态 audit |
+| delete-or-register | 无 runtime code、fixture、fake success、second owner 或 hidden compatibility path |
+| protection | H5/SDK/RN runtime source 不改；未执行 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web` |
+| residual | 迁移未完成；仅暂停到任一外部激活条件成立 |
+
+## W6.a6.20.146 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/audited-cross-account-candidates/blocked-natural-data/runtime-clean` |
+| P0/P1 | `0/0`；未发现 runtime defect，候选均因真实数据缺失保持 gated |
+| evidence | accounts 2/3=`unbound + empty calls`；server group search `62/群=empty`；account 3 group conversation/joined=`2/2 matched` |
+| duplicate check | member manage fail-closed 与 `.107` 一致，不新增重复 acceptance claim |
+| delete-or-register | 无 runtime code、fixture、fake credential/call/group、第二 owner 或 compat path |
+| protection | SDK/H5/RN source 不改；未执行 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web` |
+| residual | bound reset、non-missed/duration call、available/conversation-only group、admin/cross-browser/device |
+
+## W6.a6.20.145 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/audited-three-accounts/blocked-natural-data/runtime-clean` |
+| P0/P1 | `0/0`；未发现 runtime defect，缺口仍是自然数据/授权门禁 |
+| evidence | 三账号 friend rows=`3/3/2 accepted`，group verification=`empty/empty/empty`；unread=0 群仅 system/self message |
+| unread guard | 第三账号唯一他人 owner message 会话 unread=2，未打开且未触发 mark-read |
+| delete-or-register | 无 runtime code、fixture、fake pending/role label、第二 application/member owner 或 compat path |
+| protection | SDK/H5/RN source 不改；未执行 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web` |
+| residual | pending friend/group、已读他人 owner/admin 气泡、自然 admin、cross-browser/device |
+
+## W6.a6.20.144 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/browser-narrow-light-desktop-dark-pass/media-natural-data-gated` |
+| owner | `.143` shared SDK title projection + existing H5 row/theme CSS；无第二备注或 responsive owner |
+| evidence | `320x786` light 与 `760x900` dark；真实标题/时间无重叠、document width 收敛、40x40 trigger + 14x2 glyph |
+| safety | 不打开 unread chat、不 mark-read、不执行媒体/Gateway/SQLite mutation |
+| delete-or-register | 无 runtime code、fixture、mock URL、fake playback、compat route 或第二媒体 owner |
+| residual | 任意超长自然备注、remark realtime、真实媒体 playback、Safari/Firefox、实体设备 |
+
+## W6.a6.20.143 Closeout
+
+| check | result |
+| :--- | :--- |
+| P0/P1 | `0/0`；备注标题 P1 与加号视觉偏差已关闭 |
+| owner | shared friendship projection -> conversation list；H5 无 remark Map；CSS 只持有平台 glyph |
+| storage/network | listCachedItems cache-only；展示 snapshot name 覆盖不写 SQLite、不发 Gateway |
+| duplicate/fake | 无第二 display resolver、页面好友查询、fixture 或 fake success |
+| verification | SDK 3/23、H5 3/17、Web typecheck、build:web/sync:web、真实 412px pass |
+| boundary | RN source 不改；RN/Desktop/all 未运行/同步；`build:package:desktop:web` 未改/未执行 |
+| verdict | `clean/shared-core-ready-web-consumed-rn-frozen/browser-rn-visual-pass` |
+
+## W6.a6.20.142 Closeout
+
+| check | result |
+| :--- | :--- |
+| P0/P1 | `0/0`；真实群目标单选替换 gate 关闭，无生产代码修复 |
+| owner | `ChatPage -> ChatTargetPickerModal -> forward-target-source`；type108 mutation 继续由 SDK `messages.sendCard` 持有 |
+| duplicate/fake | 无第二 picker/source/send owner，无 fixture、fake success 或 route target DTO |
+| mutation | 未点击分享；无 type108、Gateway、SQLite、realtime/list-back 写入 |
+| verification | H5 4 files/10 tests；Web typecheck；412px 真实账号临时 origin smoke |
+| protection | RN/SDK source 不改；未运行 RN/Desktop/all/`build:package:desktop:web`；临时 tab/server 已关闭 |
+| verdict | `clean/browser-chat-card-real-group-single-selection-pass/send-gated` |
+
+## W6.a6.20.141 Closeout
+
+| check | result |
+| :--- | :--- |
+| P0/P1 | `0/0`；真实群目标自然数据 gate 关闭，旧“单选”文档偏差纠正 |
+| owner | QR source、target facade、picker selection、batch-send owner 均未改变；无 production source edit |
+| runtime | 2 群 ALL + 2 好友 ALL=4；412px 零 overflow；取消返回原二维码；warning/error=0 |
+| mutation | 未点击分享、未生成/上传 PNG、未发送、未执行 Gateway/SQLite mutation |
+| regression | H5 4 files/10 tests、Web typecheck、HTTP 200、diff check green |
+| boundary | RN protected diff 与 SDK source diff 为空；未执行 RN/Desktop/all/`build:package:desktop:web` |
+
+Verdict: `clean/browser-group-qr-real-target-multiselect-pass/send-gated`。
+
+## W6.a6.20.140 Closeout
+
+| check | result |
+| :--- | :--- |
+| P0/P1 | `0/0`；真实群二维码 desktop dark 未发现实现缺陷 |
+| owner | 全局 theme tokens + 共用 `QRCodeDisplay/browser-qr-image` 保持单一 owner；无 production source edit |
+| runtime | 760px surface 居中；page/card/text token 正确；二维码白底、268px、零 overflow、warning/error=0 |
+| mutation | 未下载、分享、扫码、上传、发送、申请或修改群；无 Gateway/SQLite mutation |
+| regression | H5 4 files/9 tests、Web typecheck、HTTP 200、diff check green |
+| boundary | 恢复 light/default viewport；RN protected diff 与 SDK source diff 为空；未执行 RN/Desktop/all/`build:package:desktop:web` |
+
+Verdict: `clean/browser-real-group-qr-desktop-dark-pass/export-scan-send-gated`。
+
+## W6.a6.20.139 Closeout
+
+| check | result |
+| :--- | :--- |
+| P0/P1 | `0/0`；旧群二维码 natural-data gate 已由 production group 关闭 |
+| owner | SDK `buildIM28GroupQRCodePayload`、`loadGroupProfileSource`、共用 `QRCodeDisplay` 保持单一 owner；无新 source |
+| runtime | 真实群名/群 ID/二维码/返回群资料一致；412px 零 overflow；warning/error=0 |
+| mutation | 未下载、分享、扫码、上传、发送、申请或修改群；无 Gateway/SQLite mutation |
+| regression | H5 4 files/9 tests、Web typecheck、HTTP 200、diff check green |
+| boundary | RN protected diff 与 SDK source diff 为空；未执行 RN/Desktop/all/`build:package:desktop:web` |
+
+Verdict: `clean/browser-real-group-qr-mobile-pass/export-scan-send-gated`。
+
+## W6.a6.20.138 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/browser-broadcast-desktop-dark-selection-pass/send-gated` |
+| canonical owner | `ChatTargetPickerModal` 继续唯一拥有目标选择 presentation；SDK messageBroadcast 继续唯一拥有 batch/partial/cache 语义 |
+| browser proof | 真实 2 好友/2 群；760x900 dark sheet=720x868；跨 Tab ALL 累计 4；关闭回 conversations |
+| safety | 未点击 CTA、未进入 compose、未发送或执行 Gateway/SQLite mutation；恢复 light/default viewport，隔离 tab 已关闭 |
+| delete-or-register | P0/P1 为零；无第二 picker、target DTO、batch 或 cache owner，无需 production edit |
+| verification | H5 4 files/10 tests；Web typecheck；HTTP 200；warning/error=0；RN protected diff 为空 |
+| residual | real partial/realtime/list-back、50 上限、Safari/Firefox、physical touch/device |
+
+## W6.a6.20.137 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/browser-owner-mobile-desktop-dark-pass/admin-and-mutation-gated` |
+| canonical owner | SDK permission/mutation owner 与 H5 role projection 不变；本片只读 production DOM/CSS/Router |
+| browser proof | 真实 owner 群 `412x786`、`760x900` dark page/card token、8px、零溢出；owner-transfer 进入/返回正常 |
+| safety | 未点 switch、未选 candidate、未确认或 mutation；恢复 light/default viewport，隔离 tab 已关闭 |
+| delete-or-register | P0/P1 为零；无第二 theme/permission/route/mutation owner，无需 production edit |
+| verification | H5 4 files/15 tests；Web typecheck；SDK Web 98/408；HTTP 200；warning/error=0；RN protected diff 为空 |
+| residual | natural admin/non-empty admin、真实 setting/transfer、Safari/Firefox、实体设备 |
+
+## W6.a6.20.136 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/role-presentation-converged/owner-browser-pass/admin-natural-data-gated` |
+| canonical owner | SDK shared permissions 保持唯一业务 owner；H5 helper 只拥有可见/禁用 presentation |
+| change | admin 保留 disabled switches、read-only speech 和“群主转让/仅群主”；owner 原 Link/enabled 状态不变；member route fail-closed |
+| browser proof | 真实 owner 群全部原操作入口保持；未点击任何 mutation control |
+| anti-mock | 未构造 admin runtime snapshot；admin 仅标 local-verified，不冒充 browser pixel |
+| delete-or-register | P0/P1 为零；删除隐藏式信息偏差，无第二 permission/role/route/mutation owner |
+| verification | H5 5 files/17 tests；Web typecheck；SDK source/RN protected diff 为空 |
+| residual | natural admin、真实 setting/transfer result、realtime/list-back、cross-browser/device |
+
+## W6.a6.20.135 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/rn-label-parity/browser-route-return-pass` |
+| canonical owner | 群主转让 permission/candidate/mutation 继续归 shared SDK 与既有 owner-transfer route；管理页仅拥有入口 label/navigation |
+| change | `转让群主` -> `群主转让`，同步 route contract assertion |
+| browser proof | 真实 owner 群显示新文案；进入选择页仍为两位非本人候选；关闭精确返回群管理 |
+| safety | 不选择候选、不打开确认、不执行 transfer/Gateway/SQLite mutation |
+| delete-or-register | P0/P1 为零；无第二 route、permission、candidate 或 mutation owner，无 compat label 保留 |
+| verification | H5 4 files/13 tests；Web typecheck；SDK source/RN protected diff 为空 |
+| residual | 真实 transfer result/realtime/list-back、mobile/dark/cross-browser/device |
+
+## W6.a6.20.134 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/browser-real-common-groups-count-list-open-consistent` |
+| canonical owner | `contacts.listCommonGroups -> IMContactActionsSync -> repositories` 唯一拥有分页、去重和 cache upsert；群会话继续归 `conversations.openGroup` |
+| browser proof | 好友资料 settled count=2；共同群 list=2；无未读群打开 canonical chat；list-back unread=4、runtime online、412/412、零日志 |
+| safety | 不将 loading 首帧当结果；不 refresh/mark-read/send，不执行关系/群 mutation、fixture 或 route ID 猜测 |
+| delete-or-register | P0/P1 为零；旧 count/list 数据残项已关闭，无第二 common-group/group-conversation/cache owner，无需 production 改动 |
+| verification | SDK 1 file/13 tests；H5 3 files/16 tests；本片无 source edit，既有 H5 dirty source 保留，SDK source/RN protected diff 为空 |
+| residual | cache-miss fallback、cold-start offline、large pagination、physical touch、cross-browser/device |
+
+## W6.a6.20.133 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/browser-real-joined-group-open-and-list-back-pass` |
+| canonical owner | `conversations.openGroup -> openIMGroupConversation -> ConversationRepository` 保持唯一群会话身份/cache owner |
+| browser proof | 2 个真实 joined groups；owner 群打开 canonical chat；返回后目标行/preview 保留、unread=4、runtime online、412/412、零日志 |
+| safety | 只选择无未读群；不 refresh/mark-read/send/长按/mutation，不注入 fixture 或 route ID |
+| delete-or-register | P0/P1 为零；无第二 group/conversation/cache owner、compat route 或 fake-success；无需 production 改动 |
+| verification | SDK 1 file/4 tests；H5 3 files/9 tests；本片无 source edit，既有 H5 dirty source 保留，SDK source/RN protected diff 为空 |
+| residual | cache-miss fallback、cold-start offline、large-group、physical touch、cross-browser/device 与群 mutation |
+
+## W6.a6.20.132 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `blocked-deployment/runtime-clean/no-call-created` |
+| canonical owner | `ChatPage -> WebIMCallProvider -> createIMCallControlSync -> Gateway call API -> Web media owner` 保持唯一通话链 |
+| browser proof | 双账号 online；真实语音入口进入 active route 后显示“服务不可用”；receiver 无 overlay；双方 call list 为空 |
+| failure cleanup | caller 退出 active route 后回会话列表，两端 runtime 继续 online；独立 tab/server 已清理 |
+| safety | 无 token/storage 读取、fake invite/credential/record、permission bypass、重复 owner 或 retry loop |
+| delete-or-register | P0/P1 为零；部署门禁已登记，无需修改或删除 production code |
+| verification | SDK RTC 4 files/21 tests；H5 call UI 3 files/10 tests；H5/SDK/RN source boundary clean |
+| residual | 通话服务激活后真实 invite/reject、answer、LiveKit media、通话记录与跨浏览器/设备 |
+
+## W6.a6.20.131 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/hot-session-offline-cache-first-pass/cold-start-contract-gated` |
+| canonical owner | SDK auth restore 持有 `check-token -> account DB -> realtime`；conversation/message facade 持有唯一 SQLite cache reader；H5 只投影 cache 与远端错误 |
+| browser proof | 独立 origin 在线预热 4 会话；关闭 per-test proxy 后联系人 2 条、会话 4 条、marker 与聊天历史保留；reload 明确回 auth |
+| safety | 不读 browser storage/token，不停共享 Gateway，不注入 fixture/fake runtime，不触发发送/已读/mutation |
+| delete-or-register | 无第二 cache/auth/offline owner、compat route 或 fake-success；无需删除 production code |
+| verification | production UI + real Gateway warm-up + isolated HTTP/WS failure + SPA list/chat/cache + cold reload boundary |
+| residual | cold-start 产品/安全 contract、Safari/Firefox、实体设备、长期离线和 quota eviction |
+
+## W6.a6.20.117 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `blocked-natural-data/runtime-clean` |
+| canonical owner | message cache payload -> `ChatMediaInteractionProvider` 保持唯一 image/audio/video interaction owner |
+| browser proof | 两个无未读会话与归档均无媒体 action；两个 unread 会话未打开 |
+| safety | 不注入 URL、不 mark-read、不播放/下载/发送、不执行 Gateway/SQLite；SDK/H5 runtime/RN business 零改动 |
+| delete-or-register | 无 mock media、fake playback、第二 audio/overlay/cache owner 或 compat route |
+| verification | H5 3 files/11 tests、Web typecheck、3 route HTTP 200、diff/RN protected checks |
+| residual | 无未读真实 image/audio/video payload、playback/cleanup、responsive theme、跨浏览器/设备 |
+
+## W6.a6.20.116 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `blocked-natural-data/runtime-clean` |
+| canonical owners | friend/group application Gateway facades remain唯一 truth；验证容器只投影 tabs、rows、empty 与 confirm state |
+| browser proof | friend 3 accepted/no action；group empty；两个 412px route 无横向溢出 |
+| safety | 不打开资料/mark-read，不接受/拒绝，不制造申请，不执行 Gateway/SQLite；SDK/H5 runtime/RN business 零改动 |
+| delete-or-register | 无 fixture、fake pending、fake success、第二 application/transport/cache owner 或 compat path |
+| verification | H5 2 files/7 tests、Web typecheck、2 route HTTP 200、diff/RN protected checks |
+| residual | incoming pending friend、non-empty owner/admin group audit、确认层与授权 mutation |
+
+## W6.a6.20.115 Closeout
+
+| field | value |
+| :--- | :--- |
+| status | `clean/browser-mobile-dark-readonly-pass; desktop-dark-and-mutation-gated` |
+| canonical owner | `MeSecurityPage/MeSecurityCredentialPage -> WebIMRuntime -> GatewayHTTPClient` 保持唯一读取/mutation 链；account-state guard 只选择规范 route |
+| browser proof | 真实绑定摘要、首次设置空表单、disabled submit、错误 reset deep link 纠正、dark page/card/form、412px 无横向溢出 |
+| safety | 不输入/提交、不 set/reset/Gateway/SQLite/session cleanup；恢复 light；SDK/H5 runtime/RN business 零改动 |
+| delete-or-register | 无 mock、fake success、第二 credential/route/theme owner、fixture 或 page-local dark override |
+| verification | SDK 1 file/3 tests、H5 1 file/3 tests、Web typecheck、3 route HTTP 200、diff/RN protected checks |
+| residual | 760x900 dark、已绑定账号 reset 自然样本、approved real set/reset Network/result/session cleanup、跨浏览器/设备 |
+
 ## W6.a6.20.114 Closeout
 
 | field | value |
@@ -502,7 +783,7 @@ Resolved closeout drift: staged unread anchors use index `0` before the unread b
 | :--- | :--- | :--- |
 | real Gateway login/data-backed parity | `blocked-external` | stable test Gateway credentials/data |
 | clear/delete/edit/send mutations | `blocked-authorization` | explicit destructive/mutation approval |
-| dual-account realtime/list-back | `blocked-external` | two simultaneous authenticated clients |
+| dual-account realtime/list-back | `passed-real-text` | `.130` two simultaneous authenticated clients；non-text/background/cross-browser remain separate |
 | Safari/Firefox/browser matrix | `blocked-environment` | runnable target browsers |
 | RTC authentication/call flow | `blocked-external` | valid RTC credentials and device permissions |
 

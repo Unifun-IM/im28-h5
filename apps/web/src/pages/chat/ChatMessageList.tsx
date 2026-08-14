@@ -16,6 +16,7 @@ import {
 import { focusChatMessageRow } from './chat-message-focus.js';
 import { indexChatGroupMembers } from './chat-group-message-view.js';
 import { useTailItemMotion } from '../../components/interaction/index.js';
+import './chat-message-focus.css';
 
 /** RN 消息列表只消费 Repository 消息和页面加载状态。 */
 interface ChatMessageListProps {

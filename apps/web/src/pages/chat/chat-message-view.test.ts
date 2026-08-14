@@ -177,6 +177,58 @@ describe('chat message view media mapping', () => {
     });
   });
 
+  /** 群提及正文继续使用共享 text view，不在页面复制 mention 解析。 */
+  it('将 type106 群提及投影为普通文本气泡', () => {
+    expect(getChatMessageView(createMessage(106, {
+      mention: { text: '@donk 你好' },
+    }), true)).toEqual({
+      kind: 'text',
+      text: '@donk 你好',
+    });
+  });
+
+  /** type108 同时锁定 RN 已发布的用户和群聊名片两种快照。 */
+  it('将 type108 用户与群聊名片投影为卡片气泡', () => {
+    expect(getChatMessageView(createMessage(108, {
+      card: {
+        user: {
+          user_id: 'user-108',
+          nickname: '名片用户',
+          avatar_url: 'https://media.example.com/user.jpg',
+        },
+      },
+    }), false)).toEqual({
+      kind: 'card',
+      text: '名片用户',
+      detail: 'user-108',
+      mediaURL: 'https://media.example.com/user.jpg',
+    });
+    expect(getChatMessageView(createMessage(108, {
+      card: {
+        group: {
+          group_id: 'group-108',
+          title: '名片群聊',
+          avatar_url: 'https://media.example.com/group.jpg',
+        },
+      },
+    }), true)).toEqual({
+      kind: 'card',
+      text: '名片群聊',
+      detail: 'group-108',
+      mediaURL: 'https://media.example.com/group.jpg',
+    });
+  });
+
+  /** RN 没有位置气泡 owner，Web 不得为 type109 猜测地图或点击行为。 */
+  it('对 type109 位置消息保持明确不可用投影', () => {
+    expect(getChatMessageView(createMessage(109, {
+      location: { latitude: 1, longitude: 2, description: '未知位置' },
+    }), false)).toEqual({
+      kind: 'unsupported',
+      text: '[暂不支持的消息 · 109]',
+    });
+  });
+
   it('在单聊中也用当前账号投影 type1701 自动删除文案', () => {
     /** notice 使用 Gateway 标准 system.extra 字段。 */
     const notice = {

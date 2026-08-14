@@ -30,6 +30,11 @@ import { useChatHistoryPagination } from './useChatHistoryPagination.js';
 import { useChatQuoteSources } from './useChatQuoteSources.js';
 import { useChatMessageDeleteExit } from './useChatMessageDeleteExit.js';
 import { useChatDirectRelationship } from './useChatDirectRelationship.js';
+import { useObservedUserPresence } from './useObservedUserPresence.js';
+import { buildChatHeaderPresenceView } from './chat-header-presence-view.js';
+import { createChatGroupProfileRouteState } from './group-profile-route-state.js';
+import { useChatGroupApplicationCount } from './useChatGroupApplicationCount.js';
+import { createGroupApplicationChatRouteState } from '../contacts/group-application-route.js';
 import { getConversationTitle } from '../conversations/conversation-list-view.js';
 import type { ChatComposerMentionRequest } from './chat-composer-types.js';
 import { buildChatMessageFocusURL, focusChatMessageRow, readFocusedChatMessageWindow } from './chat-message-focus.js';
@@ -191,6 +196,33 @@ export function ChatPage() {
   });
   // mentionMembers 只消费 shared 群成员 cache/sync facade。
   const mentionMembers = useChatMentionMembers(conversation, sync, setError);
+  // headerPresenceUserIDs 只观察当前单聊对端或普通群完整成员快照。
+  const headerPresenceUserIDs = useMemo(() => {
+    if (!conversation) return [];
+    if (conversation.type === 'single') return conversation.targetID ? [conversation.targetID] : [];
+    if (!mentionMembers.showOnlineStatus) return [];
+    return mentionMembers.members.map(member => member.userID);
+  }, [conversation, mentionMembers.members, mentionMembers.showOnlineStatus]);
+  // headerOnlineByID 复用 shared presence 的初始查询与实时收敛。
+  const headerOnlineByID = useObservedUserPresence({
+    runtime,
+    accountUserID: snapshot.userID,
+    userIDs: headerPresenceUserIDs,
+    visible: headerPresenceUserIDs.length > 0,
+  });
+  // headerPresence 严格复刻 RN 单聊与普通群头部展示规则。
+  const headerPresence = useMemo(() => buildChatHeaderPresenceView({
+    conversation,
+    onlineByID: headerOnlineByID,
+    groupMemberUserIDs: mentionMembers.members.map(member => member.userID),
+    showGroupOnlineStatus: mentionMembers.showOnlineStatus,
+  }), [conversation, headerOnlineByID, mentionMembers.members, mentionMembers.showOnlineStatus]);
+  // groupApplicationCount 对齐 RN 群聊头部待审核角标，并随 runtime 事实刷新。
+  const groupApplicationCount = useChatGroupApplicationCount(
+    conversation,
+    sync,
+    snapshot.dataVersion,
+  );
   // groupAnnouncement 仅在 shared read-status 判定未读时投影 RN 横幅。
   const groupAnnouncement = useChatGroupAnnouncement({
     conversation,
@@ -416,7 +448,32 @@ export function ChatPage() {
   return (
     <main className="rn-chat-page">
       <section className="rn-chat-surface">
-        <ChatHeader conversation={conversation} />
+        <ChatHeader
+          conversation={conversation}
+          presence={headerPresence}
+          groupApplicationCount={groupApplicationCount}
+          onOpenProfile={() => {
+            if (!conversation) return;
+            /** conversationHref 保证资料页只返回当前真实会话。 */
+            const conversationHref = `/conversations/${encodeURIComponent(conversation.conversationID)}`;
+            if (conversation.type === 'group') {
+              navigate(`${conversationHref}/settings/profile`, {
+                state: createChatGroupProfileRouteState(conversation.conversationID),
+              });
+              return;
+            }
+            navigate(`/contacts/users/${encodeURIComponent(conversation.targetID)}`, {
+              state: { backHref: conversationHref },
+            });
+          }}
+          onOpenGroupApplications={() => {
+            if (conversation?.type !== 'group' || !conversation.targetID) return;
+            navigate(
+              `/contacts/group-applications/${encodeURIComponent(conversation.targetID)}`,
+              { state: createGroupApplicationChatRouteState(conversationID) },
+            );
+          }}
+        />
         <ChatPageFeedback error={error} notice={notice} />
         {groupAnnouncement.announcement ? (
           <ChatGroupAnnouncementBanner

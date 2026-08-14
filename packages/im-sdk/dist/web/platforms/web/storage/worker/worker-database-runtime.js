@@ -6,6 +6,7 @@ const OPEN_PAYLOAD_SCHEMA = z.object({
     databaseName: z.string().min(1),
     wasmURL: z.string().min(1),
     storageDatabaseName: z.string().min(1).optional(),
+    mode: z.enum(['readwrite', 'readonly-existing']).optional(),
 });
 // SQL 参数允许共享 DatabaseAdapter contract 中的浏览器可克隆值。
 const DATABASE_PARAMETER_SCHEMA = z.union([

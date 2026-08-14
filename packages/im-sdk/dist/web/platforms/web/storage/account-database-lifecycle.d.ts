@@ -4,6 +4,7 @@ import type { AccountDatabaseLeaseManager } from './lock/index.js';
 /** 认证 runtime 使用的账户 SQLite 生命周期端口。 */
 export interface WebIMAccountDatabaseLifecycle {
     open(userID: string): Promise<void>;
+    openExistingReadOnly(userID: string): Promise<void>;
     close(): Promise<void>;
     getDatabase(): DatabaseAdapter | null;
 }

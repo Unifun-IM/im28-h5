@@ -5,6 +5,10 @@ declare const OPEN_PAYLOAD_SCHEMA: z.ZodObject<{
     databaseName: z.ZodString;
     wasmURL: z.ZodString;
     storageDatabaseName: z.ZodOptional<z.ZodString>;
+    mode: z.ZodOptional<z.ZodEnum<{
+        readwrite: "readwrite";
+        "readonly-existing": "readonly-existing";
+    }>>;
 }, z.core.$strip>;
 /** Worker open 后创建真实 DatabaseAdapter 的依赖。 */
 export interface WorkerDatabaseRuntimeDependencies {

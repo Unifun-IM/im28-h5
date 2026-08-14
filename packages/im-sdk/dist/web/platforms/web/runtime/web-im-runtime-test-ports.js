@@ -19,6 +19,7 @@ export function createWebIMRuntimeTestPorts() {
     return {
         accountDatabase: {
             open: async () => undefined,
+            openExistingReadOnly: async () => undefined,
             close: async () => undefined,
             getDatabase: () => database,
         },

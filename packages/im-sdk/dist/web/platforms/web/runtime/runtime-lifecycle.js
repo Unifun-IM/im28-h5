@@ -4,6 +4,7 @@ const WEB_IM_RUNTIME_TRANSITIONS = {
     anonymous: {
         auth_started: 'authenticating',
         auth_restored: 'authenticated',
+        offline_restored: 'offline-readonly',
         signed_out: 'anonymous',
     },
     authenticating: {
@@ -14,6 +15,16 @@ const WEB_IM_RUNTIME_TRANSITIONS = {
     authenticated: {
         realtime_connecting: 'connecting',
         token_expired: 'anonymous',
+        signed_out: 'anonymous',
+    },
+    'offline-readonly': {
+        offline_reconnect_started: 'offline-validating',
+        signed_out: 'anonymous',
+    },
+    'offline-validating': {
+        offline_reconnect_failed: 'offline-readonly',
+        offline_reconnect_succeeded: 'authenticated',
+        offline_session_invalid: 'anonymous',
         signed_out: 'anonymous',
     },
     connecting: {

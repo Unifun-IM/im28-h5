@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildGroupApplicationEntries,
   buildGroupVerificationEntries,
+  countPendingGroupApplications,
   getGroupApplicationSourceText,
   getGroupApplicationStatusText,
 } from './group-application-view.js';
@@ -39,6 +40,14 @@ describe('group application view', () => {
     const applications = [createApplication(), createApplication({ applicationID: 'a2', groupID: 'team-2', groupName: '产品群' })];
     expect(buildGroupVerificationEntries(applications, 'self', '产品')).toHaveLength(1);
     expect(buildGroupVerificationEntries(applications, 'self', 'team-2')[0]?.groupName).toBe('产品群');
+  });
+
+  it('群管理入口只统计目标群待处理申请', () => {
+    expect(countPendingGroupApplications([
+      createApplication(),
+      createApplication({ applicationID: 'a2', status: 'accepted' }),
+      createApplication({ applicationID: 'a3', groupID: 'g2' }),
+    ], 'g1')).toBe(1);
   });
 
   it('详情只保留目标群并支持申请人搜索', () => {

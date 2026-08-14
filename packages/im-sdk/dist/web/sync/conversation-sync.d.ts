@@ -1,5 +1,6 @@
 import { type Conversation, type ConversationListOptions, type Message } from '@im28/im-sdk/core';
 import { type IMConversationClearOptions, type IMConversationClearSyncDependencies } from './conversation-clear-sync.js';
+import { type WebIMSyncContext } from './sync-context.js';
 import { type IMConversationSettingsSync } from './conversation-settings.js';
 import { type IMConversationListActionsSync } from './conversation-list-actions.js';
 import { type WebIMUnreadMentionSnapshot } from './conversation-unread-mention.js';
@@ -17,6 +18,8 @@ export interface WebIMConversationListItem {
     readonly latestSenderDisplayName?: string;
     readonly unreadMention: WebIMUnreadMentionSnapshot | null;
 }
+/** 从指定账号上下文组合 cache-only 会话列表，不触发 Gateway 或写入。 */
+export declare function listWebIMCachedConversationItems(context: WebIMSyncContext, options?: ConversationListOptions): Promise<readonly WebIMConversationListItem[]>;
 /** 页面可消费的 cache-first 会话能力。 */
 export interface WebIMConversationSync extends IMConversationSettingsSync, IMConversationListActionsSync, IMConversationDraftSync {
     listCached(options?: ConversationListOptions): Promise<readonly Conversation[]>;

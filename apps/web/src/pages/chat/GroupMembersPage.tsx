@@ -25,7 +25,7 @@ import {
   shouldShowGroupMemberPresence,
 } from './group-members-view.js';
 import { GroupMemberRow } from './GroupMemberRow.js';
-import { useGroupMemberPresence } from './useGroupMemberPresence.js';
+import { useObservedUserPresence } from './useObservedUserPresence.js';
 import './group-members-page.css';
 
 /** RN 群成员完整列表只消费共享 groupMembers facade。 */
@@ -164,7 +164,7 @@ export function GroupMembersPage() {
   // memberUserIDs 为当前完整成员快照建立一个批量 presence observation。
   const memberUserIDs = useMemo(() => members.map(member => member.userID), [members]);
   // onlineByID 仅保存当前页面内存状态，不进入成员 DTO 或 SQLite。
-  const onlineByID = useGroupMemberPresence({
+  const onlineByID = useObservedUserPresence({
     runtime,
     accountUserID: snapshot.userID,
     userIDs: memberUserIDs,

@@ -1,16 +1,438 @@
 # IM28 H5 Foundation Workset
 
-## Current Workset W6 Closeout External Acceptance Gates
+## Current Workset W6 Cold-Start Offline Readonly
 
 | field | value |
 | :--- | :--- |
-| status | `active/external-acceptance` |
-| owner | `existing shared SDK owners -> authorized deployment/browser/device evidence` |
-| target | 按现有 gate ledger 补真实 Gateway mutation、RTC、offline SQLite、多标签/跨浏览器、主题/viewport 和自然样本证据 |
+| status | `active/implementation-partial/not-consumed` |
+| owner | `im28-sdk Web runtime/storage/reader -> im28-h5 offline shell` |
+| target | 让同 tab 的既有账号快照在冷启动网络不可达时只读恢复，同时阻止完整 sync、realtime 和全部 mutation |
 | non-claim | `.91` 已关闭本地确定性 implementation inventory；不再把授权、样本、浏览器绑定或平台不适用项包装成新代码任务 |
 | verification | 每个门禁必须复用现有 production path，记录 Network/result/cache/list-back/visual evidence；禁止 fixture、fake success 或第二 writer |
 | protected | RN business 继续冻结；H5 验收若发现 shared defect，另行冻结 SDK contract 且只走 `build:web/sync:web` |
-| next | `.93-.114` 已关闭当前单标签可无副作用 browser gate、群管理 light/dark 层级与本人资料 mobile dark；等待 destructive/send/RTC/offline/multi-browser/device、physical-touch、admin 角色/非空管理员、已读 owner/admin 消息、长列表未读滚动、消息高亮活动帧、available 群或 conversation-only 群等缺失 natural-data gate，不制造新实现任务 |
+| next | `.148.1a/.1b` classifier/lifecycle/storage/reader 已关闭；执行 `.148.1c` runtime orchestration，然后 `.148.2` H5 shell 和 `.148.3` isolated acceptance |
+
+## Active Slice W6.a6.20.148.1c Runtime Offline Restore And Reconnect Orchestration
+
+| field | value |
+| :--- | :--- |
+| source anchor | `web-im-runtime.ts/types`、`web-im-authentication.ts`、auth session store、runtime lifecycle and offline reader |
+| deliverable | network-only cold restore、offline snapshot/getOfflineReader、offline getSync rejection、single-flight reconnect and invalid cleanup |
+| guardrail | explicit invalid/HTTP/business stays canonical；offline path skips recovery/realtime；reader revoked before normal runtime upgrade |
+| verification | focused restore/reconnect/auth cleanup tests + Web full/typecheck/boundary/build:web/sync:web |
+| protected | no RN business source；no build:rn/build:desktop/build:all/`build:package:desktop:web` |
+| status | `active` |
+
+## Latest Closed Slice W6.a6.20.148.1b Existing-Snapshot Storage And Reader
+
+| field | value |
+| :--- | :--- |
+| delivered | no-create IndexedDB probe、read-only lifecycle/Worker/sql.js mode、minimal reader and shared cache query extraction |
+| non-exposure | production restore/reconnect/getSync and H5 consumers unchanged |
+| verification | focused 7/35；Web full 100/419；H5 typecheck/build；build:web/sync:web；RN protected diff empty |
+| verdict | `clean/storage-reader-safe/not-consumed` |
+
+## Latest Closed Slice W6.a6.20.148.1a Transport Classification And Lifecycle
+
+| field | value |
+| :--- | :--- |
+| delivered | strict browser transport error normalization + guarded offline lifecycle transitions |
+| non-exposure | production restore/storage/sync/H5 consumers unchanged；no usable offline runtime claimed |
+| verification | SDK 2 files/10 tests；H5 typecheck/build；build:web/sync:web；RN protected diff empty |
+| verdict | `clean/foundation-complete/not-consumed` |
+
+## Queued Slice W6.a6.20.148.2 H5 Offline Shell
+
+| field | value |
+| :--- | :--- |
+| deliverable | offline banner、cached conversations/chat history、retry/sign-out；composer/actions/tabs with remote dependency unavailable |
+| owner rule | pages consume `getOfflineReader()` only；no direct sessionStorage/IndexedDB/token or duplicated repository query |
+| status | `pending-after-.148.1` |
+
+## Queued Slice W6.a6.20.148.3 Isolated Cold-Reload Acceptance
+
+| field | value |
+| :--- | :--- |
+| deliverable | isolated origin warm-up -> Gateway blocked reload -> cache list/chat -> failed retry -> valid reconnect；separate invalid-session cleanup harness |
+| mutation | no send、mark-read、draft、profile/group/call/message/conversation write |
+| status | `pending-after-.148.2` |
+
+## Current Activation Card W6.a6.20.147
+
+| field | value |
+| :--- | :--- |
+| decision | `no-safe-auto-activation` |
+| natural-data resume | pending friend/group、自然 admin/role bubble、bound account、non-missed/duration call、available/conversation-only group、非空 blacklist/media 等样本 |
+| mutation resume | 指定 operation + disposable target + 明确服务器/SQLite 副作用授权 |
+| environment resume | RTC deployment/credential、Safari/Firefox、实体设备或 physical-touch 会话 |
+| design resume | cold-start offline 等需新增实现的条目另建 contract/slice |
+| anti-loop | 外部状态未变化时不新增同类 audit 编号，不重跑三账号空态 |
+| protected | 不改 frozen RN business；Web defect 才进入 shared SDK 且仅允许 `build:web/sync:web` |
+| status | `superseded-by-explicit-local-design-authorization/.148` |
+
+## Latest Audited Slice W6.a6.20.146
+
+| field | value |
+| :--- | :--- |
+| goal | 跨第二/第三授权账号审计 bound reset、通话记录和 available/conversation-only 群候选样本 |
+| security proof | 两账号均 `account=''`，安全总览进入首次设置语义，不存在 reset form |
+| calls proof | 两账号 `/calls` 均为空，无 non-missed/duration row |
+| group proof | 关键词 `62/群` 服务端群搜索为空；第三账号 2 group conversations 与 2 joined groups 相同 |
+| dedupe | 普通成员 manage deep-link replace 已由 `.107` 验收，本片不重复记为新通过 |
+| anti-shortcut | 不输入 credential、不编辑 call、不申请群、不打开 unread chat、不注入 fixture |
+| protection | runtime code 零修改；未运行 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web` |
+| verdict | `audited/blocked-natural-data/runtime-clean` |
+
+## Latest Audited Slice W6.a6.20.145
+
+| field | value |
+| :--- | :--- |
+| goal | 用三个已授权测试账号重新审计 pending 申请与已读 owner/admin 消息自然样本，消除重复尝试 |
+| friend proof | 账号 1/2/3 分别为 3/3/2 条申请，全部 accepted；无 pending action |
+| group proof | 三账号群验证均为空；账号 2 是真实 owner，账号 3 能看到其群摘要 |
+| bubble proof | unread=0 群聊仅 system/self 消息；账号 3 的他人 owner message 会话 unread=2，未打开 |
+| anti-shortcut | 不用摘要替代 role badge，不用空态替代 pending，不注入 fixture，不接受/拒绝或 mark-read |
+| protection | runtime code 零修改；未运行 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web` |
+| verdict | `audited/blocked-natural-data/runtime-clean` |
+
+## Latest Accepted Slice W6.a6.20.144
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭 `.143` 真实备注标题与首页加号的窄屏 light、桌面 dark 响应式 gate |
+| mobile proof | authenticated `320x786`；`donk二大爷备注名` 与时间/未读无重叠；document=`320/320` |
+| desktop proof | authenticated `760x900` dark；surface/text token 正确；标题/时间无重叠；document=`760/760` |
+| geometry | 两个 viewport 均保持 trigger=`40x40`、glyph/pseudo=`14x2` |
+| media audit | 旧媒体 route 缺当前账号 open database snapshot；未注入 URL、未 playback，继续 natural-data-gated |
+| anti-shortcut | 不打开 unread chat、不 mark-read、不执行 Gateway/SQLite mutation；当前真实长度不外推任意超长备注 |
+| protection | 无 runtime source edit；light、`412x786` 与 `/conversations` 已恢复；RN/SDK source 不改 |
+
+## Latest Accepted Slice W6.a6.20.143
+
+| field | value |
+| :--- | :--- |
+| goal | 修复单聊会话备注名缺失和首页加号过大两项 RN parity defect |
+| owner | SDK `listCachedItems + resolveFriendshipDisplayProfile` 持有备注投影；H5 CSS 持有 glyph 尺寸 |
+| behavior | 已确认 friend remark 覆盖单聊展示 snapshot name；SQLite conversation/name 不改；群标题不受影响 |
+| browser | 真实首行=`donk二大爷备注名`、群摘要备注正确；40x40 target、14x2 glyph/pseudo、412/412、warning/error=0 |
+| verification | SDK 3 files/23 tests；H5 3 files/17 tests；Web typecheck；build:web/sync:web |
+| protection | RN source clean；未运行/同步 RN/Desktop/all；未修改/执行 `build:package:desktop:web` |
+| residual | remark realtime refresh、长备注截断、Safari/Firefox、physical device |
+
+## Latest Accepted Slice W6.a6.20.142
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭聊天附件名片选择器真实群目标、单选替换、取消返回自然数据 gate |
+| RN proof | frozen RN 为好友/群聊 single-select；选择和最终发送分属两阶段 |
+| real proof | 无未读单聊 `donk三大爷`；好友过滤后 1 项，群聊 Tab 2 个真实群 |
+| selection proof | 首群 selected=1/CTA enabled；选择第二群后前项清除且 selected 仍为 1 |
+| layout/route | `412x786`、document=`412/412`；关闭回原单聊，composer 保持 |
+| verification | H5 4 files/10 tests；Web typecheck；临时 5178 dev-pc smoke |
+| anti-shortcut | 不点击 CTA，不发送 type108，不制造 success/failed/realtime/list-back |
+| protection | 结束恢复 default viewport、关闭隔离 tab/临时 server；RN/SDK source 不改；未运行 RN/Desktop/all/`build:package:desktop:web` |
+| residual | final send/failure retry/realtime/list-back、search/long-name、Safari/Firefox、physical touch/device |
+
+## Latest Accepted Slice W6.a6.20.141
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭 `.18.3.19` 群二维码分享中真实群目标、ALL、多选保留和取消返回自然数据 gate |
+| RN proof | `cardShare` 以 `selectedKeys` 多选好友/群聊；旧 SSOT“单选”已纠正，不改 RN source |
+| real proof | share source=`donk的群聊 / 97524759106`；target facade=2 好友+2 群聊 |
+| selection proof | 群聊 ALL=2；切好友仍 selected=2；好友 ALL 后 selected=4、CTA enabled |
+| layout/route | `412x786`、sheet=`380x754@16`、document=`412/412`；关闭 replace 回原群二维码 |
+| verification | H5 4 files/10 tests；Web typecheck；HTTP 200；warning/error=0；diff check green |
+| anti-shortcut | 不点击 CTA，不生成/上传 PNG，不 batch-send，不制造 partial/success/list-back |
+| protection | 恢复 default viewport 并关闭隔离 tab；RN protected diff 与 SDK source diff 为空；未运行 SDK/RN/Desktop/all/`build:package:desktop:web` |
+| residual | final send/partial result/realtime/list-back、50-target、desktop/dark、Safari/Firefox、physical touch/device |
+
+## Latest Accepted Slice W6.a6.20.140
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭真实群二维码 desktop dark、主题 token 分层、二维码白底和宽屏居中 residual |
+| real proof | `donk的群聊 / 97524759106`；同一 canonical conversation；二维码 ready、无错误 |
+| layout proof | `760x900`；surface=`480x900@140`、card=`448x368@156`、Canvas=`268x268`、document=`760/760` |
+| theme proof | page/surface=`rgb(17,19,24)`、card=`rgb(27,29,36)`、text=`rgb(245,245,247)`、QR box=`rgb(255,255,255)` |
+| route proof | 暗色返回精确进入同一群资料，identity 与二维码入口一致 |
+| verification | H5 4 files/9 tests；Web typecheck；HTTP 200；warning/error=0；diff check green |
+| anti-shortcut | 不注入主题/群资料，不点击下载/分享/扫一扫，不执行上传、发送、申请或群 mutation |
+| protection | 已恢复 light/default viewport 并关闭隔离 tab；RN protected diff 与 SDK source diff 为空；未运行 SDK/RN/Desktop/all/`build:package:desktop:web` |
+| residual | actual download/Web Share/scan、应用内发送、Safari/Firefox、实体设备/physical touch |
+
+## Latest Accepted Slice W6.a6.20.139
+
+| field | value |
+| :--- | :--- |
+| goal | 用真实 joined group 关闭 `.18.3.18` 群二维码视觉、身份绑定和返回链 data gate |
+| real proof | `donk的群聊 / 97524759106`；canonical conversation `019ff8b7-b24f-7e71-afe1-332d40294c00`；二维码可见且 ready |
+| layout proof | `412x786`；Canvas CSS/bitmap=`268x268 / 472x472`；card=`380x368`；document=`412/412` |
+| route proof | 返回精确进入同一 conversation 的群资料页，群名、群 ID 和二维码入口一致 |
+| verification | H5 4 files/9 tests；Web typecheck；HTTP 200；warning/error=0；diff check green |
+| anti-shortcut | 不注入群资料，不点击下载/分享/扫一扫，不执行上传、发送、申请或群 mutation |
+| residual | dark/desktop 已由 `.140` 关闭；actual download/Web Share/scan、应用内发送、Safari/Firefox、实体设备 |
+| protection | RN protected diff 与 SDK source diff 为空；未运行 SDK/RN/Desktop/all/`build:package:desktop:web` |
+
+## Latest Accepted Slice W6.a6.20.138
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭统一群发目标选择器的真实桌面暗色、跨 Tab ALL、本地选择保留和取消返回 gate |
+| real proof | `760x900` dark sheet=`720x868`；真实好友 2、群聊 2；好友 ALL 后 2、群聊 ALL 后累计 4 |
+| route proof | CTA enabled 但未点击；关闭 replace 回 conversations，未进入 compose |
+| verification | H5 4 files/10 tests；Web typecheck；HTTP 200；warning/error=0 |
+| anti-shortcut | 不注入目标、不点击 CTA、不执行 broadcast/Gateway/SQLite mutation，不冒充 partial result |
+| residual | real send/partial result/realtime/list-back、50 上限、Safari/Firefox、physical touch/device |
+| protection | 已恢复 light/default viewport 并关闭隔离 tab；RN protected diff 为空；未运行 SDK/RN/Desktop/all/`build:package:desktop:web` |
+
+## Latest Accepted Slice W6.a6.20.137
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭真实 owner 群管理页的 Chromium 移动/桌面暗色、响应式和群主转让返回链 gate |
+| real proof | `412x786` 与 `760x900` 均显示完整 owner 项；page/card=`17/19/24 -> 27/29/36`、8px、无横向溢出 |
+| route proof | 群主转让显示两位非本人候选；关闭返回同一管理页；未选择或确认 |
+| verification | H5 4 files/15 tests；Web typecheck；SDK Web 98/408；HTTP 200；warning/error=0 |
+| anti-shortcut | 不伪造 admin/member，不点击开关，不执行设置、转让、Gateway/SQLite mutation |
+| residual | natural admin/non-empty admin、真实 setting/transfer、Safari/Firefox、实体设备 |
+| protection | 已恢复 light/default viewport 并关闭隔离 tab；RN protected diff 为空；未运行 RN/Desktop/all/`build:package:desktop:web` |
+
+## Latest Accepted Slice W6.a6.20.136
+
+| field | value |
+| :--- | :--- |
+| goal | 对齐 RN 群管理 owner/admin/member 三角色下控制项可见、禁用和路由守卫语义 |
+| owner proof | H5 presentation helper 只消费 shared `canManageAdmins/canTransferOwner`；页面 production caller 已接线，无 roleLevel/parser/transport/cache owner |
+| owner proof runtime | 真实 owner 群所有原可操作入口保持 Link/enabled switch；无回归 |
+| admin proof | focused test 锁定三 switch disabled、发言频率只读、群主转让“仅群主”；自然 admin 账号缺失，browser pixel gated |
+| member proof | shared `canOpenGroupManage` 路由守卫保持；`.107` 已证明普通成员直达 replace |
+| verification | H5 5 files/17 tests；Web typecheck；真实 owner DOM；source/owner/diff checks |
+| anti-shortcut | 不伪造 admin snapshot，不点 switch/候选/确认，不执行设置、转让、Gateway/SQLite mutation |
+| residual | natural admin pixel、真实 setting/transfer result、realtime/list-back、cross-browser/device |
+| protection | SDK source/RN protected diff 为空；不运行 SDK build/sync 或 RN/Desktop/all 脚本 |
+
+## Latest Accepted Slice W6.a6.20.135
+
+| field | value |
+| :--- | :--- |
+| goal | 将 H5 群主管理入口“转让群主”纠正为 frozen RN `GroupManageScreen` 的“群主转让” |
+| real proof | 真实 owner 群管理页显示“群主转让”；点击进入既有选择页，仍只列两位非本人候选，关闭后返回同管理页 |
+| owner proof | 只改 `ManagementLink` label；permission、candidate view、SDK `groupManagement` facade、route URL 均不变 |
+| verification | H5 4 files/13 tests；Web typecheck；真实 localhost 隔离账号 route/DOM/return evidence |
+| anti-shortcut | 不选择候选、不打开确认、不执行 transfer/Gateway/SQLite mutation，不改 SDK 或 RN business |
+| residual | 真实转让确认/result/realtime/list-back、mobile/dark/cross-browser/device |
+| protection | RN protected source 与 SDK source diff 为空；不运行 SDK build/sync 或 RN/Desktop/all 脚本 |
+
+## Latest Accepted Slice W6.a6.20.134
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭好友资料共同群 count、共同群列表与 canonical conversation open 的真实一致性 gate |
+| real proof | `donk二大爷` 资料异步完成后 count=2；共同群页返回同一批 2 个真实三人群；无未读 `donk的群聊` 打开 canonical `019ff8b7...` |
+| persistence proof | chat 显示群名、2 人在线与缓存系统消息；返回列表后 unread 4 -> 4，runtime online，412/412，零 warning/error |
+| owner proof | Profile 与 CommonGroups 页面均消费 SDK `contacts.listCommonGroups`；分页、token、防重复和 cache upsert 只在 shared SDK |
+| verification | SDK 1 file/13 tests；H5 3 files/16 tests；本片 source-edit audit、SDK source 与 RN protected diff checks |
+| anti-shortcut | 等待异步数据稳定，不把首帧空 count 当最终事实；不进入 unread 群、不 refresh/mark-read/send，不执行关系或群 mutation |
+| residual | cache-miss Gateway fallback、offline cold start、large pagination、physical touch、Safari/Firefox/实体设备 |
+| protection | 本片仅改 docs，既有 H5 dirty source 原样保留；SDK source/RN protected diff 为空；未运行 SDK build/sync 或 RN/Desktop/all 脚本 |
+
+## Latest Accepted Slice W6.a6.20.133
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭 Joined Groups 真实群行解析 canonical conversation、进入 chat 与 list-back persistence gate |
+| real proof | 联系人 -> 我的群聊显示 2 个真实群；无未读 `donk的群聊` 打开 conversation `019ff8b7...`，显示群名、2 人在线和缓存系统消息 |
+| persistence proof | 返回会话列表后目标群/preview 保留，总未读保持 4，runtime online，412/412，零 warning/error |
+| owner proof | `JoinedGroupsPage -> conversations.openGroup -> openIMGroupConversation -> ConversationRepository`；页面未构造 conversation ID 或第二 cache owner |
+| verification | SDK 1 file/4 tests；H5 3 files/9 tests；本片 source-edit audit、SDK source 与 RN protected diff checks |
+| anti-shortcut | 不进入有未读群、不 refresh/mark-read/send，不执行长按、群生命周期、Gateway mutation、fixture 或 fake-success |
+| residual | cache-miss Gateway fallback、offline cold start、large-group、physical touch、Safari/Firefox/实体设备与所有群 mutation |
+| protection | 本片仅改 docs，既有 H5 dirty source 原样保留；SDK source/RN protected diff 为空；未运行 SDK build/sync 或 RN/Desktop/all 脚本 |
+
+## Latest Audited Slice W6.a6.20.132
+
+| field | value |
+| :--- | :--- |
+| goal | 用两个独立在线账号执行 production 语音通话入口，验证 start、incoming、reject、终态和通话记录链 |
+| reached | caller 完成聊天附件 -> 音视频通话 -> 语音通话 -> `/calls/active`；两端 runtime 均保持 online |
+| blocker | active route 立即显示“通话已结束 / 服务不可用”，receiver 无来电 overlay，双方通话列表为空；本次未创建持久化 call |
+| static owner | `ChatPage -> WebIMCallProvider -> SDK call control -> Gateway call start -> Web media owner` 保持唯一链；reject 不创建媒体 |
+| verification | SDK RTC 4 files/21 tests、H5 call UI 3 files/10 tests、diff boundary、端口与清理检查通过 |
+| anti-shortcut | 不读取 token/storage、不伪造邀请/凭证/记录、不绕过权限、不用 retry loop 掩盖部署错误 |
+| activation | 通话服务必须能创建真实 call 并下发凭证；随后重跑 caller invite -> receiver overlay -> reject -> caller terminal -> 双方 call list |
+| protection | H5/SDK/RN production source 零改动；未运行任何 SDK build/sync 或 RN/Desktop/all 脚本 |
+
+## Latest Accepted Slice W6.a6.20.131
+
+| field | value |
+| :--- | :--- |
+| goal | 使用独立 origin 和仅测试会话可见的 Gateway proxy，证明在线预热后 SPA 路由重进仍从当前账号 SQLite 读取会话与消息 |
+| real proof | `donk二大爷` 在线同步 4 个会话；关闭 proxy 后联系人 2 条、会话 4 条及 `H5-WS-1786686250693` 均保留，进入聊天仍显示同 marker |
+| failure proof | 会话/聊天明确显示 `Failed to fetch`；整页 reload 返回手机号登录并显示同错误，证明现有 restore 不支持冷启动离线恢复 |
+| owner proof | H5 只调用 `listCachedItems/getCachedHistory`；SDK `restore` 仍固定 `check-token -> open account DB -> recover -> realtime`，无第二 writer 或页面 token/cache 分支 |
+| non-claim | 只关闭 authenticated hot-session cache-first；不声明离线登录、刷新/重启恢复、离线发送、媒体离线副本或 token 过期安全语义 |
+| protection | 临时 proxy/dev server 与测试 tab 已停止；5176/共享 Gateway 未受影响；H5/SDK/RN production source 零改动 |
+| next | 继续外部 gate；若推进 cold-start，先建立 auth/session/只读 DB/发送禁用/reconnect 的产品与安全 contract |
+
+## Latest Accepted Slice W6.a6.20.130
+
+| field | value |
+| :--- | :--- |
+| goal | 用两个独立认证 tab 验证 production text send -> Gateway -> WebSocket -> shared SQLite convergence -> H5 list/chat cache projection |
+| real proof | `donk三大爷 -> donk二大爷` 发送唯一 marker；receiver 不刷新即出现 preview、`聊天(1)` 与 1 unread，进入聊天显示同 marker，返回后 preview 保留且 unread 清零 |
+| owner proof | `createIMRealtimeMessageSync -> MessageRepository/ConversationRepository -> publishDataChange -> listCachedItems/getCachedHistory`；页面无 transport/SQL owner |
+| verification | SDK realtime 2 files/6、H5 conversation/chat 2 files/15、route HTTP 200、双 tab 零 warning/error |
+| non-claim | 已证明 realtime SQLite 写入触发和 cache consumer；未隔离网络，不能声明 offline/restart cache-hit |
+| protection | production code、SDK generated、RN protected source 和 package scripts 零改动；禁跑脚本未执行 |
+| next | `W3.real-gateway-offline-cache`：使用非破坏网络隔离或受控 Gateway failure，证明 IndexedDB/sql.js cache-first；不得停服影响其他用户 |
+
+## Latest Audited Slice W6.a6.20.129
+
+| field | value |
+| :--- | :--- |
+| goal | 按 RN 聊天气泡 production 分支重新审计 H5 消息类型矩阵，确认 `[暂不支持的消息]` 是否代表迁移遗漏 |
+| result | RN/H5 专用气泡类型一致；type106/type108 已由现有生产 parser 覆盖；type109 在 RN 无专用气泡 owner，H5 fail-closed 属于对齐行为 |
+| guardrail | 新增 mention、用户/群名片、位置 unsupported 三组 production parser 测试；未新增 runtime 分支 |
+| verification | focused 1 file/14、H5 full 140 files/449 tests、Web typecheck、466 assets |
+| protection | H5 production、SDK source/generated、RN protected source 零改动；未运行 SDK/RN/Desktop build/sync |
+| next | 维持 external acceptance workset；下一项必须来自明确授权的真实 mutation/消息、RTC、offline、多浏览器/设备或自然数据，不制造本地占位实现 |
+
+## Latest Closed Slice W6.a6.20.119
+
+| field | value |
+| :--- | :--- |
+| goal | 补齐 RN 群管理“入群申请”行及群管理/联系人验证双来源返回语义 |
+| proof | 真实群主管理页出现入群申请；进入 `/contacts/group-applications/97524759106` 后返回目标为原会话管理页；无来源 URL 回退 `/contacts/verifications/group` |
+| ownership | 审核事实继续来自 `WebIMSync.groupApplications.list`；H5 helper 只统计目标群 `pending` 并校验受限 Router state |
+| verification | focused 2/8、H5 full 137/435、typecheck、466 assets、production build、真实页面零 console error；RN protected diff empty |
+| residual | 当前真实群无 pending；非零数量、admin/member 无权限行和真实审核 mutation 继续 natural-data/authorization gated |
+
+## Latest Closed Slice W6.a6.20.120
+
+| field | value |
+| :--- | :--- |
+| goal | 补齐 RN 群聊头部非零入群申请角标，并确保申请页返回原群聊 |
+| proof | 纯渲染覆盖零隐藏、99+ 和单聊隐藏；真实 owner 群无 pending 时头部不误显，群聊设置保留，header `412/412` 且 clean log |
+| ownership | 审核事实继续来自 shared `groupApplications.list`；`.119` 的目标群 pending helper 被群管理和聊天头部共同消费；Router state 只允许 chat/manage 两种来源 |
+| verification | focused 4/13、H5 full 139/440、typecheck、466 assets、production build、RN protected diff empty |
+| residual | 非零 pending 自然样本、角标点击实际返回、处理后刷新、双账号 realtime 和跨浏览器/设备继续 gated |
+
+## Latest Closed Slice W6.a6.20.121
+
+| field | value |
+| :--- | :--- |
+| goal | 对齐 RN 聊天标题区点击资料入口，单聊进入对方资料、群聊进入群资料 |
+| proof | 真实群聊进入群资料并直接返回原群聊；真实单聊进入 donk三大爷资料并返回原单聊 |
+| ownership | 标题区只负责 React Router 导航；联系人/群资料继续调用既有 shared facade，不新增资料读取、DTO、Gateway 或 SQLite owner |
+| verification | focused 3/9、H5 full 140/443、typecheck、466 assets、1188-module production build；真实 412px 双链路、412/412 与零 warning/error |
+| residual | 浏览器 history state 刷新后按安全默认值返回群设置/通讯录；这属于既有 SPA 安全降级，不影响标题点击主链 |
+
+## Latest Closed Slice W6.a6.20.122
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭本人资料总览与 nickname/gender/bio 三编辑 route 的 760×900 deep-dark 只读验收门 |
+| proof | 真实 `donk / 未知 / 未设置`；page=`17/19/24`、card/textarea=`27/29/36`，四 route 均 760/760 且零 warning/error |
+| anti-shortcut | 仅通过显示设置切换 dark/light；不编辑字段、不点击完成、不调用 update-profile，不把 HTTP 200 当作资料事实 |
+| verification | focused 4 files/17 tests、Web typecheck、4 route HTTP 200、RN/SDK boundary/diff；浏览器结束前恢复 light |
+| residual | changed-value Network/result、slow-saving pending、Safari/Firefox 与实体设备继续 gated |
+
+## Latest Closed Slice W6.a6.20.123
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭账号安全总览、首次设置表单与账号状态 route guard 的 760×900 dark Chromium 门禁 |
+| proof | root `+86 15555555551 / 未绑定 / 账号密码`；account/password/confirm 空表单；reset deep link 纠正到 account；page=`15/17/21`、card/form=`27/29/36`、input=`36/39/51` |
+| anti-shortcut | 只通过显示设置切换 dark/light；不输入/提交凭据，不执行 set/reset/Gateway/SQLite/session cleanup；不把 route correction 当作 reset 成功 |
+| verification | SDK 1 file/3 tests、H5 1 file/3 tests、Web typecheck、3 route HTTP 200、RN/SDK boundary/diff；760/760、零 warning/error，结束前恢复 light |
+| residual | 已绑定账号 reset 自然表单、approved real set/reset Network/result/session cleanup、Safari/Firefox 与实体设备 |
+
+## Latest Closed Slice W6.a6.20.124
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭现行统一转发目标弹窗的 760×900 light 桌面只读门禁，并清理旧独立转发页残余表述 |
+| proof | 当前已读单聊右键消息进入原 URL 内 modal；好友/群聊跨 Tab 累计选中 2，群聊 ALL 后累计 3；modal=`720×868`、left=`20`、viewport/scrollWidth=`760/760` |
+| anti-shortcut | 不点击最终“转发”，不构造旧 pending preview state，不执行 Gateway/SQLite/send/list-back；关闭后原聊天保持 2 条消息且零 warning/error |
+| verification | focused 5 files/14 tests、Web typecheck、2 route HTTP 200、RN/SDK boundary/diff；运行时与 SDK/RN 零改动 |
+| residual | 可控 real partial-result、Safari/Firefox、物理长按与实体设备；真实发送继续授权门 |
+
+## Latest Closed Slice W6.a6.20.125
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭单聊文本搜索的 760×900 light/dark、稳定 messageID 和浏览器 history 门禁 |
+| proof | 真实 `123` 命中 `61da9d1a-5ce3-4ce8-8d37-44d56939c104`；目标行精确恢复；back 返回 `/search?q=123&tab=all` 并自动恢复结果，forward 再次命中同一行 |
+| change | H5 将已提交关键词/tab 持久化到 React Router query；history 返回时只经 `WebIMSync.messages.searchCached` 重读当前账号缓存 |
+| safety | 不调用 Gateway/WebSocket/send/download/mutation，不改 SDK/RN；日期/媒体/文件索引不计入本片结论 |
+| verification | focused 3 files/8 tests、Web typecheck（含 SDK build:web/sync:web）、2 route HTTP 200、RN/SDK boundary/diff；light/dark 均 760/760 且零 warning/error |
+| residual | 日期/媒体/文件独立桌面/history/theme matrix、Safari/Firefox、动画活动帧和实体设备 |
+
+## Latest Closed Slice W6.a6.20.126
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭日期、图片与视频、文件索引搜索的 760×900 light/dark、刷新与浏览器 history 门禁 |
+| proof | 日期页真实 `2026-08-13，3条聊天记录` 可进入稳定 messageID，back 恢复日期结果；月份由 3 扩展到 4 后 reload 保持；媒体视频筛选与文件页 reload 保持各自 URL/空态 |
+| change | H5 只将 `view/months/filter` presentation 状态写入 React Router query；恢复时继续调用 `WebIMSync.messages.searchCached` 重读当前账号缓存 |
+| safety | URL 月份限制为 1..120，未知 view/filter fail-closed；无 Gateway/WebSocket/send/download/mutation，不改 SDK/RN |
+| verification | focused helper 1 file/5 tests、H5 full 140 files/445 tests、Web typecheck、466 assets、1188-module production build、3 route HTTP 200、RN/SDK boundary/diff；light/dark 760/760，clean reload 新增零 warning/error |
+| residual | 当前自然样本没有非空媒体/文件；历史 458px 已有非空证据；Safari/Firefox、实体设备和媒体预览活动帧继续 gated |
+
+## Latest Audited Slice W6.a6.20.127
+
+| field | value |
+| :--- | :--- |
+| goal | 只读扫描当前全部会话，寻找 `.126` 所需的非空媒体/文件自然样本 |
+| proof | 当前 4 个会话的 `view=media&filter=all` 与 `view=file` 共 8 个真实 route 均返回明确空态；会话列表扫描前后两个未读会话均保持各 2 条未读 |
+| anti-shortcut | 不打开聊天、不注入 fixture/URL payload、不发送/上传/下载、不调用 Gateway mutation、不 mark-read，不以历史截图替代当前自然数据 |
+| runtime | 412×786 light，viewport/scrollWidth=`412/412`，warning/error=`0`；existing production Router/cache path only |
+| change | runtime/code/SDK/RN 零改动；仅登记 current-natural-data gate |
+| activation | 任一当前会话自然出现 type102/104/105 缓存消息后，复用现有索引 route 完成非空预览活动帧；真实发送仍需独立授权 |
+
+## Latest Closed Slice W6.a6.20.128
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭文本搜索结果定位消息的 RN 1600ms 高亮活动帧残余 |
+| proof | 真实 `123` 结果携带稳定 `messageID=61da9d1a-5ce3-4ce8-8d37-44d56939c104`，当前账号缓存恢复目标窗口后，目标消息行出现 `is-focus-highlighted`、`rgba(0,0,0,0.04)` 与 `14px` 圆角，并在 1600ms 后清理 |
+| change | H5 用受控 class/timer 替代当前轻量浏览器缺失的 Web Animations API；样式拆入独立 `chat-message-focus.css`，不继续扩大既有大 CSS 文件 |
+| ownership | SDK 继续独占搜索/SQLite；H5 helper 只负责目标 DOM 行滚动和短暂展示态；RN business 与 SDK source 均不改 |
+| verification | focused 2 files/5 tests、H5 full 140 files/446 tests、Web typecheck、466 assets、1189-module production build；真实 target ID/高亮帧/清理时序通过 |
+| residual | 文本搜索仅剩 Safari/Firefox 与实体设备；索引媒体/文件非空自然样本仍由 `.127` gate 管理 |
+
+## Latest Audited Slice W6.a6.20.117
+
+| field | value |
+| :--- | :--- |
+| goal | 在不触发 mark-read 的前提下寻找真实 image/audio/video cache payload 并验收媒体交互 |
+| proof | 无未读群=系统消息；无未读单聊=申请/建联/文本；归档=empty；均无媒体 action |
+| anti-shortcut | 两个 unread 会话未打开；不注入 URL、不 mark-read、不播放/下载/发送、不执行 Gateway/SQLite |
+| verification | H5 3 files/11 tests、Web typecheck、3 route HTTP 200、diff/RN protected checks；runtime 零改动 |
+| state | `blocked-natural-data` |
+| activation | 无未读会话自然包含 safe absolute HTTP(S) image/audio/video payload |
+
+## Latest Audited Slice W6.a6.20.116
+
+| field | value |
+| :--- | :--- |
+| goal | 审计好友/群聊验证是否已有可无副作用验收的真实 pending 样本 |
+| proof | friend=3 条 accepted、无“加好友”；group=empty；两个 Tab 均 412px 无横向溢出 |
+| anti-shortcut | 不注入 fixture、不制造申请、不打开资料/mark-read、不接受/拒绝、不改 Gateway/SQLite |
+| verification | H5 2 files/7 tests、Web typecheck、2 route HTTP 200、diff/RN protected checks；runtime 零改动 |
+| state | `blocked-natural-data` |
+| activation | incoming pending 好友申请或 owner/admin pending 群申请自然出现；mutation 继续独立授权 |
+
+## Latest Closed Slice W6.a6.20.115
+
+| field | value |
+| :--- | :--- |
+| goal | 关闭账号安全总览、首次设置表单与账号状态 route guard 的 authenticated 412px dark gate |
+| proof | root `+86 15555555551 / 未绑定 / 账号密码`；account/password/confirm 空表单；reset deep link 纠正到 account；page `15/17/21`、card/form `27/29/36` |
+| anti-shortcut | 不输入/提交凭据，不执行 set/reset/Gateway/SQLite/session cleanup，不把错误 route 可达冒充 reset 成功；恢复 light |
+| verification | SDK 1 file/3 tests、H5 1 file/3 tests、Web typecheck、3 route HTTP 200、diff/RN protected checks；runtime 零改动 |
+| residual | 760x900 dark、已绑定账号 reset 自然表单、approved real set/reset Network/result/session cleanup、跨浏览器/设备 |
 
 ## Latest Closed Slice W6.a6.20.114
 
@@ -211,7 +633,7 @@
 | route proof | profile -> common-groups -> profile -> search；查询与 2 位本地好友/1 个本地群结果恢复，412/412 |
 | anti-shortcut | 不读 Clipboard 内容；不点通话/星标/消息/备注/分享，不打开共同群会话或执行关系 mutation |
 | verification | focused 4/12、`.94` H5 typecheck、真实 DOM/route；RN protected source 与 SDK/H5 runtime 零改动 |
-| residual | 当前共同群 count=1 但列表为空；群行/openGroup、关系/RTC/send、跨浏览器/设备继续 gated |
+| residual | 当时共同群 count=1 但列表为空；该自然数据残项已由 `.134` 的 count=2/list=2/canonical-open 真实证据关闭；关系/RTC/send、跨浏览器/设备仍 gated |
 
 ## Latest Closed Slice W6.a6.20.94
 
@@ -444,7 +866,7 @@
 | goal | 共同群聊子路由返回资料后，资料仍可回到搜索/扫码/群成员/验证列表的原始受控 context |
 | primary owner | H5 既有 `contact-profile-route-state` 清洗 state；资料/共同群/Header 只传递；共同群与会话业务继续归 shared SDK |
 | verification floor | fail-first 1 expected failure、focused 2/6、H5 full 125/389、SDK Web 98/406、`npm run verify`、typecheck/boundary、466 assets、1176-module build、diff/cleanup |
-| browser gate | `.95` 已关闭真实二级返回与搜索恢复；共同群 count=1 但列表为空，群行/openGroup 继续 data-gated |
+| browser gate | `.95` 已关闭真实二级返回与搜索恢复；当时共同群 count=1/list=0 的数据门禁已由 `.134` 当前 count=2/list=2/canonical-open 证据关闭 |
 | protected | SDK source/generated 与 RN business 零本片改动；未运行 RN/Desktop/build:all/`build:package:desktop:web` |
 
 ## Latest Closed Slice W6.a6.20.74
@@ -856,7 +1278,7 @@ Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择已�
 | status | `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pass` |
 | goal | 对齐 RN 群设置首屏预览成员在线绿点，不建立设置页专属 presence 分支 |
 | shared owner | 既有 `isIMNormalGroupMode` 与 `createIMUserPresenceSync/WebIMSync.presence` 保持唯一业务 owner |
-| H5 owner | `ChatSettingsPage` 只选择预览身份；`useGroupMemberPresence` 持有唯一页面内存 observation；CSS 投影 14/8px 绿点 |
+| H5 owner | `ChatSettingsPage` 只选择预览身份；`useObservedUserPresence` 持有唯一页面内存 observation；CSS 投影 14/8px 绿点 |
 | verification floor | H5 focused 2/13、full Web 88/368、466 assets、runtime boundary、SDK/H5 typecheck、1119-module build、真实普通群响应式 smoke |
 | browser gate | 真实 3 人预览中 2 人在线，412px/390x844 零 overflow/console error；large 群和实时切换仍 sample-gated |
 | not authorized | SDK/RN business、群/成员 mutation、RN/desktop builds、build:all、`build:package:desktop:web` |
@@ -870,7 +1292,7 @@ Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续选择可�
 | status | `shared-core-ready/web-consumed/rn-frozen; browser-readonly-pass` |
 | goal | 对齐 RN 普通群成员列表的在线绿点，并消除页面群模式判断双轨 |
 | shared owner | `normalizeIMGroupMode/isIMNormalGroupMode` 持有群模式；既有 `createIMUserPresenceSync` 持有 HTTP/realtime/lifecycle |
-| H5 owner | `useGroupMemberPresence` 只持有页面内存映射；`GroupMemberRow` 只投影 14/8px 在线绿点 |
+| H5 owner | `useObservedUserPresence` 只持有页面内存映射；`GroupMemberRow` 只投影 14/8px 在线绿点 |
 | verification floor | SDK focused 3/16、H5 view 1/4、full Web 88/368、466 assets、SDK/H5 typecheck、1119-module build、真实 3 人普通群响应式 smoke |
 | browser gate | 真实普通群显示 1 个在线成员，412px/390x844 零 overflow/页面错误；large 群和实时状态切换仍 sample-gated |
 | not authorized | RN business/caller、群/成员 mutation、RN/desktop builds、build:all、`build:package:desktop:web` |
@@ -1118,7 +1540,7 @@ Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；继续按 RN 页
 | status | `shared-core-ready/web-consumed/rn-frozen` |
 | goal | 对齐 RN 二维码“发送给好友/群”语义，统一个人/群二维码的应用内图片分享，不用 Web Share 替代业务动作 |
 | shared owner | 既有 `WebIMSync.contacts/groups/conversations/peerProfile/messages.sendImage`；SDK 无新增业务路径 |
-| H5 owner | `forward-target-source` 统一普通转发与二维码分享的 cache-first 目标加载、投影和真实会话解析；`QRCodeSharePage` 只保留 React Router、单选 UI 与显式确认 |
+| H5 owner | `forward-target-source` 统一普通转发与二维码分享的 cache-first 目标加载、投影和真实会话解析；`QRCodeSharePage` 只保留 React Router、RN `cardShare` 同源多选 UI 与显式确认 |
 | route/data contract | `/me/qrcode/share`、`/conversations/:conversationID/settings/qrcode/share`；路由仅携带稳定来源 ID，确认后从 shared payload 生成 320x320 PNG，不跨路由携带 Blob/消息正文/凭据 |
 | verification floor | H5 focused 6 files/13 tests + full verify：SDK Web 82 files/337 tests、466 assets/typecheck/1070-module build；412px authenticated friend/group tabs、single-select、disabled gate、safe return、zero overflow；RN source zero change |
 | not authorized | 最终“分享”点击、真实 PNG 上传/消息发送、第二账号 realtime/list-back、RN consumer convergence |
@@ -1135,7 +1557,7 @@ Next bounded slice: `W6-rn-parity-residual-inventory-refresh`；重新按 RN 页
 | production consumer | `/conversations/:conversationID/settings/profile` -> `/settings/qrcode`；`/scan` 可严格返回同一群二维码 route |
 | platform owner | `QRCodeDisplay` + `browser-qr-image`；用户/群共用高纠错 Canvas、头像 fallback、导出/分享和 async cleanup |
 | verification floor | H5 focused 5 files/13 tests + full verify：SDK Web 82 files/337 tests、466 assets/typecheck/1067-module build；412px personal QR zero-overflow + missing-group fail-visible；RN source zero change |
-| data gate | 当前认证账号会话列表只有两条单聊且“我的群聊”为空；历史群深链已失效，真实群卡片/二维码视觉未伪造 |
+| data gate | 已由 `.20.139` 使用真实群 `donk的群聊 / 97524759106` 关闭；实际下载/Web Share/扫码/发送仍保持门禁 |
 | not authorized | 实际下载/Web Share、应用内图片消息发送、物理扫码、群申请/群 mutation、RN consumer convergence |
 
 Next bounded slice: `W6.a6.18.3.19-qrcode-in-app-share`；已由上方 latest slice 关闭。
@@ -1330,7 +1752,7 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 | `W3.a1` | contract/design | sdk runtime | Gateway runtime contract、auth/token owner 与配置边界 | 4 test files / 11 tests + workspace verify | `done` | closed 2026-08-09 |
 | `W3.a2-local` | code/verification | sdk runtime + storage | browser auth/realtime、account SQLite lifecycle、privacy gate | shared SDK test + H5 25 tests + Chromium SQLite smoke | `done` | closed 2026-08-09 |
 | `W3.real-gateway-readonly` | deployment verification | sdk runtime + deployment | real phone-code login、refresh restore、Gateway-backed reads、two-account tab isolation and WS online | authenticated browser smoke + token-free lifecycle/list/error evidence | `passed-partial` | closed 2026-08-12；shared device-ID collision reproduced/fixed；30s sample 19/20 dual-online + one simultaneous recovered reconnect；no send/mutation |
-| `W3.real-gateway` | deployment verification | sdk runtime + deployment | authoritative realtime delivery/list-back and offline SQLite cache-hit evidence | explicitly authorized dual-account event + non-destructive offline harness | `blocked-external` | online is proven；do not infer delivery or offline cache from populated pages |
+| `W3.real-gateway` | deployment verification | sdk runtime + deployment | authoritative realtime delivery/list-back and offline SQLite cache-hit evidence | explicitly authorized dual-account event + non-destructive offline harness | `passed-partial` | text delivery/SQLite convergence/list-back passed 2026-08-14；offline isolation remains |
 | `W3.closeout` | verification/docs | sdk runtime + docs | real smoke evidence、架构与 trio 回写 | `npm run verify` + real Gateway smoke | `planned` | `W3.real-gateway` passed |
 | `W4.a0` | contract/code | shared sdk + web sdk | 三操作 contract 与唯一 Gateway DTO -> core mapper | pure mapping tests + shared SDK build | `done` | closed 2026-08-09 |
 | `W4.a1-conversations` | code | web sdk runtime | cache list、Gateway full sync、latest message persistence | 3 focused sql.js/Repository tests | `done` | closed 2026-08-09 |
@@ -1339,7 +1761,7 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 | `W4.a2-created-conversation` | code/verification | web sdk runtime | 新消息/会话事件落库、账号隔离、分页 HTTP 缺口恢复与 UI cache 刷新 | 5 focused tests + workspace verify | `done-local` | closed 2026-08-09; real gate retained |
 | `W4.a2-updates` | contract/code | web sdk runtime | 消息编辑、撤回、删除的 cursor 与 Repository 状态收敛 | sql.js + raw WebSocket integration | `done-local` | closed 2026-08-09; real gate retained |
 | `W4.a2-serialization` | architecture/code | web sdk sync | full sync/history/send/realtime 共享业务 operation queue | 3 delayed interleaving/failure regressions | `done-local` | closed 2026-08-09; real gate retained |
-| `W4.a2-closeout` | verification/docs | web sdk runtime + docs | W4.a2 证据、残留项与下一片回写 | `npm run verify` + real chat smoke | `blocked-external` | local closeout and real WS online passed；message delivery/list-back event remains unproven |
+| `W4.a2-closeout` | verification/docs | web sdk runtime + docs | W4.a2 证据、残留项与下一片回写 | `npm run verify` + real chat smoke | `passed-real-text` | local closeout plus real text send/realtime/cache/list-back passed；offline/cross-browser/non-text remain separate |
 | `W5.a1-storage-boundary` | architecture | storage/runtime | Dedicated Worker RPC、lifecycle Web Lock 与 failure contract | architecture review + executable test plan | `done` | closed 2026-08-09 |
 | `W5.a2-worker-runtime` | code/verification | storage worker | typed RPC/client、Worker-owned sql.js/IndexedDB、fatal-state discard | 7 adapter/protocol tests + 18/47 workspace verify + Worker build | `done-local` | closed 2026-08-09 |
 | `W5.a3-multi-tab-writer` | code/verification | storage lifecycle | account-scoped lifecycle Web Lock、busy/unsupported UI state | 6 lock/lifecycle tests + 19/52 verify | `done-local` | closed 2026-08-09 |
@@ -1380,7 +1802,7 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 | `W6.a5.2.4-me-core` | code/verification | web me + sdk facade | RN current-profile hero、general settings/logout、`/me` fourth tab | source/tests + authenticated 390x844/760x900 light/dark screenshots/history + 24/65 verify | `accepted-readonly/mutation-gated` | real logout Network/session/DB cleanup proof；Safari/Firefox joins W5 browser matrix |
 | `W6.a5.2.5-me-profile-edit` | code/verification | web me profile + sdk facade | nickname/gender/bio update-profile routes and RN field validation | source/API trace + authenticated responsive/history/cold-restart + `.114` 412px dark readonly | `done-local/acceptance-gated` | 760x900 dark + approved changed-value Network/result + slow-saving pending evidence |
 | `W6.a5.2.6-account-security` | design | web me security + sdk/runtime facade | RN security screen/operation/route matrix with bounded real mutations only | source/API/export/session-side-effect trace | `decomposed` | account credential child done-local/acceptance-gated；contact verification remains blocked-contract |
-| `W6.a5.2.6.1-account-credential` | code/verification | web me security + sdk runtime | security root、set account/password、old-password reset with revoked-session cleanup | 3 focused tests + 25/70 verify + authenticated responsive/history/guest browser matrix | `done-local/acceptance-gated` | approved real set/reset Network/result + dark proof |
+| `W6.a5.2.6.1-account-credential` | code/verification | web me security + sdk runtime | security root、set account/password、old-password reset with revoked-session cleanup | 3 focused tests + 25/70 verify + authenticated responsive/history/guest browser matrix + `.115` 412px dark readonly | `done-local/acceptance-gated` | 760x900 dark + 已绑定账号 reset 自然表单 + approved real set/reset Network/result/session cleanup |
 | `W6.a5.2.6.2-contact-security` | contract/code | web me security + sdk/runtime facade | phone/email bind or change with verified-code lifecycle | send-code + mutation contract and real verification flow | `blocked-contract` | Gateway exposes a real send-code operation or product explicitly changes scope |
 | `W6.a5.2.7-general-settings` | design | web me settings + sdk/runtime facade | display、notification、permission、network、terms、version/cache route/capability matrix | RN source/API/route owner trace | `decomposed/active-children` | continue bounded children without mixing browser-blocked contracts |
 | `W6.a5.2.7.1-display-notification-terms` | code/verification | web me settings + sdk runtime | RN display preference、real notification detail/update facade、real terms routes | focused tests + real reads + 390x844/760x900 light/dark/history/reload and zero-console proof | `accepted-readonly/mutation-gated` | approved notification update + Safari/Firefox proof；RN/H5 shared title semantics debt remains explicit |
@@ -1396,13 +1818,13 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 | `W6.a6.20.6-onboarding-avatar` | code/verification | shared profile sync + web auth avatar platform/UI | RN album/camera/crop/upload/draft/final profile timing | H5 4 files/10 tests + full SDK Web 84 files/347 tests + 466 assets/typecheck/1089-module build + route guard | `shared-core-ready/web-consumed/rn-frozen` | valid new-account source/crop/upload/update visual and Network proof blocked-external；RN consumer frozen |
 | `W6.a5.2.8.4-onboarding-real-acceptance` | deployment verification | web auth + deployment owner | approved register/optional invite/profile mutation and valid-context visual/history evidence | Network/result + 390x844/760x900 light/dark/back/forward/reload | `blocked-external` | approved disposable new account and mutation authorization available；never fabricate marker/session |
 | `W6.a5.2.9-blacklist-core` | code/verification | web me + sdk sync | RN blacklist list/search/remove/confirm route through shared Gateway operations | 4 view tests + authenticated real empty/search-empty + 567x786 system-light/dark/direct/history/reload/zero-console proof + full verify | `accepted-empty-read/chromium/mutation-gated` | non-empty enrichment/search、approved remove Network/result and Safari/Firefox proof；no unsupported add flow |
-| `W6.a5.2.10-friend-applications-core` | code/verification | web contacts + sdk sync | RN standalone friend application list/search/group/status/accept through shared Gateway operations | facade/view tests + real 5-row list + 390x844/760x900 light/dark/direct/history/reload + zero-console | `accepted-readonly/mutation-gated` | pending-state sample and approved accept remain；no fake session or unsupported unread/group/profile/reject path |
-| `W6.a5.2.11-group-applications-core` | code/verification | web contacts + sdk sync | RN group verification index、per-group application list/search/section/status and accept/reject through one audit facade | facade/view tests + real empty-state + 390x844/760x900 light/dark/direct/history/reload + zero-console | `accepted-empty-read/mutation-gated` | non-empty owner/admin detail and approved accept/reject remain；no fake session or unsupported unread/profile/manage/member-join path |
-| `W6.a5.2.12-joined-groups-core` | code/verification | web contacts + sdk sync | RN 我的群聊 cache-first list/search/status/role and conversation opening through shared group/conversation facades | tests + authenticated 11-group/role/search 2/1/0 + 390x844 dark/760x900 light/history/reload proof | `accepted-readonly/mutation-gated` | open-conversation persistence、offline cache isolation and Safari/Firefox remain |
+| `W6.a5.2.10-friend-applications-core` | code/verification | web contacts + sdk sync | RN standalone friend application list/search/group/status/accept through shared Gateway operations | facade/view tests + historical real 5-row list + 390x844/760x900 light/dark/direct/history/reload + `.116` current 3 accepted rows | `accepted-readonly/natural-data-and-mutation-gated` | pending-state sample and approved accept remain；no fake session or unsupported unread/group/profile/reject path |
+| `W6.a5.2.11-group-applications-core` | code/verification | web contacts + sdk sync | RN group verification index、per-group application list/search/section/status and accept/reject through one audit facade | facade/view tests + `.116` current real empty-state + 390x844/760x900 light/dark/direct/history/reload + zero-console | `accepted-empty-read/natural-data-and-mutation-gated` | non-empty owner/admin detail and approved accept/reject remain；no fake session or unsupported unread/profile/manage/member-join path |
+| `W6.a5.2.12-joined-groups-core` | code/verification | web contacts + sdk sync | RN 我的群聊 cache-first list/search/status/role and conversation opening through shared group/conversation facades | tests + authenticated list/role/search/theme/history + `.133` real canonical open/list-back proof | `accepted-readonly/open-conversation-accepted/mutation-gated` | cache-miss fallback、offline cold start、large-group、physical touch、Safari/Firefox and mutations remain |
 | `W6.a5.2.13-contact-profile-core` | code/verification | web contacts + sdk sync | RN 联系人点击 -> 资料 -> 发消息/加好友 through shared user/friend/conversation facades | tests + real friend/self/unknown-error + 390x844 dark/760x900 light/history/reload proof | `accepted-readonly/mutation-gated` | open-conversation、real stranger and friend apply remain；Safari/Firefox joins W5 matrix |
 | `W6.a5.2.14-contact-user-search-core` | code/verification | web contacts + sdk sync | RN 通讯录搜索入口、本地好友匹配、真实 Gateway 用户搜索和资料页跳转 | tests + known result/self-filter/unknown no-result + responsive theme proof | `accepted-readonly/acceptance-gated` | transport/business failure and Safari/Firefox remain |
 | `W6.a5.2.15-group-members-route-parity` | code/verification | H5 chat settings/router + existing shared group-member facade | RN 群设置“全部”入口、完整成员 cache-first/sync、搜索、分组、角色标签、资料跳转和 SPA 返回 | H5 focused 4/15 + typecheck/build/full verify + authenticated 4-row search/profile-back + 567/390px zero-overflow proof | `done-local/read-only-accepted` | closed 2026-08-12；large-group、offline、physical touch、Safari/Firefox and all member mutations remain gated |
-| `W6.a6.1-chat-media-read-core` | code/verification | web chat | RN 图片全屏预览、单实例语音播放/停止、视频全屏播放，消费既有 cache payload | H5 11/42 + SDK 32/103 + 466 assets + typecheck/build/full verify + guest guard | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10；approved authenticated media playback and responsive light/dark proof remain acceptance gates |
+| `W6.a6.1-chat-media-read-core` | code/verification | web chat | RN 图片全屏预览、单实例语音播放/停止、视频全屏播放，消费既有 cache payload | H5 11/42 + SDK 32/103 + 466 assets + typecheck/build/full verify + guest guard + `.117` safe-candidate audit | `implemented-local/natural-data-acceptance-gated` | 当前无未读候选无媒体；authenticated media playback + responsive light/dark 仍待自然 payload |
 | `W6.a6.2-chat-image-file-send-core` | code/verification | shared sdk + web adapter + web chat | RN 相册图片/普通文件选择 -> 上传凭证 -> OSS 直传 -> Gateway send -> SQLite 状态收敛 | H5 12/46 + SDK 33/107 + 466 assets + all-runtime typecheck + full verify/build + release/pack + responsive browser proof | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10；real upload/send requires explicit authorization and remains an acceptance gate |
 | `W6.a6.3-chat-album-video-send-core` | code/verification | shared sdk + web adapter + web chat | RN mixed 相册视频 -> browser metadata -> shared upload/Gateway video body -> SQLite 状态收敛 | H5 13/50 + SDK 35/109 + 466 assets + all-runtime typecheck/build:web/full verify + responsive browser proof | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10；real upload/send requires explicit authorization and remains an acceptance gate |
 | `W6.a6.4-chat-voice-send-core` | code/verification | shared sdk + web media adapter + web chat | RN hold/cancel recording -> browser Blob -> shared upload/Gateway audio body -> SQLite 状态收敛 | H5 15/56 + SDK 36/111 + injected recorder lifecycle/error tests + all-runtime typecheck/build:web/full verify + responsive voice-mode proof | `implemented-local/acceptance-gated` | local implementation passed 2026-08-10 without opening a microphone or transmitting media；real recording/upload/send requires explicit authorization |
@@ -1428,8 +1850,8 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 | `W6.a6.13-chat-copy-core` | code/verification | H5 chat action + browser clipboard adapter | RN copy action/icon、message projection text and success-only feedback | H5 27/99 + SDK 44/140 + full verify/build + authenticated 458x786 right-click/no-overflow/zero-console proof | `implemented-local/acceptance-gated` | closed 2026-08-11；Safari/Firefox clipboard permission and touch long-press remain acceptance gates；no rich clipboard or mutation |
 | `W6.a6.14-chat-forward-contract-freeze` | contract/design | RN forward actions + shared SDK send/cache + H5 router/modal | freeze single/multi forward eligibility、target selection、payload identity、preview editing and failure convergence | RN caller/payload/API/SQLite/UI owner trace + anti-fake review | `done` | closed 2026-08-11；Gateway batch exists but shared mapper/schema drop `forward_origin`；normal and hidden-sender paths remain distinct |
 | `W6.a6.14.1-shared-forward-core` | code/verification | shared SDK message sync + Gateway transport + SQLite | core forward-origin model/schema/repository、source reread、normal batch + registered hidden-sender send、stable IDs and per-row final state | SDK 49/150 + Web 46/145、real sql.js mapper/repository、partial/top-level/hidden guards、all-runtime typecheck/package、build:web + H5 verify | `done-local/acceptance-gated` | closed 2026-08-11；no RN runtime wiring or real Gateway mutation；server-backed sources only |
-| `W6.a6.14.2-h5-forward-target-preview` | code/verification | H5 chat + React Router + existing contact/group/conversation facades | RN action/multi-select、three target sources、target-chat pending preview、exclude/change-target/comment and shared submit caller | H5 29/103 + SDK Web 46/147 + typecheck/build + 466 assets + authenticated read-only 390x844/458x786 light/dark proof + zero page transport/cache logic | `implemented-local/acceptance-gated` | closed 2026-08-11；invalid zero-item pending state fixed；real mutation and desktop visual proof remain `.14.3` gates |
-| `W6.a6.14.3-forward-acceptance` | authorized verification | deployment + H5 + SDK | one disposable normal/partial-result/list-back proof and explicitly approved hidden-sender proof | 14:59 normal origin + 15:01 hidden no-origin + conversation cache/list-back + zero sending/failed + H5 30/104 | `partially-accepted/blocked-external` | normal/hidden closed 2026-08-11；controllable real partial-result and desktop viewport remain unavailable |
+| `W6.a6.14.2-h5-forward-target-preview` | code/verification | H5 chat + React Router + existing contact/group/conversation facades | historical target-chat preview path，现已由 `.54` 统一弹窗 supersede | H5 29/103 + SDK Web 46/147 + authenticated 390x844/458x786 historical proof；`.124` closes current modal 760x900 proof | `implemented-local/superseded-ui-history` | current default path is `ChatTargetPickerModal`；real mutation remains `.14.3` gate |
+| `W6.a6.14.3-forward-acceptance` | authorized verification | deployment + H5 + SDK | one disposable normal/partial-result/list-back proof and explicitly approved hidden-sender proof | 14:59 normal origin + 15:01 hidden no-origin + conversation cache/list-back + zero sending/failed；current modal 760x900 closed by `.124` | `partially-accepted/blocked-external` | normal/hidden and desktop readonly closed；controllable real partial-result remains unavailable |
 | `W6.a6.15.1-shared-message-delete-core` | contract/code/verification | shared SDK message sync + Gateway transport + SQLite | current-account source reread、single update/batch-delete/local-only self、partial-result and transactional local convergence | SDK Web 47/152 + all-runtime typecheck + build:web generated-package sync | `done-local/acceptance-gated` | closed 2026-08-11；RN service/runtime import graph unchanged |
 | `W6.a6.15.2-h5-message-delete-ui` | code/verification | H5 chat action + multi-select + shared SDK facade | RN single/multi confirmation、self/all scope、group permission presentation and visible partial feedback | H5 31/107 + typecheck/build + 466 assets + authenticated read-only 458x786/390x844 no-overflow/zero-console proof | `done-local/acceptance-gated` | closed 2026-08-11；no delete option was confirmed |
 | `W6.a6.15.3-message-delete-acceptance` | destructive authorized verification | deployment + H5 + SDK | disposable `self/all/partial` Gateway、SQLite、realtime/list-back proof | Network/result + exact affected rows + conversation reread | `blocked-destructive-authorization` | explicit disposable messages and action-time authorization required；never delete production history by inference |
@@ -1442,9 +1864,9 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 | `W6.a6.17.2.1-unread-mention-conversation-projection` | code/verification | shared SDK message/group repository + conversation facade + H5 preview | seq-bounded latest unread mention、cached group sender name、draft/mention/latest priority | SDK 50/160 + H5 33/116 + all-runtime typecheck + verify + 458x786 real-list no-overflow proof | `done-local/acceptance-gated` | closed 2026-08-11；no network/mutation；sender-name residual closed by `.17.2.2` |
 | `W6.a6.17.2.2-sender-display-name-cache-parity` | code/verification | shared SDK contact cache + sender resolver + conversation facade | success-only `friendships/users` snapshot、shared queue、RN remark/group/user priority、no ID guessing | SDK 52/163 + all-runtime typecheck + build:web/H5 verify + authenticated 7-contact/19-conversation zero-console proof | `done-local/acceptance-gated` | closed 2026-08-11；no message mutation；real unread mention sample remains `.17.3` gate |
 | `W6.a6.17.3-group-mention-acceptance` | authorized verification | deployment + H5 + SDK | one disposable member mention and one permission-valid all mention -> Gateway -> SQLite/realtime/list-back | Network/result + top-level mentions/body targets + stable IDs/status/cache proof | `blocked-mutation-authorization` | explicit disposable group and action-time send authorization required |
-| `W6.a6.18.1-chat-text-search` | code/verification | shared SDK message repository/sync + H5 chat/router | current-account visible-text search、RN result list、stable client-ID cached-window focus | SDK Web 52/164 + all-runtime typecheck/boundary/build:web + H5 38/126/verify + authenticated 458px real-cache deep-link/reload proof | `done-local/acceptance-gated` | closed 2026-08-11；no Gateway/mutation/send；history/theme/desktop matrix remains gated |
+| `W6.a6.18.1-chat-text-search` | code/verification | shared SDK message repository/sync + H5 chat/router | current-account visible-text search、RN result list、stable client-ID cached-window focus、query/tab history restore | SDK Web 52/164 + H5 38/126 baseline；authenticated 458px deep-link/reload plus `.125` real 760×900 light/dark back/forward proof | `done-local/acceptance-gated` | text history/theme/desktop gate closed 2026-08-14；no Gateway/mutation/send；Safari/Firefox、动画活动帧和实体设备 remain gated |
 | `W6.a6.18.2.1-shared-indexed-search-range` | contract/code/verification | shared SDK message repository/sync | current-account inclusive-lower/exclusive-upper send-time query plus existing content-type query, without Gateway I/O | real sql.js boundary test + SDK Web 52/165 + all-runtime typecheck/boundary/build:web | `done-local/acceptance-gated` | closed 2026-08-11；no RN service/runtime or desktop build-script change |
-| `W6.a6.18.2.2-h5-date-media-file-index` | code/verification | H5 chat/router + existing media preview owner | RN date calendar、media filters/month groups、file groups and stable-ID return without page history scans | H5 39/129 + 466 assets + build/verify + authenticated 458px real-cache browser proof | `done-local/acceptance-gated` | closed 2026-08-11；no Gateway/download/mutation/send；history/theme/desktop matrix remains gated |
+| `W6.a6.18.2.2-h5-date-media-file-index` | code/verification | H5 chat/router + existing media preview owner | RN date calendar、media filters/month groups、file groups and stable-ID return without page history scans | H5 39/129 + authenticated 458px non-empty proof；`.126` H5 full 140/445 + 760×900 light/dark/history/reload proof | `done-local/desktop-history-verified` | desktop/history/theme closed 2026-08-14；no Gateway/download/mutation/send；current non-empty media/file、Safari/Firefox/device remain gated |
 | `W6.a6.18.2.3-chat-settings-entry` | contract/code/verification | RN single/group chat settings + H5 router | settings-owned “查看聊天记录/查找聊天内容” entry routes into the same search owner | RN source mapping + H5 40/132 + full verify + authenticated single/group deep-link browser proof | `done-local/acceptance-gated` | closed 2026-08-11；only existing cache/profile/search facades render，unsupported mutation rows remain omitted |
 | `W6.a6.18.3-chat-settings-capability-contract-freeze` | contract/design | RN single/group settings + shared SDK/runtime | freeze mute、pin、auto-delete、clear-history and group-management ownership/failure/authorization boundaries | RN service/Gateway/cache/realtime trace + owner and destructive-action review | `done` | closed 2026-08-11；three-operation `.18.3.1` split from lifecycle/destructive/group domains |
 | `W6.a6.18.3.1-shared-conversation-setting-core` | code/verification | shared conversation sync + RN/H5 composition | neutral setting detail、mute、pin facade with RN/Web actual callers and success-only SQLite convergence | SDK focused 13 + all-runtime typecheck/build:rn/build:web + RN tsc/4 caller tests + H5 full verify | `converged/mutation-acceptance-gated` | RN legacy Gateway/local/fallback paths deleted；real toggle remains gated |
@@ -1661,9 +2083,9 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 
 | item | reason_not_active | likely_owner | candidate_verification |
 | :--- | :--- | :--- | :--- |
-| Real Gateway smoke | read-only login/restore/data/account-isolation and dual WebSocket online passed；offline SQLite hit and realtime delivery lack authoritative observation | deployment + runtime owner | run an explicitly authorized dual-account realtime event and a non-destructive offline-cache harness |
-| authenticated conversation UI smoke | real account 1 restored 19 visible rows/25 unread and account 2 loaded an independent list；cache-vs-remote source was not isolated | `apps/web/src/pages/conversations` | offline cache-first evidence plus chat-back/realtime list-back smoke |
-| authenticated chat UI smoke | authenticated history/read surfaces have prior local proof；this slice intentionally sent no message | `apps/web/src/pages/chat` | explicitly authorized send/realtime/list-back flow only |
+| Real Gateway smoke | dual WebSocket online and real text delivery/SQLite convergence/list-back passed；offline SQLite hit lacks isolated observation | deployment + runtime owner | run a non-destructive offline-cache harness without stopping shared services |
+| authenticated conversation UI smoke | real receiver list updated without reload and cache reread preserved preview/read convergence；offline source was not isolated | `apps/web/src/pages/conversations` | offline cache-first evidence only |
+| authenticated chat UI smoke | real text send、receiver cache window and chat-back passed | `apps/web/src/pages/chat` | non-text/cross-browser/background natural samples |
 | Worker SQL runtime | `done-local`: production App Worker、RPC/fatal parity 与 Vite build passed | storage worker | real-browser DB open evidence joins W5.a3 |
 | multi-tab writer | `done-local/gated-browser`: lifecycle owner 已接入，缺真实浏览器矩阵 | storage runtime | three-browser two-tab concurrency test |
 | Remaining RN route surfaces | prior cores/settings/onboarding core 已移除 generic 视觉；valid onboarding context、network/cache remain gated | `apps/web/src/app` + feature owners | approved onboarding real flow；then continue explicit blocked/acceptance ledger |
@@ -1748,3 +2170,11 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 - gated: 真实禁止互加群样本、Safari/Firefox history state、群消息头像携带的禁言上下文；不制造群配置 mutation。
 - protected: `im28-phone` business clean；未运行 RN/Desktop/build:all 或 `build:package:desktop:web`。
 - next: `W6-rn-parity-residual-inventory-refresh`，重新按 RN page/action/state 对 H5 route/owner 做残余检索。
+
+## W6.a6.20.118 Chat Header Presence
+
+- owner chain: `ChatPage -> useObservedUserPresence -> WebIMSync.presence -> buildChatHeaderPresenceView -> ChatHeader`。
+- completed: 单聊明确状态展示在线/离线；未知状态隐藏圆点并保留高度；普通群去重统计明确在线成员；large/unknown 群 fail-closed。
+- verification: focused 2 files/8 tests、H5 typecheck/build；真实 donk三大爷显示离线，普通群当前显示 1 人在线，412px 无页面横向溢出或 console error。
+- protected: SDK/RN business source 不改；不写 presence DTO/SQLite；不新增 Gateway/WebSocket owner；禁跑脚本未执行。
+- next: 继续 RN/H5 功能残余检索，presence 的 large 群和 realtime 转换保留自然样本 gate。

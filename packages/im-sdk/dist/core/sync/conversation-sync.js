@@ -1,4 +1,4 @@
-import { ConversationRepository, MessageRepository, mapGatewayConversationToCore, } from '@im28/im-sdk/core';
+import { ConversationRepository, FriendshipRepository, MessageRepository, mapGatewayConversationToCore, } from '@im28/im-sdk/core';
 import { createIMConversationClearSync, } from './conversation-clear-sync.js';
 import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.js';
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
@@ -10,6 +10,58 @@ import { syncIMGatewayDifference } from './gateway-difference-sync.js';
 import { openIMGroupConversation, } from './group-conversation-open.js';
 import { createIMConversationDraftSync, } from './conversation-draft.js';
 import { resolveGroupSenderDisplayName } from './sender-display-name.js';
+import { resolveFriendshipDisplayProfile } from './friendship-display-profile.js';
+/** 从指定账号上下文组合 cache-only 会话列表，不触发 Gateway 或写入。 */
+export async function listWebIMCachedConversationItems(context, options = {}) {
+    // conversationRepository 保留共享 SDK 的排序和归档语义。
+    const conversationRepository = new ConversationRepository(context.database);
+    // messageRepository 是最新消息 payload 的唯一读取 owner。
+    const messageRepository = new MessageRepository(context.database);
+    // conversations 先冻结本轮列表窗口，避免组合过程中改变排序。
+    const conversations = await conversationRepository.list(options);
+    /** directTargetIDs 只收集当前列表窗口内需要备注投影的单聊身份。 */
+    const directTargetIDs = conversations
+        .filter(conversation => conversation.type === 'single')
+        .map(conversation => conversation.targetID);
+    /** friendships 批量读取已确认好友关系，避免按会话逐行查询。 */
+    const friendships = await new FriendshipRepository(context.database)
+        .getByUserIDs(directTargetIDs);
+    /** friendRemarkByUserID 保存当前账号可证明的非空好友备注。 */
+    const friendRemarkByUserID = new Map();
+    for (const friendship of friendships) {
+        /** remark 复用好友资料唯一字段兼容规则，并自动拒绝非好友 alias。 */
+        const remark = resolveFriendshipDisplayProfile(friendship).remark;
+        if (remark)
+            friendRemarkByUserID.set(friendship.userID, remark);
+    }
+    return Promise.all(conversations.map(async (conversation) => {
+        /** directRemark 对齐 RN“好友备注优先于会话昵称”的列表规则。 */
+        const directRemark = conversation.type === 'single'
+            ? friendRemarkByUserID.get(conversation.targetID)
+            : undefined;
+        /** projectedConversation 只修改本次展示快照，不覆盖 SQLite 会话事实。 */
+        const projectedConversation = directRemark
+            ? { ...conversation, name: directRemark }
+            : conversation;
+        /** latestMessage 保留会话远端指针指向的普通摘要真相。 */
+        const latestMessage = conversation.latestMessageID
+            ? await messageRepository.getByClientMsgID(conversation.latestMessageID)
+            : null;
+        /** latestSenderDisplayName 只为群收到的最新消息组合现有缓存，不触发网络同步。 */
+        const latestSenderDisplayName = conversation.type === 'group' &&
+            latestMessage?.direction === 'incoming'
+            ? await resolveGroupSenderDisplayName(context.database, conversation.targetID, latestMessage.senderID)
+            : undefined;
+        /** unreadMention 由共享 SQLite 未读窗口查询提供，不扫描页面 history。 */
+        const unreadMention = await readUnreadMentionSnapshot(context, conversation);
+        return {
+            conversation: projectedConversation,
+            latestMessage,
+            ...(latestSenderDisplayName ? { latestSenderDisplayName } : {}),
+            unreadMention,
+        };
+    }));
+}
 /** 创建认证账号绑定的浏览器会话同步服务。 */
 export function createWebIMConversationSync(dependencies) {
     return new WebIMConversationSyncImpl(dependencies);
@@ -68,31 +120,7 @@ class WebIMConversationSyncImpl {
     async listCachedItems(options = {}) {
         // context 保证会话与消息读取始终来自同一账号数据库。
         const context = requireWebIMSyncContext(this.dependencies, 'Conversation sync');
-        // conversationRepository 保留共享 SDK 的排序和归档语义。
-        const conversationRepository = new ConversationRepository(context.database);
-        // messageRepository 是最新消息 payload 的唯一读取 owner。
-        const messageRepository = new MessageRepository(context.database);
-        // conversations 先冻结本轮列表窗口，避免组合过程中改变排序。
-        const conversations = await conversationRepository.list(options);
-        return Promise.all(conversations.map(async (conversation) => {
-            /** latestMessage 保留会话远端指针指向的普通摘要真相。 */
-            const latestMessage = conversation.latestMessageID
-                ? await messageRepository.getByClientMsgID(conversation.latestMessageID)
-                : null;
-            /** latestSenderDisplayName 只为群收到的最新消息组合现有缓存，不触发网络同步。 */
-            const latestSenderDisplayName = conversation.type === 'group' &&
-                latestMessage?.direction === 'incoming'
-                ? await resolveGroupSenderDisplayName(context.database, conversation.targetID, latestMessage.senderID)
-                : undefined;
-            /** unreadMention 由共享 SQLite 未读窗口查询提供，不扫描页面 history。 */
-            const unreadMention = await readUnreadMentionSnapshot(context, conversation);
-            return {
-                conversation,
-                latestMessage,
-                ...(latestSenderDisplayName ? { latestSenderDisplayName } : {}),
-                unreadMention,
-            };
-        }));
+        return listWebIMCachedConversationItems(context, options);
     }
     /** 全分页拉取 Gateway 会话后替换当前账号 cache。 */
     async sync(options = {}) {

@@ -47,6 +47,10 @@ class SqlJsIndexedDBDatabaseAdapter {
                 this.discardDatabaseDirect();
                 return;
             }
+            if (this.options.mode === 'readonly-existing') {
+                this.discardDatabaseDirect();
+                return;
+            }
             await this.persistDirect(this.database);
             this.database.close();
             this.database = null;
@@ -55,6 +59,7 @@ class SqlJsIndexedDBDatabaseAdapter {
     /** 执行单条写语句，并在成功后持久化一次完整快照。 */
     async execute(statement) {
         return this.runSerialized(async () => {
+            this.assertWritable();
             // 所有公开操作都支持调用方省略显式 open。
             const database = await this.requireDatabaseDirect();
             // SQL 执行结果只承诺 im-sdk 当前消费的 rowsAffected。
@@ -74,6 +79,7 @@ class SqlJsIndexedDBDatabaseAdapter {
     /** 在一个 SQLite transaction 内运行回调，成功时只持久化一次。 */
     async transaction(run) {
         return this.runSerialized(async () => {
+            this.assertWritable();
             // transaction 期间直接使用当前数据库，避免递归进入串行队列死锁。
             const database = await this.requireDatabaseDirect();
             // transaction facade 禁止调用方绕过当前 SQLite connection。
@@ -119,6 +125,9 @@ class SqlJsIndexedDBDatabaseAdapter {
         });
         // null 表示账号第一次打开，不代表持久化读取失败。
         const persistedBytes = await this.options.binaryStore.read(this.name);
+        if (!persistedBytes && this.options.mode === 'readonly-existing') {
+            throw new Error('Existing Web SQLite snapshot is unavailable.');
+        }
         this.database = persistedBytes
             ? new sqlRuntime.Database(persistedBytes)
             : new sqlRuntime.Database();
@@ -145,6 +154,12 @@ class SqlJsIndexedDBDatabaseAdapter {
             this.fatalPersistenceCause = cause;
             this.discardDatabaseDirect();
             throw new SqlJsPersistenceError(cause);
+        }
+    }
+    /** 只读 existing-snapshot adapter 在触碰 SQL 前拒绝所有 mutation。 */
+    assertWritable() {
+        if (this.options.mode === 'readonly-existing') {
+            throw new Error('Web SQLite snapshot is read-only.');
         }
     }
     /** 丢弃非 durable 内存数据库，禁止 close 将失败写入重新持久化。 */

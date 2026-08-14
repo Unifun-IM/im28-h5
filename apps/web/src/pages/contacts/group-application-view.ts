@@ -49,6 +49,16 @@ export function buildGroupVerificationEntries(
     .sort((left, right) => right.count - left.count || left.groupName.localeCompare(right.groupName));
 }
 
+/** 统计目标群待审核申请，供群管理入口复用同一状态语义。 */
+export function countPendingGroupApplications(
+  applications: readonly WebIMGroupApplication[],
+  groupID: string,
+): number {
+  return applications.filter(application => (
+    application.groupID === groupID && application.status === 'pending'
+  )).length;
+}
+
 /** 筛选单群申请并生成最近三天/三天前分组。 */
 export function buildGroupApplicationEntries(
   applications: readonly WebIMGroupApplication[],

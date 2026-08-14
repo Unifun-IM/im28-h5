@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { WebIMGroupApplication } from '@im28/im-sdk/web';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
@@ -12,12 +12,15 @@ import { GroupApplicationActionDialog } from './GroupApplicationActionDialog.js'
 import { GroupApplicationRow } from './GroupApplicationRow.js';
 import { GroupApplicationsError, GroupApplicationsHeader, GroupApplicationsPageState } from './GroupApplicationsShared.js';
 import { buildGroupApplicationEntries, readGroupApplicationError } from './group-application-view.js';
+import { resolveGroupApplicationBackTo } from './group-application-route.js';
 import './group-applications-page.css';
 
 /** RN 单群入群申请页复用 audit facade，并提供真实 accept/reject。 */
 export function GroupApplicationsPage() {
   // groupID 来自稳定 React Router path。
   const { groupID = '' } = useParams();
+  // location 仅用于解析受限的群管理来源，不接受任意返回 URL。
+  const location = useLocation();
   // runtime context 是页面唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // applications 保存完整 audit 结果以支持直接刷新恢复。
@@ -96,6 +99,8 @@ export function GroupApplicationsPage() {
   const entries = useMemo(() => buildGroupApplicationEntries(applications, groupID, keyword), [applications, groupID, keyword]);
   // groupName 从真实 audit 数据回退群 ID。
   const groupName = applications.find(application => application.groupID === groupID)?.groupName || groupID;
+  // backTo 保留群验证入口原路径，并支持从群管理返回原会话。
+  const backTo = resolveGroupApplicationBackTo(location.state);
 
   if (restoring) return <GroupApplicationsPageState label="正在恢复入群申请" />;
   if (!runtime) return <GroupApplicationsPageState label="运行配置不可用" detail={startupError} />;
@@ -111,7 +116,7 @@ export function GroupApplicationsPage() {
     onTouchCancel={pullRefresh.onTouchCancel}
   >
     <section className="rn-group-applications-surface">
-      <GroupApplicationsHeader title="入群申请" backTo="/contacts/verifications/group" />
+      <GroupApplicationsHeader title="入群申请" backTo={backTo} />
       <p className="rn-group-applications-group-name">{groupName}</p>
       <label className="rn-group-applications-search"><RNAssetIcon assetURL={searchIconURL} /><input type="search" value={keyword} placeholder="搜索申请人/用户ID" aria-label="搜索入群申请" onChange={event => setKeyword(event.target.value)} />{keyword ? <button type="button" aria-label="清除" onClick={() => setKeyword('')}><RNAssetIcon assetURL={clearIconURL} /></button> : null}</label>
       <PullRefreshIndicator refreshing={refreshing} pullDistance={pullRefresh.pullDistance} armed={pullRefresh.armed} />

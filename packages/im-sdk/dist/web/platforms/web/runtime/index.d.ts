@@ -12,6 +12,8 @@ export { WEB_IM_PLATFORM_TERM_KEYS, createWebIMPlatformTermsClient, } from './pl
 export { transitionWebIMRuntimeState } from './runtime-lifecycle.js';
 /** 创建复用共享 Gateway clients 的浏览器 IM runtime。 */
 export { createWebIMRuntime } from './web-im-runtime.js';
+/** 创建能力最小化的冷启动离线 cache reader。 */
+export { createWebIMOfflineReader } from './web-im-offline-reader.js';
 /** 导出未注册账号错误的标准化认证判断。 */
 export { isWebIMUnregisteredAccountError } from './web-im-authentication.js';
 /** 导出 Web IM runtime 的结构化错误。 */
@@ -38,4 +40,6 @@ export type { WebIMUpdateNotificationSettingRequest, WebIMUpdatePermissionSettin
 export type { WebIMClientVersion, WebIMClientVersionCheckResult, WebIMClientVersionDependencies, } from './web-im-client-version.js';
 /** 导出 Web IM runtime 命令、配置和快照类型。 */
 export type { WebIMLoginRequest, WebIMRegisterRequest, WebIMResetPasswordRequest, WebIMRuntime, WebIMRuntimeOptions, WebIMRuntimeSnapshot, WebIMSetAccountPasswordRequest, } from './web-im-runtime-types.js';
+/** 导出冷启动离线 reader 的只读公开 contract。 */
+export type { WebIMOfflineReadContext, WebIMOfflineReader, WebIMOfflineReaderDependencies, } from './web-im-offline-reader.js';
 //# sourceMappingURL=index.d.ts.map

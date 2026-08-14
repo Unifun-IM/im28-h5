@@ -1,22 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { WebIMRuntime } from '@im28/im-sdk/web';
 
-/** 群成员在线状态 hook 的输入。 */
-interface UseGroupMemberPresenceOptions {
+/** 页面级用户在线状态观察参数。 */
+interface UseObservedUserPresenceOptions {
   readonly runtime: WebIMRuntime | null;
   readonly accountUserID: string | null;
   readonly userIDs: readonly string[];
   readonly visible: boolean;
 }
 
-/** 批量观察普通群成员在线状态，并在目标变化时释放旧订阅。 */
-export function useGroupMemberPresence({
+/** 批量观察页面所需用户在线状态，并在目标变化时释放旧订阅。 */
+export function useObservedUserPresence({
   runtime,
   accountUserID,
   userIDs,
   visible,
-}: UseGroupMemberPresenceOptions): Readonly<Record<string, boolean>> {
-  /** userIDKey 让成员身份相同的渲染复用同一 observation。 */
+}: UseObservedUserPresenceOptions): Readonly<Record<string, boolean>> {
+  /** userIDKey 让身份集合相同的渲染复用同一 observation。 */
   const userIDKey = useMemo(() => Array.from(new Set(
     userIDs.map(userID => userID.trim()).filter(Boolean),
   )).join('\n'), [userIDs]);
@@ -37,9 +37,9 @@ export function useGroupMemberPresence({
     const observation = runtime.getSync().presence.observe(targetUserIDs, presence => {
       if (!active) return;
       setOnlineByID(current => {
-        /** next 仅合并本次初始或 realtime 返回的成员。 */
+        /** next 仅合并本次初始或 realtime 返回的用户。 */
         const next = { ...current };
-        // status 只会包含本 observation 的稳定成员身份。
+        // status 只会包含本 observation 的稳定用户身份。
         for (const status of presence) next[status.userID] = status.online;
         return next;
       });

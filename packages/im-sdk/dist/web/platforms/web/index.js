@@ -7,7 +7,7 @@ export { createWebIMCallSync, createIMCallRecordSync, mapIMCallTerminalSignalToR
 /** 导出只属于浏览器 runtime 的聚合 sync composition。 */
 export { createWebIMSync } from './sync/web-im-sync.js';
 /** 导出浏览器 Gateway runtime 配置、认证会话与 lifecycle 基础。 */
-export { WebIMRuntimeError, createBrowserGatewayFetch, createWebIMAuthSessionStore, createWebIMDeviceIdentityStore, createWebIMPlatformTermsClient, createWebIMRuntime, createWebIMUserSettings, createWebIMClientVersion, isWebIMUnregisteredAccountError, parseWebIMRuntimeConfig, transitionWebIMRuntimeState, WEB_IM_PLATFORM_TERM_KEYS, } from './runtime/index.js';
+export { WebIMRuntimeError, createBrowserGatewayFetch, createWebIMAuthSessionStore, createWebIMDeviceIdentityStore, createWebIMPlatformTermsClient, createWebIMRuntime, createWebIMOfflineReader, createWebIMUserSettings, createWebIMClientVersion, isWebIMUnregisteredAccountError, parseWebIMRuntimeConfig, transitionWebIMRuntimeState, WEB_IM_PLATFORM_TERM_KEYS, } from './runtime/index.js';
 /** 导出浏览器 OSS 上传与通话媒体 adapter。 */
 export { createBrowserOSSUploadPort, createLiveKitCallMediaPort, createWebIMCallMediaSession, createWebIMIncomingCall, createWebIMOutgoingCall, } from './media/index.js';
 /** 导出 H5 Web IM storage foundation。 */

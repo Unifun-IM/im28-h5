@@ -12,6 +12,8 @@ export { WEB_IM_PLATFORM_TERM_KEYS, createWebIMPlatformTermsClient, } from './pl
 export { transitionWebIMRuntimeState } from './runtime-lifecycle.js';
 /** 创建复用共享 Gateway clients 的浏览器 IM runtime。 */
 export { createWebIMRuntime } from './web-im-runtime.js';
+/** 创建能力最小化的冷启动离线 cache reader。 */
+export { createWebIMOfflineReader } from './web-im-offline-reader.js';
 /** 导出未注册账号错误的标准化认证判断。 */
 export { isWebIMUnregisteredAccountError } from './web-im-authentication.js';
 /** 导出 Web IM runtime 的结构化错误。 */

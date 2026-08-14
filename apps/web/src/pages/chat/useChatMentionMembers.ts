@@ -3,6 +3,7 @@ import {
   IM_GROUP_COMPOSER_MISSING_REASON,
   IM_GROUP_COMPOSER_RECOVERING_REASON,
   IM_GROUP_COMPOSER_UNRESOLVED_REASON,
+  isIMNormalGroupMode,
   type Conversation,
   type WebIMGroupMember,
   type WebIMSync,
@@ -14,6 +15,7 @@ interface ChatMentionMembersState {
   readonly members: readonly WebIMGroupMember[];
   readonly canMentionAll: boolean;
   readonly composerUnavailableReason: string;
+  readonly showOnlineStatus: boolean;
 }
 
 /** 非群聊或群快照未恢复前使用的 fail-neutral 页面投影。 */
@@ -22,6 +24,7 @@ const EMPTY_CHAT_MENTION_MEMBERS_STATE: ChatMentionMembersState = {
   members: [],
   canMentionAll: false,
   composerUnavailableReason: '',
+  showOnlineStatus: false,
 };
 
 /** 从 shared facade cache-first 恢复群聊提及候选。 */
@@ -59,6 +62,7 @@ export function useChatMentionMembers(
             members: [],
             canMentionAll: false,
             composerUnavailableReason: IM_GROUP_COMPOSER_MISSING_REASON,
+            showOnlineStatus: false,
           });
           throw new Error('群聊不存在或尚未同步');
         }
@@ -69,6 +73,7 @@ export function useChatMentionMembers(
           members: cachedMembers,
           canMentionAll: group.canMentionAll,
           composerUnavailableReason: group.composerUnavailableReason ?? '',
+          showOnlineStatus: isIMNormalGroupMode(group.mode),
         });
         /** refreshResults 独立收敛群权限和成员失败，避免成员失败吞掉新权限。 */
         const refreshResults = await Promise.allSettled([
@@ -89,6 +94,7 @@ export function useChatMentionMembers(
             members: [],
             canMentionAll: false,
             composerUnavailableReason: IM_GROUP_COMPOSER_MISSING_REASON,
+            showOnlineStatus: false,
           });
           throw new Error('群聊不存在或已退出');
         }
@@ -101,6 +107,7 @@ export function useChatMentionMembers(
           members,
           canMentionAll: refreshedGroup.canMentionAll,
           composerUnavailableReason: refreshedGroup.composerUnavailableReason ?? '',
+          showOnlineStatus: isIMNormalGroupMode(refreshedGroup.mode),
         });
         /** rejectedResult 只上报第一个真实刷新失败，缓存状态仍可继续使用。 */
         const rejectedResult = refreshResults.find(
@@ -120,6 +127,7 @@ export function useChatMentionMembers(
                 members: [],
                 canMentionAll: false,
                 composerUnavailableReason: IM_GROUP_COMPOSER_UNRESOLVED_REASON,
+                showOnlineStatus: false,
               });
           onError(cause instanceof Error ? cause.message : String(cause));
         }
@@ -133,6 +141,7 @@ export function useChatMentionMembers(
       members: [],
       canMentionAll: false,
       composerUnavailableReason: IM_GROUP_COMPOSER_RECOVERING_REASON,
+      showOnlineStatus: false,
     };
   }
   return state;

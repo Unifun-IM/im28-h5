@@ -4,10 +4,20 @@ export function createBrowserGatewayFetch(fetchImplementation = globalThis.fetch
     if (typeof fetchImplementation !== 'function') {
         throw new WebIMRuntimeError('BROWSER_CAPABILITY_UNAVAILABLE', 'Browser fetch is unavailable.');
     }
-    return async (input, init) => fetchImplementation(input, {
-        method: init.method,
-        headers: init.headers,
-        body: init.body,
-    });
+    return async (input, init) => {
+        try {
+            return await fetchImplementation(input, {
+                method: init.method,
+                headers: init.headers,
+                body: init.body,
+            });
+        }
+        catch (cause) {
+            if (!(cause instanceof TypeError)) {
+                throw cause;
+            }
+            throw new WebIMRuntimeError('GATEWAY_NETWORK_UNAVAILABLE', 'Gateway network is unavailable.', cause);
+        }
+    };
 }
 //# sourceMappingURL=browser-gateway-fetch.js.map

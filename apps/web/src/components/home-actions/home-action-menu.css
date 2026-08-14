@@ -25,7 +25,7 @@
 
 .rn-home-action-trigger > span,
 .rn-home-action-trigger > span::after {
-  width: 20px;
+  width: 14px;
   height: 2px;
   border-radius: 1px;
   background: currentColor;

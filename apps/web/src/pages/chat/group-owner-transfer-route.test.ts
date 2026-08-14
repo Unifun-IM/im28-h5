@@ -9,7 +9,7 @@ describe('group owner transfer route contract', () => {
   it('群管理入口只导航到独立 React Router 子路由', () => {
     expect(appSource).toContain('path="/conversations/:conversationID/settings/manage/owner-transfer"');
     expect(appSource).toContain('<GroupOwnerTransferPage />');
-    expect(managementSource).toContain('label="转让群主"');
+    expect(managementSource).toContain('label="群主转让"');
     expect(managementSource).toContain('to={ownerTransferURL}');
     expect(managementSource).not.toContain('MemberPickerModal');
     expect(managementSource).not.toContain('groupMembers.transferOwner');

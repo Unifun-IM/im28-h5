@@ -17,6 +17,7 @@ const runtime = createWorkerDatabaseRuntime({
             databaseName: options.databaseName,
             binaryStore,
             locateWasmFile: () => options.wasmURL,
+            ...(options.mode ? { mode: options.mode } : {}),
         });
     },
 });

@@ -26,7 +26,7 @@ import {
   buildChatSettingsView,
 } from './chat-settings-view.js';
 import { shouldShowGroupMemberPresence } from './group-members-view.js';
-import { useGroupMemberPresence } from './useGroupMemberPresence.js';
+import { useObservedUserPresence } from './useObservedUserPresence.js';
 import { ChatConversationSettingsControls } from './ChatConversationSettingsControls.js';
 import { ChatAutoDeleteSettingsRow } from './ChatAutoDeleteSettingsRow.js';
 import { ChatClearHistorySheet } from './ChatClearHistorySheet.js';
@@ -86,7 +86,7 @@ export function ChatSettingsPage() {
   // showOnlineStatus 只接受 shared mode=normal 判定，large/unknown fail-closed。
   const showOnlineStatus = shouldShowGroupMemberPresence(group);
   // onlineByID 复用群成员页相同的 shared presence observation。
-  const onlineByID = useGroupMemberPresence({
+  const onlineByID = useObservedUserPresence({
     runtime,
     accountUserID: snapshot.userID,
     userIDs: memberUserIDs,

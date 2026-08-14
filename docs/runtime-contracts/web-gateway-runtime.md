@@ -66,6 +66,8 @@ The H5 package may adapt browser `fetch`, `WebSocket`, storage and configuration
 
 ## 5. Lifecycle State Machine
 
+冷启动离线扩展的资格、只读数据库、专用 reader、mutation 禁用与 reconnect 规则由 [`web-cold-start-offline.md`](./web-cold-start-offline.md) 冻结；当前 runtime 尚未实现该扩展，因此下表仍是 production 主链。
+
 | current | event | next |
 | :--- | :--- | :--- |
 | `anonymous` | `auth_started` | `authenticating` |
@@ -117,11 +119,17 @@ npm run smoke:gateway
 
 Optional variables: `IM28_GATEWAY_PLATFORM_ID` (default `5`), `IM28_GATEWAY_LANGUAGE` (default `zh-CN`) and `IM28_GATEWAY_DEVICE_ID`. The script keeps tokens in process memory, prints only `state/userID`, and performs remote logout in `finally`. Never commit smoke credentials or place them in `.env.example`.
 
-Current gate state on 2026-08-12:
+Current gate state on 2026-08-14:
 
 - implementation: passed with 10 Vitest files / 25 tests and workspace typecheck/build;
 - Chromium App and account SQLite smoke: passed; WASM open/migrate/close completed with no console warning/error and the isolated smoke database was deleted;
-- real Gateway read-only smoke: phone-code login、refresh restore、Gateway-backed conversation/contact/profile reads and two-account tab isolation passed；no message or mutation was executed;
+- real Gateway read-only smoke: phone-code login、refresh restore、Gateway-backed conversation/contact/profile reads and two-account tab isolation passed;
 - realtime observability: `PrimaryTabsLayout[data-im-runtime-state]` exposes only the token-free SDK lifecycle state；the initial two-account run exposed alternating `online/reconnecting` caused by origin-shared device identity，and tab-scoped `sessionStorage` device identity removed that collision；a 30-second sample produced 19/20 dual-online states plus one simultaneous transient reconnect that recovered on the next sample;
-- offline SQLite hit and realtime message delivery remain separate acceptance gates；populated pages and zero console errors are not sufficient evidence;
+- realtime delivery: two online tab-scoped accounts used the production composer/Gateway/WebSocket path；the receiver list updated without reload to the unique marker plus one unread, then the chat cache window and list-back showed the same marker;
+- SQLite convergence: shared realtime writes `MessageRepository/ConversationRepository` before publishing `dataVersion`，and H5 consumes that revision only through `listCachedItems/getCachedHistory`；this proves realtime persistence, not offline restart recovery;
+- offline SQLite hot-session hit: passed in an isolated origin after online warm-up; once its HTTP proxy was stopped and WebSocket remained unavailable, contacts、conversation rows、latest marker and chat history stayed readable from the current-account cache while `Failed to fetch` remained visible;
+- offline cold start: not implemented; `restore()` intentionally performs `check-token` before opening the account database, so a Gateway-isolated full reload closes the database and returns to auth instead of exposing unchecked cached identity;
+- any cold-start design must first freeze token-expiry、read-only database、send/mutation disablement、reconnect and invalid-session cleanup semantics; hot-session evidence must not be expanded into an offline-login claim;
+- RTC deployment gate: two independent online accounts reached the production audio-call active route, but the caller received `通话已结束 / 服务不可用`, the receiver received no invite overlay, and neither call list gained a record; this proves the client failure cleanup path, not real invite/reject/LiveKit acceptance;
+- RTC activation requires the deployed call service to create a durable call and issue credentials; only then may the same production path close receiver invite/reject, caller terminal convergence, media and call-list gates;
 - upstream privacy gate: passed after removing raw `event.data` logging from the canonical `@im28/im-sdk` realtime client; shared SDK and H5 regression gates passed.

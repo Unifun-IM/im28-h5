@@ -15,6 +15,313 @@
 - 以纵向切片逐步交付认证、会话和消息能力，每个切片都有明确验证和残留项。
 - 以 `im28-phone` 为视觉、资产、页面行为和能力源，按 React Router SPA 路由逐页完成可追踪 parity 迁移。
 
+## W6.a6.20.148 Cold-Start Offline Safety Contract Freeze
+
+> OFFLINE SAFETY AXIOM: unchecked cached identity may unlock only an existing read-only account snapshot；完整 sync、mutation、realtime and fake online state remain forbidden until Gateway auth succeeds again.
+
+| field | contract |
+| :--- | :--- |
+| source evidence | `.131` 已证明 hot-session cache-first；Gateway-isolated reload currently fails at `check-token` and returns auth |
+| eligibility | only browser fetch transport unavailable + structurally valid tab session + existing durable account snapshot |
+| shared owner | planned SDK runtime lifecycle、`openExistingReadOnly` and capability-minimal `WebIMOfflineReader` |
+| H5 owner | offline banner/read-only conversations/chat + retry/sign-out；no direct storage/token inspection |
+| auth safety | explicit invalid/HTTP/business error never enters offline；reconnect must revalidate/refresh before normal runtime |
+| mutation safety | no send/retry/draft/mark-read/profile/group/call/message/conversation mutation or offline queue |
+| deliverable | `docs/runtime-contracts/web-cold-start-offline.md` + consumer matrix registration + bounded implementation slices |
+| status | `completed/contract-frozen/implementation-pending` |
+
+### W6.a6.20.148.1a Transport Classification And Lifecycle Foundation
+
+| field | contract |
+| :--- | :--- |
+| delivered | browser fetch `TypeError -> GATEWAY_NETWORK_UNAVAILABLE`；other failures unchanged；offline readonly/validating lifecycle transitions |
+| deliberately unchanged | production `restore()`、account DB open、sync facade、H5 shell and reconnect orchestration |
+| verification | SDK focused 2 files/10 tests；H5 typecheck/build include `build:web/sync:web`；RN protected diff empty |
+| status | `completed/foundation-only/not-consumed` |
+| next | `.148.1b` existing-snapshot read-only storage + capability-minimal reader |
+
+### W6.a6.20.148.1b Existing-Snapshot Read-Only Storage And Reader
+
+| field | contract |
+| :--- | :--- |
+| delivered | no-create snapshot probe、read-only lifecycle mode、caller-thread/Worker write rejection、no migration/export/close persist、minimal conversation/history reader |
+| shared reuse | normal sync and offline reader consume the same cached conversation projection and message-history query owners |
+| verification | focused 7 files/35 tests；Web full 100 files/419 tests；typecheck/boundary/build:web/sync:web；H5 typecheck/build；RN protected diff empty |
+| status | `completed/storage-reader-safe/not-consumed` |
+| next | `.148.1c` runtime restore/reconnect/getSync/getOfflineReader orchestration |
+
+## W6.a6.20.147 External Gate Activation Review
+
+> ACTIVATION AXIOM: 本地实现闭环后，只有新增自然数据、明确写操作授权、可用外部环境/设备或独立设计授权才能重新激活验收；环境未变化时不得继续生成同类空审计切片。
+
+| gate class | current state | activation requirement |
+| :--- | :--- | :--- |
+| natural data | `blocked` | 提供 pending 申请、自然 admin/role bubble、bound account、non-missed call、available/conversation-only group、非空 blacklist/media 等真实样本 |
+| business mutation | `blocked-authorization` | 明确具体 operation、一次性目标和允许产生的服务器/SQLite 副作用；按 Network/result/cache/realtime/list-back 验收 |
+| deployment/runtime | `blocked-external` | 提供已启用 RTC 服务、通话鉴权/凭据或可验证的部署环境 |
+| browser/device | `blocked-external` | 提供 Safari、Firefox、实体移动设备或 physical-touch 会话 |
+| contract/design | `blocked-separate-slice` | cold-start offline 等需要新增实现的能力必须另行授权和冻结 contract，不得以只读验收代替 |
+| auto activation | `none` | 当前三个授权账号及 Chromium 会话已穷尽可安全读取的候选样本 |
+| status | `paused/no-safe-auto-activation/external-input-required` | 任一激活条件成立后从对应 ledger item 恢复，不重开已关闭本地实现 |
+
+## W6.a6.20.146 Cross-Account Residual Candidate Audit
+
+> RESIDUAL AUDIT AXIOM: 多账号空态只能排除当前授权样本；不得把 unbound credential、empty calls 或 joined-only group search 写成 reset、call-record 或 available-group 验收。
+
+| field | contract |
+| :--- | :--- |
+| security | 第二、第三账号只读 `/me/security`；仅真实 `profile.account` 非空时进入 reset form |
+| calls | 第二、第三账号只读 `/calls`；非未接/时长必须由真实 record row 证明 |
+| groups | 第二账号服务端关键词 `62/群` 搜索群 Tab；第三账号对照 group conversations 与 joined groups |
+| safety | 不输入 credential、不编辑/删除 call、不申请入群、不打开 unread chat |
+| result | 两账号均 account unbound、calls empty；群搜索 empty；第三账号 2 group conversations 与 2 joined groups 一一对应 |
+| status | `audited/blocked-natural-data/runtime-clean` |
+
+## W6.a6.20.145 Multi-Account Natural-Data Gate Audit
+
+> NATURAL-DATA AXIOM: 已授权测试账号只提供 production data evidence；空态、accepted 历史或 unread 保护不能冒充 pending、角色气泡或 mutation 验收。
+
+| field | contract |
+| :--- | :--- |
+| accounts | 使用既有三个手机号测试账号的隔离 tab/session；只走 production login、application list、group list 和 conversation list/read route |
+| applications | 三账号分别读取 friend/group verification；pending 必须由真实 `status=pending` 行证明，禁止 fixture 或 accept/reject |
+| role bubble | 仅打开 unread=0 群聊；他人 owner/admin 消息必须真实出现在气泡内才关闭 pixel gate |
+| safety | unread>0 会话禁止进入，避免 shared `conversations.markRead`；不发送、不处理申请、不改群或资料 |
+| result | 三账号好友申请均为 accepted 历史、群申请均为空；安全群聊只有 system/self 消息，第三账号唯一他人群主消息会话 unread=2，未打开 |
+| status | `audited/blocked-natural-data/runtime-clean` |
+
+## W6.a6.20.144 Conversation Remark Responsive Theme Acceptance
+
+> RESPONSIVE TITLE AXIOM: 窄屏与暗色只验证现有真实名称的呈现；不得以 CSS 规则存在替代像素证据，也不得把当前长度样本外推为任意超长备注。
+
+| field | contract |
+| :--- | :--- |
+| source | `.143` shared remark projection + H5 existing conversation row；不新增 DTO、备注 Map 或 page owner |
+| mobile | authenticated `320x786` light；标题/时间/未读零重叠，document width 收敛 |
+| desktop | authenticated `760x900` dark；theme token、标题/时间和加号 geometry 保持 |
+| safety | 不打开 unread chat、不 mark-read、不写 Gateway/SQLite；媒体无当前账号自然样本时保持 blocked |
+| cleanup | 恢复 light、`412x786` 与 `/conversations`；RN/SDK/H5 runtime source 不改 |
+| status | `completed/browser-narrow-light-desktop-dark-pass/media-natural-data-gated` |
+
+## W6.a6.20.143 Conversation Remark Title And Home Plus Parity
+
+> CONVERSATION TITLE AXIOM: 好友备注是当前账号关系事实，必须由 shared cache projection 提供；H5 页面不得复制 RN 的备注 Map。点击热区与可见 glyph 尺寸必须分开管理。
+
+| field | contract |
+| :--- | :--- |
+| RN truth | 单聊标题 `remark > showName`；首页更多操作 40px hit target、14x2px visible plus |
+| SDK | `listCachedItems` 批量关联已确认 friendship；只改返回快照 name，不写 conversation cache、不发网络请求 |
+| H5 | `getConversationTitle` 继续消费 conversation；仅 CSS 收敛 plus glyph，菜单路由和交互不变 |
+| verification | SDK conversation/contact/sender focused、H5 list/home action focused、Web typecheck、build:web/sync:web、真实 412px measurement |
+| protection | RN source 只读；禁止 RN/Desktop/all build/sync 和 `build:package:desktop:web` |
+| status | `completed/shared-core-ready-web-consumed-rn-frozen/browser-rn-visual-pass` |
+
+## W6.a6.20.142 Chat Card Picker Real Group Target Acceptance
+
+> CHAT CARD PICKER AXIOM: 单选目标替换只改变弹窗 local state；只有点击分享并完成 shared `messages.sendCard` 才是 type108 mutation。
+
+| field | contract |
+| :--- | :--- |
+| RN truth | frozen `useChatCardPicker -> CardPickerModal` 好友/群聊单选；RN source 只读 |
+| data | 无未读真实单聊 + 当前账号真实好友/群聊；不注入 target fixture 或 route DTO |
+| interaction | 打开附件名片 -> 群聊 Tab -> 依次选择两个真实群；selected 始终为 1，第二次替换第一次 |
+| close | CTA 只验证 enabled；禁止点击；关闭回原聊天，不执行 type108/Gateway/SQLite mutation |
+| ownership | `ChatPage -> ChatTargetPickerModal -> forward-target-source`；单选规则由统一组件持有，发送由 SDK facade 持有 |
+| verification | picker/card/composer focused、Web typecheck、mobile smoke、RN/SDK boundary |
+| status | `completed/browser-chat-card-real-group-single-selection-pass/send-gated` |
+
+## W6.a6.20.141 Group QR In-App Share Group-Target Acceptance
+
+> QR SHARE SELECTION AXIOM: 目标选择只改变弹窗 local state；只有点击分享后生成 PNG 并调用 shared batch-send 才是业务 mutation，两者不得混记。
+
+| field | contract |
+| :--- | :--- |
+| RN truth | `ForwardTargetSelector variant=cardShare` 的好友/群聊、多选、跨 Tab selection；RN source 只读 |
+| data | 当前账号真实 2 好友、2 joined groups；来源为 `.139` 同一真实群二维码 |
+| interaction | 群 Tab -> ALL=2 -> 好友 Tab 保留 -> ALL=4；CTA 仅验证 enabled，禁止点击 |
+| route | 关闭 replace 回原群二维码；不进入 compose，不生成/上传/发送 PNG |
+| ownership | `QRCodeSharePage -> ChatTargetPickerModal -> forward-target-source`；不得复制目标 DTO、会话解析或 batch owner |
+| verification | QR/share/picker focused、Web typecheck、HTTP/log/diff boundary |
+| status | `completed/browser-group-qr-real-target-multiselect-pass/send-gated` |
+
+## W6.a6.20.140 Real Group QR Code Desktop Dark Acceptance
+
+> GROUP QR DARK AXIOM: 暗色主题必须通过全局 token 适配页面、surface、card 和文字；二维码像素区必须保持白底，不得随主题变暗而破坏识别。
+
+| field | contract |
+| :--- | :--- |
+| data | `.139` 同一真实群与 canonical conversation；不注入 identity、theme fixture 或历史群资料 |
+| viewport | `760x900` dark；surface 480px 居中、card/token 分层、二维码白底、零横向溢出 |
+| route | 验证暗色二维码 -> 同一群资料返回；禁止下载、分享、扫一扫和发送 |
+| ownership | 只消费全局 theme tokens 与现有 `QRCodeDisplay`；禁止页面级暗色分支或第二 Canvas owner |
+| verification | QR/profile focused、Web typecheck、HTTP/log/diff boundary；结束恢复 light/default viewport |
+| status | `completed/browser-real-group-qr-desktop-dark-pass/export-scan-send-gated` |
+
+## W6.a6.20.139 Real Group QR Code Mobile Acceptance
+
+> GROUP QR AXIOM: 真实群二维码必须由 canonical group conversation 与匹配的群快照恢复；视觉验收不得用 route ID、fixture 或历史群资料制造二维码。
+
+| field | contract |
+| :--- | :--- |
+| data | 当前账号真实 owner 群 `donk的群聊`；conversation/group identity 必须由 production source 精确匹配 |
+| viewport | `412x786` light；验证二维码 ready、Canvas 尺寸、card 几何与零横向溢出 |
+| route | 只验证二维码 route 与同一群资料返回链；禁止下载、分享、扫一扫和最终发送 |
+| ownership | SDK group payload + H5 共用 Canvas owner；不新增 QR 协议、导出或资料恢复路径 |
+| verification | QR/profile focused、Web typecheck、HTTP/log/diff boundary；RN/SDK source 保持不变 |
+| status | `completed/browser-real-group-qr-mobile-pass/export-scan-send-gated` |
+
+## W6.a6.20.138 Broadcast Target Picker Desktop Dark Acceptance
+
+> BROADCAST PICKER AXIOM: 目标选择是 H5 local presentation state；只有点击 CTA 后的 shared batch-send 才是业务 mutation，二者不得混记。
+
+| field | contract |
+| :--- | :--- |
+| data | 当前账号真实好友/群聊；不注入 fixture，不构造 route target DTO |
+| viewport | `760x900` dark；统一 sheet 居中、720px 上限、无横向溢出 |
+| selection | 好友/群聊跨 Tab ALL 累计；只验证 local selected map 与 CTA 状态 |
+| close | 关闭返回白名单 `backHref`；禁止点击 CTA、进入 compose 或发送 |
+| verification | picker/broadcast focused、Web typecheck、HTTP/log、RN protected diff |
+| status | `completed/browser-broadcast-desktop-dark-selection-pass/send-gated` |
+
+## W6.a6.20.137 Group Management Owner Dark Responsive Acceptance
+
+> OWNER DARK AXIOM: 只读主题验收必须消费真实 owner 数据与 production route；视觉通过不得外推为 admin 角色或群设置 mutation 通过。
+
+| field | contract |
+| :--- | :--- |
+| data | 真实 owner 群；不注入 role、permission、member 或 setting fixture |
+| viewports | `412x786` 与 `760x900`；page/card token 分层、8px card、无横向溢出 |
+| route | 只进入群主转让候选页并关闭返回；禁止选择、确认或提交 |
+| safety | 不点开关，不执行 Gateway/SQLite mutation；结束恢复 light/default viewport 并关闭隔离 tab |
+| verification | group-management focused、Web typecheck、SDK Web regression、HTTP/log/diff boundary |
+| status | `completed/browser-owner-mobile-desktop-dark-pass/admin-and-mutation-gated` |
+
+## W6.a6.20.136 Group Management Role Presentation Parity
+
+> ROLE PRESENTATION AXIOM: shared permission 决定能力；H5 只决定可见/禁用/导航。管理员可读的 RN 设置说明不得因不可操作而隐藏，普通成员不得绕过管理页守卫。
+
+| role | H5 contract |
+| :--- | :--- |
+| owner | switch enabled；mute/speech/auto-delete/admin/transfer 保持既有 Link |
+| admin | switch visible+disabled；speech visible+disabled；applications 按 shared capability；admins 与 owner transfer 显示只读限制 |
+| member | `canOpenGroupManage=false` -> replace settings；不得在页面解析 roleLevel |
+| boundary | `buildGroupManagementRoleView` 只消费 shared booleans；SDK permission resolver 仍是唯一业务 owner |
+| anti-shortcut | 禁止 fake admin fixture 作为 browser evidence；禁止为展示对齐调用 mutation 或复制角色权限矩阵 |
+| verification | role projection + group settings/transfer/auto-delete focused、Web typecheck、真实 owner DOM、diff boundary |
+| status | `completed/role-presentation-converged/owner-browser-pass/admin-natural-data-gated` |
+
+## W6.a6.20.135 Group Owner Transfer Label Parity
+
+> LABEL PARITY AXIOM: H5 设置入口必须复用 RN 用户可见文案；文案修正不得改变 permission、route、candidate 或 shared mutation owner。
+
+| field | contract |
+| :--- | :--- |
+| RN truth | frozen `GroupManageScreen` 使用“群主转让” |
+| H5 scope | `GroupManagementPage` 对应 `ManagementLink` label 与 route contract assertion |
+| proof | 真实 owner 群管理页显示新文案；进入 owner-transfer 页后候选与关闭返回行为不变 |
+| anti-shortcut | 禁止选择候选、打开确认、执行 transfer 或借文案修正改写 permission/SDK/route |
+| verification | owner-transfer/group-management focused tests、Web typecheck、authenticated DOM/route/return evidence |
+| protection | RN business 和 SDK source/generated 保持不变；不运行 SDK/RN/Desktop build/sync |
+| status | `completed/rn-label-parity/browser-route-return-pass` |
+
+## W6.a6.20.134 Contact Common-Groups Consistency
+
+> COMMON GROUPS AXIOM: 资料页数量和列表页必须消费同一次 shared capability 语义；异步首帧空值不得替代 settled result，页面不得维护第二分页、去重或 cache owner。
+
+| field | contract |
+| :--- | :--- |
+| entry | 真实好友资料 `/contacts/users/:userID` -> 共同的群聊 -> 真实群 row -> canonical chat |
+| path | `ContactProfilePage/ContactCommonGroupsPage -> contacts.listCommonGroups -> IMContactActionsSync -> repositories`；群打开继续走 `conversations.openGroup` |
+| proof | settled count 与 list length/identity 一致；选择无未读群进入真实 conversation，返回后 unread 不变 |
+| anti-shortcut | 禁止把 loading 首帧、fixture、route group ID 或页面去重冒充 shared result；禁止 refresh/mark-read/send/relationship/group mutation |
+| verification | SDK contact-actions focused；H5 profile/child-route/search focused；authenticated DOM/runtime/layout/log evidence |
+| protection | 本片不编辑 production source；既有 dirty worktree 保留；不运行 SDK build/sync、RN/Desktop/build:all 或 `build:package:desktop:web` |
+| status | `completed/browser-real-common-groups-count-list-open-consistent` |
+
+## W6.a6.20.133 Joined Group Open-Conversation Persistence
+
+> GROUP OPEN AXIOM: 群列表只能通过 shared `openGroup` 获得真实 conversation；页面不得把 group ID 猜成 conversation ID，也不得因 route 可达伪造持久化成功。
+
+| field | contract |
+| :--- | :--- |
+| entry | `/contacts -> /contacts/groups`，只选择会话列表中已确认无未读的真实 joined group |
+| path | `JoinedGroupsPage -> conversations.openGroup -> openIMGroupConversation -> ConversationRepository -> React Router chat` |
+| proof | chat identity/message 可见；返回主会话列表后同 canonical conversation 与 preview 仍存在，未读总数不变 |
+| anti-shortcut | 禁止 route-only ID、fixture、refresh、mark-read、send、长按动作、群生命周期或 Gateway mutation |
+| verification | SDK open-group focused；H5 joined-group view/route/refresh focused；authenticated DOM/runtime/layout/log evidence |
+| protection | 本片不编辑 production source；既有 dirty worktree 保留；不运行 SDK build/sync、RN/Desktop/build:all 或 `build:package:desktop:web` |
+| status | `completed/browser-real-joined-group-open-and-list-back-pass` |
+
+## W6.a6.20.132 Real RTC Start Deployment Gate
+
+> RTC AXIOM: 真实通话只有在 Gateway 创建 call、接收端收到 invite 且双方收敛终态后才能验收；部署失败不得由客户端假状态、循环重试或跳过媒体权限来补偿。
+
+| field | contract |
+| :--- | :--- |
+| accounts | 两个独立 origin 使用真实手机号验证码登录，caller/receiver 都必须先达到 `online` |
+| path | 单聊功能面板 -> 音视频通话 -> 语音通话 -> shared call control；禁止测试 API 和页面直写 call state |
+| expected chain | start 创建真实 call/credential -> receiver 全局 overlay -> receiver reject -> caller terminal -> 双方通话列表一致 |
+| observed | caller active route 显示“通话已结束 / 服务不可用”；receiver 无 invite，双方列表无记录 |
+| interpretation | 证据表明本次部署未形成可持久化 call；未抓取 Network，不推断具体 HTTP 状态码或服务内部原因 |
+| activation | 部署侧恢复 call creation 与 credential issuance 后，按同一 production path 重新执行完整 invite/reject gate |
+| protection | 不改 H5/SDK/RN production，不创建 fake call，不运行 SDK build/sync、RN/Desktop/build:all 或 `build:package:desktop:web` |
+| status | `blocked-deployment/runtime-clean/no-call-created` |
+
+## W6.a6.20.131 Offline SQLite Cache-First Acceptance
+
+> OFFLINE AXIOM: `cache-first` 只表示已认证 runtime 在远端失败时继续读取当前账号 SQLite；除非 auth/session 安全 contract 明确允许，否则不得外推为离线冷启动或离线登录。
+
+| field | contract |
+| :--- | :--- |
+| isolation | 新 origin + per-test HTTP proxy；只隔离测试 tab 的 Gateway，禁止停止共享服务或污染 5176 会话 |
+| warm-up | production phone-code login -> conversation sync -> account SQLite；必须保留可识别的真实 marker |
+| hot-session proof | 关闭 proxy -> SPA 离开/返回 conversations -> list cache retained -> 进入无未读 chat -> history cache retained；远端错误仍可见 |
+| cold-reload proof | proxy offline 时 reload；记录 `restore/check-token` 的真实失败行为，不因期望 parity 降低标准 |
+| anti-shortcut | 禁止 fixture、fake-success、runtime monkeypatch、第二 DB reader/writer 或读取浏览器 token/storage |
+| status | `completed/hot-session-offline-cache-first-pass; cold-start-contract-gated` |
+
+## W6.a6.20.115 Account Security Mobile Dark Readonly Acceptance
+
+> CREDENTIAL SAFETY AXIOM: 账号安全暗色验收只读取真实绑定状态与空表单；未经授权不得填写或提交 set/reset，也不得用 route 可达性代替 mutation/session-cleanup 证明。
+
+| field | contract |
+| :--- | :--- |
+| scenario | 真实账号安全总览 -> 当前账号未设置分支 -> 首次设置表单 -> 错误直达 reset route 自动纠正 |
+| root | `/me/security` 显示 `+86 15555555551 / 未绑定 / 账号密码`；page `15/17/21`、card `27/29/36` |
+| form | `/me/security/account` 显示账号/密码/确认密码；空值 submit disabled；form `27/29/36` |
+| route guard | 当前 account 为空时直达 `/me/security/password` replace 到 `/me/security/account` |
+| layout | root/form 均 viewport 412x786、无横向溢出 |
+| safety | 不输入、不提交、不调用 set/reset/Gateway/SQLite/session cleanup；验收后恢复 light preference |
+| verification | SDK credential 1 file/3 tests；H5 menu contract 1 file/3 tests；Web typecheck；3 route HTTP 200；diff/RN protected checks |
+| status | `completed/browser-mobile-dark-readonly-pass; desktop-dark-and-mutation-gated` |
+
+## W6.a6.20.116 Verification Pending Natural-Data Audit
+
+> NATURAL DATA AXIOM: pending 申请与处理层只能由 Gateway 真实记录驱动；无 pending 时必须登记为 data-gated，不得注入 fixture、改状态或制造申请。
+
+| field | contract |
+| :--- | :--- |
+| operations | 好友验证 pending incoming；群聊验证 pending audit |
+| friend evidence | `/contacts/verifications/friend` 返回 3 条真实历史记录，全部为“已添加”，无“加好友”入口 |
+| group evidence | `/contacts/verifications/group` 返回“暂无群聊验证”，无审核行或动作 |
+| safety | 不打开资料、不 mark-read、不接受/拒绝、不制造申请、不执行 Gateway/SQLite mutation |
+| verification | H5 focused 2 files/7 tests；Web typecheck；2 route HTTP 200；diff/RN protected checks；412px 无横向溢出 |
+| status | `blocked-natural-data/runtime-clean` |
+| activation | Gateway 自然出现 incoming pending 好友申请或 owner/admin pending 群申请后，只读打开确认层；mutation 仍需独立授权 |
+
+## W6.a6.20.117 Chat Media Read Natural-Data Audit
+
+> MEDIA READ AXIOM: 真实媒体交互只能在无未读会话中使用 cache payload 验收；不得为寻找媒体打开带未读会话并触发 `markRead`，也不得注入 URL。
+
+| field | contract |
+| :--- | :--- |
+| candidates | 无未读群 `donk的群聊`、无未读单聊 `donk三大爷`、归档会话列表 |
+| evidence | 群仅有系统消息；单聊仅有申请/建联/文本；归档为空；三个 source 均无 image/audio/video action |
+| protected | 两个带未读会话未打开；不 mark-read、不播放/下载、不发消息、不执行 Gateway/SQLite mutation |
+| verification | H5 media focused 3 files/11 tests；Web typecheck；3 route HTTP 200；diff/RN protected checks；412px 无横向溢出 |
+| status | `blocked-natural-data/runtime-clean` |
+| activation | 已有无未读会话自然包含 absolute HTTP(S) image/audio/video payload；视频可独立于图片/音频验收 |
+
 ## W6.a6.20.114 Me Profile Editors Mobile Dark Readonly Acceptance
 
 > PROFILE DARK AXIOM: 暗色验收只能读取真实资料并浏览字段 route；不改 draft、不点击完成、不把只读像素冒充 update-profile 成功。
@@ -295,7 +602,7 @@
 | scenario | 当前真实好友 `donk二大爷`：搜索 `donk` -> 资料 -> 复制 ID -> 共同群聊 -> 资料 -> 搜索 |
 | clipboard evidence | 点击真实 ID 后出现 RN 联系人资料同款“复制ID成功”，约 1.2s 后消失；URL 与联系人事实不变 |
 | route evidence | `/contacts/users/94424103659/groups` 返回资料，再返回 `/contacts/search`；`donk` 查询与两位本地好友/一个本地群结果保留 |
-| presentation | 全链 scrollWidth=clientWidth=412；共同群真实 count=1，但当前列表为空，不冒充群行/打开证据 |
+| presentation | 全链 scrollWidth=clientWidth=412；当时共同群真实 count=1/list=0，不冒充群行/打开证据；该历史数据门禁已由 `.134` 当前 count=2/list=2/canonical-open 关闭 |
 | safety | 未读取 Clipboard 内容、未点击语音/视频/星标/发消息/备注/分享、未打开群会话或执行关系 mutation |
 | verification | clipboard/route focused 4 files/12 tests、`.94` H5 typecheck、真实 DOM/route/viewport evidence |
 | status | `completed/browser-readonly-pass; relationship-action-and-group-row-gated` |
@@ -954,7 +1261,7 @@
 | field | value |
 | :--- | :--- |
 | source | RN `GroupMembersScreen -> useGroupMemberOnlineStatus` 的普通群判定、批量查询与在线绿点 |
-| target | SDK `normalizeIMGroupMode/isIMNormalGroupMode` + H5 `useGroupMemberPresence` |
+| target | SDK `normalizeIMGroupMode/isIMNormalGroupMode` + H5 `useObservedUserPresence` |
 | behavior | `1|normal` 标准化为普通群；仅普通群批量观察完整成员；只显示明确在线成员；large/unknown fail-closed |
 | invariant | 复用 `.20.19` shared presence HTTP/realtime/lifecycle；页面不持有 Gateway/WebSocket/SQLite 或群模式 magic number |
 | gate | SDK group-mode/joined-group/presence tests + H5 view/typecheck/full verify + 真实普通群成员页只读 smoke |
@@ -965,7 +1272,7 @@
 | field | value |
 | :--- | :--- |
 | source | RN `GroupSettingsScreen -> useGroupMemberOnlineStatus` 只观察设置页预览成员并显示在线绿点 |
-| target | H5 `ChatSettingsPage -> useGroupMemberPresence`，复用 `.20.20` shared mode/presence owner |
+| target | H5 `ChatSettingsPage -> useObservedUserPresence`，复用 `.20.20` shared mode/presence owner |
 | behavior | 仅普通群观察实际渲染的最多 10 名预览成员；只给明确在线成员显示 RN 14/8px 状态点 |
 | invariant | 不新增设置页 presence service、HTTP/WebSocket/SQLite、群模式数字判断或完整成员订阅 |
 | gate | H5 settings/group-member focused tests + H5/SDK Web typecheck/full verify + 真实普通群设置页响应式只读 smoke |
@@ -998,7 +1305,7 @@
 | RN parity foundation | 迁移合同已冻结；466 个资产按字节同步；auth entry、conversation、chat、contacts/contact-profile、friend/group applications、calls、me/profile/security、settings、global tab shell 与 onboarding core 均为 local/acceptance-gated；valid authenticated data/mutations、onboarding context、cache/network blocked or gated | `docs/rn-h5-migration-contract.md`; `apps/web/src/assets/rn`; `apps/web/src/styles/rn-theme.css` |
 | shared SDK | `@im28/im-sdk/core` 提供平台中立 contract、Repository 和 Gateway client | `../im28-sdk/src/core.ts` |
 | Web SDK/runtime | `sql.js + IndexedDB`、login/register/account-credential auth-bound lifecycle、notification/permission settings facade、public platform-term/client-version adapters、共享 mutation queue、HTTP/realtime sync、remote contact list/user search、peer profile/conversation/apply、call-record cache/sync/delete、current-profile read/update、preset/custom emoji、same-row retry、uploaded-media checkpoint recovery、shared forward、群 mention/realtime/clear-history/list-actions、群管理/创建、文本/图片/视频/文件/语音群发、二维码协议/个人与群码展示/公开群申请与聊天缓存查询已实现；当前 `test:web` 为 82 文件/337 测试 | `../im28-sdk/src/platforms/web/runtime/**`; `../im28-sdk/src/platforms/web/storage/**`; `../im28-sdk/src/sync/**` |
-| Gateway runtime | real phone-code login、refresh restore、Gateway-backed reads、two-account tab isolation and dual WebSocket online passed；realtime delivery/list-back and offline SQLite-hit remain deployment gates | `docs/runtime-contracts/web-gateway-runtime.md` |
+| Gateway runtime | real phone-code login、refresh restore、Gateway-backed reads、two-account tab isolation、dual WebSocket online and text delivery/SQLite convergence/list-back passed；offline SQLite-hit remains a deployment gate | `docs/runtime-contracts/web-gateway-runtime.md` |
 | package shape | H5 workspace 仅保留 `apps/web`；浏览器 SDK 已迁入独立兄弟 Git 仓库 | `package.json`; `../im28-sdk/package.json` |
 
 ## Workstreams
@@ -1036,7 +1343,7 @@
 
 | gate | blocks | does_not_block |
 | :--- | :--- | :--- |
-| `W3.real-gateway` | realtime delivery/list-back、offline SQLite-hit、W3 closeout and W4/W6 mutation-backed final acceptance | read-only real login/data、dual-account online、W4 contract/sync and W6 local implementation |
+| `W3.real-gateway` | offline SQLite-hit、W3 closeout and remaining W4/W6 mutation-backed final acceptance | read-only real login/data、dual-account online、real text delivery/SQLite convergence/list-back、W4 contract/sync and W6 local implementation |
 | `W5.browser-matrix` | storage production acceptance | W6 local style/route/API implementation |
 
 W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实登录/读取/online 不能被解释为消息投递、离线 cache 或 mutation 已验收。
@@ -1076,7 +1383,7 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实
   - `W6.a6.14.1-shared-forward-core` 已完成本地闭环：SDK schema v9、Mapper/Repository、来源重读、normal batch、registered hidden-sender body-copy、stable IDs 与逐行成败均由 shared owner 持有；RN runtime 未接线，H5 仅同步 Web 产物。
   - `W6.a6.14.2-h5-forward-target-preview` 已完成本地闭环：RN 单选/多选、三类真实目标、目标 chat pending preview、反选/隐藏发送者/comment/换目标和 shared submit caller 已接入；Router 只携带稳定 ID，页面不持有 Gateway body/cache owner。
   - `W6.a6.14.3-forward-acceptance` 已完成授权子集：14:59 normal 保留 origin，15:01 hidden 无 origin，两条均通过真实 Gateway、会话置顶和 SQLite/list-back；真实运行暴露的 initial pull/send 覆盖竞态已修复并加入顺序回归。
-  - `.14.3` 仅剩可控 real partial-result 和 desktop visual proof；当前保持 `blocked-external`，禁止用 production fake failure 替代。
+  - `.14.3` 的现行统一弹窗 desktop visual proof 已由 `.124` 关闭；仅剩可控 real partial-result，继续保持 `blocked-external`，禁止用 production fake failure 替代。
   - `W6.a6.15.1-shared-message-delete-core` 已完成本地闭环：SDK 从当前账号 SQLite 重读来源，区分 single update/batch-delete/local-only self，顶层失败不改本地，partial 只在事务中隐藏成功行；RN runtime 未接线。
   - `W6.a6.15.2-h5-message-delete-ui` 已完成本地闭环：单条 action、多选删除、RN 确认文案、self/all scope 和群角色呈现共用一个 flow，页面只调 `messages.delete`。
   - `W6.a6.15.3-message-delete-acceptance` 需在经明确授权的可丢弃消息上验证 `self/all/partial/list-back`，当前保持 `blocked-destructive-authorization`；只读 UI 验收不等于真实删除验收。
@@ -1397,6 +1704,28 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实
 - 两个页面分别为 282/268 行，共用提示组件 23 行且有两个生产消费者；无第二 owner、孤立文件、compat wrapper、TODO/FIXME/HACK 或调试日志。
 - 本片未修改 SDK source/generated package 或 `im28-phone`；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
 
+## Completed W6.a6.20.118
+
+- 聊天头部复用 SDK `WebIMSync.presence`，单聊只观察对端并展示在线/离线，普通群观察成员快照并展示在线人数。
+- 群模式继续由 SDK `isIMNormalGroupMode` 判定；large/unknown 群隐藏状态，未知单聊状态保留头部高度且不伪造在线。
+- 页面 presence observation 收敛到通用 `useObservedUserPresence`；群成员页、群设置预览和聊天头部不再保留不同 Hook owner。
+- 验收要求：纯投影覆盖在线、离线、未知、2 人在线与非普通群；H5 typecheck/build；真实单聊和普通群 412px 无溢出、无 console error。
+
+## Completed W6.a6.20.119
+
+- 群管理页复用既有 `groupApplications.list`，按目标群和 `pending` 状态展示 RN 同款待处理数量；无审核权限时保留“无权限”行，管理员设置无权限时保留“仅群主”行。
+- 单群申请页接受受限的 `group-management + conversationID` Router state；从群管理进入返回原会话，从联系人验证或直接访问仍返回群聊验证，不接受任意 back URL。
+- focused 2 files/8 tests、H5 full 137 files/435 tests、typecheck、466 assets和 production build通过；真实群管理入口、返回链和 console 零错误通过。
+- 当前真实群无 pending 申请，非零角标、admin/member 权限视觉和 accept/reject 仍为显式验收门；SDK 业务源码与 RN protected source 未改，未运行 forbidden build scripts。
+
+## Completed W6.a6.20.120
+
+- 群聊头部新增 RN 同款待审核申请入口：当前群 `pending` 数量为零时隐藏，超过 99 显示 `99+`，单聊始终隐藏。
+- `useChatGroupApplicationCount` 只调用现有 `groupApplications.list`，失败时角标归零且不阻断聊天；`.119` 的 pending 计数 helper 同时服务群管理和聊天头部。
+- 申请页受限 Router state 新增 `chat` 来源，从头部进入时返回原群聊；仍拒绝任意 back URL，群管理和联系人验证返回语义不变。
+- focused 4 files/13 tests、H5 full 139 files/440 tests、typecheck、466 assets和 production build通过；真实 412px 群聊零误显、header 无溢出且无 warning/error。
+- 当前账号无 pending 样本，非零角标实际点击、处理后刷新和双账号 realtime 继续 gated；SDK business/RN protected source 与 forbidden build scripts 均未触碰。
+
 ## Completed W6.a6.20.49
 
 - 群禁言页复用全局 `usePullRefresh`，对齐 RN `GroupMuteScreen` 手动禁言列表的顶部下拉反馈；首次加载、刷新或提交期间拒绝新手势。
@@ -1437,3 +1766,84 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实
 - 5176 真实数据完成 3 条最近会话、2 位好友、1 个群聊、搜索/清除、三 Tab、折叠提示和 412/412 验收；warning/error 为零，物理触摸释放保持显式 gate。
 - `ChatForwardTargetPage.tsx` 228 行、新 contract test 22 行；无第二 owner、孤立文件、compat wrapper、TODO/FIXME/HACK、fake-success 或调试日志。
 - 本片未修改 SDK source/generated package 或 `im28-phone`；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.121
+
+- 聊天标题区按 RN `ChatDetailHeader` 语义成为资料入口：群聊进入现有群资料 route，单聊在存在对端 ID 时进入现有联系人资料 route。
+- 单聊沿用联系人资料页既有白名单 `backHref`；群资料新增最小 `chat + conversationID` state，只有来源 ID 与当前路由一致才返回聊天，否则保持返回群设置。
+- 标题区不读取资料、不复制 DTO/权限/Gateway/SQLite 逻辑；资料内容和 mutation 继续由既有页面及 shared facade 提供。
+- focused 3 files/9 tests、H5 full 140 files/443 tests、typecheck、466 assets和 1188-module production build通过；真实群聊/单聊资料进入与返回、412px 零溢出和零 warning/error 通过。
+- SDK source/generated package 与 `im28-phone` 本片零改动；未执行 SDK/RN/Desktop/build:all/`build:package:desktop:web` build 或 sync。
+
+## Completed W6.a6.20.122
+
+- 在真实已登录账号下通过显示设置切换 dark，补齐 `/me/profile`、nickname、gender、bio 四个 route 的 760×900 桌面只读验收。
+- 总览保持 `donk / 未知 / 未设置`；昵称输入保持 `donk`、性别“未知”仍 checked、签名为空且 `0/100`，未输入或点击完成。
+- 四个页面均使用 dark page `rgb(17,19,24)` 与 card/textarea `rgb(27,29,36)`，document viewport/scrollWidth 均为 760，无横向溢出和 warning/error。
+- focused 4 files/17 tests、H5 typecheck、四 route HTTP 200、RN/SDK boundary 和 diff check 通过；结束前恢复 light preference。
+- 本片代码与运行时零改动，未运行任何 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.123
+
+- 在真实已登录、未绑定账号密码的账号下，通过显示设置切换 dark，补齐 `/me/security`、`/me/security/account` 和错误重置深链的 760×900 桌面只读验收。
+- 总览真实展示 `+86 15555555551 / 未绑定 / 账号密码`；首设账号、密码、确认密码三个输入保持为空，设置按钮保持 disabled，未触发任何凭据 mutation。
+- 错误直达 `/me/security/password` 按账号状态自动 replace 到 `/me/security/account`；不把该保护行为声明成密码重置成功。
+- page=`rgb(15,17,21)`、card/form=`rgb(27,29,36)`、input=`rgb(36,39,51)`，三个链路 viewport/scrollWidth=`760/760` 且 warning/error 为零。
+- SDK 1 file/3 tests、H5 1 file/3 tests、Web typecheck、三 route HTTP 200、RN/SDK boundary 和 diff check 通过；结束前恢复 light preference。
+- 本片代码与运行时零改动，未运行任何 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.124
+
+- 从当前真实已读单聊右键可转发文本消息，进入 `.54` 后唯一生产入口 `ChatTargetPickerModal`；URL 保持原聊天，不再进入已删除的独立转发目标页。
+- 在 760×900 light viewport 下先选择好友，再切换群聊选择单群，选中计数为 2；点击群聊当前筛选范围 ALL 后计数为 3，证明跨 Tab 保留选择与 ALL 行为。
+- modal 尺寸为 720×868、左偏移 20px，grid 720px，viewport/scrollWidth 为 760/760；最终转发按钮在有选择时可用，但未点击。
+- 关闭弹窗后仍为原单聊、消息行保持 2 条，未产生发送、Gateway、SQLite 或 list-back 变化，warning/error 为零。
+- focused 5 files/14 tests、Web typecheck、两个 route HTTP 200、RN/SDK boundary 与 diff check 通过；本片运行时代码零改动且未执行任何 SDK build/sync。
+
+## Completed W6.a6.20.125
+
+- 在真实已登录单聊搜索中输入 `123`，命中当前账号 sql.js 的稳定消息 `61da9d1a-5ce3-4ce8-8d37-44d56939c104`，结果跳转后精确恢复目标缓存窗口与 DOM 行。
+- 修复结果跳转后浏览器 back 丢失关键词/结果的 RN parity 缺口：已提交关键词和文本 tab 写入 `/search?q=123&tab=all`，返回时只通过既有 `WebIMSync.messages.searchCached` 重读缓存。
+- 760×900 light/dark 均完成搜索、目标定位和 history 返回；两种主题 viewport/scrollWidth 都为 760/760，dark page/card/input 分别为 `#111318/#1b1d24/#242733`，warning/error 为零。
+- focused 3 files/8 tests、Web typecheck（含允许的 SDK `build:web/sync:web`）、两个 route HTTP 200、diff check 与 RN/SDK protected boundary 通过。
+- 本片未修改 SDK 或 RN；未调用 Gateway、WebSocket、发送、下载或 mutation。日期/媒体/文件的桌面/history/theme 仍由 `.18.2.2` 独立验收。
+
+## Completed W6.a6.20.126
+
+- 为日期、图片与视频、文件三个索引页补齐 React Router query 状态：`view` 标识页面，`months` 保存有界月份数，`filter` 保存媒体筛选；刷新和 history 返回后只重读当前账号缓存。
+- 真实单聊日期页在 760×900 light 下显示 `2026-08-13，3条聊天记录`，进入稳定 messageID 后 back 恢复原日期结果；月份从 3 扩展到 4 后 reload 保持四个月。
+- 当前真实群的媒体/文件缓存为空，但 `media&filter=video` 和 `file` 的 URL、选中态及空态在 reload 后保持；既有 458px 非空媒体/文件证据继续有效，未以空态替代非空验收。
+- 760×900 light/dark 的 page/card/input token、viewport/scrollWidth 均正确；历史 HMR 日志不计入新证据，clean reload 前后新增 warning/error 为零。
+- focused helper 1 file/5 tests、H5 full 140 files/445 tests、Web typecheck、466 assets、1188-module production build、三个 route HTTP 200、diff 与 RN/SDK protected boundary 通过；未修改 SDK/RN，未调用 Gateway、WebSocket、发送、下载或 mutation。
+
+## Audited W6.a6.20.127
+
+- 从当前会话列表取得 4 个真实 conversationID，逐一直接进入现有媒体与文件索引 route；8 个 production route 均返回“暂无图片与视频”或“暂无文件”。
+- 扫描前后两个未读会话仍各显示 2 条未读，证明索引搜索直达没有打开聊天页或触发 mark-read；不把未读会话的不可见内容猜测为媒体样本。
+- 审计在 412×786 light 下完成，viewport/scrollWidth 为 412/412，warning/error 为零；没有创建第二标签或 SQLite writer。
+- 本片不修改 runtime、SDK 或 RN，不注入 fixture、不上传/发送/下载、不调用 Gateway mutation；当前非空媒体/文件和预览活动帧继续保持 `blocked-natural-data`。
+
+## Completed W6.a6.20.128
+
+- 对齐 RN `CHAT_DETAIL_HIGHLIGHT_MS=1600`，将文本搜索结果定位后的消息行高亮从 Web Animations API 改为受控 class/timer；当前轻量浏览器缺少 `HTMLElement.animate` 时仍可见。
+- 真实缓存搜索 `123` 继续使用稳定 client message ID 恢复同账号消息窗口；目标行显示 `--im-bg-pressed` 背景和 14px 圆角，1600ms 后移除展示态。
+- 高亮 CSS 从既有超长 `chat-page.css` 拆入独立 `chat-message-focus.css`；不新增搜索、缓存、Gateway、WebSocket 或消息状态 owner。
+- focused 2 files/5 tests、H5 full 140 files/446 tests、Web typecheck、466 assets和 1189-module production build通过；SDK source 与 RN protected source 未改。
+- 本片未运行 RN/Desktop/build:all 或 `build:package:desktop:web`；文本搜索仅剩 Safari/Firefox 与实体设备验收门。
+
+## Audited W6.a6.20.129
+
+- 重新对照 RN `ChatMessageBody` 与 H5 production `getChatMessageView`，确认 text/mention、image、audio、video、file、card、quote、custom emoji、call 与 system notice 均有对应 owner。
+- 为 type106 mention、type108 用户/群名片和 type109 位置 fail-closed 补 production parser 护栏；测试不引入测试专用 runtime 分支。
+- type109 在 RN 聊天气泡没有专用位置组件，仅会进入通用 fallback；H5 保持 `[暂不支持的消息 · 109]`，不得擅自增加地图、定位权限或点击行为。
+- focused 1 file/14、H5 full 140 files/449 tests、Web typecheck 与 466 assets 通过；本片仅测试/文档，沿用 `.128` 的 1189-module production build 基线。
+- H5 production、SDK source/generated 与 `im28-phone` protected source 零改动；未执行任何 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web`。
+
+## Accepted W6.a6.20.130
+
+- 使用用户授权的两个真实测试账号、两个 tab-scoped session 和两个账号 SQLite owner，发送唯一文本 `H5-WS-1786686250693`。
+- sender production composer 出现发送气泡；receiver 保持会话列表、不刷新/不导航即出现同 marker、`聊天(1)` 与 1 条未读，证明实时 delivery/list-back。
+- shared runtime 只有在 `createIMRealtimeMessageSync` 完成 `MessageRepository/ConversationRepository` upsert 后才发布 `dataVersion`；H5 列表响应版本只调用 `listCachedItems`，聊天响应版本只调用 `getCachedHistory`，因此接收端 UI 证据闭合 SQLite convergence。
+- receiver 新进入聊天后显示同 marker，返回列表后 preview 保留且 unread 清零；两端 warning/error 为 0。
+- SDK realtime focused 2 files/6、H5 conversation/chat focused 2 files/15、route HTTP 200；production code、SDK generated、RN protected source 与 package scripts 零改动。
+- 未隔离网络或重启浏览器，offline/restart cache-hit 仍是独立 gate；不把本片 realtime 入库证据扩大为离线验收。

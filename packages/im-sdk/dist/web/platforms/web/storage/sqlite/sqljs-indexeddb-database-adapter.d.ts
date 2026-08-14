@@ -5,6 +5,7 @@ export interface SqlJsIndexedDBDatabaseAdapterOptions {
     readonly databaseName: string;
     readonly binaryStore: SQLiteBinaryStore;
     readonly locateWasmFile: (fileName: string) => string;
+    readonly mode?: 'readwrite' | 'readonly-existing';
 }
 /** 标识 SQLite 内存状态已领先 durable snapshot 的致命持久化失败。 */
 export declare class SqlJsPersistenceError extends Error {

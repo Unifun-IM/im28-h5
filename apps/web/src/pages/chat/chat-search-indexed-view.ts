@@ -31,6 +31,12 @@ export interface ChatSearchTimeRange {
   readonly afterSendTime: number;
   readonly beforeSendTime: number;
 }
+/** 索引搜索路由只保存可刷新 presentation 状态。 */
+export interface ChatSearchIndexedRouteState {
+  readonly page: 'date' | 'media' | 'file';
+  readonly monthCount: number;
+  readonly mediaFilter: ChatSearchMediaFilter;
+}
 
 /** 图片消息的共享 content type。 */
 export const CHAT_SEARCH_IMAGE_TYPE = 102;
@@ -38,6 +44,35 @@ export const CHAT_SEARCH_IMAGE_TYPE = 102;
 export const CHAT_SEARCH_VIDEO_TYPE = 104;
 /** 文件消息的共享 content type。 */
 export const CHAT_SEARCH_FILE_TYPE = 105;
+/** 路由最多恢复十年月份，拒绝恶意 query 制造超大日历。 */
+const CHAT_SEARCH_MAX_ROUTE_MONTHS = 120;
+
+/** 从 React Router query 收敛索引页、月份数和媒体筛选。 */
+export function readChatSearchIndexedRouteState(
+  searchParams: URLSearchParams,
+  defaultMonthCount: number,
+): ChatSearchIndexedRouteState | null {
+  /** page 只接受三个已实现的 RN 索引页。 */
+  const page = searchParams.get('view');
+  if (page !== 'date' && page !== 'media' && page !== 'file') return null;
+  /** parsedMonthCount 只允许有界正整数。 */
+  const parsedMonthCount = Number(searchParams.get('months'));
+  /** fallbackMonthCount 保证调用方默认值至少为一。 */
+  const fallbackMonthCount = Math.max(1, Math.trunc(defaultMonthCount));
+  /** monthCount 防止刷新 URL 扩张为无限日历。 */
+  const monthCount = Number.isSafeInteger(parsedMonthCount)
+    && parsedMonthCount >= 1
+    && parsedMonthCount <= CHAT_SEARCH_MAX_ROUTE_MONTHS
+    ? parsedMonthCount
+    : fallbackMonthCount;
+  /** rawFilter 对未知筛选回退全部。 */
+  const rawFilter = searchParams.get('filter');
+  /** mediaFilter 只接受 RN 全部、图片、视频三态。 */
+  const mediaFilter: ChatSearchMediaFilter = rawFilter === 'image' || rawFilter === 'video'
+    ? rawFilter
+    : 'all';
+  return { page, monthCount, mediaFilter };
+}
 
 /** 按发送时间倒序复制消息，避免修改 SDK 只读结果。 */
 export function sortChatSearchMessages(messages: readonly Message[]): readonly Message[] {

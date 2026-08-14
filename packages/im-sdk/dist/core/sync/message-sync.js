@@ -13,6 +13,10 @@ import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.j
 import { createWebIMSyncMutationQueue, } from './sync-mutation-queue.js';
 import { pullWebIMMessageHistory, pullWebIMMessageHistoryPage, } from './message-history-pull.js';
 import { createIMMessageSearchSync, } from './message-search.js';
+/** 从指定账号数据库读取 cache-only 历史窗口，不触发 Gateway 或写入。 */
+export function getWebIMCachedMessageHistory(database, options) {
+    return new MessageRepository(database).getHistory(options);
+}
 /** 创建认证账号绑定的浏览器消息同步服务。 */
 export function createWebIMMessageSync(dependencies) {
     return new WebIMMessageSyncImpl(dependencies);
@@ -42,9 +46,7 @@ class WebIMMessageSyncImpl {
     async getCachedHistory(options) {
         // context 阻止匿名页面读取其他账号 cache。
         const context = requireWebIMSyncContext(this.dependencies, 'Message sync');
-        // repository 每次绑定当前 account database。
-        const repository = new MessageRepository(context.database);
-        return repository.getHistory(options);
+        return getWebIMCachedMessageHistory(context.database, options);
     }
     /** 在当前账号 SQLite 中按会话、关键词和消息类型搜索缓存。 */
     async searchCached(options) {

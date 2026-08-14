@@ -139,6 +139,14 @@
   color: var(--im-icon-muted);
 }
 
+.rn-group-management-link.is-disabled {
+  cursor: default;
+}
+
+.rn-group-management-link.is-disabled .rn-asset-icon {
+  opacity: 0.45;
+}
+
 .rn-group-management-confirm button {
   border: 0;
   color: var(--im-brand-primary);

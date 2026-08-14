@@ -6,6 +6,12 @@ type ChatMessageFocusSync = Pick<
   'getCachedByClientMsgIDs' | 'getCachedHistory'
 >;
 
+/** 与 RN 目标消息高亮持续时间保持一致。 */
+export const CHAT_MESSAGE_FOCUS_HIGHLIGHT_MS = 1600;
+
+/** 每行只保留一个高亮清理计时器，重复定位时重新计时。 */
+const chatMessageFocusTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
+
 /** 从当前账号 SQLite 恢复目标消息所在的 newest-first 窗口。 */
 export async function readFocusedChatMessageWindow(
   sync: ChatMessageFocusSync,
@@ -42,14 +48,16 @@ export function focusChatMessageRow(
   );
   if (!target) return false;
   target.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  target.animate(
-    [
-      { backgroundColor: 'transparent' },
-      { backgroundColor: 'var(--im-bg-pressed)' },
-      { backgroundColor: 'transparent' },
-    ],
-    { duration: 900 },
-  );
+  /** previousTimer 防止重复定位被旧计时器提前移除。 */
+  const previousTimer = chatMessageFocusTimers.get(target);
+  if (previousTimer !== undefined) clearTimeout(previousTimer);
+  target.classList.add('is-focus-highlighted');
+  /** timer 在 RN 1600ms 窗口结束后移除纯展示状态。 */
+  const timer = setTimeout(() => {
+    target.classList.remove('is-focus-highlighted');
+    chatMessageFocusTimers.delete(target);
+  }, CHAT_MESSAGE_FOCUS_HIGHLIGHT_MS);
+  chatMessageFocusTimers.set(target, timer);
   return true;
 }
 

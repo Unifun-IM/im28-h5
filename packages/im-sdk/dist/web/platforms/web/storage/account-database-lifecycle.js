@@ -21,6 +21,8 @@ class WebIMAccountDatabaseLifecycleImpl {
     currentDatabase = null;
     // 当前 userID 使用 trim 后的稳定值比较。
     currentUserID = null;
+    // 当前模式决定重复 open 是否可复用以及 close 是否允许回写。
+    currentMode = null;
     // 当前 lease 从 Worker snapshot read 前持有到 close 完成后。
     currentLease = null;
     /** 初始化共享 IndexedDB binary store。 */
@@ -36,7 +38,11 @@ class WebIMAccountDatabaseLifecycleImpl {
     }
     /** 打开并迁移指定账号数据库，切换账号前先关闭旧库。 */
     open(userID) {
-        return this.enqueue(() => this.openDirect(userID));
+        return this.enqueue(() => this.openDirect(userID, 'readwrite'));
+    }
+    /** 只打开已有账号快照，不迁移、不创建、不持久化。 */
+    openExistingReadOnly(userID) {
+        return this.enqueue(() => this.openDirect(userID, 'readonly-existing'));
     }
     /** 持久化并关闭当前账号数据库。 */
     close() {
@@ -54,10 +60,12 @@ class WebIMAccountDatabaseLifecycleImpl {
         return result;
     }
     /** 执行单次账号打开、迁移和公开。 */
-    async openDirect(userID) {
+    async openDirect(userID, mode) {
         // 账号比较使用 trim 结果，命名函数继续负责校验和编码。
         const normalizedUserID = userID.trim();
-        if (this.currentDatabase && this.currentUserID === normalizedUserID) {
+        if (this.currentDatabase &&
+            this.currentUserID === normalizedUserID &&
+            this.currentMode === mode) {
             return;
         }
         await this.closeDirect();
@@ -69,14 +77,20 @@ class WebIMAccountDatabaseLifecycleImpl {
         let database = null;
         try {
             // 每次账号打开创建独立 adapter，避免跨账号 Repository 复用。
-            database = this.createDatabaseAdapter(databaseName);
-            await runMigrations(database);
+            database = this.createDatabaseAdapter(databaseName, mode);
+            if (mode === 'readwrite') {
+                await runMigrations(database);
+            }
+            else {
+                await database.open();
+            }
         }
         catch (cause) {
             await cleanupFailedDatabaseOpen(database, lease, cause);
         }
         this.currentDatabase = database;
         this.currentUserID = normalizedUserID;
+        this.currentMode = mode;
         this.currentLease = lease;
     }
     /** Worker 模式取得独占 lease；caller-thread 测试兼容路径不声明跨 tab 安全。 */
@@ -90,7 +104,7 @@ class WebIMAccountDatabaseLifecycleImpl {
         return this.options.accountDatabaseLeaseManager.acquire(databaseName);
     }
     /** 按显式配置创建 Worker 或 caller-thread adapter，不做运行时自动降级。 */
-    createDatabaseAdapter(databaseName) {
+    createDatabaseAdapter(databaseName, mode) {
         if (this.options.createDatabaseWorker) {
             if (!this.options.wasmURL) {
                 throw new Error('Worker database execution requires a sql.js WASM URL.');
@@ -102,12 +116,14 @@ class WebIMAccountDatabaseLifecycleImpl {
                 ...(this.options.storageDatabaseName
                     ? { storageDatabaseName: this.options.storageDatabaseName }
                     : {}),
+                mode,
             });
         }
         return createSqlJsIndexedDBDatabaseAdapter({
             databaseName,
             binaryStore: this.binaryStore,
             locateWasmFile: this.locateWasmFile,
+            mode,
         });
     }
     /** 执行当前 adapter 的持久化关闭。 */
@@ -122,6 +138,7 @@ class WebIMAccountDatabaseLifecycleImpl {
         await this.currentLease?.release();
         this.currentDatabase = null;
         this.currentUserID = null;
+        this.currentMode = null;
         this.currentLease = null;
     }
 }

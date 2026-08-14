@@ -6,6 +6,7 @@ import {
   getChatSearchCalendarRange,
   getChatSearchFileExtension,
   groupChatSearchMessagesByMonth,
+  readChatSearchIndexedRouteState,
 } from './chat-search-indexed-view.js';
 
 /** 构造只包含分类视图所需字段的缓存消息。 */
@@ -58,5 +59,29 @@ describe('chat indexed search view', () => {
   it('formats a bounded file extension label', () => {
     expect(getChatSearchFileExtension('report.pdf')).toBe('PDF');
     expect(getChatSearchFileExtension('README')).toBe('FILE');
+  });
+
+  it('restores bounded date and media route state', () => {
+    /** dateParams 模拟加载更多月份后的可刷新日期地址。 */
+    const dateParams = new URLSearchParams('view=date&months=5');
+    expect(readChatSearchIndexedRouteState(dateParams, 3)).toEqual({
+      page: 'date', monthCount: 5, mediaFilter: 'all',
+    });
+    /** mediaParams 保留视频筛选但忽略无关月份。 */
+    const mediaParams = new URLSearchParams('view=media&filter=video&months=9999');
+    expect(readChatSearchIndexedRouteState(mediaParams, 3)).toEqual({
+      page: 'media', monthCount: 3, mediaFilter: 'video',
+    });
+  });
+
+  it('rejects unknown indexed routes and unsafe query values', () => {
+    /** unknownParams 不得凭 query 创建未实现页面。 */
+    const unknownParams = new URLSearchParams('view=voice');
+    expect(readChatSearchIndexedRouteState(unknownParams, 3)).toBeNull();
+    /** unsafeParams 对负月份和未知筛选使用安全默认值。 */
+    const unsafeParams = new URLSearchParams('view=file&months=-2&filter=gif');
+    expect(readChatSearchIndexedRouteState(unsafeParams, 3)).toEqual({
+      page: 'file', monthCount: 3, mediaFilter: 'all',
+    });
   });
 });

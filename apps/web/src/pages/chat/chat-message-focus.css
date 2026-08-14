@@ -1,0 +1,5 @@
+.rn-chat-message-row.is-focus-highlighted {
+  background: var(--im-bg-pressed);
+  border-radius: 14px;
+  transition: background-color 180ms ease-out;
+}

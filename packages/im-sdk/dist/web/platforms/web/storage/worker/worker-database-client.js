@@ -48,6 +48,7 @@ class WorkerDatabaseAdapter {
     /** 执行写语句并等待 Worker snapshot durable。 */
     execute(statement) {
         return this.runSerialized(async () => {
+            this.assertWritable();
             await this.openDirect();
             return this.sendRequest('execute', { statement });
         });
@@ -62,6 +63,7 @@ class WorkerDatabaseAdapter {
     /** 独占 FIFO 执行 transaction callback，子 RPC 不重新入队。 */
     transaction(run) {
         return this.runSerialized(async () => {
+            this.assertWritable();
             await this.openDirect();
             // Worker 返回的 transactionID 约束所有 transaction 子操作。
             const transactionID = await this.sendRequest('transaction.begin', null);
@@ -123,8 +125,15 @@ class WorkerDatabaseAdapter {
             ...(this.options.storageDatabaseName
                 ? { storageDatabaseName: this.options.storageDatabaseName }
                 : {}),
+            ...(this.options.mode ? { mode: this.options.mode } : {}),
         });
         this.state = 'ready';
+    }
+    /** 只读 Worker client 不发送任何写入或 transaction RPC。 */
+    assertWritable() {
+        if (this.options.mode === 'readonly-existing') {
+            throw new WorkerDatabaseError('WORKER_DATABASE_READ_ONLY', 'Worker database snapshot is read-only.', false);
+        }
     }
     /** 发送具名 RPC 并安装 timeout watchdog。 */
     sendRequest(operation, payload) {

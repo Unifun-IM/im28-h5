@@ -12,6 +12,7 @@ export interface WorkerDatabaseAdapterOptions {
     readonly createWorker: () => WorkerDatabasePort;
     readonly storageDatabaseName?: string;
     readonly requestTimeoutMs?: number;
+    readonly mode?: 'readwrite' | 'readonly-existing';
 }
 /** Worker 数据库 RPC 的结构化错误。 */
 export declare class WorkerDatabaseError extends Error {

@@ -17,7 +17,10 @@ export function createIndexedDBSQLiteBinaryStore(options) {
         /** 读取并复制快照，避免调用方修改 IndexedDB 返回的缓冲区。 */
         async read(databaseName) {
             // 每次操作短开连接，避免测试、热更新和页面卸载残留连接。
-            const database = await openIndexedDB(options.indexedDB, storageDatabaseName);
+            const database = await openExistingIndexedDB(options.indexedDB, storageDatabaseName);
+            if (!database) {
+                return null;
+            }
             try {
                 // 只读事务用于加载指定账号的 SQLite 快照。
                 const transaction = database.transaction(SQLITE_DATABASE_STORE, 'readonly');
@@ -90,6 +93,41 @@ export function createIndexedDBSQLiteBinaryStore(options) {
             }
         },
     };
+}
+/** 只打开已存在的 IndexedDB 容器，首次读取不得创建空存储。 */
+function openExistingIndexedDB(indexedDB, databaseName) {
+    return new Promise((resolve, reject) => {
+        // creationPrevented 区分主动中止首次建库与真实 open error。
+        let creationPrevented = false;
+        // request 不传更高版本，已有容器按当前版本打开。
+        const request = indexedDB.open(databaseName);
+        request.onupgradeneeded = () => {
+            creationPrevented = true;
+            request.transaction?.abort();
+        };
+        request.onsuccess = () => {
+            // 理论上主动 abort 后不会 success；防御性关闭迟到连接。
+            if (creationPrevented) {
+                request.result.close();
+                resolve(null);
+                return;
+            }
+            if (!request.result.objectStoreNames.contains(SQLITE_DATABASE_STORE)) {
+                request.result.close();
+                reject(new Error('IndexedDB SQLite snapshot store is unavailable.'));
+                return;
+            }
+            resolve(request.result);
+        };
+        request.onerror = () => {
+            if (creationPrevented) {
+                resolve(null);
+                return;
+            }
+            reject(request.error ?? new Error('IndexedDB open failed.'));
+        };
+        request.onblocked = () => reject(new Error('IndexedDB open is blocked by another connection.'));
+    });
 }
 /** 打开 IndexedDB 容器并在首次升级时创建 SQLite 快照 store。 */
 function openIndexedDB(indexedDB, databaseName) {

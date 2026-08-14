@@ -11,7 +11,10 @@ import { InteractionModal } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { countPendingGroupApplications } from '../contacts/group-application-view.js';
+import { createGroupApplicationManagementRouteState } from '../contacts/group-application-route.js';
 import { ChatAutoDeleteSettingsRow } from './ChatAutoDeleteSettingsRow.js';
+import { buildGroupManagementRoleView } from './group-management-role-view.js';
 import './group-management-page.css';
 
 /** 群设置开关动作只保存 shared patch 字段与下一布尔值。 */
@@ -32,6 +35,8 @@ export function GroupManagementPage() {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   /** group 保存 shared capability 和群主身份。 */
   const [group, setGroup] = useState<WebIMJoinedGroup | null>(null);
+  /** applicationCount 保存当前群的待审核数量。 */
+  const [applicationCount, setApplicationCount] = useState(0);
   /** loading 覆盖首次 cache 与权威刷新。 */
   const [loading, setLoading] = useState(true);
   /** submitting 阻止设置 mutation 重复提交。 */
@@ -48,6 +53,7 @@ export function GroupManagementPage() {
     if (!sync || !snapshot.userID || !conversationID) return;
     setLoading(true);
     setError(null);
+    setApplicationCount(0);
     try {
       /** conversations 先读 cache，缺失时才执行 canonical 同步。 */
       let conversations = await sync.conversations.listCached({ limit: 500 });
@@ -68,7 +74,14 @@ export function GroupManagementPage() {
       setGroup(cachedGroups.find(item => item.groupID === groupID) ?? null);
       /** refreshedGroups 刷新 capability 和群设置，不在首页拉取成员。 */
       const refreshedGroups = await sync.groups.sync({ pageSize: 100 });
-      setGroup(refreshedGroups.find(item => item.groupID === groupID) ?? null);
+      /** refreshedGroup 决定是否有权读取审核队列。 */
+      const refreshedGroup = refreshedGroups.find(item => item.groupID === groupID) ?? null;
+      setGroup(refreshedGroup);
+      if (refreshedGroup?.permissions.canAuditApplications) {
+        /** applications 复用 shared facade 的完整审核列表。 */
+        const applications = await sync.groupApplications.list({ pageSize: 100 });
+        setApplicationCount(countPendingGroupApplications(applications, groupID));
+      }
     } catch (cause) {
       setError(readGroupManagementError(cause));
     } finally {
@@ -88,6 +101,14 @@ export function GroupManagementPage() {
   const adminsURL = `${settingsURL}/manage/admins`;
   /** ownerTransferURL 指向群主转让唯一 SPA 子路由。 */
   const ownerTransferURL = `${settingsURL}/manage/owner-transfer`;
+  /** applicationsURL 指向既有单群审核页。 */
+  const applicationsURL = conversation?.targetID
+    ? `/contacts/group-applications/${encodeURIComponent(conversation.targetID)}`
+    : '/contacts/verifications/group';
+  /** applicationsRouteState 只声明群管理来源和当前会话。 */
+  const applicationsRouteState = createGroupApplicationManagementRouteState(conversationID);
+  /** roleView 仅把 shared capability 投影为 RN 同款可见/禁用状态。 */
+  const roleView = group ? buildGroupManagementRoleView(group.permissions) : null;
 
   /** 设置确认后只提交一个显式 shared patch，并从 SQLite 恢复页面 DTO。 */
   async function confirmSettingAction(): Promise<void> {
@@ -140,17 +161,19 @@ export function GroupManagementPage() {
           {error ? <p className="rn-group-management-error" role="alert">{error}</p> : null}
           {notice ? <p className="rn-group-management-notice" role="status">{notice}</p> : null}
           {loading ? <p className="rn-group-management-empty">正在加载群管理</p> : null}
-          {!loading && group?.permissions.canManageAdmins ? (
+          {!loading && group && roleView ? (
             <section className="rn-group-management-card">
-              <ManagementSwitch label="入群验证" checked={group.joinApprovalRequired === true} disabled={submitting} onChange={() => setSettingAction({ type: 'join-approval', nextValue: group.joinApprovalRequired !== true })} />
-              <ManagementSwitch label="邀请好友" checked={group.allowMemberInvite === true} disabled={submitting} onChange={() => setSettingAction({ type: 'member-invite', nextValue: group.allowMemberInvite !== true })} />
-              <ManagementSwitch label="群内可互加好友" checked={group.allowMemberAddFriend === true} disabled={submitting} divided={false} onChange={() => setSettingAction({ type: 'member-add-friend', nextValue: group.allowMemberAddFriend !== true })} />
+              <ManagementSwitch label="入群验证" checked={group.joinApprovalRequired === true} disabled={roleView.switchesDisabled || submitting} onChange={() => setSettingAction({ type: 'join-approval', nextValue: group.joinApprovalRequired !== true })} />
+              <ManagementSwitch label="邀请好友" checked={group.allowMemberInvite === true} disabled={roleView.switchesDisabled || submitting} onChange={() => setSettingAction({ type: 'member-invite', nextValue: group.allowMemberInvite !== true })} />
+              <ManagementSwitch label="群内可互加好友" checked={group.allowMemberAddFriend === true} disabled={roleView.switchesDisabled || submitting} divided={false} onChange={() => setSettingAction({ type: 'member-add-friend', nextValue: group.allowMemberAddFriend !== true })} />
             </section>
           ) : null}
-          {!loading && (group?.permissions.canMuteAll || group?.permissions.canMuteMembers || group?.permissions.canManageAdmins) ? (
+          {!loading && group && roleView ? (
             <section className="rn-group-management-card">
               {group.permissions.canMuteAll || group.permissions.canMuteMembers ? <ManagementLink label="群禁言" value={group.muteAll ? '全员禁言' : group.muteMember ? '普通成员禁言' : '关闭'} to={muteURL} /> : null}
-              {group.permissions.canManageAdmins ? <ManagementLink label="发言频率" value={formatSpeechFrequency(group.speechFrequencyEnabled === true, group.speechFrequencySeconds)} to={speechURL} divided={false} /> : null}
+              {roleView.speechFrequencyDisabled
+                ? <ManagementDisabledRow label="发言频率" value={formatSpeechFrequency(group.speechFrequencyEnabled === true, group.speechFrequencySeconds)} divided={false} />
+                : <ManagementLink label="发言频率" value={formatSpeechFrequency(group.speechFrequencyEnabled === true, group.speechFrequencySeconds)} to={speechURL} divided={false} />}
             </section>
           ) : null}
           {!loading && group?.permissions.canManageAdmins && conversation ? (
@@ -160,17 +183,23 @@ export function GroupManagementPage() {
               autoDeleteSeconds={conversation.autoDeleteSeconds}
             />
           ) : null}
-          {!loading && group?.permissions.canManageAdmins ? (
+          {!loading && group ? (
             <section className="rn-group-management-card">
-              <ManagementLink label="管理员设置" value="" to={adminsURL} divided={false} />
+              {group.permissions.canAuditApplications
+                ? <ManagementLink label="入群申请" value={applicationCount > 0 ? String(applicationCount) : ''} to={applicationsURL} state={applicationsRouteState} />
+                : <ManagementDisabledRow label="入群申请" value="无权限" />}
+              {group.permissions.canManageAdmins
+                ? <ManagementLink label="管理员设置" value="" to={adminsURL} divided={false} />
+                : <ManagementDisabledRow label="管理员设置" value="仅群主" divided={false} />}
             </section>
           ) : null}
-          {!loading && group?.permissions.canTransferOwner ? (
+          {!loading && group && roleView ? (
             <section className="rn-group-management-card">
-              <ManagementLink label="转让群主" value="" to={ownerTransferURL} divided={false} />
+              {roleView.ownerTransferDisabled
+                ? <ManagementDisabledRow label="群主转让" value="仅群主" divided={false} />
+                : <ManagementLink label="群主转让" value="" to={ownerTransferURL} divided={false} />}
             </section>
           ) : null}
-          {!loading && !error && !group?.permissions.canManageAdmins && !group?.permissions.canTransferOwner ? <p className="rn-group-management-empty">当前账号暂无可管理项目</p> : null}
         </div>
       </section>
       <InteractionModal open={Boolean(settingAction)} ariaLabel="确认群设置" onRequestClose={() => { if (!submitting) setSettingAction(null); }}>
@@ -190,8 +219,13 @@ function ManagementSwitch({ label, checked, disabled, divided = true, onChange }
 }
 
 /** 群管理详情行使用 React Router Link 保持 SPA 导航。 */
-function ManagementLink({ label, value, to, divided = true }: { readonly label: string; readonly value: string; readonly to: string; readonly divided?: boolean }) {
-  return <Link className={`rn-group-management-link${divided ? ' is-divided' : ''}`} to={to}><span>{label}</span><span><small>{value}</small><RNAssetIcon assetURL={arrowIconURL} /></span></Link>;
+function ManagementLink({ label, value, to, state, divided = true }: { readonly label: string; readonly value: string; readonly to: string; readonly state?: unknown; readonly divided?: boolean }) {
+  return <Link className={`rn-group-management-link${divided ? ' is-divided' : ''}`} to={to} state={state}><span>{label}</span><span><small>{value}</small><RNAssetIcon assetURL={arrowIconURL} /></span></Link>;
+}
+
+/** 无权限管理行保留 RN 信息层级且不产生无效导航。 */
+function ManagementDisabledRow({ label, value, divided = true }: { readonly label: string; readonly value: string; readonly divided?: boolean }) {
+  return <div className={`rn-group-management-link is-disabled${divided ? ' is-divided' : ''}`} aria-disabled="true"><span>{label}</span><span><small>{value}</small><RNAssetIcon assetURL={arrowIconURL} /></span></div>;
 }
 
 /** 将 RN 发言频率档位投影为管理页副标题。 */

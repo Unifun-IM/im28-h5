@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import copyIconURL from '../../assets/rn/assets/icons/imm28/copy.dynamic.svg';
@@ -13,6 +13,7 @@ import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-ava
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { buildGroupProfileView, copyGroupProfileID } from './group-profile-view.js';
 import { loadGroupProfileSource, type GroupProfileSource } from './group-profile-source.js';
+import { resolveGroupProfileBackHref } from './group-profile-route-state.js';
 import './group-profile-page.css';
 
 /** RN 群资料页的 Web 垂直切片，开放 shared 群昵称与头像更新。 */
@@ -21,7 +22,9 @@ export function GroupProfilePage() {
   const { conversationID = '' } = useParams();
   // searchParams 支持群列表长按直接进入原有群名称编辑层。
   const [searchParams] = useSearchParams();
-  // navigate 负责返回群设置，不依赖 location state。
+  // location 只提供白名单聊天来源的返回上下文。
+  const location = useLocation();
+  // navigate 负责返回受控聊天来源或默认群设置。
   const navigate = useNavigate();
   // runtime 是会话、群资料和群昵称 mutation 的唯一应用入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
@@ -193,8 +196,8 @@ export function GroupProfilePage() {
   if (!snapshot.userID) return <Navigate to="/login" replace />;
   // view 只从已验证 source 生成，不使用路由参数拼主体。
   const view = source ? buildGroupProfileView(source.conversation, source.group) : null;
-  // backURL 是当前群设置稳定返回目标。
-  const backURL = `/conversations/${encodeURIComponent(conversationID)}/settings`;
+  // backURL 仅允许当前聊天来源覆盖默认群设置目标。
+  const backURL = resolveGroupProfileBackHref(location.state, conversationID);
   // qrCodeURL 保持群二维码属于群资料子路由。
   const qrCodeURL = `/conversations/${encodeURIComponent(conversationID)}/settings/qrcode`;
   // avatarStyle 使用群 ID 生成 RN 稳定 fallback 渐变。
@@ -203,7 +206,7 @@ export function GroupProfilePage() {
   return (
     <main className="rn-group-profile-page" aria-busy={loading || saving || uploadingAvatar}>
       <section className="rn-group-profile-surface">
-        <PageNavbar className="rn-group-profile-header"><button type="button" aria-label="返回群设置" onClick={() => navigate(backURL)}><RNAssetIcon assetURL={backIconURL} /></button><h1>群资料</h1><span /></PageNavbar>
+        <PageNavbar className="rn-group-profile-header"><button type="button" aria-label="返回" onClick={() => navigate(backURL)}><RNAssetIcon assetURL={backIconURL} /></button><h1>群资料</h1><span /></PageNavbar>
         <div className="rn-group-profile-content">
           {error ? <p className="rn-group-profile-error" role="alert">{error}</p> : null}
           {notice ? <p className="rn-group-profile-notice" role="status">{notice}</p> : null}

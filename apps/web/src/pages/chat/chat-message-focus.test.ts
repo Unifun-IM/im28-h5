@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   buildChatMessageFocusURL,
+  CHAT_MESSAGE_FOCUS_HIGHLIGHT_MS,
+  focusChatMessageRow,
   readFocusedChatMessageWindow,
 } from './chat-message-focus.js';
 
@@ -68,5 +70,31 @@ describe('chat message focus', () => {
       'conversation-1',
       'target-message',
     )).rejects.toThrow('搜索结果已不在当前聊天记录中');
+  });
+
+  it('在没有 Web Animations API 时仍按 RN 时长高亮目标行', () => {
+    vi.useFakeTimers();
+    /** classes 模拟目标行的浏览器 classList。 */
+    const classes = new Set<string>();
+    /** target 不提供 animate，锁定轻量浏览器的兼容路径。 */
+    const target = {
+      dataset: { clientMessageId: 'target-message' },
+      scrollIntoView: vi.fn(),
+      classList: {
+        add: (value: string) => classes.add(value),
+        remove: (value: string) => classes.delete(value),
+      },
+    } as unknown as HTMLElement;
+    /** container 只暴露消息行查询能力。 */
+    const container = {
+      querySelectorAll: vi.fn(() => [target]),
+    } as unknown as HTMLElement;
+
+    expect(focusChatMessageRow(container, 'target-message')).toBe(true);
+    expect(classes.has('is-focus-highlighted')).toBe(true);
+    expect(target.scrollIntoView).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' });
+    vi.advanceTimersByTime(CHAT_MESSAGE_FOCUS_HIGHLIGHT_MS);
+    expect(classes.has('is-focus-highlighted')).toBe(false);
+    vi.useRealTimers();
   });
 });
