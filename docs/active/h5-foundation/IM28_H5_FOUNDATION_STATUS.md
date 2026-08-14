@@ -1,8 +1,77 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a6.20.148.1b 已完成 existing-snapshot read-only storage 与 capability-minimal reader；production runtime 尚未接入`
-- next_step: `执行 W6.a6.20.148.1c：restore/reconnect/getSync/getOfflineReader 编排；不接 H5 UI、不运行真实 mutation`
+- current_step: `W6.a6.20.149.3/.149.4 已完成本地实现与验证；.149.5 active`
+- next_step: `将真实操作 success/error 迁移到唯一 Toast owner，保留加载、权限和可重试结构状态`
+
+## W6.a6.20.149.3/.149.4 Card Settings Recorder And RTC (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| card action | `pass-local` | type108 显式保存 user/group 与 targetID；用户名片进入资料；群名片 cache-first 判断已加入后进入群资料，否则进入申请页 | authenticated card pixel |
+| settings/reset | `pass-local` | 单聊文字头像链接去下划线；input/textarea/select focus 去浏览器默认轮廓且按钮/链接保留键盘焦点；定时删除确认按钮不再被统一 Navbar 撑至 56px | mobile keyboard/device pixel |
+| recorder | `pass-local` | 只在真实 recording 状态运行分段音量条动效；上滑取消立即停动效并切危险态；reduced-motion 保持静态 | physical touch + microphone sample |
+| RTC chain | `pass-local/external-gated` | 复核 `CallTypeActionSheet -> WebIMCallProvider -> SDK calls -> LiveKit media port -> /calls/active`；呼入/呼出/终态/凭据隔离均为正式 owner，无 fake call | 双账号 Gateway credential、权限、接通、重连和挂断 |
+| feedback | `pass-local` | 定时删除提交 success/error 使用全局 Toast；加载失败仍保留页面可重试状态 | repo-wide consumers 在 `.149.5` |
+| verification | `pass` | card 2 files/15 tests；recorder/auto-delete/call 5 files/17 tests；Web typecheck；1197-module production build | existing >500kB chunk warning |
+| protection | `pass` | 仅 H5；SDK/RN 未改；未运行 RN/Desktop/all 或禁改脚本 | none |
+
+Closeout verdict: `.149.3 clean/local-complete/browser-session-gated; .149.4 clean/local-complete/external-rtc-gated`。正式 RTC 代码链已存在且通过构建，但不把缺少部署侧双账号媒体证据写成端到端完成。
+
+## W6.a6.20.149.2 Single-Friend Share And QR Modal (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| target contract | `pass-local` | 好友名片、群名片、个人二维码、群二维码均 `single + friend-only`；无 ALL/群聊 Tab；确认再次校验 `kind=friend` | authenticated picker pixel |
+| shared mutation | `pass-unchanged` | 继续消费 `messageBroadcast.sendCard/sendImage`；每次仅提交一个 friend target；无页面 send DTO/state machine 分叉 | 真实发送需 mutation 授权 |
+| QR owner | `pass-local` | 个人/群二维码继续共用 `QRCodeDisplay` Canvas/export；展示改为唯一 `InteractionModal`，light/dark token 共享 | authenticated mobile/dark pixel |
+| verification | `pass` | focused 3 files/9 tests；Web typecheck；1197-module production build | existing >500kB chunk warning |
+| browser | `blocked-session` | 与 `.149.1` 相同的 5176 multi-tab SQLite lease；未关闭用户 tab | lease 释放后补视觉 |
+| protection | `pass` | 仅 H5 picker/QR/cards/docs；SDK/RN 未改；禁跑脚本未执行 | none |
+
+Closeout verdict: `clean/local-complete/browser-session-gated/send-mutation-gated`。选择与 modal 合同已收敛；不声明真实名片/二维码发送成功。
+
+## W6.a6.20.149.1 Chat Multi-Select And Toast Foundation (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN truth | `pass` | frozen `ChatDetailHeader/ChatDetailComposerArea/ToastProvider`：取消+数量在 Navbar；底部仅转发/删除；Toast=1600ms top pill + success/error | physical touch |
+| multi-select layout | `pass-local` | selector 固定消息行左侧；普通/群聊气泡方向不变；Navbar 隐藏普通资料/设置动作 | authenticated pixel proof |
+| bottom actions | `pass-local` | 仅转发、删除两个 24px 图标；零选择同时 disabled；删除/转发原 mutation owner 未改 | delete/forward authorized smoke |
+| Toast owner | `pass-foundation` | App 顶层唯一 `AppToastProvider/useAppToast`；聊天 error 优先、notice success；旧页面横幅 CSS 删除 | 其他页面消费者迁移在 `.149.5` |
+| verification | `pass` | focused 3 files/7 tests；Web typecheck；1197-module production build | existing >500kB chunk warning |
+| browser | `blocked-session` | 5176 真实页面被另一 tab 持有 SQLite lease，claim 后安全回 `/auth/phone` 并提示关闭占用 tab | 用户现有会话释放后补 mobile/dark pixel |
+| protection | `pass` | 仅 H5 UI/docs；SDK、RN business/generated 未改；未运行 RN/Desktop/all | none |
+
+Closeout verdict: `clean/local-complete/browser-session-gated`。多选与 Toast 结构已对齐 RN；不把被多标签 lease 阻断的页面写成浏览器通过。
+
+## W6.a6.20.148.2/.148.3 H5 Offline Shell And Isolated Acceptance (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| route boundary | `pass` | offline states only mount cached conversations/chat routes；CallProvider、PrimaryTabs、search/settings/presence and remote tabs remain unmounted | Safari/Firefox、physical device |
+| readonly UI | `pass` | banner + retry/sign-out；cached list/history readable；composer、message actions、profile/settings and conversation long-press unavailable | media bytes are not an offline claim |
+| strict-mode safety | `pass` | real reload exposed duplicate `restore()` DB-owner race；SDK now coalesces concurrent restore calls and regression proves one read-only open | multi-tab lease contention |
+| isolated cold reload | `browser-pass-real` | isolated `5179 -> 5191` warm-up；proxy-down reload retained 4 conversations and `H5-WS-1786686250693` chat history | long-duration/background eviction |
+| reconnect | `browser-pass-real` | proxy-down retry retained reader with visible network error；restored proxy revoked shell and returned full online conversations/tabs | unstable/flapping network |
+| invalid cleanup | `browser-pass-real` | isolated check `valid:false` + refresh failure revoked reader/session/DB owner and returned `/auth/phone` | production token expiry timing |
+| verification | `pass` | SDK Web 101/425；H5 142/457；466 assets、typecheck、runtime boundary、build:web/sync:web and 1195-module production build | existing >500 kB chunk warning |
+| protection | `pass` | no send/mark-read/draft/profile/group/call/message/conversation mutation；only `build:web/sync:web`；RN business untouched | RN remains frozen |
+
+Closeout verdict: `clean/h5-consumed/browser-cold-reload-reconnect-invalid-cleanup-pass`。能力只声明当前 tab 的已有账号快照在 Gateway transport unavailable 时可只读恢复；不声明离线登录、离线写入/队列、媒体离线副本、跨浏览器或设备完成。
+
+## W6.a6.20.148.1c Runtime Offline Restore And Reconnect Orchestration (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| eligibility | `pass` | only stable Gateway network-unavailable opens existing read-only snapshot；business/HTTP/invalid fail closed | isolated browser proof |
+| capability | `pass` | offline reader runtime-gated；full sync/settings/security/incoming-call unavailable；no recovery/realtime in offline restore | H5 consumer |
+| reconnect | `pass` | single-flight network retry retains reader；valid/refresh upgrades canonical DB/realtime；invalid clears session/DB | online event/UI |
+| concurrency | `pass` | sign-out/new auth increments reconnect generation；stale validation cannot publish success、open readwrite DB or create WS | browser race smoke |
+| verification | `pass` | focused 4 files/17；Web full 101/424；typecheck/boundary/build:web/sync:web；H5 typecheck/build | `.148.2/.148.3` |
+| protection | `pass` | RN protected source/generated diff empty；no RN/Desktop/all or `build:package:desktop:web` command | RN frozen |
+
+Closeout verdict: `clean/runtime-safe/not-h5-consumed`。SDK production runtime 已闭合离线身份与重连安全，但 H5 provider/pages 尚未读取 offline snapshot/reader，不能声明用户可见能力完成。
 
 ## W6.a6.20.148.1b Existing-Snapshot Read-Only Storage And Reader (2026-08-14)
 

@@ -28,6 +28,55 @@
   animation: im-page-enter var(--im-motion-base) var(--im-motion-ease-out) both;
 }
 
+.im-toast-host {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: calc(var(--im-safe-top) + 12px) 16px 0;
+  pointer-events: none;
+}
+
+.im-toast {
+  display: flex;
+  max-width: min(88vw, 480px);
+  min-height: 46px;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--im-text-invert);
+  background: var(--im-bg-toast);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 18px;
+  text-align: center;
+  animation: im-toast-enter var(--im-motion-base) var(--im-motion-ease-out) both;
+}
+
+.im-toast-icon {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  place-items: center;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.im-toast.is-default .im-toast-icon { display: none; }
+.im-toast.is-success .im-toast-icon { color: var(--im-status-success); }
+.im-toast.is-error .im-toast-icon { color: var(--im-status-danger); }
+
 .im-message-enter {
   transform-origin: bottom center;
   animation: im-message-enter var(--im-motion-base) var(--im-motion-ease-out) both;
@@ -85,6 +134,13 @@
   }
 }
 
+@keyframes im-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+
 @keyframes im-modal-enter {
   from { opacity: 0; }
 }
@@ -117,6 +173,7 @@
 
   .im-page-enter,
   .im-message-enter,
+  .im-toast,
   .im-interaction-modal[open],
   .im-interaction-modal[data-closing='true'],
   .im-interaction-modal[open]::backdrop,

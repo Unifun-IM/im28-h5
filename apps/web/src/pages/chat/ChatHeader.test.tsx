@@ -20,6 +20,28 @@ function renderHeader(conversation: Conversation, groupApplicationCount: number)
   );
 }
 
+/** 渲染 RN 多选状态下的聊天头部。 */
+function renderMultiSelectHeader(selectedCount: number): string {
+  /** conversation 提供应在多选状态隐藏的普通头部信息。 */
+  const conversation = {
+    conversationID: 'c1', type: 'single', targetID: 'u1', showName: '好友', unreadCount: 0, updatedAt: 0,
+  } as Conversation;
+  return renderToStaticMarkup(
+    <MemoryRouter>
+      <ChatHeader
+        conversation={conversation}
+        presence={{ text: '在线', dot: 'online' }}
+        groupApplicationCount={0}
+        multiSelecting
+        selectedCount={selectedCount}
+        onCancelMultiSelect={() => undefined}
+        onOpenProfile={() => undefined}
+        onOpenGroupApplications={() => undefined}
+      />
+    </MemoryRouter>,
+  );
+}
+
 // 群聊头部申请角标遵循 RN 的可见与上限规则。
 describe('ChatHeader group applications', () => {
   it('群聊只在非零时展示申请入口并限制为 99+', () => {
@@ -53,5 +75,17 @@ describe('ChatHeader profile action', () => {
     } as Conversation;
     expect(renderHeader(groupConversation, 0)).toContain('aria-label="群资料"');
     expect(renderHeader(singleConversation, 0)).toContain('aria-label="查看对方资料"');
+  });
+});
+
+// 多选头部只保留 RN 的取消和已选择数量，不泄漏普通聊天动作。
+describe('ChatHeader multi select mode', () => {
+  it('shows cancel and selected message count in the navbar', () => {
+    /** markup 是多选头部的静态无副作用投影。 */
+    const markup = renderMultiSelectHeader(3);
+    expect(markup).toContain('aria-label="取消多选"');
+    expect(markup).toContain('已选择3条消息');
+    expect(markup).not.toContain('聊天设置');
+    expect(markup).not.toContain('好友');
   });
 });

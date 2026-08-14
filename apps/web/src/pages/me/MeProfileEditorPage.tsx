@@ -7,6 +7,7 @@ import {
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
+import { useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { MeProfileHeader } from './MeProfileHeader.js';
@@ -34,6 +35,8 @@ interface MeProfileEditorPageProps {
 export function MeProfileEditorPage({ mode }: MeProfileEditorPageProps) {
   // runtime context 是读取和更新资料的唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 承载资料保存动作结果。 */
+  const { toast } = useAppToast();
   // navigate 在成功或未变更时返回总览页。
   const navigate = useNavigate();
   // location 只读取资料页写入的受控返回标记。
@@ -122,12 +125,13 @@ export function MeProfileEditorPage({ mode }: MeProfileEditorPageProps) {
     setError(null);
     try {
       await runtime.getSync().profile.update(updatePatch);
+      toast.success('保存成功');
       returnFromEditor();
     } catch (cause) {
-      setError(readEditorError(cause));
+      toast.error(readEditorError(cause));
       setSaving(false);
     }
-  }, [actionDisabled, isUnchanged, returnFromEditor, runtime, updatePatch]);
+  }, [actionDisabled, isUnchanged, returnFromEditor, runtime, toast, updatePatch]);
 
   /** 将软键盘 Done 和物理 Enter 委托给既有昵称保存链。 */
   const submitNicknameFromKeyboard = useCallback((event: KeyboardEvent<HTMLInputElement>) => {

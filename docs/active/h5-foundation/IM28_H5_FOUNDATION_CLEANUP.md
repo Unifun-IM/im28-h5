@@ -1,5 +1,28 @@
 # IM28 H5 Foundation Cleanup
 
+## W6.a6.20.148.2/.148.3 Closeout
+
+| check | result |
+| :--- | :--- |
+| P0/P1 | `0/0`；offline route tree and reader are production-consumed；no online mutation owner mounts before revalidation |
+| defect removed | duplicate `restore()` under React StrictMode is coalesced in SDK；one session validation/read-only DB open owns the result |
+| anti-fake | real account/cache/proxy isolation used；no fixture、token/storage inspection、fake online、offline send or second SQLite reader/writer |
+| cleanup | temporary `5179/5191` tab、proxy and dev server stopped；shared `5176` and Gateway unchanged |
+| protection | RN source/generated package untouched；no RN/Desktop/all or `build:package:desktop:web` command |
+| residual | Safari/Firefox、physical device、multi-tab lock contention、quota eviction、media offline bytes and all offline writes remain outside claim |
+| verdict | `clean/h5-consumed/browser-cold-reload-reconnect-invalid-cleanup-pass` |
+
+## W6.a6.20.148.1c Closeout
+
+| field | result |
+| :--- | :--- |
+| status | `clean/runtime-safe/not-h5-consumed` |
+| P0/P1 | `0/0`；network-only eligibility、offline capability gate、invalid cleanup and reconnect race are covered |
+| anti-fake | no H5 consumption claim、no full sync/realtime/recovery/mutation/queue while offline |
+| regression | focused 4/17；Web full 101/424；SDK/H5 typecheck/build and boundary/sync:web passed |
+| protection | RN protected diff empty；no RN/Desktop/all or forbidden desktop:web package command |
+| next | `.148.2` H5 offline shell |
+
 ## W6.a6.20.148.1b Closeout
 
 | field | value |

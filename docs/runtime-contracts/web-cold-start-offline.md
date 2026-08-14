@@ -40,6 +40,10 @@ Implementation checkpoint `.148.1a`: browser `TypeError` transport rejection is 
 
 Implementation checkpoint `.148.1b`: lifecycle `openExistingReadOnly` now carries an explicit mode through caller-thread/Worker sql.js adapters, aborts missing IndexedDB creation, skips migrations/export/close persistence and rejects execute/transaction at the adapter boundary. `WebIMOfflineReader` exposes only cached conversation items and message history through the same shared query owners. Runtime restore/reconnect and H5 consumers remain pending `.148.1c/.148.2`.
 
+Implementation checkpoint `.148.1c`: production runtime now owns network-only offline restore、reader revocation、offline facade rejection、single-flight reconnect、invalid cleanup and stale reconnect cancellation. Valid or refreshed sessions upgrade the canonical readwrite/realtime path only after revalidation. H5 consumers remain pending `.148.2`, so no user-visible cold-start claim is made.
+
+Delivery checkpoint `.148.2/.148.3`: H5 now consumes the runtime reader only through a dedicated offline route boundary；cached conversations/history、retry and sign-out are available while online tabs、calls、presence、settings、composer and mutation actions stay unmounted. Independent proxy-down reload、failed retry、valid reconnect and explicit-invalid cleanup passed with a real account. React StrictMode exposed duplicate cold restore, so SDK `restore()` now coalesces concurrent callers before session validation or database open.
+
 ## 4. Lifecycle
 
 | current | event | next | side effect |
@@ -92,4 +96,4 @@ Implementation checkpoint `.148.1b`: lifecycle `openExistingReadOnly` now carrie
 
 - 不支持离线登录、跨 tab/device session、离线发送队列、离线 mark-read、媒体离线副本或后台无限保活。
 - 不以 `navigator.onLine`、历史截图、fixture、mock token 或跳过 `check-token` 证明安全恢复。
-- 合同冻结不等于实现完成；在 SDK reader、storage read-only port 和 H5 shell 全部接入前状态保持 `contract-frozen/implementation-pending`。
+- H5 delivery is accepted only for the same-tab existing snapshot and Chromium evidence；cross-browser/device、offline writes/queue and media offline bytes remain explicit non-claims。

@@ -27,6 +27,7 @@ interface ChatMessageListProps {
   readonly isGroup: boolean;
   readonly currentUserID: string;
   readonly groupMembers: readonly WebIMGroupMember[];
+  readonly readOnly?: boolean;
   readonly loading: boolean;
   readonly historyLoading: boolean;
   readonly stickyDateLabel: string;
@@ -39,6 +40,7 @@ interface ChatMessageListProps {
   readonly onCopyMessage: (view: ChatMessageView) => Promise<boolean>;
   readonly onCopyLink: (url: string) => Promise<boolean>;
   readonly onStartCall?: (mediaType: 'audio' | 'video') => void;
+  readonly onOpenCard?: (view: ChatMessageView) => void;
   readonly multiSelecting: boolean;
   readonly selectedMessageIDs: ReadonlySet<string>;
   readonly onToggleSelectedMessage: (message: Message) => void;
@@ -67,6 +69,7 @@ export function ChatMessageList({
   isGroup,
   currentUserID,
   groupMembers,
+  readOnly = false,
   loading,
   historyLoading,
   stickyDateLabel,
@@ -79,6 +82,7 @@ export function ChatMessageList({
   onCopyMessage,
   onCopyLink,
   onStartCall,
+  onOpenCard,
   multiSelecting,
   selectedMessageIDs,
   onToggleSelectedMessage,
@@ -165,6 +169,7 @@ export function ChatMessageList({
             isGroup={isGroup}
             conversationID={conversationID}
             membersByID={membersByID}
+            readOnly={readOnly}
             customEmojiActionDisabled={customEmojiActionDisabled}
             onAddCustomEmoji={onAddCustomEmoji}
             retryDisabled={retryDisabled}
@@ -184,6 +189,7 @@ export function ChatMessageList({
             onCopyMessage={onCopyMessage}
             onCopyLink={onCopyLink}
             {...(onStartCall ? { onStartCall } : {})}
+            {...(onOpenCard ? { onOpenCard } : {})}
             onOpenQuotedMessage={handleOpenQuotedMessage}
             multiSelecting={multiSelecting}
             selected={selectedMessageIDs.has(entry.message.clientMsgID)}

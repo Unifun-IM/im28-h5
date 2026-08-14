@@ -121,12 +121,3 @@
     animation: none;
   }
 }
-
-.rn-chat-notice {
-  margin: 0;
-  padding: 8px 16px;
-  background: color-mix(in srgb, var(--im-status-success) 12%, var(--im-bg-page));
-  color: var(--im-status-success);
-  font-size: 13px;
-  text-align: center;
-}

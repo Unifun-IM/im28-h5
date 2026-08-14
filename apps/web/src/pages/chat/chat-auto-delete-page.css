@@ -48,9 +48,11 @@
   white-space: nowrap;
 }
 
-.rn-chat-auto-delete-header > button {
+.im-page-navbar.rn-chat-auto-delete-header > button:last-child:not(:first-child) {
   min-width: 56px;
+  min-height: 32px;
   height: 32px;
+  padding: 0 12px;
   border: 0;
   border-radius: 8px;
   color: #ffffff;
@@ -61,7 +63,7 @@
   letter-spacing: 0;
 }
 
-.rn-chat-auto-delete-header > button:disabled {
+.im-page-navbar.rn-chat-auto-delete-header > button:last-child:not(:first-child):disabled {
   opacity: 0.5;
 }
 

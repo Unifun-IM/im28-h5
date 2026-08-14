@@ -28,9 +28,9 @@ import { MeTermsPage } from '../pages/me/MeTermsPage.js';
 import { MeSecurityCredentialPage } from '../pages/me/MeSecurityCredentialPage.js';
 import { MeSecurityPage } from '../pages/me/MeSecurityPage.js';
 import { NotFoundPage } from '../pages/not-found/NotFoundPage.js';
-import { WebIMCallProvider, WebIMRuntimeProvider } from '../runtime/index.js';
+import { OfflineRuntimeBoundary, WebIMCallProvider, WebIMRuntimeProvider } from '../runtime/index.js';
 import { PrimaryTabsLayout } from './PrimaryTabsLayout.js';
-import { RouteMotionController } from '../components/interaction/index.js';
+import { AppToastProvider, RouteMotionController } from '../components/interaction/index.js';
 
 /** 好友名片选择页按动作路由加载，不进入通讯录和主路由首包。 */
 const ContactCardSharePage = lazy(() => import('../pages/contacts/ContactCardSharePage.js'));
@@ -96,8 +96,10 @@ const QRCodeSharePage = lazy(() => import('../pages/qr/QRCodeSharePage.js'));
 /** Web 应用根组件只负责装配浏览器路由，页面能力由对应 page owner 承担。 */
 export function App() {
   return (
-    <BrowserRouter>
+    <AppToastProvider>
+      <BrowserRouter>
       <WebIMRuntimeProvider>
+        <OfflineRuntimeBoundary>
         <WebIMCallProvider>
           <AuthOnboardingProvider>
           <RouteMotionController />
@@ -413,8 +415,10 @@ export function App() {
           </Routes>
           </AuthOnboardingProvider>
         </WebIMCallProvider>
+        </OfflineRuntimeBoundary>
       </WebIMRuntimeProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AppToastProvider>
   );
 }
 

@@ -25,6 +25,7 @@ interface ConversationRowProps {
   readonly item: WebIMConversationListItem;
   readonly currentUserID: string;
   readonly online: boolean;
+  readonly actionsEnabled?: boolean;
   readonly onOpenActions: (
     item: WebIMConversationListItem,
     anchor: ConversationActionAnchor,
@@ -32,7 +33,7 @@ interface ConversationRowProps {
 }
 
 /** 渲染 RN 72px 会话行及其头像、摘要、时间和未读状态。 */
-export function ConversationRow({ item, currentUserID, online, onOpenActions }: ConversationRowProps) {
+export function ConversationRow({ item, currentUserID, online, actionsEnabled = true, onOpenActions }: ConversationRowProps) {
   /** longPressTimerRef 保存 300ms RN 长按阈值定时器。 */
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** pointerStartRef 用于移动阈值取消长按。 */
@@ -79,6 +80,7 @@ export function ConversationRow({ item, currentUserID, online, onOpenActions }: 
 
   /** handlePointerDown 启动与 RN 相同的 300ms 长按识别。 */
   function handlePointerDown(event: PointerEvent<HTMLAnchorElement>): void {
+    if (!actionsEnabled) return;
     if (event.button !== 0) return;
     clearLongPress();
     didLongPressRef.current = false;
@@ -113,18 +115,20 @@ export function ConversationRow({ item, currentUserID, online, onOpenActions }: 
       data-conversation-id={conversation.conversationID}
       to={`/conversations/${encodeURIComponent(conversation.conversationID)}`}
       aria-label={`打开与${title}的会话`}
-      aria-haspopup="menu"
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={clearLongPress}
-      onPointerCancel={clearLongPress}
-      onPointerLeave={clearLongPress}
-      onClick={handleClick}
-      onContextMenu={event => {
-        event.preventDefault();
-        clearLongPress();
-        openActions(event.currentTarget);
-      }}
+      {...(actionsEnabled ? { 'aria-haspopup': 'menu' as const } : {})}
+      {...(actionsEnabled ? {
+        onPointerDown: handlePointerDown,
+        onPointerMove: handlePointerMove,
+        onPointerUp: clearLongPress,
+        onPointerCancel: clearLongPress,
+        onPointerLeave: clearLongPress,
+        onClick: handleClick,
+        onContextMenu: (event: MouseEvent<HTMLAnchorElement>) => {
+          event.preventDefault();
+          clearLongPress();
+          openActions(event.currentTarget);
+        },
+      } : {})}
       onDragStart={event => event.preventDefault()}
     >
       <span className="rn-conversation-avatar-shell">

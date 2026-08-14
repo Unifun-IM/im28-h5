@@ -2878,3 +2878,28 @@ Closeout verdict: `clean/foundation-complete/not-consumed`。下一片只实现 
 | verification | focused 7/35、Web full 100/419、H5 typecheck/build、build:web/sync:web、RN protected diff empty |
 
 Closeout verdict: `clean/storage-reader-safe/not-consumed`。Runtime restore/reconnect 与 H5 shell 仍未接入，不能把底层通过外推为冷启动离线可用。
+
+## 156. W6.a6.20.148.1c Cold-Start Offline Runtime Contract
+
+| layer | contract |
+| :--- | :--- |
+| restore | only stable Gateway network-unavailable + stored session + existing snapshot enters offline-readonly；business/HTTP/invalid remains fail-closed |
+| capability | runtime exposes only `getOfflineReader()`；full sync/settings/security/incoming-call and all mutation paths reject or remain unreachable |
+| reconnect | single-flight check/refresh；network failure retains reader，invalid clears session/DB，valid upgrades canonical DB/recovery/realtime |
+| concurrency | sign-out/new auth revokes stale reconnect results before DB/realtime success publication |
+| verification | focused 4/17、Web full 101/424、SDK/H5 typecheck/build、boundary/build:web/sync:web、RN protected diff empty |
+
+Closeout verdict: `clean/runtime-safe/not-h5-consumed`。H5 provider、routes and pages remain the next bounded slice；SDK success alone is not a user-visible offline capability.
+
+## 157. W6.a6.20.148.2/.148.3 H5 Cold-Start Offline Delivery Contract
+
+| layer | contract |
+| :--- | :--- |
+| H5 boundary | only offline conversations/chat routes mount；reader comes from runtime，never direct sessionStorage/IndexedDB/token access |
+| interaction | cached list/history remain readable；composer、retry-send、mark-read、message/conversation/profile/settings/call/presence actions are unavailable |
+| reconnect | visible retry delegates to SDK；network failure retains reader；valid session returns canonical online tree；sign-out remains available during validation |
+| startup concurrency | SDK coalesces concurrent `restore()` calls so React StrictMode cannot race account DB owners or revoke a valid reader |
+| real acceptance | independent `5179 -> 5191` account warm-up、proxy-down reload、cache list/chat、failed retry、proxy recovery and explicit-invalid cleanup passed |
+| protection | no business mutation、fixture、token/storage inspection、RN source change or forbidden build script；temporary test resources stopped |
+
+Closeout verdict: `clean/h5-consumed/browser-cold-reload-reconnect-invalid-cleanup-pass`。RN remains frozen；该结论不覆盖 offline write/queue、media bytes、Safari/Firefox、physical device or multi-tab lease contention。

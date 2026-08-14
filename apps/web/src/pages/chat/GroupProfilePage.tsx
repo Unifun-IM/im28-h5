@@ -7,6 +7,7 @@ import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.reg
 import qrCodeIconURL from '../../assets/rn/assets/icons/imm28/qrcode-small.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
+import { OperationToastFeedback } from '../../components/interaction/index.js';
 import { AvatarCropDialog } from '../../components/avatar/AvatarCropDialog.js';
 import { validateAvatarFile } from '../../components/avatar/avatar-crop.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
@@ -208,8 +209,8 @@ export function GroupProfilePage() {
       <section className="rn-group-profile-surface">
         <PageNavbar className="rn-group-profile-header"><button type="button" aria-label="返回" onClick={() => navigate(backURL)}><RNAssetIcon assetURL={backIconURL} /></button><h1>群资料</h1><span /></PageNavbar>
         <div className="rn-group-profile-content">
+          <OperationToastFeedback notice={notice} />
           {error ? <p className="rn-group-profile-error" role="alert">{error}</p> : null}
-          {notice ? <p className="rn-group-profile-notice" role="status">{notice}</p> : null}
           {view ? <div className="rn-group-profile-card">
             <button className="rn-group-profile-row" type="button" onClick={chooseAvatar}><span>群头像</span><span className="rn-group-profile-trailing"><span className="rn-group-profile-avatar" style={avatarStyle}><span>{getRNAvatarInitial(view.name, '群')}</span>{view.avatarURL ? <img src={view.avatarURL} alt="" onError={event => { event.currentTarget.hidden = true; }} /> : null}</span>{view.canEdit ? <RNAssetIcon assetURL={arrowIconURL} /> : null}</span></button>
             <button className="rn-group-profile-row" type="button" onClick={openNameEditor}><span>群昵称</span><span className="rn-group-profile-trailing"><span>{view.name}</span>{view.canEdit ? <RNAssetIcon assetURL={arrowIconURL} /> : null}</span></button>

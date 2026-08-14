@@ -9,6 +9,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import checkIconURL from '../../assets/rn/assets/icons/imm28/check.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import {
@@ -26,6 +27,8 @@ export function ChatAutoDeletePage() {
   const navigate = useNavigate();
   /** runtime context 提供认证状态和唯一 shared sync。 */
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 承载保存动作的成功与失败反馈。 */
+  const { toast } = useAppToast();
   /** sync 跟随认证 runtime 生命周期。 */
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
   /** conversation 保存当前账号真实缓存目标。 */
@@ -110,12 +113,13 @@ export function ChatAutoDeletePage() {
         conversation.conversationID,
         selectedSeconds,
       );
+      toast.success(selectedSeconds === 0 ? '已停用定时删除' : '定时删除设置已更新');
       /** successURL 对齐入口层级：群聊返回群管理，单聊返回聊天设置。 */
       const successURL = '/conversations/' + encodeURIComponent(conversation.conversationID)
         + (conversation.type === 'group' ? '/settings/manage' : '/settings');
       navigate(successURL, { replace: true });
     } catch (cause) {
-      setError(readAutoDeleteError(cause, '定时删除设置保存失败'));
+      toast.error(readAutoDeleteError(cause, '定时删除设置保存失败'));
     } finally {
       setSaving(false);
     }

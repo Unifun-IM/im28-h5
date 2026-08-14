@@ -445,6 +445,49 @@ export function ChatPage() {
     mentionRequestSequenceRef.current += 1;
     setMentionRequest({ id: mentionRequestSequenceRef.current, member });
   }
+  /** 名片点击复刻 RN：用户进入资料，群聊按真实已加入状态分流。 */
+  async function handleOpenCard(view: import('./chat-message-view.js').ChatMessageView): Promise<void> {
+    /** targetID 只接受消息协议保存的稳定身份。 */
+    const targetID = view.cardTargetID?.trim() ?? '';
+    if (!targetID) {
+      setError('名片身份不可用');
+      return;
+    }
+    /** backHref 保证资料或申请页返回当前聊天。 */
+    const backHref = `/conversations/${encodeURIComponent(conversationID)}`;
+    if (view.cardKind !== 'group') {
+      navigate(`/contacts/users/${encodeURIComponent(targetID)}`, {
+        state: { backHref },
+      });
+      return;
+    }
+    if (!sync) {
+      setError('群聊服务尚未就绪');
+      return;
+    }
+    try {
+      /** groups 先读取 SQLite，未命中再刷新权威已加入群列表。 */
+      let groups = await sync.groups.listCached();
+      /** joinedGroup 必须精确匹配名片 groupID。 */
+      let joinedGroup = groups.find(group => group.groupID === targetID);
+      if (!joinedGroup) {
+        groups = await sync.groups.sync({ pageSize: 100 });
+        joinedGroup = groups.find(group => group.groupID === targetID);
+      }
+      if (joinedGroup?.conversationID) {
+        navigate(
+          `/conversations/${encodeURIComponent(joinedGroup.conversationID)}/settings/profile`,
+          { state: createChatGroupProfileRouteState(joinedGroup.conversationID) },
+        );
+        return;
+      }
+      navigate(`/groups/${encodeURIComponent(targetID)}/apply`, {
+        state: { backHref },
+      });
+    } catch (cause) {
+      setError(readChatPageError(cause));
+    }
+  }
   return (
     <main className="rn-chat-page">
       <section className="rn-chat-surface">
@@ -452,6 +495,9 @@ export function ChatPage() {
           conversation={conversation}
           presence={headerPresence}
           groupApplicationCount={groupApplicationCount}
+          multiSelecting={forwardFlow.multiSelecting}
+          selectedCount={forwardFlow.selectedCount}
+          onCancelMultiSelect={forwardFlow.cancelMultiSelect}
           onOpenProfile={() => {
             if (!conversation) return;
             /** conversationHref 保证资料页只返回当前真实会话。 */
@@ -514,6 +560,7 @@ export function ChatPage() {
             }}
             onCopyMessage={clipboardActions.copyMessage}
             onCopyLink={clipboardActions.copyLink}
+            onOpenCard={view => { void handleOpenCard(view); }}
             {...(conversation?.type === 'single'
               ? { onStartCall: (mediaType: 'audio' | 'video') => { void handleStartCall(mediaType); } }
               : {})}

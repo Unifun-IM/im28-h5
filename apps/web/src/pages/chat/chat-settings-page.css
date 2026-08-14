@@ -83,6 +83,7 @@
 .rn-chat-settings-single-member > a {
   display: block;
   border-radius: 999px;
+  text-decoration: none;
 }
 
 .rn-chat-settings-single-member > .rn-chat-settings-add-member {
@@ -150,7 +151,7 @@
   color: var(--im-icon-muted);
 }
 
-.rn-chat-settings-group-info > span:last-child {
+.rn-chat-settings-group-info-copy {
   display: flex;
   min-width: 0;
   flex: 1;

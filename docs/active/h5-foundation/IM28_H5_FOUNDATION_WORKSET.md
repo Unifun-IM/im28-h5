@@ -4,26 +4,36 @@
 
 | field | value |
 | :--- | :--- |
-| status | `active/implementation-partial/not-consumed` |
+| status | `closed/h5-consumed/browser-accepted` |
 | owner | `im28-sdk Web runtime/storage/reader -> im28-h5 offline shell` |
 | target | 让同 tab 的既有账号快照在冷启动网络不可达时只读恢复，同时阻止完整 sync、realtime 和全部 mutation |
 | non-claim | `.91` 已关闭本地确定性 implementation inventory；不再把授权、样本、浏览器绑定或平台不适用项包装成新代码任务 |
 | verification | 每个门禁必须复用现有 production path，记录 Network/result/cache/list-back/visual evidence；禁止 fixture、fake success 或第二 writer |
 | protected | RN business 继续冻结；H5 验收若发现 shared defect，另行冻结 SDK contract 且只走 `build:web/sync:web` |
-| next | `.148.1a/.1b` classifier/lifecycle/storage/reader 已关闭；执行 `.148.1c` runtime orchestration，然后 `.148.2` H5 shell 和 `.148.3` isolated acceptance |
+| next | `.148.1a/.1b/.1c/.2/.3` 均已关闭；恢复 external acceptance queue |
 
-## Active Slice W6.a6.20.148.1c Runtime Offline Restore And Reconnect Orchestration
+## Closed Slice W6.a6.20.148.2 H5 Offline Shell
 
 | field | value |
 | :--- | :--- |
-| source anchor | `web-im-runtime.ts/types`、`web-im-authentication.ts`、auth session store、runtime lifecycle and offline reader |
-| deliverable | network-only cold restore、offline snapshot/getOfflineReader、offline getSync rejection、single-flight reconnect and invalid cleanup |
-| guardrail | explicit invalid/HTTP/business stays canonical；offline path skips recovery/realtime；reader revoked before normal runtime upgrade |
-| verification | focused restore/reconnect/auth cleanup tests + Web full/typecheck/boundary/build:web/sync:web |
+| source anchor | H5 runtime provider、auth route guard、conversation/chat data owners、global shell |
+| deliverable | offline banner、cached conversations/chat history、retry/sign-out；composer/actions/presence/call/remote tabs unavailable |
+| guardrail | pages consume runtime `getOfflineReader()` only；no direct sessionStorage/IndexedDB/token、no duplicate SQL/query owner |
+| verification | focused H5 tests + typecheck/build/full verify + isolated responsive route smoke |
 | protected | no RN business source；no build:rn/build:desktop/build:all/`build:package:desktop:web` |
-| status | `active` |
+| verification | H5 focused 1/4 + full 142/457；typecheck/build/full verify；independent cold-reload smoke |
+| status | `done-local/browser-accepted-with-.148.3` |
 
-## Latest Closed Slice W6.a6.20.148.1b Existing-Snapshot Storage And Reader
+## Latest Closed Slice W6.a6.20.148.1c Runtime Offline Restore And Reconnect
+
+| field | value |
+| :--- | :--- |
+| delivered | network-only cold restore、runtime reader gate、offline capability rejection、single-flight reconnect、invalid cleanup and stale-result revocation |
+| non-exposure | H5 provider/pages unchanged；no user-visible offline claim |
+| verification | focused 4/17；Web full 101/424；H5 typecheck/build；build:web/sync:web；RN protected diff empty |
+| verdict | `clean/runtime-safe/not-h5-consumed` |
+
+## Closed Slice W6.a6.20.148.1b Existing-Snapshot Storage And Reader
 
 | field | value |
 | :--- | :--- |
@@ -41,21 +51,16 @@
 | verification | SDK 2 files/10 tests；H5 typecheck/build；build:web/sync:web；RN protected diff empty |
 | verdict | `clean/foundation-complete/not-consumed` |
 
-## Queued Slice W6.a6.20.148.2 H5 Offline Shell
-
-| field | value |
-| :--- | :--- |
-| deliverable | offline banner、cached conversations/chat history、retry/sign-out；composer/actions/tabs with remote dependency unavailable |
-| owner rule | pages consume `getOfflineReader()` only；no direct sessionStorage/IndexedDB/token or duplicated repository query |
-| status | `pending-after-.148.1` |
-
-## Queued Slice W6.a6.20.148.3 Isolated Cold-Reload Acceptance
+## Closed Slice W6.a6.20.148.3 Isolated Cold-Reload Acceptance
 
 | field | value |
 | :--- | :--- |
 | deliverable | isolated origin warm-up -> Gateway blocked reload -> cache list/chat -> failed retry -> valid reconnect；separate invalid-session cleanup harness |
 | mutation | no send、mark-read、draft、profile/group/call/message/conversation write |
-| status | `pending-after-.148.2` |
+| real proof | account 2 warmed 4 conversations；proxy-down reload kept list and `H5-WS-1786686250693` history；failed retry retained reader；proxy restore returned online tabs |
+| invalid proof | isolated `valid:false` + refresh failure returned `/auth/phone` and revoked offline identity |
+| discovered defect | React StrictMode duplicate restore raced the DB owner；SDK restore single-flight fixed and covered by focused regression |
+| status | `browser-pass-real/cleaned-up` |
 
 ## Current Activation Card W6.a6.20.147
 
@@ -2104,6 +2109,35 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 | Account-security final acceptance | account set/reset 本地链路已闭合，但真实 mutation 与 dark 证据未执行；contact mutation 缺 send-code contract | `apps/web/src/pages/me/security` + Web runtime | approved real set/reset Network/result/session cleanup + dark matrix；contact waits for real code-send contract |
 | upstream raw WS log | `resolved 2026-08-09`: canonical owner 已清除原始 payload 日志 | `im28-sdk` | shared SDK test + H5 `npm run verify` passed |
 # Current Workset
+
+## W6.a6.20.149 H5 Interaction Parity Closeout
+
+- active slice: `.149.5 repo-wide-operation-toast-consumers`。
+- owner: `AppToastProvider + operation-owning pages`。
+- expected: 页面 mutation/copy/save/share 的 success/error 进入唯一 Toast；加载、权限、空态、媒体内联状态和显式重试错误继续由页面结构 owner 承载。
+- forbidden: 不改 `im28-phone/src/**`；不复制 batch/sendCard/sendImage 业务逻辑；不运行 RN/Desktop/all；不改 `build:package:desktop:web`。
+- verification: consumer inventory/contract -> focused tests -> Web typecheck/build -> 412px success/error browser sample。
+- current state: `active`。
+- next activation: `.149.5` closeout 后重新生成 RN parity residual inventory。
+- residual seeds: `.149.4` RTC external deployment；Toast authenticated action/browser samples。
+
+### Closed `.149.3/.149.4`
+
+- deliverable: type108 名片正式点击链；设置/input/确认按钮样式；录音态动效；RTC 正式 owner 审计。
+- evidence: card 2/15、recorder/auto-delete/call 5/17、typecheck、1197-module build。
+- verdict: `.149.3 local-complete/browser-session-gated; .149.4 local-complete/external-rtc-gated`。
+
+### Closed `.149.1`
+
+- deliverable: 多选 selector 左对齐、Navbar 取消/数量、底部转发/删除、全局 Toast foundation。
+- evidence: focused 3/7、typecheck、1197-module build；browser 被另一 tab SQLite lease fail-closed。
+- verdict: `local-complete/browser-session-gated`。
+
+### Closed `.149.2`
+
+- deliverable: 四类分享 friend-only single selection；个人/群二维码共用 `InteractionModal`。
+- evidence: focused 3/9、typecheck、1197-module build；真实发送和 browser pixel 分别 mutation/session gated。
+- verdict: `local-complete/browser-session-gated/send-mutation-gated`。
 
 ## W6.a6.20.24 Chat Sender Avatar Mention Gesture
 

@@ -91,11 +91,15 @@ textarea {
 }
 
 button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
+a:focus-visible {
   outline: 2px solid #0b62d6;
   outline-offset: 2px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
 }
 
 button:focus:not(:focus-visible),

@@ -6,6 +6,7 @@ import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regul
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
+import { OperationToastFeedback } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { useWebThemePreference } from '../../runtime/theme-preference.js';
 import { MeLogoutDialog } from './MeLogoutDialog.js';
@@ -84,8 +85,8 @@ export function MeSettingsPage() {
           <span />
         </PageNavbar>
         <div className="rn-me-settings-content">
+          <OperationToastFeedback notice={versionStatus} />
           {error ? <p className="rn-me-settings-error" role="status">{error}</p> : null}
-          {versionStatus ? <p className="rn-me-settings-notice" role="status">{versionStatus}</p> : null}
           <SettingsLinkRow
             label="显示"
             value={themeSnapshot.preference === 'system' ? '跟随系统' : themeSnapshot.mode === 'light' ? '浅色模式' : '深色模式'}

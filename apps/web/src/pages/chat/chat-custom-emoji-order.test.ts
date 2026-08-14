@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { ChatSystemEmojiStorage } from './chat-system-emoji-recent.js';
 import {
   applyChatCustomEmojiOrder,
+  getChatCustomEmojiGridCellSize,
   getChatCustomEmojiMoveTarget,
   loadChatCustomEmojiOrder,
   reorderChatCustomEmojis,
@@ -29,6 +30,10 @@ function createOrderStorage(initialValue: string | null = null) {
 
 // 本地排序只能影响当前 SDK 成员快照的视觉顺序。
 describe('chat custom emoji local order', () => {
+  it('keeps five square cells inside a 412px manager grid', () => {
+    expect(getChatCustomEmojiGridCellSize(412)).toBeCloseTo(69.6);
+  });
+
   it('applies valid IDs and appends new remote members', () => {
     // emojis 模拟远端完整列表新增 c 且删除旧 x。
     const emojis = ['a', 'b', 'c'].map(createEmoji);
@@ -50,7 +55,7 @@ describe('chat custom emoji local order', () => {
   });
 
   it('maps pointer coordinates to a bounded five-column target', () => {
-    // rect 使用 500px 宽度得到每格 100px。
+    // rect 使用 500px 宽度验证包含内边距与间距后的五列命中。
     const rect = { left: 10, top: 20, width: 500 };
     expect(getChatCustomEmojiMoveTarget(260, 170, rect, 8)).toBe(7);
     expect(getChatCustomEmojiMoveTarget(999, 999, rect, 8)).toBe(8);

@@ -221,16 +221,39 @@
 
 .rn-chat-header-settings .rn-asset-icon { width: 30px; height: 30px; }
 
-.rn-chat-error {
-  flex: 0 0 auto;
-  margin: 0;
-  padding: 8px 16px;
-  color: var(--im-status-danger);
-  background: var(--im-chat-background);
-  font-size: 13px;
+.rn-chat-header.is-multi-selecting {
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+.rn-chat-header-multi-cancel {
+  width: 56px;
+  min-height: 28px;
+  padding-left: 8px;
+  color: var(--im-text-secondary);
+  cursor: pointer;
+  font-size: 16px;
   letter-spacing: 0;
-  line-height: 18px;
-  overflow-wrap: anywhere;
+  line-height: 24px;
+  text-align: left;
+}
+
+.rn-chat-header-multi-title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 24px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-chat-header-multi-spacer {
+  width: 56px;
+  flex: 0 0 56px;
 }
 
 .rn-chat-announcement {
@@ -501,7 +524,7 @@
   max-width: 220px;
   align-items: center;
   gap: 4px;
-  color: var(--im-text-muted);
+  color: var(--chat-sender-identity-color, var(--im-text-muted));
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0;
@@ -519,8 +542,8 @@
   flex: 0 0 auto;
   padding: 1px 4px;
   border-radius: 3px;
-  color: var(--im-brand-primary);
-  background: color-mix(in srgb, var(--im-brand-primary) 8%, transparent);
+  color: var(--chat-sender-identity-color, var(--im-brand-primary));
+  background: color-mix(in srgb, var(--chat-sender-identity-color, var(--im-brand-primary)) 5%, transparent);
   font-size: 9px;
   line-height: 12px;
 }

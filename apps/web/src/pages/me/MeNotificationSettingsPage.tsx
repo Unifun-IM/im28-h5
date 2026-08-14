@@ -5,6 +5,7 @@ import type {
 } from '@im28/im-sdk/web';
 import { Navigate } from 'react-router-dom';
 
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { MeProfileHeader } from './MeProfileHeader.js';
 import { MeSettingsSwitchRow } from './MeSettingsSwitchRow.js';
@@ -39,6 +40,8 @@ const NOTIFICATION_ROWS: ReadonlyArray<{
 export function MeNotificationSettingsPage() {
   // runtime context 是通知设置唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 承载通知偏好写入结果。 */
+  const { toast } = useAppToast();
   // settings 保存服务端返回的完整通知状态。
   const [settings, setSettings] = useState<GatewayUserNotificationSetting | null>(null);
   // loading 覆盖首次读取。
@@ -79,13 +82,14 @@ export function MeNotificationSettingsPage() {
         type: key as GatewayNotificationType,
         enabled: nextValue,
       }));
+      toast.success('设置成功');
     } catch (cause) {
       setSettings(previousSettings);
-      setError(readNotificationError(cause));
+      toast.error(readNotificationError(cause));
     } finally {
       setSavingKey(null);
     }
-  }, [runtime, savingKey, settings]);
+  }, [runtime, savingKey, settings, toast]);
 
   if (restoring) return <NotificationPageState label="正在恢复通知设置" />;
   if (!runtime) return <NotificationPageState label="运行配置不可用" detail={startupError} />;

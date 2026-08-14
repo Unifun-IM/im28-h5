@@ -17,6 +17,7 @@ import starSelectedIconURL from '../../assets/rn/assets/icons/imm28/star.solid.s
 import videoIconURL from '../../assets/rn/assets/icons/imm28/video-camera.regular.svg';
 import { copyUserIDToClipboard } from '../../components/clipboard/user-id-clipboard.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
 import { ContactDeleteSheet } from './ContactActionSheets.js';
 import {
@@ -55,6 +56,8 @@ import './contact-profile-page.css';
 export function ContactProfilePage() {
   // runtime context 是页面唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 只承载剪贴板等瞬时操作结果。 */
+  const { toast } = useAppToast();
   /** callOwner 是 H5 全局唯一通话生命周期 owner。 */
   const callOwner = useWebIMCall();
   // routeParams 提供稳定联系人 ID deep link。
@@ -91,8 +94,6 @@ export function ContactProfilePage() {
   const [confirmBlacklist, setConfirmBlacklist] = useState(false);
   /** deleteOpen 控制好友删除范围确认层。 */
   const [deleteOpen, setDeleteOpen] = useState(false);
-  /** copiedUserID 只保存平台写入成功后的短暂反馈。 */
-  const [copiedUserID, setCopiedUserID] = useState('');
   // error 显示真实 SDK/Gateway/clipboard 失败。
   const [error, setError] = useState<string | null>(null);
 
@@ -153,11 +154,11 @@ export function ContactProfilePage() {
         .openConversation(profile.userID);
       navigate(`/conversations/${encodeURIComponent(conversation.conversationID)}`);
     } catch (cause) {
-      setError(readContactProfileError(cause, '打开会话失败，请重试'));
+      toast.error(readContactProfileError(cause, '打开会话失败，请重试'));
     } finally {
       setActionPending(false);
     }
-  }, [actionPending, navigate, profile, runtime]);
+  }, [actionPending, navigate, profile, runtime, toast]);
 
   /** 复制按钮只在浏览器 clipboard 成功后结束。 */
   const copyUserID = useCallback(async (): Promise<void> => {
@@ -165,13 +166,11 @@ export function ContactProfilePage() {
     try {
       await copyUserIDToClipboard(profile.userID);
       setError(null);
-      setCopiedUserID('复制ID成功');
-      window.setTimeout(() => setCopiedUserID(''), 1200);
+      toast.success('复制ID成功');
     } catch (cause) {
-      setCopiedUserID('');
-      setError(readContactProfileError(cause, '复制用户ID失败'));
+      toast.error(readContactProfileError(cause, '复制用户ID失败'));
     }
-  }, [profile]);
+  }, [profile, toast]);
 
   /** 发起通话前通过 shared peer facade 获取真实单聊主键。 */
   const startCall = useCallback(async (mediaType: 'audio' | 'video'): Promise<void> => {
@@ -188,11 +187,11 @@ export function ContactProfilePage() {
         mediaType,
       });
     } catch (cause) {
-      setError(readContactProfileError(cause, '发起通话失败'));
+      toast.error(readContactProfileError(cause, '发起通话失败'));
     } finally {
       setActionPending(false);
     }
-  }, [actionPending, callOwner, profile, runtime]);
+  }, [actionPending, callOwner, profile, runtime, toast]);
 
   /** 星标更新只在 shared facade 成功后替换页面关系快照。 */
   const toggleStar = useCallback(async (): Promise<void> => {
@@ -206,12 +205,13 @@ export function ContactProfilePage() {
         !profile.isStarred,
       );
       setProfile(current => current ? { ...current, isStarred: result.isStarred } : current);
+      toast.success(result.isStarred ? '已设为星标好友' : '已取消星标');
     } catch (cause) {
-      setError(readContactProfileError(cause, '星标设置失败'));
+      toast.error(readContactProfileError(cause, '星标设置失败'));
     } finally {
       setActionPending(false);
     }
-  }, [actionPending, profile, runtime]);
+  }, [actionPending, profile, runtime, toast]);
 
   /** 备注保存调用 SDK success-only 关系写入并更新展示优先级。 */
   const saveRemark = useCallback(async (): Promise<void> => {
@@ -231,12 +231,13 @@ export function ContactProfilePage() {
           formatIMUserDisplayName(current.userID),
       } : current);
       setRemarkOpen(false);
+      toast.success('备注保存成功');
     } catch (cause) {
-      setError(readContactProfileError(cause, '备注保存失败'));
+      toast.error(readContactProfileError(cause, '备注保存失败'));
     } finally {
       setActionPending(false);
     }
-  }, [actionPending, profile, remarkDraft, runtime]);
+  }, [actionPending, profile, remarkDraft, runtime, toast]);
 
   /** 黑名单二次确认后只调用共享联系人动作 facade。 */
   const updateBlacklist = useCallback(async (): Promise<void> => {
@@ -249,12 +250,13 @@ export function ContactProfilePage() {
       await runtime.getSync().contacts.setBlacklist(profile.userID, nextBlocked);
       setBlockedByMe(nextBlocked);
       setConfirmBlacklist(false);
+      toast.success(nextBlocked ? '已加入黑名单' : '已移出黑名单');
     } catch (cause) {
-      setError(readContactProfileError(cause, '黑名单设置失败'));
+      toast.error(readContactProfileError(cause, '黑名单设置失败'));
     } finally {
       setActionPending(false);
     }
-  }, [actionPending, blockedByMe, profile, runtime]);
+  }, [actionPending, blockedByMe, profile, runtime, toast]);
 
   /** 删除好友在明确消息清理范围后执行 shared 原子状态机。 */
   const deleteFriend = useCallback(async (scope: 'self' | 'both'): Promise<void> => {
@@ -263,13 +265,14 @@ export function ContactProfilePage() {
     setError(null);
     try {
       await runtime.getSync().contacts.deleteFriend({ friendUserID: profile.userID, clearScope: scope });
+      toast.success('好友已删除');
       navigate('/contacts', { replace: true });
     } catch (cause) {
-      setError(readContactProfileError(cause, '删除好友失败'));
+      toast.error(readContactProfileError(cause, '删除好友失败'));
     } finally {
       setActionPending(false);
     }
-  }, [actionPending, navigate, profile, runtime]);
+  }, [actionPending, navigate, profile, runtime, toast]);
 
   // primaryAction 只公开本切片已具备真实 owner 的动作。
   const primaryAction = useMemo(
@@ -328,7 +331,6 @@ export function ContactProfilePage() {
         ) : profile ? (
           <div className="rn-contact-profile-content">
             {error ? <ContactProfileError error={error} onRetry={loadProfile} /> : null}
-            {copiedUserID ? <p className="rn-contact-profile-copy-state" role="status">{copiedUserID}</p> : null}
             <div className="rn-contact-profile-hero">
               <ContactProfileAvatar {...profile} displayName={displayName} />
               <div className="rn-contact-profile-name-row">

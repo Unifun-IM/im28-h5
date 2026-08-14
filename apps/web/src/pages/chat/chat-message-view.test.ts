@@ -202,6 +202,8 @@ describe('chat message view media mapping', () => {
       text: '名片用户',
       detail: 'user-108',
       mediaURL: 'https://media.example.com/user.jpg',
+      cardKind: 'user',
+      cardTargetID: 'user-108',
     });
     expect(getChatMessageView(createMessage(108, {
       card: {
@@ -216,6 +218,8 @@ describe('chat message view media mapping', () => {
       text: '名片群聊',
       detail: 'group-108',
       mediaURL: 'https://media.example.com/group.jpg',
+      cardKind: 'group',
+      cardTargetID: 'group-108',
     });
   });
 

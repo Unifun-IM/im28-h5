@@ -13,6 +13,7 @@ import qrCodeIconURL from '../../assets/rn/assets/icons/imm28/qrcode-small.svg';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { copyUserIDToClipboard } from '../../components/clipboard/user-id-clipboard.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import './me-page.css';
 
@@ -20,14 +21,14 @@ import './me-page.css';
 export function MePage() {
   // runtime context 是页面唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 承载复制动作结果，不改变资料加载错误。 */
+  const { toast } = useAppToast();
   // profile 保存 Gateway 当前用户详情，不使用本地假数据回退。
   const [profile, setProfile] = useState<GatewayUser | null>(null);
   // loading 覆盖 current-detail 请求。
   const [loading, setLoading] = useState(false);
   // error 保留真实 Gateway 错误并支持重试。
   const [error, setError] = useState<string | null>(null);
-  // copied 短暂反馈 ID 已复制。
-  const [copied, setCopied] = useState(false);
 
   /** 通过 Web runtime facade 读取当前账号资料。 */
   const loadProfile = useCallback(async () => {
@@ -56,12 +57,11 @@ export function MePage() {
     if (!userID) return;
     try {
       await copyUserIDToClipboard(userID);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1200);
+      toast.success('已复制ID');
     } catch (cause) {
-      setError(readProfileError(cause));
+      toast.error(readProfileError(cause));
     }
-  }, [profile?.user_id, snapshot.userID]);
+  }, [profile?.user_id, snapshot.userID, toast]);
 
   // userID 仅显示服务端或认证 runtime 的真实身份。
   const userID = profile?.user_id?.trim() || snapshot.userID || '';
@@ -117,7 +117,6 @@ export function MePage() {
               <button type="button" onClick={() => void loadProfile()}>重试</button>
             </div>
           ) : null}
-          {copied ? <p className="rn-me-copy-state" role="status">已复制ID</p> : null}
           <div className="rn-me-menu-card">
             <Link className="rn-me-menu-row" to="/me/profile">
               <RNAssetIcon assetURL={profileIconURL} />

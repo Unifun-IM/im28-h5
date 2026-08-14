@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { IM_BROADCAST_MAX_TARGETS, type Conversation, type WebIMJoinedGroup } from '@im28/im-sdk/web';
+import type { Conversation, WebIMJoinedGroup } from '@im28/im-sdk/web';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { ChatTargetPickerModal, type ChatTargetPickerItem } from '../../components/chat-target-picker/index.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 
 /** 群名片来源只保留当前账号真实会话和群快照。 */
@@ -11,7 +12,7 @@ interface GroupCardShareSource {
   readonly group: WebIMJoinedGroup;
 }
 
-/** 群名片兼容路由恢复来源后使用统一多选弹窗。 */
+/** 群名片兼容路由恢复来源后使用统一单选好友弹窗。 */
 export function GroupCardSharePage() {
   /** conversationID 来自稳定 SPA path。 */
   const { conversationID = '' } = useParams();
@@ -19,11 +20,13 @@ export function GroupCardSharePage() {
   const navigate = useNavigate();
   /** runtime 提供群资料和群名片 shared mutation。 */
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 承载群名片发送成功反馈。 */
+  const { toast } = useAppToast();
   /** source 保存已验证的群会话和群资料。 */
   const [source, setSource] = useState<GroupCardShareSource | null>(null);
   /** loading 标识来源恢复轮次。 */
   const [loading, setLoading] = useState(true);
-  /** sharing 阻止多目标重复分享。 */
+  /** sharing 阻止唯一好友目标重复分享。 */
   const [sharing, setSharing] = useState(false);
   /** shareCompleted 在部分成功后阻止重复发送已成功目标。 */
   const [shareCompleted, setShareCompleted] = useState(false);
@@ -61,15 +64,17 @@ export function GroupCardSharePage() {
 
   useEffect(() => { void load(); }, [load]);
 
-  /** 向全部选中好友或群聊执行 shared type108 批量发送。 */
+  /** 向唯一选中好友执行 shared type108 发送。 */
   async function shareCard(targets: readonly ChatTargetPickerItem[]): Promise<void> {
-    if (!runtime || !source || sharing) return;
+    /** target 必须是统一弹窗交付的唯一好友目标。 */
+    const target = targets[0];
+    if (!runtime || !source || sharing || !target || target.kind !== 'friend') return;
     setSharing(true);
     setError(null);
     try {
       /** result 按目标保留 sent、failed 和 unknown。 */
       const result = await runtime.getSync().messageBroadcast.sendCard({
-        targets: targets.map(target => ({ kind: target.kind, targetID: target.id })),
+        targets: [{ kind: 'friend', targetID: target.id }],
         card: {
           type: 'group',
           groupID: source.group.groupID,
@@ -86,6 +91,7 @@ export function GroupCardSharePage() {
         setError(`已发送到${result.successCount}个目标，${result.failedCount + result.unknownCount}个目标未成功`);
         return;
       }
+      toast.success('群名片已发送');
       navigate(-1);
     } catch (cause) {
       setError(cause instanceof Error && cause.message ? cause.message : '分享群名片失败');
@@ -97,7 +103,7 @@ export function GroupCardSharePage() {
   if (restoring) return <GroupCardShareState label="正在恢复会话" />;
   if (!runtime) return <GroupCardShareState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
-  return <main className="rn-contact-card-share-page" aria-busy={loading || sharing}><ChatTargetPickerModal open sync={runtime.getSync()} selectionMode="multiple" excludeUserIDs={[snapshot.userID]} maxSelected={IM_BROADCAST_MAX_TARGETS} actionLabel="分享" pending={sharing} confirmDisabled={loading || !source || shareCompleted} operationError={error} onClose={() => navigate(-1)} onConfirm={targets => { void shareCard(targets); }} /></main>;
+  return <main className="rn-contact-card-share-page" aria-busy={loading || sharing}><ChatTargetPickerModal open sync={runtime.getSync()} selectionMode="single" allowedKinds={['friend']} excludeUserIDs={[snapshot.userID]} actionLabel="分享" pending={sharing} confirmDisabled={loading || !source || shareCompleted} operationError={error} onClose={() => navigate(-1)} onConfirm={targets => { void shareCard(targets); }} /></main>;
 }
 
 /** 统一呈现群名片来源恢复状态。 */

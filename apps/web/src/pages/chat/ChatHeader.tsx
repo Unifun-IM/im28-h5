@@ -19,6 +19,10 @@ interface ChatHeaderProps {
   readonly conversation: Conversation | null;
   readonly presence: ChatHeaderPresenceView;
   readonly groupApplicationCount: number;
+  readonly readOnly?: boolean;
+  readonly multiSelecting?: boolean;
+  readonly selectedCount?: number;
+  readonly onCancelMultiSelect?: () => void;
   readonly onOpenProfile: () => void;
   readonly onOpenGroupApplications: () => void;
 }
@@ -28,9 +32,31 @@ export function ChatHeader({
   conversation,
   presence,
   groupApplicationCount,
+  readOnly = false,
+  multiSelecting = false,
+  selectedCount = 0,
+  onCancelMultiSelect,
   onOpenProfile,
   onOpenGroupApplications,
 }: ChatHeaderProps) {
+  if (multiSelecting) {
+    return (
+      <header className="rn-chat-header is-multi-selecting">
+        <button
+          className="rn-chat-header-multi-cancel"
+          type="button"
+          aria-label="取消多选"
+          onClick={onCancelMultiSelect}
+        >
+          取消
+        </button>
+        <strong className="rn-chat-header-multi-title">
+          已选择{selectedCount}条消息
+        </strong>
+        <span className="rn-chat-header-multi-spacer" aria-hidden="true" />
+      </header>
+    );
+  }
   // title 复用单聊匿名显示和群聊标题的唯一页面投影。
   const title = conversation ? getConversationTitle(conversation) : '会话';
   // identity 为 fallback 头像提供跨刷新稳定的颜色键。
@@ -41,7 +67,7 @@ export function ChatHeader({
   } as CSSProperties;
   // canOpenProfile 与 RN 一致：群聊可打开群资料，单聊必须存在对端 ID。
   const canOpenProfile = Boolean(
-    conversation && (conversation.type === 'group' || conversation.targetID),
+    !readOnly && conversation && (conversation.type === 'group' || conversation.targetID),
   );
   return (
     <header className="rn-chat-header">
@@ -105,7 +131,7 @@ export function ChatHeader({
       </button>
 
       <span className="rn-chat-header-actions">
-        {conversation?.type === 'group' && groupApplicationCount > 0 ? (
+        {!readOnly && conversation?.type === 'group' && groupApplicationCount > 0 ? (
           <button
             className="rn-chat-header-group-applications"
             type="button"
@@ -116,7 +142,7 @@ export function ChatHeader({
             <span>{groupApplicationCount > 99 ? '99+' : groupApplicationCount}</span>
           </button>
         ) : null}
-        {conversation ? (
+        {!readOnly && conversation ? (
           <Link
             className="rn-chat-header-settings"
             to={`/conversations/${encodeURIComponent(conversation.conversationID)}/settings`}

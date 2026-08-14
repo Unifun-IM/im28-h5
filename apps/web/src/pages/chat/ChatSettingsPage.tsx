@@ -16,6 +16,7 @@ import plusIconURL from '../../assets/rn/assets/icons/imm28/plus-circle.regular.
 import addMemberIconURL from '../../assets/rn/assets/icons/imm28/plus.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
+import { OperationToastFeedback } from '../../components/interaction/index.js';
 import {
   getRNAvatarGradient,
   getRNAvatarInitial,
@@ -222,8 +223,8 @@ export function ChatSettingsPage() {
           <span />
         </PageNavbar>
         <div className="rn-chat-settings-content">
+          <OperationToastFeedback notice={notice} />
           {error ? <p className="rn-chat-settings-error" role="status">{error}</p> : null}
-          {notice ? <p className="rn-chat-settings-notice" role="status">{notice}</p> : null}
           {view ? (
             <>
               {view.isGroup ? (
@@ -269,11 +270,12 @@ export function ChatSettingsPage() {
                   autoDeleteSeconds={conversation?.autoDeleteSeconds}
                 />
               ) : null}
-              {view.canShowAnnouncement ? (
-                <ChatGroupAnnouncementSettingsCard view={view} />
-              ) : null}
-              {view.canOpenGroupManage ? (
-                <ChatGroupManageSettingsRow conversationID={view.conversationID} />
+              {view.canShowAnnouncement || view.canOpenGroupManage ? (
+                <ChatGroupAnnouncementSettingsCard
+                  view={view}
+                  showAnnouncement={view.canShowAnnouncement}
+                  showManage={view.canOpenGroupManage}
+                />
               ) : null}
               <ChatClearHistorySettingsCard
                 clearing={clearing}
@@ -309,20 +311,6 @@ export function ChatSettingsPage() {
         onConfirm={() => { void confirmGroupLifecycle(); }}
       />
     </main>
-  );
-}
-
-/** 群管理入口只在 shared capability 允许时进入 SPA 子路由。 */
-function ChatGroupManageSettingsRow({ conversationID }: { readonly conversationID: string }) {
-  /** manageURL 指向当前真实群会话的唯一管理路由。 */
-  const manageURL = `/conversations/${encodeURIComponent(conversationID)}/settings/manage`;
-  return (
-    <div className="rn-chat-settings-card">
-      <Link className="rn-chat-settings-row" to={manageURL}>
-        <span>群管理</span>
-        <RNAssetIcon assetURL={arrowIconURL} />
-      </Link>
-    </div>
   );
 }
 
@@ -396,7 +384,7 @@ function GroupSettingsCard({
     <div className="rn-chat-settings-card">
       <Link className="rn-chat-settings-group-info" to={profileURL} aria-label="编辑群资料">
         <SettingsAvatar identity={view.targetID} name={view.title} avatarURL={view.avatarURL} size={56} />
-        <span>
+        <span className="rn-chat-settings-group-info-copy">
           <strong>{view.title}</strong>
           <small>群ID：{view.targetID}</small>
         </span>

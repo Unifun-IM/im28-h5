@@ -3,13 +3,13 @@ import {
   buildIM28GroupQRCodePayload,
   buildIM28UserQRCodePayload,
   formatIMUserDisplayName,
-  IM_BROADCAST_MAX_TARGETS,
   type GatewayUser,
   type WebIMSync,
 } from '@im28/im-sdk/web';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { ChatTargetPickerModal, type ChatTargetPickerItem } from '../../components/chat-target-picker/index.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { loadGroupProfileSource } from '../chat/group-profile-source.js';
@@ -27,7 +27,7 @@ interface QRCodeShareSource {
   readonly payload: string;
 }
 
-/** 二维码兼容路由恢复来源后呈现统一多目标弹窗。 */
+/** 二维码兼容路由恢复来源后呈现统一单选好友弹窗。 */
 export default function QRCodeSharePage({ kind }: { readonly kind: QRCodeShareKind }) {
   /** conversationID 仅在群二维码路由存在。 */
   const { conversationID = '' } = useParams();
@@ -35,6 +35,8 @@ export default function QRCodeSharePage({ kind }: { readonly kind: QRCodeShareKi
   const navigate = useNavigate();
   /** runtime 提供资料与媒体群发 shared facade。 */
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 承载二维码发送结果，来源加载错误仍由页面状态呈现。 */
+  const { toast } = useAppToast();
   /** source 保存当前二维码可验证公开来源。 */
   const [source, setSource] = useState<QRCodeShareSource | null>(null);
   /** loading 标识二维码来源恢复轮次。 */
@@ -67,9 +69,11 @@ export default function QRCodeSharePage({ kind }: { readonly kind: QRCodeShareKi
 
   useEffect(() => { void load(); }, [load]);
 
-  /** 一次生成和上传二维码，再由 shared batch-send 分发全部目标。 */
+  /** 一次生成和上传二维码，再由 shared facade 发送到唯一好友。 */
   async function shareQRCode(targets: readonly ChatTargetPickerItem[]): Promise<void> {
-    if (!runtime || !source || sharing) return;
+    /** target 必须是统一弹窗交付的唯一好友目标。 */
+    const target = targets[0];
+    if (!runtime || !source || sharing || !target || target.kind !== 'friend') return;
     setSharing(true);
     setError(null);
     try {
@@ -85,7 +89,7 @@ export default function QRCodeSharePage({ kind }: { readonly kind: QRCodeShareKi
       });
       /** result 按目标保留 sent、failed 和 unknown，不信任顶层伪成功。 */
       const result = await runtime.getSync().messageBroadcast.sendImage({
-        targets: targets.map(target => ({ kind: target.kind, targetID: target.id })),
+        targets: [{ kind: 'friend', targetID: target.id }],
         source: file,
         name: file.name,
         mimeType: file.type,
@@ -102,6 +106,7 @@ export default function QRCodeSharePage({ kind }: { readonly kind: QRCodeShareKi
         setError(`已发送到${result.successCount}个目标，${result.failedCount + result.unknownCount}个目标未成功`);
         return;
       }
+      toast.success('二维码已发送');
       navigate(backHref, { replace: true });
     } catch (cause) {
       setError(cause instanceof Error && cause.message ? cause.message : '二维码发送失败');
@@ -113,7 +118,7 @@ export default function QRCodeSharePage({ kind }: { readonly kind: QRCodeShareKi
   if (restoring) return <QRCodeShareState label="正在恢复会话" />;
   if (!runtime) return <QRCodeShareState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
-  return <main className="rn-qr-share-page" aria-busy={loading || sharing}><ChatTargetPickerModal open sync={runtime.getSync()} selectionMode="multiple" excludeUserIDs={[snapshot.userID]} maxSelected={IM_BROADCAST_MAX_TARGETS} actionLabel="分享" pending={sharing} confirmDisabled={loading || !source || shareCompleted} operationError={error} onClose={() => navigate(backHref, { replace: true })} onConfirm={targets => { void shareQRCode(targets); }} /></main>;
+  return <main className="rn-qr-share-page" aria-busy={loading || sharing}><ChatTargetPickerModal open sync={runtime.getSync()} selectionMode="single" allowedKinds={['friend']} excludeUserIDs={[snapshot.userID]} actionLabel="分享" pending={sharing} confirmDisabled={loading || !source || shareCompleted} operationError={error} onClose={() => navigate(backHref, { replace: true })} onConfirm={targets => { void shareQRCode(targets); }} /></main>;
 }
 
 /** 从可刷新路由恢复个人或群二维码公开来源。 */

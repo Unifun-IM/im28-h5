@@ -66,7 +66,7 @@ The H5 package may adapt browser `fetch`, `WebSocket`, storage and configuration
 
 ## 5. Lifecycle State Machine
 
-冷启动离线扩展的资格、只读数据库、专用 reader、mutation 禁用与 reconnect 规则由 [`web-cold-start-offline.md`](./web-cold-start-offline.md) 冻结；当前 runtime 尚未实现该扩展，因此下表仍是 production 主链。
+冷启动离线扩展的资格、只读数据库、专用 reader、mutation 禁用与 reconnect 规则由 [`web-cold-start-offline.md`](./web-cold-start-offline.md) 冻结；H5 已通过独立 Gateway proxy 验收消费该 reader，Gateway 再校验成功后才恢复下表完整 production 主链。
 
 | current | event | next |
 | :--- | :--- | :--- |
@@ -128,7 +128,7 @@ Current gate state on 2026-08-14:
 - realtime delivery: two online tab-scoped accounts used the production composer/Gateway/WebSocket path；the receiver list updated without reload to the unique marker plus one unread, then the chat cache window and list-back showed the same marker;
 - SQLite convergence: shared realtime writes `MessageRepository/ConversationRepository` before publishing `dataVersion`，and H5 consumes that revision only through `listCachedItems/getCachedHistory`；this proves realtime persistence, not offline restart recovery;
 - offline SQLite hot-session hit: passed in an isolated origin after online warm-up; once its HTTP proxy was stopped and WebSocket remained unavailable, contacts、conversation rows、latest marker and chat history stayed readable from the current-account cache while `Failed to fetch` remained visible;
-- offline cold start: not implemented; `restore()` intentionally performs `check-token` before opening the account database, so a Gateway-isolated full reload closes the database and returns to auth instead of exposing unchecked cached identity;
+- offline cold start: SDK runtime-safe but not H5-consumed；`restore()` 仅在 check-token transport failure 且 existing snapshot 可读时返回专用 reader，当前 H5 仍未渲染该分支；
 - any cold-start design must first freeze token-expiry、read-only database、send/mutation disablement、reconnect and invalid-session cleanup semantics; hot-session evidence must not be expanded into an offline-login claim;
 - RTC deployment gate: two independent online accounts reached the production audio-call active route, but the caller received `通话已结束 / 服务不可用`, the receiver received no invite overlay, and neither call list gained a record; this proves the client failure cleanup path, not real invite/reject/LiveKit acceptance;
 - RTC activation requires the deployed call service to create a durable call and issue credentials; only then may the same production path close receiver invite/reject, caller terminal convergence, media and call-list gates;

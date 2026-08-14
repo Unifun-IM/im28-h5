@@ -6,6 +6,7 @@ import {
 } from '@im28/im-sdk/web';
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { buildContactProfileRoute } from './contact-profile-view.js';
 import {
@@ -24,6 +25,8 @@ import './contact-friend-application-page.css';
 export function ContactFriendApplicationPage() {
   // runtime context 是页面唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 承载好友申请提交结果。 */
+  const { toast } = useAppToast();
   // routeParams 提供申请目标用户 ID。
   const routeParams = useParams<{ userID: string }>();
   /** location 提供扫码入口传递的受控申请来源。 */
@@ -102,16 +105,17 @@ export function ContactFriendApplicationPage() {
         message,
         readContactProfileApplicationSourceType(location.state) ?? undefined,
       );
+      toast.success('好友申请已发送');
       navigate(buildContactProfileRoute(profile.userID), {
         replace: true,
         state: profileRouteState,
       });
     } catch (cause) {
-      setError(readApplicationError(cause, '好友申请发送失败'));
+      toast.error(readApplicationError(cause, '好友申请发送失败'));
     } finally {
       setSubmitting(false);
     }
-  }, [location.state, message, navigate, profile, profileRouteState, runtime, submitting]);
+  }, [location.state, message, navigate, profile, profileRouteState, runtime, submitting, toast]);
 
   if (restoring) return <ApplicationPageState label="正在恢复好友申请" />;
   if (!runtime) return <ApplicationPageState label="运行配置不可用" detail={startupError} />;

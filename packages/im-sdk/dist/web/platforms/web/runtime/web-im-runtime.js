@@ -6,6 +6,7 @@ import { WebIMRuntimeError } from './runtime-error.js';
 import { transitionWebIMRuntimeState } from './runtime-lifecycle.js';
 import { createWebIMUserSettings } from './web-im-user-settings.js';
 import { createWebIMClientVersion } from './web-im-client-version.js';
+import { createWebIMOfflineReader } from './web-im-offline-reader.js';
 import { createBrowserOSSUploadPort } from '../media/index.js';
 import { normalizeIMCallTerminalSignals } from '../../../sync/call-terminal-signal.js';
 import { normalizeIMCallRealtimeSignals } from '../../../sync/call-realtime-signal.js';
@@ -20,12 +21,19 @@ class WebIMRuntimeImpl {
     gatewayClient;
     platformTermsClient;
     sync;
+    offlineReader;
     settings;
     clientVersion;
     listeners = new Set();
     callSignalListeners = new Set();
     currentState = 'anonymous';
     currentSession = null;
+    offlineReaderEnabled = false;
+    // pendingRestore 保证 React StrictMode 或重复启动只执行一次会话恢复与数据库打开。
+    pendingRestore = null;
+    pendingOfflineReconnect = null;
+    // offlineReconnectVersion 使退出或新认证能够撤销仍在等待的离线重连结果。
+    offlineReconnectVersion = 0;
     currentSnapshot;
     dataVersion = 0;
     /** relationshipVersion 只标记好友与我方黑名单领域事实可能变化。 */
@@ -64,6 +72,21 @@ class WebIMRuntimeImpl {
                 ? { createClientMessageID: options.createRequestID }
                 : {}),
         });
+        this.offlineReader = createWebIMOfflineReader({
+            getContext: () => {
+                if (!this.offlineReaderEnabled ||
+                    !this.currentSession ||
+                    (this.currentState !== 'offline-readonly' &&
+                        this.currentState !== 'offline-validating')) {
+                    return null;
+                }
+                // database 由 lifecycle 持有同账号 Web Lock，关闭或升级后立即变为 null。
+                const database = this.options.accountDatabase.getDatabase();
+                return database
+                    ? { userID: this.currentSession.userID, database }
+                    : null;
+            },
+        });
         this.settings = createWebIMUserSettings({ gatewayClient: this.gatewayClient, getCurrentUserID: () => this.currentSession?.userID ?? null });
         this.clientVersion = createWebIMClientVersion({
             gatewayClient: this.gatewayClient,
@@ -97,6 +120,7 @@ class WebIMRuntimeImpl {
     }
     /** 将登录和注册返回的认证数据收敛为同一浏览器 runtime 状态。 */
     async authenticate(requestAuthData) {
+        this.offlineReconnectVersion += 1;
         this.stopRealtime();
         this.sync.presence.clear();
         this.currentSession = null;
@@ -127,7 +151,21 @@ class WebIMRuntimeImpl {
     /** 查询公开平台条款，不要求建立认证会话。 */
     async getPlatformTerm(key) { return this.platformTermsClient.getTerm(key); }
     /** 恢复 tab 会话，先 check-token，明确无效时再 refresh。 */
-    async restore() {
+    restore() {
+        if (this.pendingRestore) {
+            return this.pendingRestore;
+        }
+        // restorePromise 是当前 runtime 唯一允许的冷启动恢复任务。
+        const restorePromise = this.restoreStoredSession();
+        this.pendingRestore = restorePromise;
+        return restorePromise.finally(() => {
+            if (this.pendingRestore === restorePromise) {
+                this.pendingRestore = null;
+            }
+        });
+    }
+    /** 执行一次 tab 会话校验与账号数据库恢复。 */
+    async restoreStoredSession() {
         // Store 会对损坏记录清理并抛错，不伪装成未登录。
         const storedSession = this.options.authSessionStore.load();
         if (!storedSession) {
@@ -135,23 +173,32 @@ class WebIMRuntimeImpl {
         }
         this.currentSession = storedSession;
         try {
-            const checked = await this.gatewayClient.checkToken({
-                access_token: storedSession.accessToken,
-            });
-            if (checked.valid === false) {
-                // Refresh 只处理服务端已明确判定无效的 access token。
-                const refreshedSession = await this.refreshInvalidSession(storedSession);
-                if (!refreshedSession) {
-                    this.clearLocalSession();
-                    return false;
-                }
-                this.currentSession = refreshedSession;
+            // validatedSession 只可能来自 valid check 或 explicit-invalid 后的 refresh。
+            const validatedSession = await this.validateStoredSession(storedSession);
+            if (!validatedSession) {
+                await this.invalidateRestoredSession();
+                return false;
             }
+            this.currentSession = validatedSession;
             // 恢复 realtime 前先恢复当前账号的 SQLite owner。
-            await this.options.accountDatabase.open(this.currentSession.userID);
+            await this.options.accountDatabase.open(validatedSession.userID);
             await this.sync.messages.recoverInterruptedSends();
         }
         catch (cause) {
+            if (isGatewayNetworkUnavailable(cause)) {
+                try {
+                    await this.options.accountDatabase.openExistingReadOnly(storedSession.userID);
+                    this.offlineReaderEnabled = true;
+                    this.applyLifecycleEvent('offline_restored');
+                    return true;
+                }
+                catch (offlineCause) {
+                    this.offlineReaderEnabled = false;
+                    this.currentSession = null;
+                    await this.options.accountDatabase.close();
+                    throw offlineCause;
+                }
+            }
             this.currentSession = null;
             await this.options.accountDatabase.close();
             throw cause;
@@ -161,13 +208,32 @@ class WebIMRuntimeImpl {
         this.scheduleIncomingCallRefresh();
         return true;
     }
+    /** 在离线只读状态重新校验会话，并只在成功后升级完整 runtime。 */
+    reconnect() {
+        if (this.pendingOfflineReconnect) {
+            return this.pendingOfflineReconnect;
+        }
+        if (this.currentState !== 'offline-readonly' || !this.currentSession) {
+            throw new WebIMRuntimeError('INVALID_LIFECYCLE_TRANSITION', 'Web IM offline reconnect requires an offline session.');
+        }
+        // reconnectPromise 是当前 runtime 唯一允许的离线校验请求。
+        // reconnectVersion 固定本轮校验所有权，退出登录会使其立即过期。
+        const reconnectVersion = ++this.offlineReconnectVersion;
+        const reconnectPromise = this.reconnectOfflineSession(this.currentSession, reconnectVersion);
+        this.pendingOfflineReconnect = reconnectPromise;
+        return reconnectPromise.finally(() => {
+            if (this.pendingOfflineReconnect === reconnectPromise) {
+                this.pendingOfflineReconnect = null;
+            }
+        });
+    }
     /** 远端 logout 失败时仍关闭 socket 并清除本地凭据。 */
     async signOut() {
         // 未 restore 的 runtime 仍可尝试退出已保存的 tab session。
         let session = this.currentSession;
         try {
             session ??= this.options.authSessionStore.load();
-            if (session) {
+            if (session && this.currentState !== 'offline-readonly' && this.currentState !== 'offline-validating') {
                 try {
                     await this.gatewayClient.logout({ access_token: session.accessToken });
                 }
@@ -183,13 +249,27 @@ class WebIMRuntimeImpl {
     /** 返回 useSyncExternalStore 可消费的稳定 snapshot。 */
     getSnapshot() { return this.currentSnapshot; }
     /** 返回动态绑定当前 auth/account DB owner 的唯一同步入口。 */
-    getSync() { return this.sync; }
+    getSync() {
+        this.rejectOfflineCapability('Full Web IM sync');
+        return this.sync;
+    }
+    /** 仅在 runtime 明确处于离线状态时返回 cache-only reader。 */
+    getOfflineReader() {
+        if (!this.offlineReaderEnabled) {
+            throw new WebIMRuntimeError('OFFLINE_READ_ONLY', 'Web IM offline reader is unavailable.');
+        }
+        return this.offlineReader;
+    }
     /** 返回动态绑定当前认证会话的唯一用户设置入口。 */
-    getSettings() { return this.settings; }
+    getSettings() {
+        this.rejectOfflineCapability('Web IM settings');
+        return this.settings;
+    }
     /** 返回不依赖认证状态的 Web 客户端版本检查入口。 */
     getClientVersion() { return this.clientVersion; }
     /** 从 Gateway 恢复当前账号待接来电，失败由调用方或后台 reporter 显式处理。 */
     async refreshIncomingCall() {
+        this.rejectOfflineCapability('Incoming call refresh');
         /** session 固定本轮查询所属账号，防止响应串入切换后的账号。 */
         const session = this.currentSession;
         if (!session)
@@ -366,6 +446,88 @@ class WebIMRuntimeImpl {
     async refreshInvalidSession(session) {
         return refreshWebIMAuthSession(session, this.gatewayClient, this.options.authSessionStore);
     }
+    /** 校验已有 tab session；explicit invalid 后的任何 refresh failure 都失效关闭。 */
+    async validateStoredSession(session) {
+        // checked 是唯一允许进入离线分支前抛 transport error 的远端操作。
+        const checked = await this.gatewayClient.checkToken({
+            access_token: session.accessToken,
+        });
+        if (checked.valid !== false) {
+            return session;
+        }
+        try {
+            return await this.refreshInvalidSession(session);
+        }
+        catch {
+            return null;
+        }
+    }
+    /** 执行离线单飞重连，网络失败保留 reader，其余失败清理 session/DB。 */
+    async reconnectOfflineSession(session, reconnectVersion) {
+        this.applyLifecycleEvent('offline_reconnect_started');
+        let validatedSession;
+        try {
+            validatedSession = await this.validateStoredSession(session);
+        }
+        catch (cause) {
+            if (!this.isCurrentOfflineReconnect(session, reconnectVersion)) {
+                return false;
+            }
+            if (isGatewayNetworkUnavailable(cause)) {
+                this.applyLifecycleEvent('offline_reconnect_failed');
+                throw cause;
+            }
+            await this.invalidateOfflineSession();
+            throw cause;
+        }
+        if (!this.isCurrentOfflineReconnect(session, reconnectVersion)) {
+            return false;
+        }
+        if (!validatedSession) {
+            await this.invalidateOfflineSession();
+            return false;
+        }
+        // 升级 database 前先撤销旧 reader，防止其观察 readwrite adapter。
+        this.offlineReaderEnabled = false;
+        this.currentSession = validatedSession;
+        try {
+            await this.options.accountDatabase.open(validatedSession.userID);
+            if (!this.isCurrentOfflineReconnect(session, reconnectVersion)) {
+                return false;
+            }
+            await this.sync.messages.recoverInterruptedSends();
+            if (!this.isCurrentOfflineReconnect(session, reconnectVersion)) {
+                return false;
+            }
+        }
+        catch (cause) {
+            await this.invalidateOfflineSession();
+            throw cause;
+        }
+        this.applyLifecycleEvent('offline_reconnect_succeeded');
+        this.connectRealtime();
+        this.scheduleIncomingCallRefresh();
+        return true;
+    }
+    /** 判断异步离线重连结果仍属于当前 session 和生命周期。 */
+    isCurrentOfflineReconnect(session, reconnectVersion) {
+        return (this.offlineReconnectVersion === reconnectVersion &&
+            this.currentSession?.userID === session.userID &&
+            this.currentState === 'offline-validating');
+    }
+    /** 清理初次 restore 已明确失效的 session，不派发离线状态事件。 */
+    async invalidateRestoredSession() {
+        this.offlineReaderEnabled = false;
+        this.clearLocalSession();
+        await this.options.accountDatabase.close();
+    }
+    /** 从 offline-validating 原子进入 anonymous 并释放所有本地 owner。 */
+    async invalidateOfflineSession() {
+        this.offlineReaderEnabled = false;
+        this.clearLocalSession();
+        this.applyLifecycleEvent('offline_session_invalid');
+        await this.options.accountDatabase.close();
+    }
     /** 关闭 realtime client 和事件订阅，不修改认证会话。 */
     stopRealtime() {
         this.unsubscribeRealtime?.();
@@ -382,17 +544,27 @@ class WebIMRuntimeImpl {
         this.incomingCallState = resetIMIncomingCallLifecycleState(this.incomingCallState);
         this.options.authSessionStore.clear();
     }
+    /** 离线状态禁止返回任何包含远端或 mutation 能力的 facade。 */
+    rejectOfflineCapability(capability) {
+        if (this.currentState === 'offline-readonly' ||
+            this.currentState === 'offline-validating') {
+            throw new WebIMRuntimeError('OFFLINE_READ_ONLY', `${capability} is unavailable while Web IM is offline.`);
+        }
+    }
     /** 拒绝未 restore 的 tab 直接执行账号安全 mutation。 */
     requireAccountSecuritySession() {
+        this.rejectOfflineCapability('Account security');
         if (!this.currentSession) {
             throw new WebIMRuntimeError('ACCOUNT_SECURITY_AUTH_REQUIRED', 'Account security requires an authenticated Web IM session.');
         }
     }
     /** 清除本地认证、realtime 与账号数据库，不额外请求远端 logout。 */
     async invalidateLocalSession() {
+        this.offlineReconnectVersion += 1;
         this.stopRealtime();
         this.sync.presence.clear();
         this.currentSession = null;
+        this.offlineReaderEnabled = false;
         this.incomingCallState = resetIMIncomingCallLifecycleState(this.incomingCallState);
         this.options.authSessionStore.clear();
         this.applyLifecycleEvent('signed_out');
@@ -446,5 +618,10 @@ class WebIMRuntimeImpl {
             incomingCall: this.incomingCallState.snapshot,
         };
     }
+}
+/** 判断 Gateway adapter 已证明的浏览器 transport unavailable 错误。 */
+function isGatewayNetworkUnavailable(cause) {
+    return (cause instanceof WebIMRuntimeError &&
+        cause.code === 'GATEWAY_NETWORK_UNAVAILABLE');
 }
 //# sourceMappingURL=web-im-runtime.js.map

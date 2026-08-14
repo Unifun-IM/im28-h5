@@ -9,6 +9,7 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { buildConversationRoute } from '../conversations/conversation-route.js';
@@ -23,6 +24,8 @@ import './qr-code-page.css';
 export default function GroupQRCodeApplyPage() {
   /** runtime 是公开群资料和申请 mutation 的唯一入口。 */
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 承载入群申请与打开群聊动作结果。 */
+  const { toast } = useAppToast();
   /** routeParams 提供扫码协议解析出的群 ID。 */
   const routeParams = useParams<{ groupID: string }>();
   /** groupID 排除空 deep link。 */
@@ -101,16 +104,17 @@ export default function GroupQRCodeApplyPage() {
         message,
         sourceType: routeState.sourceType,
       });
+      toast.success('入群申请已发送');
       navigate(routeState.backHref, {
         replace: true,
         state: createGroupApplyReturnState(routeState),
       });
     } catch (cause) {
-      setError(readGroupApplyError(cause, '入群申请发送失败'));
+      toast.error(readGroupApplyError(cause, '入群申请发送失败'));
     } finally {
       setSubmitting(false);
     }
-  }, [group, message, navigate, routeState, runtime, submitting]);
+  }, [group, message, navigate, routeState, runtime, submitting, toast]);
 
   /** 已入群账号进入现有群会话，不重复提交申请。 */
   const openJoinedGroup = useCallback(async (): Promise<void> => {
@@ -127,11 +131,11 @@ export default function GroupQRCodeApplyPage() {
       if (!route) throw new Error('该群聊暂不可进入');
       navigate(route.href, { replace: route.replace });
     } catch (cause) {
-      setError(readGroupApplyError(cause, '该群聊暂不可进入'));
+      toast.error(readGroupApplyError(cause, '该群聊暂不可进入'));
     } finally {
       setLoading(false);
     }
-  }, [group, navigate, routeState.sourceType, runtime]);
+  }, [group, navigate, routeState.sourceType, runtime, toast]);
 
   if (restoring) return <GroupApplyState label="正在恢复群资料" />;
   if (!runtime) return <GroupApplyState label="运行配置不可用" detail={startupError} />;

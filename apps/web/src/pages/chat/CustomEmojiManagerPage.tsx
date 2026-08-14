@@ -7,6 +7,7 @@ import checkIconURL from '../../assets/rn/assets/icons/imm28/check.regular.svg';
 import plusIconURL from '../../assets/rn/assets/icons/imm28/plus.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
+import { OperationToastFeedback } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import {
   buildCustomEmojiUploadInputs,
@@ -193,7 +194,7 @@ export function CustomEmojiManagerPage() {
           </button>
         </PageNavbar>
         {error ? <p className="rn-custom-emoji-manager-feedback is-error" role="status">{error}</p> : null}
-        {notice ? <p className="rn-custom-emoji-manager-feedback is-success" role="status">{notice}</p> : null}
+        <OperationToastFeedback notice={notice} />
         <div className="rn-custom-emoji-manager-grid" role="list" aria-label="自定义表情" ref={gridRef}>
           {mode === 'view' ? (
             <button className="rn-custom-emoji-manager-add" type="button" role="listitem" disabled={mutating || !remaining} aria-label="添加自定义表情" onClick={() => fileInputRef.current?.click()}>

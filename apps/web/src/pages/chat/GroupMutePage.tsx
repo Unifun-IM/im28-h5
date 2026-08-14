@@ -3,7 +3,7 @@ import { resolveIMGroupMemberDisplayName, type Conversation, type WebIMGroupMemb
 import { Link, Navigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
-import { InteractionModal, PullRefreshIndicator } from '../../components/interaction/index.js';
+import { InteractionModal, OperationToastFeedback, PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
@@ -177,7 +177,7 @@ export function GroupMutePage() {
         <PullRefreshIndicator refreshing={refreshing} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
         <div className="rn-group-action-content">
           {error ? <p className="rn-group-action-error" role="alert">{error}</p> : null}
-          {notice ? <p className="rn-group-action-notice" role="status">{notice}</p> : null}
+          <OperationToastFeedback notice={notice} />
           {loading ? <p className="rn-group-action-empty">正在加载群禁言</p> : null}
           {!loading && group?.permissions.canMuteAll ? <section className="rn-group-action-card"><h2>群禁言范围</h2><MuteScopeOption label="关闭" selected={!group.muteAll && !group.muteMember} disabled={submitting} onSelect={() => setAction({ type: 'scope', scope: 'off' })} /><MuteScopeOption label="全员禁言" selected={group.muteAll === true} disabled={submitting} onSelect={() => setAction({ type: 'scope', scope: 'all' })} /><MuteScopeOption label="仅普通成员禁言" selected={group.muteMember === true && !group.muteAll} disabled={submitting} divided={false} onSelect={() => setAction({ type: 'scope', scope: 'normal' })} /></section> : null}
           {!loading && group?.permissions.canMuteMembers ? <section className="rn-group-action-card"><div className="rn-group-action-section-title"><strong>手动禁言({mutedMembers.length})</strong></div>{mutedMembers.map(member => <MuteMemberRow key={member.userID} member={member} actionLabel="解除" onAction={() => setAction({ type: 'unmute-member', userID: member.userID })} />)}{candidates.map(member => <MuteMemberRow key={member.userID} member={member} actionLabel="禁言" onAction={() => setPickerTarget(member.userID)} />)}{!mutedMembers.length && !candidates.length ? <p className="rn-group-action-empty">暂无可操作成员</p> : null}</section> : null}

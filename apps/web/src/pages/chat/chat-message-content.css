@@ -230,7 +230,17 @@
   width: min(220px, 58vw);
   min-height: 42px;
   align-items: center;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
   gap: 9px;
+}
+
+.rn-chat-card-content:disabled {
+  opacity: 1;
 }
 
 .rn-chat-card-avatar {

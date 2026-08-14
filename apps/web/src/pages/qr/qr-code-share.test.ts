@@ -23,5 +23,13 @@ describe('QR code in-app share route', () => {
     expect(pageSource).not.toContain('location.state');
     expect(pageSource).not.toContain('gatewayClient');
     expect(pageSource).not.toContain('sendImageMessage');
+    expect(pageSource).toContain('selectionMode="single"');
+    expect(pageSource).toContain("allowedKinds={['friend']}");
+  });
+
+  it('个人与群二维码共用全局模态展示 owner', () => {
+    expect(displaySource).toContain('<InteractionModal');
+    expect(displaySource).toContain('className="rn-qr-display-modal"');
+    expect(displaySource).not.toContain('className="rn-qr-display-page"');
   });
 });

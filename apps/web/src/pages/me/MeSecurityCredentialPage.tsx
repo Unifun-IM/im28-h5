@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import type { GatewayUser } from '@im28/im-sdk/web';
 import { Navigate, useNavigate } from 'react-router-dom';
 
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import {
   ACCOUNT_CREDENTIAL_ERROR,
@@ -24,6 +25,8 @@ interface MeSecurityCredentialPageProps {
 export function MeSecurityCredentialPage({ mode }: MeSecurityCredentialPageProps) {
   // runtime 同时拥有 Gateway mutation 与 reset 后本地 session cleanup。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 承载账号凭据写入结果。 */
+  const { toast } = useAppToast();
   // navigate 只在真实成功后切换 route。
   const navigate = useNavigate();
   // profile 决定当前账号是否已设置。
@@ -88,13 +91,15 @@ export function MeSecurityCredentialPage({ mode }: MeSecurityCredentialPageProps
     try {
       if (mode === 'account') {
         await runtime.setAccountPassword({ account: accountDraft.trim(), password });
+        toast.success('账号密码设置成功');
         navigate('/me/security', { replace: true });
       } else {
         await runtime.resetPassword({ old_password: oldPassword, password });
+        toast.success('密码修改成功，请重新登录');
         navigate('/auth/account', { replace: true });
       }
     } catch (cause) {
-      setError(readAuthError(cause, '设置失败'));
+      toast.error(readAuthError(cause, '设置失败'));
       setSaving(false);
     }
   }

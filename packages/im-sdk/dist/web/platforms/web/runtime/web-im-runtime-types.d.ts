@@ -8,6 +8,7 @@ import type { WebIMPlatformTerm, WebIMPlatformTermKey } from './platform-terms-c
 import type { WebIMRuntimeConfig } from './runtime-config.js';
 import type { WebIMRuntimeState } from './runtime-lifecycle.js';
 import type { WebIMUserSettings } from './web-im-user-settings.js';
+import type { WebIMOfflineReader } from './web-im-offline-reader.js';
 import type { IMIncomingCallSnapshot } from '../../../sync/incoming-call-lifecycle.js';
 import type { IMCallRealtimeSignal } from '../../../sync/call-realtime-signal.js';
 /** Web 登录请求只包含业务字段，设备身份由 runtime Header 统一注入。 */
@@ -41,9 +42,11 @@ export interface WebIMRuntime {
     resetPassword(request: WebIMResetPasswordRequest): Promise<void>;
     getPlatformTerm(key: WebIMPlatformTermKey): Promise<WebIMPlatformTerm>;
     restore(): Promise<boolean>;
+    reconnect(): Promise<boolean>;
     signOut(): Promise<void>;
     getSnapshot(): WebIMRuntimeSnapshot;
     getSync(): WebIMSync;
+    getOfflineReader(): WebIMOfflineReader;
     getSettings(): WebIMUserSettings;
     getClientVersion(): WebIMClientVersion;
     refreshIncomingCall(): Promise<void>;

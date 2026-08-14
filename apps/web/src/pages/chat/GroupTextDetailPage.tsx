@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
+import { OperationToastFeedback } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 
 /** 群文本详情页的字段与 RN 文案配置。 */
@@ -223,9 +224,7 @@ export function GroupTextDetailPage({
           {state.error ? (
             <p className="rn-group-text-detail-error" role="status">{state.error}</p>
           ) : null}
-          {notice ? (
-            <p className="rn-group-text-detail-notice" role="status">{notice}</p>
-          ) : null}
+          <OperationToastFeedback notice={notice} />
           {state.group ? (
             canEdit && editor ? (
               <textarea

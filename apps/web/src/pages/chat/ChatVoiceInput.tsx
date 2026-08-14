@@ -141,7 +141,7 @@ export function ChatVoiceInput({
       )}
       {recording ? (
         <div
-          className={`rn-chat-voice-overlay${canceling ? ' is-canceling' : ''}`}
+          className={`rn-chat-voice-overlay${status === 'recording' ? ' is-recording' : ''}${canceling ? ' is-canceling' : ''}`}
           aria-label="语音录制音量"
         >
           <div className="rn-chat-voice-overlay-panel">

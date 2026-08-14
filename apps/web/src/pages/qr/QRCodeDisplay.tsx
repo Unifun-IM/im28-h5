@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import downloadIconURL from '../../assets/rn/assets/icons/imm28/share-ios.svg';
+import { InteractionModal, useAppToast } from '../../components/interaction/index.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
@@ -29,8 +30,10 @@ export interface QRCodeDisplayProps {
   readonly onShare: () => void;
 }
 
-/** 统一渲染个人/群二维码，避免两套 Canvas、下载与分享逻辑。 */
+/** 以统一全局弹窗渲染个人/群二维码，避免两套 Canvas、下载与分享逻辑。 */
 export function QRCodeDisplay(props: QRCodeDisplayProps) {
+  /** toast 承载下载动作结果，Canvas 生成错误仍留在弹窗。 */
+  const { toast } = useAppToast();
   /** canvasRef 指向页面唯一二维码图像 owner。 */
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   /** rendering 标记当前 payload 的 Canvas 绘制过程。 */
@@ -74,14 +77,20 @@ export function QRCodeDisplay(props: QRCodeDisplayProps) {
       /** file 与系统分享共用同一无损 PNG 路径。 */
       const file = await createBrowserQRCodeFile(canvasRef.current, props.kind, props.identity);
       downloadBrowserQRCode(file);
+      toast.success('二维码已下载');
     } catch (cause) {
-      setError(readQRCodeDisplayError(cause, '二维码下载失败'));
+      toast.error(readQRCodeDisplayError(cause, '二维码下载失败'));
     }
   }
 
   return (
-    <main className="rn-qr-display-page" aria-busy={rendering}>
-      <section className="rn-qr-display-surface">
+    <InteractionModal
+      open
+      ariaLabel={props.kind === 'group' ? '群二维码' : '我的二维码'}
+      className="rn-qr-display-modal"
+      onRequestClose={props.onClose}
+    >
+      <section className="rn-qr-display-surface im-modal-sheet" aria-busy={rendering}>
         <PageNavbar className="rn-qr-display-header">
           <button type="button" aria-label={props.closeLabel} onClick={props.onClose}><RNAssetIcon assetURL={backIconURL} /></button>
           <h1>二维码</h1>
@@ -102,7 +111,7 @@ export function QRCodeDisplay(props: QRCodeDisplayProps) {
           <button className="rn-qr-display-scan" type="button" onClick={props.onScan}>扫一扫</button>
         </section>
       </section>
-    </main>
+    </InteractionModal>
   );
 }
 

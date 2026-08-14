@@ -40,6 +40,10 @@ export interface ChatMessageView {
   readonly callStatus?: IMCallMessageStatus;
   readonly callUnanswered?: boolean;
   readonly entities?: readonly PresetEmojiEntity[];
+  /** 名片类型用于页面选择用户资料或群资料链路。 */
+  readonly cardKind?: 'user' | 'group';
+  /** 名片目标身份只来自协议快照，不从展示文案反推。 */
+  readonly cardTargetID?: string;
 }
 
 /** 缺少完整成员资料时仍可稳定展示的 RN 系统文案。 */
@@ -248,6 +252,8 @@ function readCardMessageView(
       text: readString(group.title) || readString(group.group_id) || '群聊名片',
       detail: readString(group.group_id),
       mediaURL: readString(group.avatar_url),
+      cardKind: 'group',
+      cardTargetID: readString(group.group_id),
     };
   }
   // user 保存用户名片快照。
@@ -258,6 +264,8 @@ function readCardMessageView(
       formatIMUserDisplayName(readString(user.user_id)) || '个人名片',
     detail: readString(user.user_id),
     mediaURL: readString(user.avatar_url),
+    cardKind: 'user',
+    cardTargetID: readString(user.user_id),
   };
 }
 

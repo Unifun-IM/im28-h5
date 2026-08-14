@@ -37,6 +37,7 @@ interface ChatMessageContentProps {
   readonly onOpenQuotedMessage: (message: Message) => void;
   readonly onCopyLink: (url: string) => Promise<boolean>;
   readonly onStartCall?: (mediaType: 'audio' | 'video') => void;
+  readonly onOpenCard?: (view: ChatMessageView) => void;
 }
 
 /** 根据展示模型呈现文本、媒体、文件、名片和表情内容。 */
@@ -48,6 +49,7 @@ export function ChatMessageContent({
   onOpenQuotedMessage,
   onCopyLink,
   onStartCall,
+  onOpenCard,
 }: ChatMessageContentProps) {
   // media 提供当前聊天页唯一的预览和音频 owner。
   const media = useChatMediaInteraction();
@@ -209,7 +211,9 @@ export function ChatMessageContent({
       </button>
     );
   }
-  if (view.kind === 'card') return <ChatCardContent view={view} />;
+  if (view.kind === 'card') {
+    return <ChatCardContent view={view} {...(onOpenCard ? { onOpen: onOpenCard } : {})} />;
+  }
   if (view.kind === 'emoji') return <ChatCustomEmojiMessageContent view={view} />;
   if (view.kind === 'quote') {
     // sourceText 优先显示当前缓存来源，窗口外回退发送时快照。
@@ -272,18 +276,32 @@ function getAudioActionLabel(
 }
 
 /** 使用真实身份快照呈现用户或群名片。 */
-function ChatCardContent({ view }: { readonly view: ChatMessageView }) {
+function ChatCardContent({
+  view,
+  onOpen,
+}: {
+  readonly view: ChatMessageView;
+  readonly onOpen?: (view: ChatMessageView) => void;
+}) {
   // avatarStyle 以真实卡片身份生成无图片时的 RN fallback。
   const avatarStyle = {
     '--chat-card-avatar-gradient': getRNAvatarGradient(view.detail || view.text),
   } as CSSProperties;
   return (
-    <span className="rn-chat-card-content">
+    <button
+      className="rn-chat-card-content"
+      type="button"
+      aria-label={view.cardKind === 'group'
+        ? `查看${view.text}的群聊卡片`
+        : `查看${view.text}的个人资料`}
+      disabled={!view.cardTargetID || !onOpen}
+      onClick={() => onOpen?.(view)}
+    >
       <span className="rn-chat-card-avatar" style={avatarStyle}>
         {getRNAvatarInitial(view.text)}
         {view.mediaURL ? <img src={view.mediaURL} alt="" /> : null}
       </span>
       <span><strong>{view.text}</strong>{view.detail ? <small>{view.detail}</small> : null}</span>
-    </span>
+    </button>
   );
 }

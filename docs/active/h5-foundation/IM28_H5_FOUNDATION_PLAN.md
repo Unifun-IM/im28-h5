@@ -15,6 +15,18 @@
 - 以纵向切片逐步交付认证、会话和消息能力，每个切片都有明确验证和残留项。
 - 以 `im28-phone` 为视觉、资产、页面行为和能力源，按 React Router SPA 路由逐页完成可追踪 parity 迁移。
 
+## W6.a6.20.149 H5 Interaction Parity Closeout
+
+> INTERACTION AXIOM: Navbar、Toast、目标选择、二维码、名片、录音与通话只复刻 frozen RN production contract；H5 页面不得复制 shared IM mutation、DTO、权限或状态机。
+
+| slice | owner | deliverable | gate | status |
+| :--- | :--- | :--- | :--- | :--- |
+| `.149.1` | H5 interaction/chat UI | 多选 Navbar、左侧 selector、双操作底栏、全局 Toast foundation | focused + typecheck + build + browser | `local-complete/browser-session-gated` |
+| `.149.2` | H5 picker/QR UI | 名片/二维码单选好友发送；个人/群二维码共用全局 modal | focused + typecheck + mobile/dark browser | `local-complete/browser-session-gated` |
+| `.149.3` | H5 chat/settings UI | 名片点击、单聊设置、定时删除、input focus | focused + route/browser | `done-local/browser-session-gated` |
+| `.149.4` | H5 call/recorder consumers | RN 同源 RTC UI、录音取消动效与真实 runtime chain | focused + media/browser/external RTC | `done-local/external-rtc-gated` |
+| `.149.5` | H5 operation feedback | 全页面 success/error 收敛到唯一 Toast owner | consumer contract + typecheck + build | `active` |
+
 ## W6.a6.20.148 Cold-Start Offline Safety Contract Freeze
 
 > OFFLINE SAFETY AXIOM: unchecked cached identity may unlock only an existing read-only account snapshot；完整 sync、mutation、realtime and fake online state remain forbidden until Gateway auth succeeds again.
@@ -28,7 +40,7 @@
 | auth safety | explicit invalid/HTTP/business error never enters offline；reconnect must revalidate/refresh before normal runtime |
 | mutation safety | no send/retry/draft/mark-read/profile/group/call/message/conversation mutation or offline queue |
 | deliverable | `docs/runtime-contracts/web-cold-start-offline.md` + consumer matrix registration + bounded implementation slices |
-| status | `completed/contract-frozen/implementation-pending` |
+| status | `completed/h5-consumed/browser-accepted` |
 
 ### W6.a6.20.148.1a Transport Classification And Lifecycle Foundation
 
@@ -49,6 +61,33 @@
 | verification | focused 7 files/35 tests；Web full 100 files/419 tests；typecheck/boundary/build:web/sync:web；H5 typecheck/build；RN protected diff empty |
 | status | `completed/storage-reader-safe/not-consumed` |
 | next | `.148.1c` runtime restore/reconnect/getSync/getOfflineReader orchestration |
+
+### W6.a6.20.148.1c Runtime Offline Restore And Reconnect Orchestration
+
+| field | contract |
+| :--- | :--- |
+| delivered | network-only offline restore、runtime-owned reader gate、offline full-sync/settings/security/call rejection、single-flight reconnect and invalid cleanup |
+| concurrency | sign-out/new auth revokes pending reconnect results；stale validation cannot reopen readwrite DB or realtime |
+| verification | focused 4 files/17 tests；Web full 101 files/424 tests；typecheck/boundary/build:web/sync:web；H5 typecheck/build；RN protected diff empty |
+| status | `completed/runtime-safe/not-h5-consumed` |
+| next | `.148.2` H5 offline shell |
+
+### W6.a6.20.148.2 H5 Offline Shell
+
+| field | contract |
+| :--- | :--- |
+| delivered | runtime-gated offline routes、banner、cache-only conversations/history、retry/sign-out and read-only interaction gates |
+| exclusion | no online CallProvider/tabs、search/settings/presence、composer、message/conversation/profile actions |
+| status | `completed/local-and-browser-accepted` |
+
+### W6.a6.20.148.3 Isolated Cold-Reload Acceptance
+
+| field | contract |
+| :--- | :--- |
+| proof | independent origin/proxy warm-up -> blocked reload -> cached list/chat -> failed retry -> valid reconnect |
+| fail-closed | isolated invalid check + failed refresh clears local identity and returns auth |
+| regression | concurrent cold restore is SDK single-flight, preventing React StrictMode DB-owner race |
+| status | `completed/browser-real` |
 
 ## W6.a6.20.147 External Gate Activation Review
 

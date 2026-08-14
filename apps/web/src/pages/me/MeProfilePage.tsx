@@ -9,6 +9,7 @@ import { AvatarCropDialog } from '../../components/avatar/AvatarCropDialog.js';
 import { AvatarSourceActionSheet } from '../../components/avatar/AvatarSourceActionSheet.js';
 import { validateAvatarFile } from '../../components/avatar/avatar-crop.js';
 import { copyUserIDToClipboard } from '../../components/clipboard/user-id-clipboard.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import {
   AVATAR_ALBUM_INPUT,
   AVATAR_CAMERA_INPUT,
@@ -27,6 +28,8 @@ import './me-profile-page.css';
 export function MeProfilePage() {
   // runtime context 是资料读取唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  /** toast 只承载剪贴板操作结果。 */
+  const { toast } = useAppToast();
   // location 只承载应用内部的受控快捷动作，不参与资料业务状态。
   const location = useLocation();
   // navigate 在消费快捷动作后清空当前 history entry 的瞬时 state。
@@ -39,8 +42,6 @@ export function MeProfilePage() {
   const [loading, setLoading] = useState(false);
   // error 保留真实请求错误。
   const [error, setError] = useState<string | null>(null);
-  // copied 短暂反馈用户 ID 已真实写入系统剪贴板。
-  const [copied, setCopied] = useState(false);
   // avatarSheetVisible 控制 RN 同语义的头像来源选择。
   const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
   // pendingAvatar 保存当前等待裁剪的浏览器文件。
@@ -131,11 +132,9 @@ export function MeProfilePage() {
     try {
       await copyUserIDToClipboard(userID);
       setError(null);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1200);
+      toast.success('已复制ID');
     } catch (cause) {
-      setCopied(false);
-      setError(readProfilePageError(cause, '复制用户ID失败'));
+      toast.error(readProfilePageError(cause, '复制用户ID失败'));
     }
   }
 
@@ -160,7 +159,6 @@ export function MeProfilePage() {
             <span>{error}</span>
             <button type="button" onClick={() => void loadProfile()}>重试</button>
           </div> : null}
-          {copied ? <p className="rn-me-profile-copy-state" role="status">已复制ID</p> : null}
           <div className="rn-me-profile-card">
             <button className="rn-me-profile-row rn-me-profile-avatar-row" type="button" disabled={updatingAvatar} onClick={() => setAvatarSheetVisible(true)}>
               <span className="rn-me-profile-label">头像</span>

@@ -4,7 +4,7 @@ import type { WebIMSync } from '@im28/im-sdk/web';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import closeIconURL from '../../assets/rn/assets/icons/imm28/xmark.regular.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
-import { InteractionModal } from '../interaction/index.js';
+import { InteractionModal, OperationToastFeedback } from '../interaction/index.js';
 import { RNAssetIcon } from '../RNAssetIcon.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../rn-avatar-view.js';
 import {
@@ -165,6 +165,8 @@ export function ChatTargetPickerModal({
   }
 
   return (
+    <>
+    <OperationToastFeedback error={operationError} />
     <InteractionModal open={open} ariaLabel="选择分享对象" className="rn-chat-target-picker-modal" closeOnBackdrop={false} onRequestClose={requestClose}>
       <section className="rn-chat-target-picker-sheet im-modal-sheet" aria-busy={loading || pending}>
         <header className="rn-chat-target-picker-header">
@@ -183,7 +185,7 @@ export function ChatTargetPickerModal({
             {visibleTabs.map(tab => <button key={tab.kind} type="button" className={activeKind === tab.kind ? 'is-active' : ''} disabled={pending} onClick={() => setActiveKind(tab.kind)}>{tab.label}</button>)}
           </nav>
         ) : null}
-        {loadError || operationError ? <p className="rn-chat-target-picker-error" role="alert">{operationError || loadError}</p> : null}
+        {loadError ? <p className="rn-chat-target-picker-error" role="alert">{loadError}</p> : null}
         <section className="rn-chat-target-picker-grid" aria-label="可选择的好友和群聊">
           {selectionMode === 'multiple' && visibleTargets.length ? <TargetTile target={null} title="ALL" selected={allSelected} disabled={pending} onToggle={toggleAll} /> : null}
           {visibleTargets.map(target => <TargetTile key={target.key} target={target} title={target.title} selected={selected.has(target.key)} disabled={pending} onToggle={() => toggleTarget(target)} />)}
@@ -193,6 +195,7 @@ export function ChatTargetPickerModal({
         <footer className="rn-chat-target-picker-footer"><button type="button" disabled={!selected.size || pending || confirmDisabled} onClick={() => onConfirm(selectedTargets)}>{pending ? '发送中' : actionLabel}</button></footer>
       </section>
     </InteractionModal>
+    </>
   );
 }
 

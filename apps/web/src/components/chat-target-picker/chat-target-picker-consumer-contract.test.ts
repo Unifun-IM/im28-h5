@@ -22,6 +22,15 @@ describe('chat target picker consumer contract', () => {
     expect(chatSource).not.toContain('ChatCardPickerDialog');
   });
 
+  it('名片和二维码分享只允许单选好友目标', () => {
+    for (const source of [contactCardSource, groupCardSource, qrSource]) {
+      expect(source).toContain('selectionMode="single"');
+      expect(source).toContain("allowedKinds={['friend']}");
+      expect(source).not.toContain('IM_BROADCAST_MAX_TARGETS');
+      expect(source).not.toContain('selectionMode="multiple"');
+    }
+  });
+
   it('keeps the legacy path redirect-only without restoring a target page', () => {
     expect(appSource).not.toContain('ChatForwardTargetPage');
     expect(appSource).toContain('path="/conversations/:conversationID/forward"');

@@ -5,6 +5,7 @@ import type {
   ConversationAction,
   ConversationActionAnchor,
 } from './ConversationActionMenu.js';
+import { resolveConversationDeleteForAllPermission } from './conversation-delete-permission.js';
 
 /** 会话动作 hook 参数只接收现有共享 facade 与页面 cache 重读函数。 */
 interface UseConversationActionsOptions {
@@ -69,18 +70,24 @@ export function useConversationActions({
   async function openDeleteSheet(target: WebIMConversationListItem): Promise<void> {
     if (!sync) return;
     closeActionMenu();
-    setCanDeleteForAll(target.conversation.type === 'single');
-    setDeleteTarget(target);
-    if (target.conversation.type !== 'group') return;
+    if (target.conversation.type !== 'group') {
+      setCanDeleteForAll(true);
+      setDeleteTarget(target);
+      return;
+    }
+    setCanDeleteForAll(false);
     try {
-      /** groups 是 SDK 已规范化的当前账号已加入群缓存。 */
-      const groups = await sync.groups.listCached();
-      /** group 必须与会话 targetID 精确匹配。 */
-      const group = groups.find(item => item.groupID === target.conversation.targetID);
-      setCanDeleteForAll(group?.permissions.canClearMessages === true);
+      // allowed 由 shared 群权限快照决定，冷缓存时会先完成远端同步。
+      const allowed = await resolveConversationDeleteForAllPermission(
+        target,
+        sync.groups,
+      );
+      setCanDeleteForAll(allowed);
     } catch (cause) {
       setCanDeleteForAll(false);
       reportError(readConversationActionError(cause));
+    } finally {
+      setDeleteTarget(target);
     }
   }
 

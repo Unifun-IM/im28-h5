@@ -7,7 +7,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
-import { InteractionModal } from '../../components/interaction/index.js';
+import { InteractionModal, OperationToastFeedback } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
@@ -158,8 +158,8 @@ export function GroupManagementPage() {
           <h1>群管理</h1><span />
         </PageNavbar>
         <div className="rn-group-management-content">
+          <OperationToastFeedback notice={notice} />
           {error ? <p className="rn-group-management-error" role="alert">{error}</p> : null}
-          {notice ? <p className="rn-group-management-notice" role="status">{notice}</p> : null}
           {loading ? <p className="rn-group-management-empty">正在加载群管理</p> : null}
           {!loading && group && roleView ? (
             <section className="rn-group-management-card">

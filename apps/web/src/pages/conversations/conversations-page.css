@@ -440,7 +440,7 @@
   align-items: flex-end;
   justify-content: center;
   margin: 0;
-  padding: 0 8px calc(var(--im-safe-bottom) + 8px);
+  padding: 0;
   background: transparent;
 }
 
@@ -454,45 +454,58 @@
 
 .rn-conversation-delete-sheet {
   display: flex;
-  width: min(100%, 464px);
+  width: min(100%, 520px);
+  padding-bottom: var(--im-safe-bottom);
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: var(--im-bg-page);
   gap: 8px;
   flex-direction: column;
 }
 
-.rn-conversation-delete-group,
-.rn-conversation-delete-sheet > button {
+.rn-conversation-delete-group {
   overflow: hidden;
-  border-radius: 8px;
   background: var(--im-bg-card);
 }
 
 .rn-conversation-delete-group p {
+  display: grid;
+  min-height: 48px;
   margin: 0;
+  place-items: center;
   padding: 16px;
-  color: var(--im-text-secondary);
-  font-size: 13px;
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: var(--im-text-muted);
+  background: var(--im-bg-card);
+  font-size: 12px;
   letter-spacing: 0;
-  line-height: 19px;
+  line-height: 16px;
   text-align: center;
 }
 
 .rn-conversation-delete-sheet button {
   width: 100%;
-  min-height: 52px;
-  padding: 0 16px;
+  min-height: 56px;
+  padding: 16px;
   border: 0;
-  border-top: var(--im-hairline-width) solid var(--im-border-subtle);
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
   color: var(--im-status-danger);
-  background: transparent;
+  background: var(--im-bg-card);
   cursor: pointer;
-  font-size: 15px;
+  font: inherit;
+  font-size: 16px;
   letter-spacing: 0;
-  line-height: 22px;
+  line-height: 24px;
 }
 
 .rn-conversation-delete-sheet > button {
-  border-top: 0;
+  border-bottom: 0;
   color: var(--im-text-primary);
+  background: var(--im-bg-card);
+}
+
+.rn-conversation-delete-sheet button:active {
+  background: var(--im-bg-pressed);
 }
 
 .rn-conversation-delete-sheet button:disabled {

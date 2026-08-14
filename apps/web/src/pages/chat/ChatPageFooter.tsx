@@ -26,7 +26,6 @@ export function ChatPageFooter({
     return (
       <ChatMultiSelectBar
         selectedCount={forwardFlow.selectedCount}
-        onCancel={forwardFlow.cancelMultiSelect}
         onForward={forwardFlow.forwardSelectedMessages}
         onDelete={onDeleteSelected}
       />

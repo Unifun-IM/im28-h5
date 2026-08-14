@@ -5,6 +5,27 @@ import type { ChatSystemEmojiStorage } from './chat-system-emoji-recent.js';
 /** 本地排序使用独立 stable-ID key，避免覆盖 RN 旧版完整对象缓存。 */
 const CHAT_CUSTOM_EMOJI_ORDER_KEY = 'im28.chat.customEmoji.order';
 
+/** 管理页网格与 RN 保持相同的四周留白。 */
+const CHAT_CUSTOM_EMOJI_GRID_PADDING = 16;
+
+/** 管理页网格与 RN 保持相同的横纵间距。 */
+const CHAT_CUSTOM_EMOJI_GRID_GAP = 8;
+
+/** 管理页固定采用五列表情布局。 */
+const CHAT_CUSTOM_EMOJI_GRID_COLUMN_COUNT = 5;
+
+/** 按网格可用宽度计算五列正方形单元边长。 */
+export function getChatCustomEmojiGridCellSize(gridWidth: number): number {
+  // gapsWidth 是五列之间四段间距的总宽度。
+  const gapsWidth =
+    CHAT_CUSTOM_EMOJI_GRID_GAP * (CHAT_CUSTOM_EMOJI_GRID_COLUMN_COUNT - 1);
+  return Math.max(
+    1,
+    (gridWidth - CHAT_CUSTOM_EMOJI_GRID_PADDING * 2 - gapsWidth) /
+      CHAT_CUSTOM_EMOJI_GRID_COLUMN_COUNT,
+  );
+}
+
 /** 读取浏览器自定义表情本地顺序。 */
 export function loadChatCustomEmojiOrder(
   storage: ChatSystemEmojiStorage | null = resolveCustomEmojiOrderStorage(),
@@ -89,17 +110,38 @@ export function getChatCustomEmojiMoveTarget(
   gridRect: Readonly<{ left: number; top: number; width: number }>,
   remainingCount: number,
 ): number {
-  // contentLeft 扣除管理网格固定 12px 横向内边距。
-  const contentLeft = gridRect.left + 12;
-  // contentTop 扣除管理网格固定 14px 顶部内边距。
-  const contentTop = gridRect.top + 14;
-  // cellSize 与五列 CSS grid 使用同一内容宽度。
-  const cellSize = Math.max(1, (gridRect.width - 24) / 5);
+  // contentLeft 扣除管理网格固定横向内边距。
+  const contentLeft = gridRect.left + CHAT_CUSTOM_EMOJI_GRID_PADDING;
+  // contentTop 扣除管理网格固定顶部内边距。
+  const contentTop = gridRect.top + CHAT_CUSTOM_EMOJI_GRID_PADDING;
+  // cellSize 与五列 CSS grid 使用同一正方形边长。
+  const cellSize = getChatCustomEmojiGridCellSize(gridRect.width);
+  // cellStep 包含单元边长和下一列或下一行间距。
+  const cellStep = cellSize + CHAT_CUSTOM_EMOJI_GRID_GAP;
   // column 把横坐标限制在五列范围内。
-  const column = Math.max(0, Math.min(4, Math.floor((clientX - contentLeft) / cellSize)));
+  const column = Math.max(
+    0,
+    Math.min(
+      CHAT_CUSTOM_EMOJI_GRID_COLUMN_COUNT - 1,
+      Math.floor(
+        (clientX - contentLeft + CHAT_CUSTOM_EMOJI_GRID_GAP / 2) / cellStep,
+      ),
+    ),
+  );
   // row 允许指针落到当前列表末行之后。
-  const row = Math.max(0, Math.floor((clientY - contentTop) / cellSize));
-  return Math.max(0, Math.min(remainingCount, row * 5 + column));
+  const row = Math.max(
+    0,
+    Math.floor(
+      (clientY - contentTop + CHAT_CUSTOM_EMOJI_GRID_GAP / 2) / cellStep,
+    ),
+  );
+  return Math.max(
+    0,
+    Math.min(
+      remainingCount,
+      row * CHAT_CUSTOM_EMOJI_GRID_COLUMN_COUNT + column,
+    ),
+  );
 }
 
 /** 规范化未知 ID 数组。 */

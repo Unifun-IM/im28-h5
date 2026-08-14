@@ -26,10 +26,11 @@ export function getRNAvatarInitial(label: string, fallback = '?'): string {
   return fallback;
 }
 
-/** 按 RN FNV-1a 规则为稳定身份生成头像渐变。 */
-export function getRNAvatarGradient(identity: string): string {
+/** 按 RN FNV-1a 规则为稳定身份解析唯一色对。 */
+function getRNAvatarColorPair(identity: string): readonly [string, string] {
   // key 确保空身份仍能稳定映射到首个颜色对。
   const key = identity.trim();
+  if (!key) return RN_AVATAR_COLOR_PAIRS[0];
   // hash 与 RN avatar helper 使用相同初始值和乘数。
   let hash = 2166136261;
   for (let index = 0; index < key.length; index += 1) {
@@ -40,5 +41,19 @@ export function getRNAvatarGradient(identity: string): string {
   const pair =
     RN_AVATAR_COLOR_PAIRS[(hash >>> 0) % RN_AVATAR_COLOR_PAIRS.length] ??
     RN_AVATAR_COLOR_PAIRS[0];
+  return pair;
+}
+
+/** 按 RN 规则读取昵称和身份标签共用的身份强调色。 */
+export function getRNAvatarAccentColor(identity: string): string {
+  // pair 与头像渐变共享同一哈希和色板，避免消息身份色漂移。
+  const pair = getRNAvatarColorPair(identity);
+  return pair[1];
+}
+
+/** 按 RN FNV-1a 规则为稳定身份生成头像渐变。 */
+export function getRNAvatarGradient(identity: string): string {
+  // pair 与消息发送人强调色共享同一身份映射。
+  const pair = getRNAvatarColorPair(identity);
   return `linear-gradient(135deg, ${pair[0]} 7%, ${pair[1]} 96%)`;
 }
