@@ -33,6 +33,7 @@ export interface WebIMJoinedGroup {
     readonly speechFrequencyEnabled?: boolean;
     readonly speechFrequencySeconds?: number;
     readonly permissions: IMGroupManagementPermissions;
+    readonly canClearMessagesForAll?: boolean;
     readonly canEditAnnouncement: boolean;
     readonly canMentionAll: boolean;
     readonly isCreatedByCurrentUser: boolean;
@@ -47,6 +48,7 @@ export interface WebIMJoinedGroupSyncOptions {
 export interface WebIMJoinedGroupSync {
     listCached(): Promise<readonly WebIMJoinedGroup[]>;
     sync(options?: WebIMJoinedGroupSyncOptions): Promise<readonly WebIMJoinedGroup[]>;
+    fetchDetail(groupID: string): Promise<WebIMJoinedGroup>;
     updateName(groupID: string, name: string): Promise<WebIMJoinedGroup>;
     updateAvatar(groupID: string, input: IMMediaUploadInput): Promise<WebIMJoinedGroup>;
     updateIntroduction(groupID: string, introduction: string): Promise<WebIMJoinedGroup>;

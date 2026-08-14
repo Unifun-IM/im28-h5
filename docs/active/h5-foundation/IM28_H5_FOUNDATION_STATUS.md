@@ -1,8 +1,86 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a6.20.149.3/.149.4 已完成本地实现与验证；.149.5 active`
-- next_step: `将真实操作 success/error 迁移到唯一 Toast owner，保留加载、权限和可重试结构状态`
+- current_step: `W6.a6.20.149.9 已完成；.149.5b active（自定义表情反馈已收敛）`
+- next_step: `继续拆分剩余列表、群成员管理与通话记录页的 load error / operation result`
+
+## W6.a6.20.149.9 RTC Startup Failure Convergence (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN truth | `pass` | frozen RN `GlobalRTCCallProvider` 只在 shared `startCall` 成功取得 call/credential 后提交 active call；失败只显示错误 | RN business unchanged |
+| shared chain | `pass-local` | H5 继续消费 `createIMCallControlSync -> createWebIMOutgoingCall -> createWebIMCallMediaSession -> LiveKitCallMediaPort`，pending、process realtime、terminal convergence 均沿既有 SDK owner | none |
+| failure convergence | `pass-browser-real` | 真实测试账号呼出时 `/v1/call/start` 返回“服务不可用”，未返回 call ID/credential；H5 留在联系人来源页并显示全局 error Toast，不再进入 `/calls/active` 假活动态 | dev RTC control/backend availability |
+| startup guard | `pass` | `startingRef` 覆盖完整异步 start，阻止重复点击；启动或账号版本失效会 dispose 且不提交 route/owner | none |
+| verification | `pass` | H5 full 149 files/484 tests、SDK Web 101 files/426 tests、466 assets、两侧 typecheck、1198-module production build | existing >500kB chunk warning |
+| protection | `pass` | 未改 `im28-phone/src/**`；仅已有 `src/config/appVersion.ts` 用户改动；未执行 RN/Desktop/all 或 `build:package:desktop:web` | none |
+
+Closeout verdict: `.149.9 completed/client-converged/external-rtc-gated`。客户端不再把 Gateway 启动失败投影成已结束通话页；真实双账号呼出、接听、远端音视频、静音/摄像头、挂断、pending 恢复与终态 list-back 仍需可用 RTC 部署后验收。
+
+## W6.a6.20.149.8 Conversation Delete Permission And Sheet (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| permission owner | `pass-shared` | SDK joined-group detail 读取并缓存显式 `can_clear_message` capability；角色不再推断全员清空权限，缺失字段 fail-closed | RN frozen consumer 不切换 |
+| H5 projection | `pass` | 会话列表先读缓存 capability，缺失时调用 shared `fetchDetail`；全员删除按钮只在明确 true 时出现 | destructive click gated |
+| modal layout | `pass-browser` | portal 挂到 body，确认层固定全视口遮罩并全宽贴底；不再受 PrimaryTabs scene/container 限制 | Safari/Firefox |
+| permission samples | `pass-browser-real` | 无权限群仅显示本地删除；群详情返回 `can_clear_message=true` 时显示“为我和所有群成员删除”；未点击删除 | actual deletion/list-back |
+| verification | `pass` | SDK focused 12 tests；H5 focused 7 tests；最终 full H5 149/484、SDK Web 101/426、typecheck/build | none |
+| protection | `pass` | 仅 SDK Web source/H5 generated package 与 H5 UI；未同步 RN package，未执行破坏性删除 | none |
+
+Closeout verdict: `.149.8 completed/destructive-action-gated`。权限与展示已按服务端显式 capability 收敛，真实 self/both/all-members 删除及多账号 list-back 保持动作时授权门。
+
+## W6.a6.20.149.7 Group Owner Transfer-Before-Leave (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN truth | `pass` | frozen RN 群主设置同时呈现退出/解散；退出必须先完成权限交接语义 | RN 服务端自动管理员承接不复制到 H5 |
+| capability boundary | `pass-local` | 页面仅消费 shared `canTransferOwner/canDismissGroup/canQuitGroup`；SDK 继续拒绝群主直接 leave | none |
+| two-step flow | `pass-local` | 群主退出进入既有 owner-transfer route；转让成功返回 `?lifecycle=leave`，设置页消费一次意图并打开确认层；未自动执行 leave | 真实 transfer + leave 需破坏性授权 |
+| browser | `pass-auth-readonly` | 真实 owner 群同时显示“退出群聊/解散群聊”；退出进入 2 位真实候选页，关闭返回原设置；412/412 无横向溢出 | 转让、退出、第二账号 list-back |
+| verification | `pass` | focused 3 files/17 tests；full 147 files/478 tests；Web typecheck；1198-module production build | existing >500kB chunk warning |
+| protection | `pass` | 仅 H5 route/UI/tests/docs；SDK/RN business 未修改；未执行 RN/Desktop/all 或 `build:package:desktop:web` | none |
+
+Closeout verdict: `.149.7 completed/transfer-and-leave-mutation-gated`。本片证明群主入口和两步路由编排，不把未执行的真实转让、退群、解散写成运行验收完成。
+
+## W6.a6.20.149.5b Custom Emoji Feedback Progress (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| feedback split | `pass-local` | 添加、删除、排序 success/error 直接进入全局 `useAppToast`；初始化同步失败继续由 `loadError` 页面状态承载 | 其他 `.149.5b` consumers |
+| cleanup | `pass` | 删除 `notice` 状态、`OperationToastFeedback` 间接消费和 `.is-success` 横幅 CSS | none |
+| browser | `pass-readonly` | 412px 真实表情页：inline success=0、Toast host=1、viewport/scrollWidth=412/412、零 warning/error；未重复 mutation | 真实下一次操作 Toast 活动帧 |
+| verification | `pass` | focused 2 files/7 tests；full 147 files/476 tests；Web typecheck；1198-module production build | existing >500kB chunk warning |
+| protection | `pass` | 仅 H5 页面/CSS/contract/docs；SDK 与 RN source 未修改 | none |
+
+## W6.a6.20.149.6 Pending Multi-Forward Draft (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN truth | `pass` | frozen RN `ChatHomeScreen.openPendingForwardTarget` 只解析首个目标、切换会话并挂载 `PendingForwardPayload`；Composer 点击发送才执行 batch forward | none |
+| target selection | `pass-local` | 聊天转发目标改为 `single`；确认只执行 `prepareChatForwardTargetDestination`，不调用 `messages.forward/forwardToTargets` | none |
+| draft route | `pass-local` | Router state 仅保存来源会话、标题和有序 clientMsgIDs；目标聊天从 SDK cache 恢复“转发N条消息/来自”预览，消息正文不进入 history state | reload 后内存草稿按安全约束丢弃 |
+| composer send | `pass-unchanged` | 用户点击发送时继续消费 canonical `messages.forward`，可附带留言；取消和更换目标不发送，取消更换目标不再丢原草稿 | 真实最终发送仍需 action-time 授权 |
+| browser | `pass-auth-readonly` | 真实会话选 2 条 -> 单选 `donk` -> URL 切到目标聊天 -> 底部显示“转发2条消息 / 来自：donk三大爷”；目标历史仍为原 3 条，未点击发送 | 最终发送/list-back 未执行 |
+| verification | `pass` | focused 2 files/8 tests；full 147 files/475 tests；Web typecheck；1198-module production build | existing >500kB chunk warning |
+| protection | `pass` | 仅修改 H5 路由/UI 编排与测试；SDK/RN source 均未修改；未运行 RN/Desktop/all 或 `build:package:desktop:web` | none |
+
+Closeout verdict: `.149.6 completed/send-action-gated`。目标选择与消息发送已严格分离；不把未点击的最终发送声明为真实 mutation 验收。
+
+## W6.a6.20.149.5a Operation Toast Consumers (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| global owner | `pass-local` | App 顶层唯一 `AppToastProvider/useAppToast`；`OperationToastFeedback` 只接收已分类的瞬时 success/error | authenticated mutation pixel |
+| consumers | `pass-local` | 23 个生产页面/反馈 owner 已接入；覆盖聊天、四类单选好友分享、二维码下载、资料保存/复制、账号安全、通知、联系人动作和好友/群申请 | 剩余列表、群成员管理、群创建和通话记录动作在 `.149.5b` |
+| structural states | `pass` | load、权限、空态、媒体内联状态、RTC 持久错误和带重试错误继续由页面结构呈现；未机械替换全部 `role=status/alert` | none |
+| focus/reset | `pass-browser` | 删除全部输入壳 `:focus-within` 描边；1280px 登录输入聚焦为 `border:0/box-shadow:none/outline:none`；按钮/链接键盘 focus-visible 保留 | mobile physical keyboard |
+| browser | `pass-guest` | 5176 验证码 contract 提示显示为顶部成功 Toast；1280/1280 无横向溢出；未登录标签未调用真实认证或发送 mutation | 已登录分享/保存/失败 Toast |
+| cleanup | `pass` | 删除三个无消费者 copy-state CSS 与十套 focus-within override；旧 clipboard contract 改为 success-only Toast | none |
+| verification | `pass` | focused 6 files/28 tests；full 147 files/473 tests；Web typecheck；1198-module production build；5176 HTTP 200 | existing >500kB chunk warning |
+| protection | `pass` | RN business 未改；未执行 RN/Desktop/all 或 `build:package:desktop:web`；SDK 仅沿既有 H5 typecheck 执行允许的 `build:web/sync:web` | none |
+
+Closeout verdict: `.149.5a clean/local-complete/authenticated-action-gated`。本片不将未执行的真实名片/二维码发送、账号修改、好友/群申请或联系人 mutation 写成浏览器验收完成；`.149.5` 总项保持 active，继续 `.149.5b`。
 
 ## W6.a6.20.149.3/.149.4 Card Settings Recorder And RTC (2026-08-14)
 

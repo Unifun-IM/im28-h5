@@ -59,10 +59,6 @@
   background: var(--im-bg-input);
 }
 
-.rn-group-applications-search:focus-within {
-  border-color: var(--im-brand-primary);
-}
-
 .rn-group-applications-search .rn-asset-icon {
   width: 18px;
   height: 18px;

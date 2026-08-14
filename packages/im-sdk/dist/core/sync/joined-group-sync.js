@@ -4,7 +4,7 @@ import { createWebIMSyncError, requireWebIMSyncContext, } from './sync-context.j
 import { sendWebIMTextMessage } from './message-text-send.js';
 import { getIMGroupAnnouncementReadStatus, markIMGroupAnnouncementRead, publishIMGroupAnnouncement, } from './group-announcement.js';
 import { updateIMJoinedGroupAvatar, updateIMJoinedGroupIntroduction, updateIMJoinedGroupName, } from './joined-group-profile-actions.js';
-import { mapCoreGroupToWeb, mapGatewayGroupToCore, readJoinedGroupCache, } from './joined-group-mappers.js';
+import { mapCoreGroupToWeb, mergeGatewayGroupDetailToCore, mapGatewayGroupToCore, readJoinedGroupCache, } from './joined-group-mappers.js';
 /** 创建当前账号绑定的我的群聊 facade。 */
 export function createWebIMJoinedGroupSync(dependencies) {
     return new WebIMJoinedGroupSyncImpl(dependencies);
@@ -41,6 +41,37 @@ class WebIMJoinedGroupSyncImpl {
             return readJoinedGroupCache(repository, context.userID);
         };
         // mutationQueue 与会话、消息和其他 cache mutation 共用顺序。
+        const queue = this.dependencies.mutationQueue;
+        return queue ? queue.enqueue(operation) : operation();
+    }
+    /** 拉取单群权威详情并在身份校验通过后合并当前账号缓存。 */
+    fetchDetail(groupID) {
+        /** normalizedGroupID 拒绝空身份进入 Gateway 或缓存。 */
+        const normalizedGroupID = groupID.trim();
+        if (!normalizedGroupID) {
+            throw createWebIMSyncError('GROUP_DETAIL_ID_REQUIRED', 'Group detail requires a group ID.');
+        }
+        /** operation 在共享队列执行时重新绑定当前账号。 */
+        const operation = async () => {
+            /** context 冻结详情请求对应的账号和数据库。 */
+            const context = requireWebIMSyncContext(this.dependencies, 'Joined group detail sync');
+            /** remoteGroup 只接受与请求主键完全一致的响应。 */
+            const remoteGroup = await this.dependencies.gatewayClient.getGroup({
+                group_id: normalizedGroupID,
+            });
+            if (remoteGroup.group_id?.trim() !== normalizedGroupID) {
+                throw createWebIMSyncError('GROUP_DETAIL_ID_MISMATCH', 'Gateway group detail does not match the requested group.');
+            }
+            /** repository 是单群详情缓存合并的唯一写入 owner。 */
+            const repository = new GroupRepository(context.database);
+            /** existingGroup 保留列表顺序和详情接口未返回的已确认字段。 */
+            const existingGroup = await repository.getByID(normalizedGroupID);
+            /** nextGroup 由共享 mapper 合并 raw payload，避免页面持有 DTO 规则。 */
+            const nextGroup = mergeGatewayGroupDetailToCore(existingGroup, remoteGroup);
+            await repository.upsert(nextGroup);
+            return mapCoreGroupToWeb(nextGroup, context.userID);
+        };
+        /** queue 与群列表和其他缓存 mutation 共用账号时序。 */
         const queue = this.dependencies.mutationQueue;
         return queue ? queue.enqueue(operation) : operation();
     }

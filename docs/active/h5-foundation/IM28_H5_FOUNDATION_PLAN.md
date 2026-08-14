@@ -25,7 +25,12 @@
 | `.149.2` | H5 picker/QR UI | 名片/二维码单选好友发送；个人/群二维码共用全局 modal | focused + typecheck + mobile/dark browser | `local-complete/browser-session-gated` |
 | `.149.3` | H5 chat/settings UI | 名片点击、单聊设置、定时删除、input focus | focused + route/browser | `done-local/browser-session-gated` |
 | `.149.4` | H5 call/recorder consumers | RN 同源 RTC UI、录音取消动效与真实 runtime chain | focused + media/browser/external RTC | `done-local/external-rtc-gated` |
-| `.149.5` | H5 operation feedback | 全页面 success/error 收敛到唯一 Toast owner | consumer contract + typecheck + build | `active` |
+| `.149.5a` | H5 operation feedback | 聊天、分享、二维码、资料、账号、通知、联系人与申请的瞬时结果收敛到唯一 Toast owner | consumer contract + full tests + typecheck + build + guest browser | `local-complete/authenticated-action-gated` |
+| `.149.5b` | H5 operation feedback | 剩余列表/群管理/通话记录页面拆分 load error 与 operation result | inventory + focused/full verification | `active` |
+| `.149.6` | H5 chat forward orchestration | 多选目标确认进入单个目标聊天并生成待发送转发草稿；仅 Composer 点击发送调用 shared forward | no-auto-send regression + full tests + authenticated browser | `completed/send-action-gated` |
+| `.149.7` | H5 group owner lifecycle UI | 群主设置同时提供退出/解散；退出先进入现有群主转让，成功返回后再次确认才调用 shared leave | route-intent regression + full tests + owner browser readonly | `completed/transfer-and-leave-mutation-gated` |
+| `.149.8` | SDK group detail + H5 conversation delete UI | 群聊“为我和所有群成员删除”只按群详情 `can_clear_message` 显式授权；确认层全宽贴底 | SDK/H5 focused + full tests + authenticated permission browser | `completed/destructive-action-gated` |
+| `.149.9` | H5 RTC startup composition | 复用 shared call control/LiveKit owner；只有启动成功后进入活动页，Gateway 失败留在来源页并使用错误 Toast | SDK RTC + H5 contract + typecheck/build + controlled real start | `completed/client-converged/external-rtc-gated` |
 
 ## W6.a6.20.148 Cold-Start Offline Safety Contract Freeze
 

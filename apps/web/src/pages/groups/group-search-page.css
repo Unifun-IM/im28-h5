@@ -7,7 +7,6 @@
 .rn-group-search-header .rn-asset-icon { width: 24px; height: 24px; }
 .rn-group-search-header h1 { align-self: center; margin: 0; overflow: hidden; font-size: 18px; font-weight: 600; line-height: 27px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .rn-group-search-box { display: flex; height: 40px; min-width: 0; align-items: center; gap: 8px; margin: 8px 16px 12px; padding: 0 12px; border: var(--im-hairline-width) solid var(--im-border-input); border-radius: 6px; color: var(--im-icon-muted); background: var(--im-bg-input); }
-.rn-group-search-box:focus-within { border-color: var(--im-brand-primary); }
 .rn-group-search-box > .rn-asset-icon { width: 18px; height: 18px; flex: 0 0 18px; }
 .rn-group-search-box input { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; color: var(--im-text-primary); background: transparent; font: inherit; font-size: 14px; }
 .rn-group-search-box button { display: grid; width: 24px; height: 32px; flex: 0 0 24px; place-items: center; padding: 0; border: 0; color: var(--im-icon-muted); background: transparent; }

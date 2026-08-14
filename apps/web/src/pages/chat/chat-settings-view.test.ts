@@ -68,6 +68,7 @@ describe('chat settings view', () => {
       canShowAutoDeleteInChatSettings: true,
       canClearForAll: true,
       canQuitGroup: false,
+      canStartOwnerLeaveFlow: false,
       canDismissGroup: false,
     });
   });
@@ -100,6 +101,7 @@ describe('chat settings view', () => {
       canShowAutoDeleteInChatSettings: false,
       canClearForAll: true,
       canQuitGroup: true,
+      canStartOwnerLeaveFlow: false,
       canDismissGroup: false,
     });
   });
@@ -114,15 +116,15 @@ describe('chat settings view', () => {
     expect(buildChatSettingsView(
       conversation,
       createGroup({ currentUserRole: 'member' }),
-    )).toMatchObject({ canQuitGroup: true, canDismissGroup: false });
+    )).toMatchObject({ canQuitGroup: true, canStartOwnerLeaveFlow: false, canDismissGroup: false });
     expect(buildChatSettingsView(
       conversation,
       createGroup({ currentUserRole: 'owner' }),
-    )).toMatchObject({ canQuitGroup: false, canDismissGroup: true });
+    )).toMatchObject({ canQuitGroup: false, canStartOwnerLeaveFlow: true, canDismissGroup: true });
     expect(buildChatSettingsView(
       conversation,
       createGroup({ groupID: 'other-group', currentUserRole: 'owner' }),
-    )).toMatchObject({ canQuitGroup: false, canDismissGroup: false });
+    )).toMatchObject({ canQuitGroup: false, canStartOwnerLeaveFlow: false, canDismissGroup: false });
   });
 
   it('shows the announcement row to matching owners and admins independently of edit permission', () => {

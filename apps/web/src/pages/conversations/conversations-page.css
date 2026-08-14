@@ -432,10 +432,12 @@
   color: var(--im-status-danger);
 }
 
-.rn-conversation-delete-backdrop {
-  width: 100%;
+.im-interaction-modal.rn-conversation-delete-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
   max-width: none;
-  height: 100%;
+  height: 100dvh;
   max-height: none;
   align-items: flex-end;
   justify-content: center;
@@ -444,11 +446,11 @@
   background: transparent;
 }
 
-.rn-conversation-delete-backdrop[open] {
+.im-interaction-modal.rn-conversation-delete-backdrop[open] {
   display: flex;
 }
 
-.rn-conversation-delete-backdrop:not([open]) {
+.im-interaction-modal.rn-conversation-delete-backdrop:not([open]) {
   display: none;
 }
 

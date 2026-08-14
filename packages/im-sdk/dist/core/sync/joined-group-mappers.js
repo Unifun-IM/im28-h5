@@ -18,6 +18,21 @@ export function mapGatewayGroupToCore(group, order) {
         payload: { ...group, [JOINED_GROUP_ORDER_KEY]: order },
     };
 }
+/** 将单群详情合并到既有缓存，并保留服务端列表顺序和未返回字段。 */
+export function mergeGatewayGroupDetailToCore(existingGroup, detail) {
+    /** existingPayload 保留列表接口已经确认但详情接口可能省略的字段。 */
+    const existingPayload = existingGroup
+        ? readJoinedGroupPayload(existingGroup)
+        : {};
+    /** order 保留我的群聊列表顺序，冷缓存详情排到列表末尾。 */
+    const order = readJoinedGroupOrder(existingPayload);
+    /** mergedGroup 让详情返回字段覆盖旧快照。 */
+    const mergedGroup = mapGatewayGroupToCore({ ...existingPayload, ...detail }, order);
+    if (!mergedGroup) {
+        throw new Error('Group detail merge requires a stable group ID.');
+    }
+    return mergedGroup;
+}
 /** 从共享 Group cache 恢复页面模型并按服务端顺序排序。 */
 export async function readJoinedGroupCache(repository, currentUserID) {
     // groups 由共享 repository 恢复 raw payload。
@@ -46,6 +61,8 @@ export function mapCoreGroupToWeb(group, currentUserID) {
         userPermission: payload.user_permission,
         currentMemberRole: currentUserRole,
     });
+    /** canClearMessagesForAll 只接受服务端 can_clear_message 明确授权。 */
+    const canClearMessagesForAll = readExplicitClearMessagePermission(payload);
     return {
         groupID: group.groupID,
         conversationID: readString(payload.conversation_id),
@@ -81,6 +98,7 @@ export function mapCoreGroupToWeb(group, currentUserID) {
             ? { speechFrequencySeconds: Number(payload.send_frequency_seconds) }
             : {}),
         permissions,
+        ...(canClearMessagesForAll !== undefined ? { canClearMessagesForAll } : {}),
         canEditAnnouncement: permissions.canEditAnnouncement,
         canMentionAll: permissions.canMentionAll,
         isCreatedByCurrentUser: Boolean(currentUserID.trim() && ownerUserID === currentUserID.trim()),
@@ -93,6 +111,23 @@ export function mapCoreGroupToWeb(group, currentUserID) {
             userPermission: payload.user_permission,
         }),
     };
+}
+/** 从群和当前成员权限快照读取全员清空授权，缺失时保持关闭。 */
+function readExplicitClearMessagePermission(payload) {
+    /** userPermission 兼容 Gateway 将 capability 放入当前成员权限对象。 */
+    const userPermission = isRecord(payload.user_permission)
+        ? payload.user_permission
+        : {};
+    /** values 按 RN 当前兼容顺序覆盖三种历史字段名。 */
+    const values = [
+        payload.can_clear_message,
+        payload.can_clear_messages,
+        payload.canClearMessages,
+        userPermission.can_clear_message,
+        userPermission.can_clear_messages,
+        userPermission.canClearMessages,
+    ];
+    return values.find((value) => typeof value === 'boolean');
 }
 /** 读取显式 payload，缺失时回退 Repository 平铺后的 Group 根对象。 */
 function readJoinedGroupPayload(group) {

@@ -40,10 +40,6 @@
   background: var(--im-bg-input);
 }
 
-.rn-conversation-search-input:focus-within {
-  border-color: var(--im-brand-primary);
-}
-
 .rn-conversation-search-input input {
   width: 100%;
   min-width: 0;

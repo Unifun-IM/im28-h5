@@ -4,6 +4,7 @@ import {
   createChatForwardRouteState,
   createChatForwardCompatibilityDestination,
   createChatForwardPickerLocationState,
+  createChatForwardTargetDestination,
   readChatForwardPickerLocationState,
   readChatForwardLocationState,
 } from './chat-forward-route.js';
@@ -69,6 +70,21 @@ describe('chat forward route state', () => {
     expect(readChatForwardPickerLocationState({
       forwardPicker: { ...forward, messages: [{ text: '不允许' }] },
     })).toBeNull();
+  });
+
+  it('opens the selected chat with a pending draft and no message body', () => {
+    // forward 只承载目标聊天恢复草稿所需的稳定来源身份。
+    const forward = createChatForwardRouteState({
+      sourceConversationID: 'source-chat',
+      sourceConversationTitle: '来源会话',
+      sourceClientMsgIDs: ['message-1', 'message-2'],
+    });
+    expect(createChatForwardTargetDestination(' target/chat ', forward)).toEqual({
+      pathname: '/conversations/target%2Fchat',
+      state: { forward },
+    });
+    expect(createChatForwardTargetDestination('target', forward).state.forward)
+      .not.toHaveProperty('messages');
   });
 
   it('redirects the legacy route to the same chat and drops mismatched source state', () => {

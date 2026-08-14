@@ -130,7 +130,7 @@ export function WebIMCallProvider({ children }: PropsWithChildren) {
     if (owner) await owner.dispose();
   }, []);
 
-  /** 从 shared control 创建一次真实 LiveKit 呼出并立即进入 route-owned UI。 */
+  /** 从 shared control 完成真实信令和媒体启动后再进入 route-owned UI。 */
   const startOutgoing = useCallback(async (
     options: WebIMStartOutgoingCallOptions,
   ): Promise<void> => {
@@ -152,11 +152,29 @@ export function WebIMCallProvider({ children }: PropsWithChildren) {
         calls: runtime.getSync().calls,
         mediaSession,
       });
-    } finally {
+    } catch (cause) {
       if (startVersionRef.current === startVersion) startingRef.current = false;
+      throw cause;
     }
     if (startVersionRef.current !== startVersion) {
       await outgoing.dispose();
+      throw new Error('通话启动已取消');
+    }
+    try {
+      await outgoing.start({
+        conversationID: options.conversationID,
+        callType: options.mediaType,
+      });
+    } catch (cause) {
+      await outgoing.dispose();
+      mediaPortRef.current = null;
+      throw cause;
+    } finally {
+      if (startVersionRef.current === startVersion) startingRef.current = false;
+    }
+    if (startVersionRef.current !== startVersion || !runtimeSnapshot.userID) {
+      await outgoing.dispose();
+      mediaPortRef.current = null;
       throw new Error('通话启动已取消');
     }
     callOwnerRef.current = outgoing;
@@ -168,14 +186,6 @@ export function WebIMCallProvider({ children }: PropsWithChildren) {
       setCallSnapshot(outgoing.getSnapshot());
     });
     navigate('/calls/active');
-    try {
-      await outgoing.start({
-        conversationID: options.conversationID,
-        callType: options.mediaType,
-      });
-    } catch (cause) {
-      setError(readWebCallError(cause));
-    }
   }, [navigate, runtime, runtimeSnapshot.incomingCall.call, runtimeSnapshot.userID]);
 
   /** 结束按钮完成远端收敛后回到来源会话。 */

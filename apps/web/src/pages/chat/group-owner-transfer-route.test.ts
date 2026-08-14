@@ -26,7 +26,15 @@ describe('group owner transfer route contract', () => {
   it('提交前有明确确认且成功后退出群主管理范围', () => {
     expect(ownerTransferSource).toContain('ariaLabel="确认选择新群主"');
     expect(ownerTransferSource).toContain("searchParams.get('from') === 'joined-groups'");
-    expect(ownerTransferSource).toContain("fromJoinedGroups ? '/contacts/groups' : settingsURL");
+    expect(ownerTransferSource).toContain("? '/contacts/groups'");
+    expect(ownerTransferSource).toContain(": `${settingsURL}${fromOwnerLeave ? '?lifecycle=leave' : ''}`");
     expect(ownerTransferSource).toContain('navigate(successURL, { replace: true })');
+  });
+
+  it('群设置发起的退出意图在转让后返回退群确认入口', () => {
+    expect(ownerTransferSource).toContain("searchParams.get('intent') === 'leave'");
+    expect(ownerTransferSource).toContain("'?lifecycle=leave'");
+    expect(ownerTransferSource).toContain("fromOwnerLeave ? settingsURL : manageURL");
+    expect(ownerTransferSource).not.toContain('groupLifecycle.leave');
   });
 });

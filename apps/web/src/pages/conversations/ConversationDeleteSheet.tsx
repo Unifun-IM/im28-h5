@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { WebIMConversationListItem } from '@im28/im-sdk/web';
 
 import { InteractionModal } from '../../components/interaction/index.js';
@@ -35,7 +36,8 @@ export function ConversationDeleteSheet({
   const title = getConversationTitle(conversation);
   /** isGroup 决定 all 范围文案。 */
   const isGroup = conversation.type === 'group';
-  return (
+  if (typeof document === 'undefined') return null;
+  return createPortal(
     <InteractionModal
       open={Boolean(target)}
       ariaLabel="删除聊天记录"
@@ -58,6 +60,7 @@ export function ConversationDeleteSheet({
         </div>
         <button type="button" disabled={pending} onClick={onClose}>取消</button>
       </section>
-    </InteractionModal>
+    </InteractionModal>,
+    document.body,
   );
 }

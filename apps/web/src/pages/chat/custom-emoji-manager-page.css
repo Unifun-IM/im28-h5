@@ -64,11 +64,6 @@
   color: var(--im-status-danger);
 }
 
-.rn-custom-emoji-manager-feedback.is-success {
-  background: color-mix(in srgb, var(--im-status-success) 12%, transparent);
-  color: var(--im-status-success);
-}
-
 .rn-custom-emoji-manager-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));

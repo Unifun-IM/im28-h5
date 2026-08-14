@@ -194,8 +194,7 @@
   color: var(--im-profile-text-muted);
 }
 
-.rn-me-error,
-.rn-me-copy-state {
+.rn-me-error {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -210,11 +209,6 @@
   color: var(--im-profile-primary);
   background: transparent;
   cursor: pointer;
-}
-
-.rn-me-copy-state {
-  justify-content: center;
-  color: var(--im-profile-text-secondary);
 }
 
 .rn-me-settings-page {

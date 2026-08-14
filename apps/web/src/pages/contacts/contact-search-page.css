@@ -34,10 +34,6 @@
   background: var(--im-bg-input);
 }
 
-.rn-contact-search-box:focus-within {
-  border-color: var(--im-brand-primary);
-}
-
 .rn-contact-search-box > .rn-asset-icon {
   width: 18px;
   height: 18px;

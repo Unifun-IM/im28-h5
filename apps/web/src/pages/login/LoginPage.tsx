@@ -7,6 +7,7 @@ import eyeClosedIconURL from '../../assets/rn/screens/auth/assets/eye-closed-ico
 import eyeIconURL from '../../assets/rn/screens/auth/assets/eye-icon.svg';
 import startupLogoURL from '../../assets/rn/screens/auth/assets/startup-logo.png';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import { OperationToastFeedback } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { AuthAgreement } from './AuthAgreement.js';
 import { AuthCountryCodeDialog } from './AuthCountryCodeDialog.js';
@@ -273,7 +274,7 @@ export function LoginPage({ mode }: LoginPageProps) {
                   <Link to="/auth/register">注册账号</Link>
                 </div>
               ) : null}
-              {notice ? <p className="auth-notice" role="status">{notice}</p> : null}
+              <OperationToastFeedback notice={notice} />
               {startupError ? <p className="auth-error" role="alert">{startupError}</p> : null}
               {error ? <p className="auth-error" role="alert">{error}</p> : null}
               <button className="auth-submit" type="submit" disabled={!canSubmit}>

@@ -651,14 +651,13 @@ export function ChatPage() {
         <ChatTargetPickerModal
           open={forwardFlow.targetPickerOpen}
           sync={sync}
-          selectionMode="multiple"
+          selectionMode="single"
           excludeUserIDs={[snapshot.userID]}
-          maxSelected={50}
           actionLabel="转发"
           pending={forwardFlow.targetSubmitting}
           operationError={error}
           onClose={forwardFlow.closeTargetPicker}
-          onConfirm={targets => { void forwardFlow.forwardToTargets(targets); }}
+          onConfirm={targets => { void forwardFlow.continueForwardToTarget(targets); }}
         />
         <CallTypeActionSheet
           open={callPickerVisible && conversation?.type === 'single'}

@@ -4,7 +4,6 @@ import {
   type Conversation,
   type Message,
   type WebIMForwardMessagesResult,
-  type WebIMForwardMessagesToTargetsResult,
   type WebIMSync,
 } from '@im28/im-sdk/web';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -16,10 +15,9 @@ import {
   createChatForwardRouteState,
   readChatForwardPickerLocationState,
   readChatForwardLocationState,
-  type ChatForwardLocationState,
   type ChatForwardRouteState,
 } from './chat-forward-route.js';
-import { resolveChatForwardTargetConversationID } from './forward-target-source.js';
+import { prepareChatForwardTargetDestination } from './forward-target-source.js';
 
 /** ChatPage 转发编排只接收 facade、可见实体和页面反馈入口。 */
 interface UseChatForwardFlowOptions {
@@ -63,9 +61,9 @@ export function useChatForwardFlow({
   const [selectedIDs, setSelectedIDs] = useState<ReadonlySet<string>>(new Set());
   // targetPickerOpen 控制聊天页内唯一转发目标弹窗。
   const [targetPickerOpen, setTargetPickerOpen] = useState(false);
-  // targetSourceIDs 冻结本次待转发来源，不依赖消息列表后续刷新。
-  const [targetSourceIDs, setTargetSourceIDs] = useState<readonly string[]>([]);
-  // targetSubmitting 阻止目标弹窗重复提交同一批转发。
+  // targetForwardState 冻结来源会话、消息身份和预览选项，不携带正文。
+  const [targetForwardState, setTargetForwardState] = useState<ChatForwardRouteState | null>(null);
+  // targetSubmitting 阻止目标弹窗重复解析同一目标会话。
   const [targetSubmitting, setTargetSubmitting] = useState(false);
   // previewMessages 从 SDK 当前账号 cache 精确重读。
   const [previewMessages, setPreviewMessages] = useState<readonly Message[]>([]);
@@ -89,7 +87,7 @@ export function useChatForwardFlow({
       navigate(location.pathname, { replace: true, state: null });
       return;
     }
-    setTargetSourceIDs(pickerRouteState.sourceClientMsgIDs);
+    setTargetForwardState(pickerRouteState);
     setTargetPickerOpen(true);
     // replace 清除一次性 state，刷新和后退都不会重复打开弹窗。
     navigate(location.pathname, { replace: true, state: null });
@@ -135,7 +133,7 @@ export function useChatForwardFlow({
       sourceConversationTitle: getConversationTitle(conversation),
       sourceClientMsgIDs,
     });
-    setTargetSourceIDs(forward.sourceClientMsgIDs);
+    setTargetForwardState(forward);
     setTargetPickerOpen(true);
   }, [conversation]);
 
@@ -212,54 +210,39 @@ export function useChatForwardFlow({
       sourceClientMsgIDs,
       hideSenderName,
     });
-    setTargetSourceIDs(forward.sourceClientMsgIDs);
+    setTargetForwardState(forward);
     setTargetPickerOpen(true);
-    clearPendingForward();
-  }, [clearPendingForward, routeState]);
+  }, [routeState]);
 
-  /** 将弹窗目标解析为真实会话后交给 shared 多目标转发 owner。 */
-  const forwardToTargets = useCallback(async (
+  /** 解析单个目标会话并进入待发送草稿态，确认目标时绝不调用发送 facade。 */
+  const continueForwardToTarget = useCallback(async (
     targets: readonly ChatTargetPickerItem[],
   ): Promise<void> => {
-    if (!sync || targetSubmitting || !targetSourceIDs.length || !targets.length) return;
+    // targetPicker 的 single 模式仍以数组回调，严格只消费第一项。
+    const target = targets[0];
+    if (!sync || targetSubmitting || !targetForwardState || !target) return;
     setTargetSubmitting(true);
     onError(null);
     try {
-      /** conversationIDs 只由现有会话解析 facade 返回，不在页面拼接。 */
-      const conversationIDs = await Promise.all(targets.map(target =>
-        resolveChatForwardTargetConversationID(sync, {
+      // destination 由 H5 编排 owner 解析会话并构造待发送状态，不触发发送。
+      const destination = await prepareChatForwardTargetDestination(
+        sync,
+        {
           ...target,
           conversationID: '',
-        }),
-      ));
-      /** result 顶层按目标区分成功和失败。 */
-      /** resultHolder 让 operation callback 只写入明确 shared 结果。 */
-      const resultHolder: { current: WebIMForwardMessagesToTargetsResult | null } = { current: null };
-      await runMessageOperation(async activeSync => {
-        resultHolder.current = await activeSync.messages.forwardToTargets({
-          conversationIDs,
-          sourceClientMsgIDs: targetSourceIDs,
-        });
-      });
-      /** result 仅在 shared operation 完成后读取。 */
-      const result = resultHolder.current;
-      if (!result) return;
-      if (result.successCount === 0) {
-        onError(`转发失败：${result.failedCount}个目标均未发送成功`);
-        return;
-      }
-      onNotice(result.failedCount
-        ? `转发完成：${result.successCount}个目标成功，${result.failedCount}个失败`
-        : `已转发到${result.successCount}个聊天`);
+        },
+        targetForwardState,
+      );
       setTargetPickerOpen(false);
-      setTargetSourceIDs([]);
+      setTargetForwardState(null);
       cancelMultiSelect();
+      navigate(destination.pathname, { state: destination.state });
     } catch (cause) {
       onError(readForwardFlowError(cause));
     } finally {
       setTargetSubmitting(false);
     }
-  }, [cancelMultiSelect, onError, onNotice, runMessageOperation, sync, targetSourceIDs, targetSubmitting]);
+  }, [cancelMultiSelect, navigate, onError, sync, targetForwardState, targetSubmitting]);
 
   /** 调用 shared messages.forward，并按逐项结果呈现真实完成状态。 */
   const submitForward = useCallback(async (options: {
@@ -298,7 +281,7 @@ export function useChatForwardFlow({
     pending,
     targetPickerOpen,
     targetSubmitting,
-    targetSourceCount: targetSourceIDs.length,
+    targetSourceCount: targetForwardState?.sourceClientMsgIDs.length ?? 0,
     forwardMessage,
     beginMultiSelect,
     toggleSelectedMessage,
@@ -307,10 +290,10 @@ export function useChatForwardFlow({
     closeTargetPicker: () => {
       if (!targetSubmitting) {
         setTargetPickerOpen(false);
-        setTargetSourceIDs([]);
+        setTargetForwardState(null);
       }
     },
-    forwardToTargets,
+    continueForwardToTarget,
     clearPendingForward,
     changeForwardTarget,
     submitForward,

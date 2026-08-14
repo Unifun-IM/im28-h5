@@ -221,8 +221,7 @@ button.rn-me-profile-row:disabled {
 }
 
 .rn-me-profile-error,
-.rn-me-editor-error,
-.rn-me-profile-copy-state {
+.rn-me-editor-error {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -230,11 +229,6 @@ button.rn-me-profile-row:disabled {
   margin: 0 0 12px;
   color: var(--im-profile-danger);
   font-size: 13px;
-}
-
-.rn-me-profile-copy-state {
-  justify-content: center;
-  color: var(--im-profile-text-secondary);
 }
 
 .rn-me-profile-error button {

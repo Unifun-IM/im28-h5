@@ -15,10 +15,11 @@ describe('chat target picker consumer contract', () => {
     }
   });
 
-  it('聊天转发和名片共用同一弹窗的多选与单选模式', () => {
+  it('聊天转发和名片共用同一弹窗且都只选择一个目标', () => {
     expect(chatSource.match(/<ChatTargetPickerModal/g)).toHaveLength(2);
-    expect(chatSource).toContain('selectionMode="multiple"');
-    expect(chatSource).toContain('selectionMode="single"');
+    expect(chatSource.match(/selectionMode="single"/g)).toHaveLength(2);
+    expect(chatSource).not.toContain('selectionMode="multiple"');
+    expect(chatSource).toContain('forwardFlow.continueForwardToTarget(targets)');
     expect(chatSource).not.toContain('ChatCardPickerDialog');
   });
 
@@ -28,6 +29,7 @@ describe('chat target picker consumer contract', () => {
       expect(source).toContain("allowedKinds={['friend']}");
       expect(source).not.toContain('IM_BROADCAST_MAX_TARGETS');
       expect(source).not.toContain('selectionMode="multiple"');
+      expect(source).toContain("toast.success('");
     }
   });
 

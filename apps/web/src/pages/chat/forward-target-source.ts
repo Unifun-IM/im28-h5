@@ -7,6 +7,11 @@ import {
   groupToChatForwardTarget,
   type ChatForwardTarget,
 } from './forward-target-view.js';
+import {
+  createChatForwardTargetDestination,
+  type ChatForwardRouteState,
+  type ChatForwardTargetDestination,
+} from './chat-forward-route.js';
 
 /** 转发和应用内分享共同消费的三类真实目标快照。 */
 export interface ChatForwardTargetSource {
@@ -80,6 +85,17 @@ export async function resolveChatForwardTargetConversationID(
   }
   if (!conversationID) throw new Error('目标会话尚未建立');
   return conversationID;
+}
+
+/** 选择单个接收人后仅生成目标聊天草稿路由，不调用任何消息发送 facade。 */
+export async function prepareChatForwardTargetDestination(
+  sync: WebIMSync,
+  target: ChatForwardTarget,
+  forward: ChatForwardRouteState,
+): Promise<ChatForwardTargetDestination> {
+  // conversationID 由已有好友或群会话 facade 验证，禁止页面自行拼接。
+  const conversationID = await resolveChatForwardTargetConversationID(sync, target);
+  return createChatForwardTargetDestination(conversationID, forward);
 }
 
 /** 把来源快照投影为指定好友或群 tab 的展示目标。 */

@@ -100,11 +100,6 @@
   opacity: 1;
 }
 
-.auth-input-shell:focus-within,
-.auth-register-input:focus-within {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--im-brand-primary) 42%, transparent);
-}
-
 .auth-country-trigger {
   display: flex;
   height: 32px;

@@ -874,10 +874,6 @@
   background: var(--im-chat-composer-input-background);
 }
 
-.rn-chat-composer-pill:focus-within {
-  box-shadow: 0 0 0 1px var(--im-brand-primary);
-}
-
 .rn-chat-composer textarea {
   width: 100%;
   min-width: 0;

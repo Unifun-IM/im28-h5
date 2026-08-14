@@ -22,7 +22,9 @@ describe('joined group actions route contract', () => {
 
   it('群主转让保持显式两步流程并返回群列表', () => {
     expect(joinedGroupsSource).toContain('buildJoinedGroupOwnerTransferRoute');
-    expect(ownerTransferSource).toContain("fromJoinedGroups ? '/contacts/groups' : settingsURL");
+    expect(ownerTransferSource).toContain("const closeURL = fromJoinedGroups ? '/contacts/groups'");
+    expect(ownerTransferSource).toContain("const successURL = fromJoinedGroups");
+    expect(ownerTransferSource).toContain("? '/contacts/groups'");
     expect(ownerTransferSource).not.toContain('groupLifecycle.leave');
   });
 });

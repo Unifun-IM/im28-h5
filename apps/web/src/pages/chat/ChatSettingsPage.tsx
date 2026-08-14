@@ -7,7 +7,7 @@ import type {
   WebIMGroupMember,
   WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
@@ -54,6 +54,8 @@ export function ChatSettingsPage() {
   const { conversationID = '' } = useParams();
   // navigate 只处理 shared clear 成功后的 SPA route 后果。
   const navigate = useNavigate();
+  // searchParams 只承载转让完成后的退群确认意图，不携带群或成员业务身份。
+  const [searchParams, setSearchParams] = useSearchParams();
   // runtime context 提供认证状态和唯一聚合 sync facade。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // sync 生命周期跟随认证 runtime，页面不创建 Gateway 或 Repository。
@@ -204,13 +206,26 @@ export function ChatSettingsPage() {
     }
   }
 
+  // view 仅在真实会话存在时生成，避免用路由 ID 伪造主体。
+  const view = conversation ? buildChatSettingsView(conversation, group) : null;
+
+  useEffect(() => {
+    if (searchParams.get('lifecycle') !== 'leave' || !view?.canQuitGroup) return;
+    // 转让成功后的当前账号已是普通成员，仍需用户显式确认才调用退群 mutation。
+    setLifecycleAction('leave');
+    setSearchParams(current => {
+      // nextSearchParams 仅消费一次生命周期意图，保留未来可能存在的其他页面参数。
+      const nextSearchParams = new URLSearchParams(current);
+      nextSearchParams.delete('lifecycle');
+      return nextSearchParams;
+    }, { replace: true });
+  }, [searchParams, setSearchParams, view?.canQuitGroup]);
+
   if (restoring) return <ChatSettingsPageState label="正在恢复聊天设置" />;
   if (!runtime) return <ChatSettingsPageState label="运行配置不可用" detail={startupError} />;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
   // chatURL 是设置页固定的 RN 返回目标。
   const chatURL = `/conversations/${encodeURIComponent(conversationID)}`;
-  // view 仅在真实会话存在时生成，避免用路由 ID 伪造主体。
-  const view = conversation ? buildChatSettingsView(conversation, group) : null;
 
   return (
     <main className="rn-chat-settings-page">
@@ -281,9 +296,24 @@ export function ChatSettingsPage() {
                 clearing={clearing}
                 onOpen={() => setClearSheetOpen(true)}
               />
-              {view.canQuitGroup || view.canDismissGroup ? (
+              {view.canStartOwnerLeaveFlow ? (
                 <GroupLifecycleSettingsCard
-                  action={view.canDismissGroup ? 'dismiss' : 'leave'}
+                  action="leave"
+                  submitting={lifecycleSubmitting || lifecycleBlocked}
+                  onOpen={() => navigate(
+                    `/conversations/${encodeURIComponent(view.conversationID)}/settings/manage/owner-transfer?intent=leave`,
+                  )}
+                />
+              ) : view.canQuitGroup ? (
+                <GroupLifecycleSettingsCard
+                  action="leave"
+                  submitting={lifecycleSubmitting || lifecycleBlocked}
+                  onOpen={setLifecycleAction}
+                />
+              ) : null}
+              {view.canDismissGroup ? (
+                <GroupLifecycleSettingsCard
+                  action="dismiss"
                   submitting={lifecycleSubmitting || lifecycleBlocked}
                   onOpen={setLifecycleAction}
                 />

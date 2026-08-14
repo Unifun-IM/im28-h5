@@ -23,6 +23,12 @@ export interface ChatForwardCompatibilityDestination {
   readonly state: ChatForwardPickerLocationState | null;
 }
 
+/** 选择转发目标后的聊天路由只携带稳定来源身份，不触发消息发送。 */
+export interface ChatForwardTargetDestination {
+  readonly pathname: string;
+  readonly state: ChatForwardLocationState;
+}
+
 /** 从稳定会话和消息身份创建可跨 SPA 页面传递的状态。 */
 export function createChatForwardRouteState(options: {
   readonly sourceConversationID: string;
@@ -85,6 +91,17 @@ export function createChatForwardPickerLocationState(
   forward: ChatForwardRouteState,
 ): ChatForwardPickerLocationState {
   return { forwardPicker: forward };
+}
+
+/** 创建目标聊天的待发送转发路由，发送动作由目标聊天 Composer 接管。 */
+export function createChatForwardTargetDestination(
+  conversationID: string,
+  forward: ChatForwardRouteState,
+): ChatForwardTargetDestination {
+  return {
+    pathname: `/conversations/${encodeURIComponent(conversationID.trim())}`,
+    state: { forward },
+  };
 }
 
 /** 只读取兼容 redirect 生成的稳定 ID 状态，不接受消息正文。 */

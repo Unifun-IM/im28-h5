@@ -60,10 +60,6 @@
   background: var(--im-bg-input);
 }
 
-.rn-joined-groups-search:focus-within {
-  border-color: var(--im-brand-primary);
-}
-
 .rn-joined-groups-search .rn-asset-icon {
   width: 18px;
   height: 18px;

@@ -25,8 +25,17 @@ describe('group lifecycle H5 contract', () => {
 
   it('页面 capability 只从 shared group permissions 投影', () => {
     expect(viewSource).toContain('group.permissions.canQuitGroup');
+    expect(viewSource).toContain('group.permissions.canTransferOwner');
     expect(viewSource).toContain('group.permissions.canDismissGroup');
     expect(viewSource).not.toContain("currentUserRole === 'owner'");
     expect(viewSource).not.toContain('roleLevel === 100');
+  });
+
+  it('群主退出先转让并在返回设置页后要求再次确认', () => {
+    expect(pageSource).toContain('view.canStartOwnerLeaveFlow');
+    expect(pageSource).toContain('settings/manage/owner-transfer?intent=leave');
+    expect(pageSource).toContain("searchParams.get('lifecycle') !== 'leave'");
+    expect(pageSource).toContain("setLifecycleAction('leave')");
+    expect(pageSource).toContain("nextSearchParams.delete('lifecycle')");
   });
 });

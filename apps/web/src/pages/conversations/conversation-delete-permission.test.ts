@@ -62,6 +62,7 @@ function createJoinedGroup(canClearMessages: boolean): WebIMJoinedGroup {
       canClearMessages,
       canMentionAll: canClearMessages,
     },
+    canClearMessagesForAll: canClearMessages,
     canEditAnnouncement: canClearMessages,
     canMentionAll: canClearMessages,
     isCreatedByCurrentUser: canClearMessages,
@@ -72,18 +73,18 @@ function createJoinedGroup(canClearMessages: boolean): WebIMJoinedGroup {
 /** 构造可观测缓存与远端群列表调用的权限来源。 */
 function createPermissionSource(
   cachedGroups: readonly WebIMJoinedGroup[],
-  syncedGroups: readonly WebIMJoinedGroup[],
+  detailedGroup: WebIMJoinedGroup = createJoinedGroup(false),
 ): ConversationDeleteGroupPermissionSource {
   return {
     listCached: vi.fn(async () => cachedGroups),
-    sync: vi.fn(async () => syncedGroups),
+    fetchDetail: vi.fn(async () => detailedGroup),
   };
 }
 
 describe('conversation delete permission', () => {
   it('allows single conversation deletion for both sides without group reads', async () => {
     // source 验证单聊不会触发无关群同步。
-    const source = createPermissionSource([], []);
+    const source = createPermissionSource([]);
     await expect(resolveConversationDeleteForAllPermission(
       createConversationTarget('single'),
       source,
@@ -93,21 +94,53 @@ describe('conversation delete permission', () => {
 
   it('uses cached group permission without remote sync', async () => {
     // source 提供已缓存的明确权限事实。
-    const source = createPermissionSource([createJoinedGroup(true)], []);
+    const source = createPermissionSource([createJoinedGroup(true)]);
     await expect(resolveConversationDeleteForAllPermission(
       createConversationTarget('group'),
       source,
     )).resolves.toBe(true);
-    expect(source.sync).not.toHaveBeenCalled();
+    expect(source.fetchDetail).not.toHaveBeenCalled();
   });
 
-  it('refreshes shared groups when the target group cache is cold', async () => {
+  it('fetches shared group detail when the target group cache is cold', async () => {
     // source 模拟会话已存在但群缓存尚未初始化的真实启动顺序。
-    const source = createPermissionSource([], [createJoinedGroup(true)]);
+    const source = createPermissionSource([], createJoinedGroup(true));
     await expect(resolveConversationDeleteForAllPermission(
       createConversationTarget('group'),
       source,
     )).resolves.toBe(true);
-    expect(source.sync).toHaveBeenCalledTimes(1);
+    expect(source.fetchDetail).toHaveBeenCalledWith('group-target');
+  });
+
+  it('fails closed when the explicit clear-message capability is false', async () => {
+    // source 即使保留管理员聚合权限，也不能替代服务端显式授权。
+    const group = createJoinedGroup(true);
+    const source = createPermissionSource([{
+      ...group,
+      canClearMessagesForAll: false,
+    }]);
+    await expect(resolveConversationDeleteForAllPermission(
+      createConversationTarget('group'),
+      source,
+    )).resolves.toBe(false);
+    expect(source.fetchDetail).not.toHaveBeenCalled();
+  });
+
+  it('fetches detail when a cached group has no explicit capability', async () => {
+    // cachedGroup 模拟旧缓存只有聚合角色权限、没有服务端 capability 字段。
+    const cachedGroup = createJoinedGroup(true);
+    // cachedGroupWithoutClearPermission 精确模拟旧 package 产出的可选字段缺失。
+    const {
+      canClearMessagesForAll: _clearPermission,
+      ...cachedGroupWithoutClearPermission
+    } = cachedGroup;
+    const source = createPermissionSource([{
+      ...cachedGroupWithoutClearPermission,
+    }], createJoinedGroup(true));
+    await expect(resolveConversationDeleteForAllPermission(
+      createConversationTarget('group'),
+      source,
+    )).resolves.toBe(true);
+    expect(source.fetchDetail).toHaveBeenCalledWith('group-target');
   });
 });

@@ -19,8 +19,9 @@ describe('user ID clipboard consumer contract', () => {
   /** 对端资料只在平台写入成功后显示 RN 同语义反馈。 */
   it('keeps contact profile feedback success-only', () => {
     expect(contactProfileSource).toContain('await copyUserIDToClipboard(profile.userID)');
-    expect(contactProfileSource).toContain('复制ID成功');
+    expect(contactProfileSource).toContain("toast.success('复制ID成功')");
     expect(contactProfileSource.indexOf('await copyUserIDToClipboard(profile.userID)'))
-      .toBeLessThan(contactProfileSource.indexOf("setCopiedUserID('复制ID成功')"));
+      .toBeLessThan(contactProfileSource.indexOf("toast.success('复制ID成功')"));
+    expect(contactProfileSource).not.toContain('setCopiedUserID');
   });
 });

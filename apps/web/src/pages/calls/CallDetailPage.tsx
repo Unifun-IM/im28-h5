@@ -10,6 +10,7 @@ import videoIconURL from '../../assets/rn/assets/icons/imm28/video-camera.solid.
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { useWebIMCall } from '../../runtime/WebIMCallProvider.js';
 import {
@@ -38,6 +39,8 @@ export function CallDetailPage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   /** callRuntime 复用全局 Web LiveKit 呼出 owner。 */
   const callRuntime = useWebIMCall();
+  /** toast 与 RN 统一承载通话启动结果。 */
+  const { toast } = useAppToast();
   /** calls 只从聚合 sync facade 获取。 */
   const calls = useMemo(() => runtime?.getSync().calls ?? null, [runtime]);
   /** detailCall 保存缓存或远端补齐后的主记录。 */
@@ -163,7 +166,7 @@ export function CallDetailPage() {
         mediaType,
       });
     } catch (cause) {
-      setError(readCallDetailError(cause));
+      toast.error(readCallDetailError(cause));
     }
   };
 

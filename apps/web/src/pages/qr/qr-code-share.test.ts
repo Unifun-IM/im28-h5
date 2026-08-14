@@ -32,4 +32,10 @@ describe('QR code in-app share route', () => {
     expect(displaySource).toContain('className="rn-qr-display-modal"');
     expect(displaySource).not.toContain('className="rn-qr-display-page"');
   });
+
+  it('下载与发送结果通过全局 Toast 呈现', () => {
+    expect(displaySource).toContain("toast.success('二维码已下载')");
+    expect(displaySource).toContain('toast.error(');
+    expect(pageSource).toContain("toast.success('二维码已发送')");
+  });
 });

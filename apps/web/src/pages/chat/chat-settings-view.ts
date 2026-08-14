@@ -27,6 +27,7 @@ export interface ChatSettingsView {
   readonly canShowAutoDeleteInChatSettings: boolean;
   readonly canClearForAll: boolean;
   readonly canQuitGroup: boolean;
+  readonly canStartOwnerLeaveFlow: boolean;
   readonly canDismissGroup: boolean;
 }
 
@@ -80,6 +81,13 @@ export function buildChatSettingsView(
   const canManageGroupMessages = Boolean(
     group?.groupID === targetID && group.permissions.canClearMessages,
   );
+  // canStartOwnerLeaveFlow 只在 shared capability 同时允许转让和解散时开放群主交接入口。
+  const canStartOwnerLeaveFlow = Boolean(
+    isGroup &&
+      group?.groupID === targetID &&
+      group.permissions.canTransferOwner &&
+      group.permissions.canDismissGroup,
+  );
   return {
     conversationID: conversation.conversationID,
     targetID,
@@ -107,6 +115,7 @@ export function buildChatSettingsView(
     canQuitGroup: Boolean(
       isGroup && group?.groupID === targetID && group.permissions.canQuitGroup,
     ),
+    canStartOwnerLeaveFlow,
     canDismissGroup: Boolean(
       isGroup && group?.groupID === targetID && group.permissions.canDismissGroup,
     ),

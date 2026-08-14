@@ -10,7 +10,7 @@ import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { usePrimaryTabBadges } from '../../components/primary-tabs/index.js';
 import { CallTypeActionSheet } from '../../components/call/CallTypeActionSheet.js';
 import { HomeActionMenu } from '../../components/home-actions/HomeActionMenu.js';
-import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
 import { ContactActionMenu } from './ContactActionMenu.js';
@@ -42,6 +42,8 @@ export function ContactsPage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   /** callOwner 是 Web 全局唯一通话生命周期 owner。 */
   const callOwner = useWebIMCall();
+  /** toast 与 RN 统一承载通话启动等操作反馈。 */
+  const { toast } = useAppToast();
   // contacts facade 不向页面暴露 Gateway client 或 token。
   const contactsFacade = useMemo(() => runtime?.getSync().contacts ?? null, [runtime]);
   // contacts 保存已完成分页和归一化的好友记录。
@@ -204,11 +206,11 @@ export function ContactsPage() {
         mediaType,
       });
     } catch (cause) {
-      setActionError(readContactActionError(cause, '发起通话失败'));
+      toast.error(readContactActionError(cause, '发起通话失败'));
     } finally {
       setActionPending(false);
     }
-  }, [actionPending, callOwner, callTarget, runtime]);
+  }, [actionPending, callOwner, callTarget, runtime, toast]);
 
   /** deleteContact 在明确清理范围后调用 shared success-only 删除状态机。 */
   const deleteContact = useCallback(async (scope: 'self' | 'both'): Promise<void> => {

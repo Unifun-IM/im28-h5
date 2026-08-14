@@ -38,10 +38,14 @@ export function GroupOwnerTransferPage() {
   const settingsURL = `/conversations/${encodeURIComponent(conversationID)}/settings`;
   /** fromJoinedGroups 保留群列表发起动作的可恢复 UI 上下文。 */
   const fromJoinedGroups = searchParams.get('from') === 'joined-groups';
+  /** fromOwnerLeave 表示群设置发起的显式“转让后退出”两步流程。 */
+  const fromOwnerLeave = searchParams.get('intent') === 'leave';
   /** closeURL 在群列表动作中避免跳入无关的群管理页面。 */
-  const closeURL = fromJoinedGroups ? '/contacts/groups' : manageURL;
+  const closeURL = fromJoinedGroups ? '/contacts/groups' : fromOwnerLeave ? settingsURL : manageURL;
   /** successURL 转让成功后离开已经失效的群主管理范围。 */
-  const successURL = fromJoinedGroups ? '/contacts/groups' : settingsURL;
+  const successURL = fromJoinedGroups
+    ? '/contacts/groups'
+    : `${settingsURL}${fromOwnerLeave ? '?lifecycle=leave' : ''}`;
   /** entries 保持 SDK 候选资格并复刻 RN 角色/拼音分组。 */
   const entries = useMemo(
     () => buildGroupOwnerTransferEntries(data.members, data.currentUserID, keyword),

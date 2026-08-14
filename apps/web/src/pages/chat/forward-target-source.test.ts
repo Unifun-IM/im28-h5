@@ -3,8 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 import type { WebIMSync } from '@im28/im-sdk/web';
 import {
   loadChatForwardTargets,
+  prepareChatForwardTargetDestination,
   resolveChatForwardTargetConversationID,
 } from './forward-target-source.js';
+import { createChatForwardRouteState } from './chat-forward-route.js';
 
 /** 只构造共享 owner 当前测试需要的 facade 表面。 */
 function createSyncStub(): WebIMSync {
@@ -25,6 +27,10 @@ function createSyncStub(): WebIMSync {
     },
     peerProfile: {
       openConversation: vi.fn(async () => ({ conversationID: 'single-conversation' })),
+    },
+    messages: {
+      forward: vi.fn(),
+      forwardToTargets: vi.fn(),
     },
   } as unknown as WebIMSync;
 }
@@ -52,5 +58,24 @@ describe('shared forward target source', () => {
     await expect(resolveChatForwardTargetConversationID(sync, {
       key: 'group:group-1', kind: 'group', id: 'group-1', conversationID: 'group-conversation', title: '测试群', description: '', avatarURL: '',
     })).resolves.toBe('group-conversation');
+  });
+
+  it('选择转发目标只进入目标聊天草稿态且不会立即发送', async () => {
+    /** sync 同时暴露发送 spy，防止目标确认阶段回归为直接发送。 */
+    const sync = createSyncStub();
+    /** forward 只携带来源稳定身份，不复制消息正文。 */
+    const forward = createChatForwardRouteState({
+      sourceConversationID: 'source-conversation',
+      sourceConversationTitle: '来源聊天',
+      sourceClientMsgIDs: ['message-1', 'message-2'],
+    });
+    await expect(prepareChatForwardTargetDestination(sync, {
+      key: 'friend:friend-1', kind: 'friend', id: 'friend-1', conversationID: '', title: '好友', description: '', avatarURL: '',
+    }, forward)).resolves.toEqual({
+      pathname: '/conversations/single-conversation',
+      state: { forward },
+    });
+    expect(sync.messages.forward).not.toHaveBeenCalled();
+    expect(sync.messages.forwardToTargets).not.toHaveBeenCalled();
   });
 });

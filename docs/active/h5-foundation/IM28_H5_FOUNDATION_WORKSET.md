@@ -2112,14 +2112,52 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 
 ## W6.a6.20.149 H5 Interaction Parity Closeout
 
-- active slice: `.149.5 repo-wide-operation-toast-consumers`。
+- active slice: `.149.5b remaining-operation-toast-consumers`。
 - owner: `AppToastProvider + operation-owning pages`。
 - expected: 页面 mutation/copy/save/share 的 success/error 进入唯一 Toast；加载、权限、空态、媒体内联状态和显式重试错误继续由页面结构 owner 承载。
 - forbidden: 不改 `im28-phone/src/**`；不复制 batch/sendCard/sendImage 业务逻辑；不运行 RN/Desktop/all；不改 `build:package:desktop:web`。
-- verification: consumer inventory/contract -> focused tests -> Web typecheck/build -> 412px success/error browser sample。
+- verification: remaining consumer inventory -> load/operation split -> focused/full tests -> Web typecheck/build -> authenticated success/error browser sample。
 - current state: `active`。
-- next activation: `.149.5` closeout 后重新生成 RN parity residual inventory。
-- residual seeds: `.149.4` RTC external deployment；Toast authenticated action/browser samples。
+- next activation: `.149.5b` closeout 后重新生成 RN parity residual inventory。
+- residual seeds: 好友验证处理、黑名单解除、群成员管理/群创建和通话记录删除；`.149.4` RTC external deployment；Toast authenticated action/browser samples。
+
+### `.149.5b` Progress
+
+- custom emoji manager: 添加/删除/排序 success/error 已接入唯一全局 Toast；初始化同步失败保留页面状态；旧成功横幅状态和 CSS 已删除。
+- evidence: focused 2/7、full 147/476、Web typecheck、1198-module build；真实 412px 页面 inline success=0、Toast host=1、zero overflow/log。
+- residual: 继续处理剩余列表、群成员管理、群创建和通话记录的 operation feedback；本项不执行新的上传/删除 mutation。
+
+### Closed `.149.6`
+
+- deliverable: 多选转发目标改为单选；确认目标只解析真实会话并通过 React Router 进入目标聊天待发送草稿，不再调用 `forwardToTargets`；最终发送继续由目标 Composer 的 shared `messages.forward` 承担。
+- state boundary: route state 只包含来源 conversation、标题和有序 clientMsgIDs；目标页从当前账号 SDK cache 恢复消息；更换接收人取消时保留原草稿。
+- evidence: focused 2/8、full 147/475、Web typecheck、1198-module build；真实登录态选择 2 条进入 `donk` 会话并显示待发送摘要，消息历史未新增。
+- verdict: `completed/send-action-gated`；真实最终发送与第二账号 list-back 未执行。
+
+### Closed `.149.7`
+
+- deliverable: 群主群设置同时展示“退出群聊/解散群聊”；退出进入既有群主转让路由，转让成功返回设置页并打开退群确认，不自动执行 leave。
+- owner boundary: 页面只投影 shared permissions 和路由意图；`groupMembers.transferOwner`、`groupLifecycle.leave/dismiss` 继续由 SDK owner 承担。
+- evidence: focused 3/17、full 147/478、Web typecheck、1198-module build；真实 owner 群显示双入口，退出进入 2 位候选页并可无副作用关闭返回，412/412、零 error log。
+- verdict: `completed/transfer-and-leave-mutation-gated`；真实转让、退群、解散和第二账号 list-back 未执行。
+
+### Closed `.149.8`
+
+- deliverable: 会话删除确认层改为全宽贴底；群聊全员清空按钮只消费 SDK 群详情的显式 `can_clear_message`，缓存缺字段时 shared `fetchDetail` 补齐，角色不得推断权限。
+- evidence: SDK focused 12；H5 focused 7；最终 full H5 149/484、SDK Web 101/426、466 assets、两侧 typecheck、1198-module build；真实有/无权限群按钮分支通过。
+- verdict: `completed/destructive-action-gated`；未点击任何删除，真实 self/both/all-members 与多账号 list-back 待动作时授权。
+
+### Closed `.149.9`
+
+- deliverable: H5 呼出保持 shared call-control/Web outgoing/LiveKit 单一 owner，只有真实 start 成功后才提交 active call 与 `/calls/active`；失败留在来源页并走全局 error Toast；重复点击锁覆盖完整异步启动。
+- evidence: 真实测试账号 `/v1/call/start` 返回“服务不可用”且无 call ID/credential，H5 未跳转活动页；H5 full 149/484、SDK Web 101/426、466 assets、两侧 typecheck、1198-module build。
+- verdict: `completed/client-converged/external-rtc-gated`；dev RTC 后端不可用，双账号接通、远端媒体、控制、挂断、pending/终态/list-back 待环境恢复。
+
+### Closed `.149.5a`
+
+- deliverable: 23 个生产页面/反馈 owner 接入唯一 Toast；四类分享/二维码/资料/账号/通知/联系人/申请动作覆盖；输入壳焦点描边与 copy-state 死 CSS 清零。
+- evidence: focused 6/28、full 147/473、typecheck、1198-module build、5176 guest success Toast 与 1280px zero-overflow。
+- verdict: `local-complete/authenticated-action-gated`；加载/权限/空态/媒体/RTC/显式重试状态仍保持页面 owner。
 
 ### Closed `.149.3/.149.4`
 

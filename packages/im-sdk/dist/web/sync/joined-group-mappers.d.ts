@@ -2,6 +2,8 @@ import { type GatewayGroup, type Group, type GroupRepository } from '@im28/im-sd
 import type { WebIMJoinedGroup } from './joined-group-sync.js';
 /** 将 Gateway group 转成共享 Group Repository 记录。 */
 export declare function mapGatewayGroupToCore(group: GatewayGroup, order: number): Group | null;
+/** 将单群详情合并到既有缓存，并保留服务端列表顺序和未返回字段。 */
+export declare function mergeGatewayGroupDetailToCore(existingGroup: Group | null, detail: GatewayGroup): Group;
 /** 从共享 Group cache 恢复页面模型并按服务端顺序排序。 */
 export declare function readJoinedGroupCache(repository: GroupRepository, currentUserID: string): Promise<readonly WebIMJoinedGroup[]>;
 /** 将缓存记录映射为稳定 Web 群模型。 */

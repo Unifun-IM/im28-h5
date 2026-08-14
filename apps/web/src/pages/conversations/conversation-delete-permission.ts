@@ -6,7 +6,7 @@ import type {
 /** 会话删除权限只依赖 shared 群缓存与远端同步能力。 */
 export type ConversationDeleteGroupPermissionSource = Pick<
   WebIMJoinedGroupSync,
-  'listCached' | 'sync'
+  'listCached' | 'fetchDetail'
 >;
 
 /** 读取删除全部会话记录权限，并在群缓存缺失时刷新 shared 群快照。 */
@@ -21,10 +21,11 @@ export async function resolveConversationDeleteForAllPermission(
   const cachedGroups = await groups.listCached();
   // cachedGroup 命中时直接消费 shared 权限投影。
   const cachedGroup = cachedGroups.find(group => group.groupID === targetGroupID);
-  if (cachedGroup) return cachedGroup.permissions.canClearMessages === true;
-  // syncedGroups 仅在缓存缺失时拉取权威群列表，避免把冷缓存误判为无权限。
-  const syncedGroups = await groups.sync();
-  // syncedGroup 缺失或权限未明确时保持 fail-closed。
-  const syncedGroup = syncedGroups.find(group => group.groupID === targetGroupID);
-  return syncedGroup?.permissions.canClearMessages === true;
+  if (typeof cachedGroup?.canClearMessagesForAll === 'boolean') {
+    return cachedGroup.canClearMessagesForAll;
+  }
+  // detailedGroup 对齐 RN：缓存缺少 capability 时拉取权威群详情。
+  const detailedGroup = await groups.fetchDetail(targetGroupID);
+  // 群详情仍缺少显式字段时保持 fail-closed。
+  return detailedGroup.canClearMessagesForAll === true;
 }

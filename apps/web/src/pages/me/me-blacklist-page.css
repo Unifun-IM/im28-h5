@@ -25,10 +25,6 @@
   background: var(--im-bg-input);
 }
 
-.rn-me-blacklist-search:focus-within {
-  border-color: var(--im-brand-primary);
-}
-
 .rn-me-blacklist-search .rn-asset-icon {
   width: 18px;
   height: 18px;

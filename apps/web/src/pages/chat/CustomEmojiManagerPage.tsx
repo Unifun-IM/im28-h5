@@ -7,7 +7,7 @@ import checkIconURL from '../../assets/rn/assets/icons/imm28/check.regular.svg';
 import plusIconURL from '../../assets/rn/assets/icons/imm28/plus.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
-import { OperationToastFeedback } from '../../components/interaction/index.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import {
   buildCustomEmojiUploadInputs,
@@ -35,6 +35,8 @@ export function CustomEmojiManagerPage() {
   const { conversationID = '' } = useParams();
   // runtime context 提供唯一认证 SDK facade。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  // toast 是添加、删除和排序结果的唯一瞬时反馈 owner。
+  const { toast } = useAppToast();
   // emojis 始终来自当前账号共享 SQLite 或远端完整列表。
   const [emojis, setEmojis] = useState<readonly CustomEmoji[]>([]);
   // mode 控制 RN 预览、整理和移动三种互斥交互。
@@ -45,10 +47,8 @@ export function CustomEmojiManagerPage() {
   const [loading, setLoading] = useState(true);
   // mutating 锁定上传与删除重复提交。
   const [mutating, setMutating] = useState(false);
-  // error 展示真实 SDK/Gateway 失败。
-  const [error, setError] = useState<string | null>(null);
-  // notice 只在真实 mutation 成功后展示。
-  const [notice, setNotice] = useState<string | null>(null);
+  // loadError 只展示 cache-first 初始化失败，不承载操作结果。
+  const [loadError, setLoadError] = useState<string | null>(null);
   // previewURL 控制当前正式远端图片预览。
   const [previewURL, setPreviewURL] = useState('');
   // deleteSheetVisible 要求危险操作二次确认。
@@ -91,12 +91,12 @@ export function CustomEmojiManagerPage() {
     // facade 是页面唯一自定义表情数据入口。
     const facade = runtime.getSync().customEmojis;
     setLoading(true);
-    setError(null);
+    setLoadError(null);
     try {
       commitOrderedSnapshot(await facade.listCached());
       commitOrderedSnapshot(await facade.sync());
     } catch (cause) {
-      setError(readCustomEmojiManagerError(cause, '自定义表情加载失败'));
+      setLoadError(readCustomEmojiManagerError(cause, '自定义表情加载失败'));
     } finally {
       setLoading(false);
     }
@@ -111,8 +111,6 @@ export function CustomEmojiManagerPage() {
     event.currentTarget.value = '';
     if (!runtime || mutating || !files.length) return;
     setMutating(true);
-    setError(null);
-    setNotice(null);
     try {
       // inputs 保留 File 为 opaque source，不在页面构造 OSS 请求。
       const inputs = buildCustomEmojiUploadInputs(
@@ -125,9 +123,9 @@ export function CustomEmojiManagerPage() {
         emojis.length,
       );
       commitOrderedSnapshot(await runtime.getSync().customEmojis.create(inputs));
-      setNotice('添加成功');
+      toast.success('添加成功');
     } catch (cause) {
-      setError(readCustomEmojiManagerError(cause, '添加自定义表情失败'));
+      toast.error(readCustomEmojiManagerError(cause, '添加自定义表情失败'));
     } finally {
       setMutating(false);
     }
@@ -138,15 +136,13 @@ export function CustomEmojiManagerPage() {
     if (!runtime || mutating || !selectedIDs.length) return;
     setDeleteSheetVisible(false);
     setMutating(true);
-    setError(null);
-    setNotice(null);
     try {
       commitOrderedSnapshot(await runtime.getSync().customEmojis.delete(selectedIDs));
       setSelectedIDs([]);
       setMode('view');
-      setNotice('删除成功');
+      toast.success('删除成功');
     } catch (cause) {
-      setError(readCustomEmojiManagerError(cause, '删除自定义表情失败'));
+      toast.error(readCustomEmojiManagerError(cause, '删除自定义表情失败'));
     } finally {
       setMutating(false);
     }
@@ -172,7 +168,7 @@ export function CustomEmojiManagerPage() {
     setSelectedIDs([]);
     setMoveTargetIndex(null);
     setMode('organize');
-    setNotice('排序成功');
+    toast.success('排序成功');
   }
 
   if (restoring) return <CustomEmojiManagerState label="正在恢复自定义表情" />;
@@ -193,8 +189,7 @@ export function CustomEmojiManagerPage() {
             {mode === 'view' ? '整理' : '取消'}
           </button>
         </PageNavbar>
-        {error ? <p className="rn-custom-emoji-manager-feedback is-error" role="status">{error}</p> : null}
-        <OperationToastFeedback notice={notice} />
+        {loadError ? <p className="rn-custom-emoji-manager-feedback is-error" role="status">{loadError}</p> : null}
         <div className="rn-custom-emoji-manager-grid" role="list" aria-label="自定义表情" ref={gridRef}>
           {mode === 'view' ? (
             <button className="rn-custom-emoji-manager-add" type="button" role="listitem" disabled={mutating || !remaining} aria-label="添加自定义表情" onClick={() => fileInputRef.current?.click()}>
