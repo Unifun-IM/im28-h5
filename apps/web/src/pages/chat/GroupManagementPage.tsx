@@ -7,7 +7,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
-import { InteractionModal, OperationToastFeedback } from '../../components/interaction/index.js';
+import { InteractionModal, useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
@@ -31,6 +31,8 @@ export function GroupManagementPage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   /** sync 生命周期绑定当前认证 runtime。 */
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
+  /** toast 统一承载群设置 mutation 的成功与失败反馈。 */
+  const { toast } = useAppToast();
   /** conversation 保存已验证的真实群会话。 */
   const [conversation, setConversation] = useState<Conversation | null>(null);
   /** group 保存 shared capability 和群主身份。 */
@@ -45,8 +47,6 @@ export function GroupManagementPage() {
   const [settingAction, setSettingAction] = useState<GroupSettingAction | null>(null);
   /** error 保留真实 SDK、Gateway 或 SQLite 失败。 */
   const [error, setError] = useState<string | null>(null);
-  /** notice 展示成功且已收敛的设置变更。 */
-  const [notice, setNotice] = useState<string | null>(null);
 
   /** 按会话、群资料顺序恢复真实管理事实。 */
   const load = useCallback(async (): Promise<void> => {
@@ -115,7 +115,6 @@ export function GroupManagementPage() {
     if (!sync || !conversation || !settingAction || submitting) return;
     setSubmitting(true);
     setError(null);
-    setNotice(null);
     try {
       /** options 严格对应 RN 三个开关，未修改字段保持 undefined。 */
       const options = settingAction.type === 'join-approval'
@@ -133,9 +132,9 @@ export function GroupManagementPage() {
       /** cachedGroups 使用 shared mapper 恢复完整页面字段和权限。 */
       const cachedGroups = await sync.groups.listCached();
       setGroup(cachedGroups.find(item => item.groupID === conversation.targetID) ?? null);
-      setNotice('设置成功');
+      toast.success('设置成功');
     } catch (cause) {
-      setError(readGroupManagementError(cause));
+      toast.error(readGroupManagementError(cause));
       setSettingAction(null);
     } finally {
       setSubmitting(false);
@@ -158,7 +157,6 @@ export function GroupManagementPage() {
           <h1>群管理</h1><span />
         </PageNavbar>
         <div className="rn-group-management-content">
-          <OperationToastFeedback notice={notice} />
           {error ? <p className="rn-group-management-error" role="alert">{error}</p> : null}
           {loading ? <p className="rn-group-management-empty">正在加载群管理</p> : null}
           {!loading && group && roleView ? (

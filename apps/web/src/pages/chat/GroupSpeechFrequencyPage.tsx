@@ -3,6 +3,7 @@ import type { Conversation, IMGroupSpeechFrequencySeconds, WebIMJoinedGroup } fr
 import { Link, Navigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
+import { useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
@@ -28,6 +29,8 @@ export function GroupSpeechFrequencyPage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   /** sync 随认证 runtime 生命周期变化。 */
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
+  /** toast 统一承载发言频率保存结果。 */
+  const { toast } = useAppToast();
   /** conversation 保存已验证的真实群会话。 */
   const [conversation, setConversation] = useState<Conversation | null>(null);
   /** group 保存 shared permission 和当前设置。 */
@@ -98,9 +101,10 @@ export function GroupSpeechFrequencyPage() {
         setError('服务端设置已更新，本地群资料尚未收敛；请稍后刷新。');
         return;
       }
+      toast.success('设置成功');
       window.history.back();
     } catch (cause) {
-      setError(readActionError(cause, '发言频率保存失败'));
+      toast.error(readActionError(cause, '发言频率保存失败'));
     } finally {
       setSubmitting(false);
     }

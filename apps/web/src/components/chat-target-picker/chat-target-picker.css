@@ -1,8 +1,8 @@
 .rn-chat-target-picker-modal {
-  width: min(100vw, 720px);
-  max-width: min(100vw, 720px);
-  height: min(100dvh - 16px, 920px);
-  max-height: min(100dvh - 16px, 920px);
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 60vh !important;
+  max-height: 60vh !important;
   margin: auto auto 0;
 }
 

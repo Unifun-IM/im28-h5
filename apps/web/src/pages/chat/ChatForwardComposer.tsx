@@ -1,40 +1,34 @@
-import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { canForwardWebIMMessage, type Message } from '@im28/im-sdk/web';
 
-import checkIconURL from '../../assets/rn/assets/icons/imm28/check-circle.solid.svg';
-import circleIconURL from '../../assets/rn/assets/icons/imm28/circle.regular.svg';
-import changeIconURL from '../../assets/rn/assets/icons/imm28/data-transfer-both-rotate-90.dynamic.svg';
-import sendIconURL from '../../assets/rn/assets/icons/imm28/send.svg';
 import shareIconURL from '../../assets/rn/assets/icons/imm28/share.dynamic.svg';
 import xmarkIconURL from '../../assets/rn/assets/icons/imm28/xmark.dynamic.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
-import { getChatMessageView } from './chat-message-view.js';
+import { buildChatForwardComposerSummary } from './chat-forward-composer-view.js';
+import { ChatForwardPreviewModal } from './ChatForwardPreviewModal.js';
+import type { ChatForwardSelection } from './chat-composer-types.js';
 import type { ChatPendingForward } from './useChatForwardFlow.js';
 import './chat-forward.css';
 
-/** 待发送转发输入区只调用 shared facade 编排回调。 */
+/** 待发送转发条只负责摘要、预览和选择状态。 */
 interface ChatForwardComposerProps {
   readonly pending: ChatPendingForward;
-  readonly sending: boolean;
+  readonly recipientName: string;
   readonly onCancel: () => void;
   readonly onChangeTarget: (
     sourceClientMsgIDs: readonly string[],
     hideSenderName: boolean,
   ) => void;
-  readonly onSubmit: (options: {
-    readonly sourceClientMsgIDs: readonly string[];
-    readonly hideSenderName: boolean;
-    readonly comment: string;
-  }) => Promise<void>;
+  readonly onSelectionChange: (selection: ChatForwardSelection) => void;
 }
 
-/** 呈现 RN 转发摘要、评论输入和可编辑预览 sheet。 */
+/** 呈现 RN 转发摘要和可编辑预览，输入与发送复用 ChatComposer。 */
 export function ChatForwardComposer({
   pending,
-  sending,
+  recipientName,
   onCancel,
   onChangeTarget,
-  onSubmit,
+  onSelectionChange,
 }: ChatForwardComposerProps) {
   // excludedIDs 保存预览中用户取消选择的稳定来源 ID。
   const [excludedIDs, setExcludedIDs] = useState<ReadonlySet<string>>(new Set());
@@ -42,8 +36,6 @@ export function ChatForwardComposer({
   const [hideSenderName, setHideSenderName] = useState(
     pending.routeState.hideSenderName === true,
   );
-  // comment 与 RN 一致作为整批转发后的独立文本消息。
-  const [comment, setComment] = useState('');
   // previewOpen 控制 60% 高度的转发项编辑 sheet。
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -66,22 +58,12 @@ export function ChatForwardComposer({
   const canHideSenderName = selectedMessages.length > 0 && selectedMessages.every(
     message => canForwardWebIMMessage(message, { hideSenderName: true }),
   );
-  // summary 使用首条真实缓存消息生成 RN 紧凑预览。
-  const summary = buildForwardComposerSummary(selectedMessages, pending.routeState.sourceConversationTitle);
+  // summary 使用来源发送者最终展示名生成 RN 紧凑预览。
+  const summary = buildChatForwardComposerSummary(selectedMessages, pending.senderNamesByID);
 
-  /** 提交当前选中 IDs、隐藏选项和评论。 */
-  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
-    event.preventDefault();
-    if (sending || pending.loading || !selectedIDs.length) return;
-    await onSubmit({ sourceClientMsgIDs: selectedIDs, hideSenderName, comment });
-  }
-
-  /** Enter 发送，Shift+Enter 换行，并尊重输入法合成态。 */
-  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>): void {
-    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
-    event.preventDefault();
-    event.currentTarget.form?.requestSubmit();
-  }
+  useEffect(() => {
+    onSelectionChange({ sourceClientMsgIDs: selectedIDs, hideSenderName });
+  }, [hideSenderName, onSelectionChange, selectedIDs]);
 
   /** 切换预览项且保证至少保留一条来源。 */
   function toggleMessage(message: Message): void {
@@ -94,8 +76,25 @@ export function ChatForwardComposer({
     });
   }
 
+  /** 应用当前反选集合并关闭预览，发送仍由 Composer 提交按钮触发。 */
+  function applyPreviewChanges(): void {
+    setPreviewOpen(false);
+  }
+
+  /** 关闭预览后把稳定来源 ID 和隐藏选项交回现有目标选择器。 */
+  function changePreviewRecipient(): void {
+    setPreviewOpen(false);
+    onChangeTarget(selectedIDs, hideSenderName);
+  }
+
+  /** 关闭预览并清除整批待发送转发。 */
+  function cancelPreviewForward(): void {
+    setPreviewOpen(false);
+    onCancel();
+  }
+
   return (
-    <section className="rn-chat-forward-composer-shell">
+    <>
       <div className="rn-chat-forward-composer-preview">
         <button type="button" className="rn-chat-forward-preview-hot-area" onClick={() => setPreviewOpen(true)} disabled={pending.loading}>
           <RNAssetIcon assetURL={shareIconURL} />
@@ -103,49 +102,20 @@ export function ChatForwardComposer({
         </button>
         <button type="button" className="rn-chat-forward-clear" aria-label="取消转发消息" onClick={onCancel}><RNAssetIcon assetURL={xmarkIconURL} /></button>
       </div>
-      <form className="rn-chat-forward-composer" onSubmit={handleSubmit}>
-        <label><span className="sr-only">转发留言</span><textarea rows={1} maxLength={1000} value={comment} placeholder="留言..." disabled={sending} onChange={event => setComment(event.target.value)} onKeyDown={handleKeyDown} /></label>
-        <button type="submit" aria-label="发送转发消息" disabled={sending || pending.loading || !selectedIDs.length}><RNAssetIcon assetURL={sendIconURL} /></button>
-      </form>
-      {previewOpen ? (
-        <div className="rn-chat-forward-sheet-backdrop" role="presentation" onMouseDown={event => { if (event.currentTarget === event.target) setPreviewOpen(false); }}>
-          <section className="rn-chat-forward-sheet" role="dialog" aria-modal="true" aria-label="转发消息预览">
-            <header><button type="button" onClick={() => setPreviewOpen(false)}>取消</button><h2>转发预览</h2><button type="button" onClick={() => setPreviewOpen(false)}>完成</button></header>
-            <div className="rn-chat-forward-preview-list">
-              {pending.messages.map(message => {
-                // selected 表示该来源将进入最终 facade 参数。
-                const selected = !excludedIDs.has(message.clientMsgID);
-                // view 复用聊天页已支持的消息类型投影。
-                const view = getChatMessageView(message, false);
-                return (
-                  <button type="button" className={selected ? 'is-selected' : ''} key={message.clientMsgID} onClick={() => toggleMessage(message)}>
-                    <RNAssetIcon assetURL={selected ? checkIconURL : circleIconURL} />
-                    <span><strong>{message.senderID}</strong><small>{view.text}</small></span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="rn-chat-forward-options">
-              <label><span><strong>隐藏发送人</strong><small>{canHideSenderName ? '仅发送消息内容' : '所选消息类型暂不支持'}</small></span><input type="checkbox" checked={hideSenderName} disabled={!canHideSenderName} onChange={event => setHideSenderName(event.target.checked)} /></label>
-              <button type="button" onClick={() => onChangeTarget(selectedIDs, hideSenderName)}><RNAssetIcon assetURL={changeIconURL} /><span>更换接收对象</span></button>
-            </div>
-          </section>
-        </div>
-      ) : null}
-    </section>
+      <ChatForwardPreviewModal
+        open={previewOpen}
+        messages={pending.messages}
+        senderNamesByID={pending.senderNamesByID}
+        excludedIDs={excludedIDs}
+        hideSenderName={hideSenderName}
+        canHideSenderName={canHideSenderName}
+        recipientName={recipientName}
+        onToggleMessage={toggleMessage}
+        onToggleSenderName={() => setHideSenderName(current => !current)}
+        onApply={applyPreviewChanges}
+        onChangeRecipient={changePreviewRecipient}
+        onCancelForward={cancelPreviewForward}
+      />
+    </>
   );
-}
-
-/** 生成单条正文或多条来源会话摘要。 */
-function buildForwardComposerSummary(
-  messages: readonly Message[],
-  sourceConversationTitle: string,
-): string {
-  if (!messages.length) return '请选择至少一条消息';
-  if (messages.length > 1) return `来自：${sourceConversationTitle}`;
-  // message 是唯一来源缓存实体。
-  const message = messages[0]!;
-  // view 复用聊天内容投影而不解析 Gateway body。
-  const view = getChatMessageView(message, false);
-  return `${message.senderID}：${view.text}`;
 }

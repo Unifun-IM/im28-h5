@@ -26,11 +26,22 @@
 | `.149.3` | H5 chat/settings UI | 名片点击、单聊设置、定时删除、input focus | focused + route/browser | `done-local/browser-session-gated` |
 | `.149.4` | H5 call/recorder consumers | RN 同源 RTC UI、录音取消动效与真实 runtime chain | focused + media/browser/external RTC | `done-local/external-rtc-gated` |
 | `.149.5a` | H5 operation feedback | 聊天、分享、二维码、资料、账号、通知、联系人与申请的瞬时结果收敛到唯一 Toast owner | consumer contract + full tests + typecheck + build + guest browser | `local-complete/authenticated-action-gated` |
-| `.149.5b` | H5 operation feedback | 剩余列表/群管理/通话记录页面拆分 load error 与 operation result | inventory + focused/full verification | `active` |
+| `.149.5b` | H5 operation feedback | 剩余列表、群管理、群角色、群资料、群生命周期、建群、成员、通话记录和媒体操作拆分 load error 与 operation result | inventory + focused/full verification | `local-complete/authenticated-action-gated` |
 | `.149.6` | H5 chat forward orchestration | 多选目标确认进入单个目标聊天并生成待发送转发草稿；仅 Composer 点击发送调用 shared forward | no-auto-send regression + full tests + authenticated browser | `completed/send-action-gated` |
 | `.149.7` | H5 group owner lifecycle UI | 群主设置同时提供退出/解散；退出先进入现有群主转让，成功返回后再次确认才调用 shared leave | route-intent regression + full tests + owner browser readonly | `completed/transfer-and-leave-mutation-gated` |
 | `.149.8` | SDK group detail + H5 conversation delete UI | 群聊“为我和所有群成员删除”只按群详情 `can_clear_message` 显式授权；确认层全宽贴底 | SDK/H5 focused + full tests + authenticated permission browser | `completed/destructive-action-gated` |
 | `.149.9` | H5 RTC startup composition | 复用 shared call control/LiveKit owner；只有启动成功后进入活动页，Gateway 失败留在来源页并使用错误 Toast | SDK RTC + H5 contract + typecheck/build + controlled real start | `completed/client-converged/external-rtc-gated` |
+| `.149.10` | RN/H5 parity inventory | 重新按 frozen RN route/feature/operation 建立 H5 complete/partial/missing/acceptance-gated 清单并选择下一片 | read-only source/route/owner audit | `completed/read-only` |
+| `.149.11` | H5 settings operation feedback | permission update、version check、sign-out 使用全局 Toast；load/runtime error 保持结构 owner | focused contract + full verification | `local-complete/authenticated-action-gated` |
+| `.149.12` | H5 chat settings structure | 将 539 行 `ChatSettingsPage` 按业务编排与纯展示 responsibility 拆分，保持 route 与 shared owner 不变 | focused behavior + full verification + authenticated readonly browser | `completed/no-behavior-change` |
+| `.149.13` | H5 forward preview UI | 转发预览复刻 frozen RN 生产结构，复用 shared message view；只修改草稿选择，不自动发送 | focused/full verification + authenticated readonly browser | `completed/send-result-gated` |
+| `.149.14` | H5 forward composer summary | 转发草稿按来源消息发送者去重显示“来自：A，B”，本人、单聊和群成员名称遵循 frozen RN 展示合同 | focused/full verification + authenticated readonly browser | `completed/send-result-gated` |
+| `.149.15` | H5 voice playback acceptance | 使用真实缓存语音验证浏览器媒体 owner 的播放、活动态和自然结束回落；不上传、不发送、不修改消息 | authenticated natural-data browser + focused/typecheck | `completed/chromium-pass/browser-matrix-gated` |
+| `.149.16` | H5 forward-origin display name | 新生成的转发来源头消费来源会话已解析名称，遵循备注/群昵称/昵称优先级；历史 `forwardOrigin` 快照保持不变 | focused/full verification + authenticated readonly browser | `completed/send-result-gated` |
+| `.149.17` | H5 outgoing voice direction | 发送方语音复用 frozen RN 的反向横排与 180° 声波方向；接收方及播放 owner 不变 | typecheck + build + authenticated browser computed style | `completed/browser-pass` |
+| `.149.18` | H5 recorder/group-card parity | 录音 HUD 使用真实 Web Audio 电平并复刻 RN 尺寸/取消态；群名片实时刷新入群关系，已加入直达 shared 群会话，未加入进入受控申请页 | focused + typecheck + build + authenticated card browser | `completed/card-browser-pass/physical-record-gated` |
+| `.149.19` | H5 forward composer convergence | `ChatForwardComposer` 只保留摘要/预览；转发条进入唯一 `ChatComposer`，复用其输入、表情和显式发送链 | focused + typecheck + build + authenticated readonly browser | `completed/structural-pass/forward-runtime-gated` |
+| `.149.20` | H5 group-member picker parity | 邀请/移除成员保持可追踪 SPA route，并共用群设置页上的 100% × 60dvh 底部选择弹窗 | focused + full tests + typecheck + build + authenticated readonly browser | `completed-local/browser-readonly-pass/mutation-gated` |
 
 ## W6.a6.20.148 Cold-Start Offline Safety Contract Freeze
 
@@ -1891,3 +1902,22 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实
 - receiver 新进入聊天后显示同 marker，返回列表后 preview 保留且 unread 清零；两端 warning/error 为 0。
 - SDK realtime focused 2 files/6、H5 conversation/chat focused 2 files/15、route HTTP 200；production code、SDK generated、RN protected source 与 package scripts 零改动。
 - 未隔离网络或重启浏览器，offline/restart cache-hit 仍是独立 gate；不把本片 realtime 入库证据扩大为离线验收。
+
+## Completed W6.a6.20.149.13
+
+- 转发预览由 H5 原始 senderID/text 列表收敛为冻结 RN `ForwardPreviewModal` 结构：60% 视口聊天面板、底部对齐 outgoing 气泡、30px 选择器和 200px 四项操作菜单。
+- 预览正文复用 `getChatMessageView + ChatMessageContent + ChatForwardOrigin`，图片、语音、文件、名片、表情和来源头不建立第二套 payload 解析；媒体交互继续由聊天页唯一 `ChatMediaInteractionProvider` 承载。
+- 预览只编辑反选集合与隐藏发送者选项；“修改收件人”继续走现有单选目标弹窗，“应用更改”仅关闭预览，真实发送仍必须由底部 Composer 显式提交。
+- focused 2 files/7、H5 full 150 files/497 tests、466 assets、Web typecheck、1203-module production build 和 diff check 通过。
+- 382×786 已登录真实链完成 3 条缓存消息预览：面板 350×471.6、菜单 200×192、选择器 30×30、3 个真实气泡、light/dark token 和零 warning/error；反选计数 `3 -> 2 -> 3`、隐藏发送者来源数 `3 -> 0 -> 3` 通过。
+- Figma 节点受登录门禁阻塞，未绕过认证或把不可见设计属性声明为证据；本片以冻结 RN 生产实现和用户截图为视觉合同。
+- SDK source/generated package 与 `im28-phone` protected source 零改动；未执行 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web`，也未点击真实发送。
+
+## Completed W6.a6.20.149.21
+
+- 将 `ChatPage` 内的 SQLite 首屏恢复、`dataVersion` 实时缓存重读、搜索消息定位和窗口大小维护抽入唯一 `useChatPageCacheState` owner。
+- `ChatPage` 继续持有发送、转发、删除、编辑、录音、名片、通话和 React Router 接线；本片未改变 SDK facade、DTO、缓存替换、重试或 UI 业务分支。
+- `ChatPage.tsx` 从 698 行收敛为 595 行；新 hook 159 行且只有一个生产消费者，无 compat wrapper、第二读取 owner、孤立导出、TODO/FIXME/HACK 或调试日志。
+- focused 73 files/245 tests、H5 full 152 files/505 tests、Web typecheck、1207-module production build 和 diff check 通过；既有 >500kB chunk warning 不变。
+- 382x786 已登录真实群聊完成只读烟测：会话、1 人在线、群主备注名/标签、消息气泡和唯一 Composer 均正常；未发送消息或执行群 mutation。
+- SDK source/generated package 零改动；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；未执行 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web`。

@@ -36,6 +36,8 @@ export function useChatVoiceRecorder({
   const [status, setStatus] = useState<ChatVoiceRecordingStatus>('idle');
   // seconds 只用于 60 秒进度展示，不作为 Gateway 真相。
   const [seconds, setSeconds] = useState(0);
+  // level 是 Web Audio 采样的 0..1 实时电平，只驱动录音 HUD。
+  const [level, setLevel] = useState(0);
   // sessionRef 持有唯一短期 recorder session。
   const sessionRef = useRef<ChatVoiceRecordingSession | null>(null);
   // startingRef 覆盖等待权限期间尚无 session 的状态。
@@ -65,6 +67,7 @@ export function useChatVoiceRecorder({
     pendingActionRef.current = null;
     if (!disposedRef.current) {
       setSeconds(0);
+      setLevel(0);
       setStatus('idle');
     }
   }, [clearTimers]);
@@ -118,6 +121,7 @@ export function useChatVoiceRecorder({
     startingRef.current = true;
     pendingActionRef.current = null;
     setSeconds(0);
+    setLevel(0);
     setStatus('starting');
     try {
       // session 只有标准浏览器能力成功后才存在。
@@ -142,11 +146,13 @@ export function useChatVoiceRecorder({
         return;
       }
       setSeconds(1);
+      setLevel(session.readLevel());
       setStatus('recording');
       tickRef.current = setInterval(() => {
         // elapsed 只用于 RN 进度显示并限制在 60 秒。
         const elapsed = Date.now() - session.startedAt;
         setSeconds(Math.min(60, Math.max(1, Math.ceil(elapsed / 1000))));
+        setLevel(session.readLevel());
       }, 120);
       autoStopRef.current = setTimeout(() => {
         void finishRecording('send');
@@ -173,6 +179,7 @@ export function useChatVoiceRecorder({
   return {
     status,
     seconds,
+    level,
     start,
     send: () => finishRecording('send'),
     cancel: () => finishRecording('cancel'),

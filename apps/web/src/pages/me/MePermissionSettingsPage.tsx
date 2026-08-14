@@ -6,6 +6,7 @@ import type {
 import { Link, Navigate } from 'react-router-dom';
 
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
+import { useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { MeProfileHeader } from './MeProfileHeader.js';
@@ -36,6 +37,8 @@ const PERMISSION_ROWS: ReadonlyArray<{
 
 /** RN 权限管理页读取和写入真实 Gateway 配置。 */
 export function MePermissionSettingsPage() {
+  /** toast 承载权限写入的瞬时成功与失败。 */
+  const { toast } = useAppToast();
   // runtime context 是权限设置唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // settings 保存服务端返回的完整权限配置。
@@ -55,7 +58,7 @@ export function MePermissionSettingsPage() {
     try {
       setSettings(await runtime.getSettings().getPermission());
     } catch (cause) {
-      setError(readPermissionError(cause));
+      setError(readPermissionError(cause, '权限设置加载失败'));
     } finally {
       setLoading(false);
     }
@@ -78,13 +81,14 @@ export function MePermissionSettingsPage() {
         type: key as GatewayPermissionType,
         enabled: nextValue,
       }));
+      toast.success('设置成功');
     } catch (cause) {
       setSettings(previousSettings);
-      setError(readPermissionError(cause));
+      toast.error(readPermissionError(cause, '权限设置失败'));
     } finally {
       setSavingKey(null);
     }
-  }, [runtime, savingKey, settings]);
+  }, [runtime, savingKey, settings, toast]);
 
   if (restoring) return <PermissionPageState label="正在恢复权限设置" />;
   if (!runtime) return <PermissionPageState label="运行配置不可用" detail={startupError} />;
@@ -119,8 +123,8 @@ export function MePermissionSettingsPage() {
 }
 
 /** 收敛权限 API 异常且不泄漏凭据。 */
-function readPermissionError(cause: unknown): string {
-  return cause instanceof Error && cause.message ? cause.message : '权限设置加载失败';
+function readPermissionError(cause: unknown, fallback: string): string {
+  return cause instanceof Error && cause.message ? cause.message : fallback;
 }
 
 /** 统一承载权限设置启动状态。 */

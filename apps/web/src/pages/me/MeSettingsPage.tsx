@@ -6,7 +6,7 @@ import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regul
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
-import { OperationToastFeedback } from '../../components/interaction/index.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { useWebThemePreference } from '../../runtime/theme-preference.js';
 import { MeLogoutDialog } from './MeLogoutDialog.js';
@@ -16,6 +16,8 @@ import './me-settings-page.css';
 
 /** RN 通用设置当前只恢复具备完整 runtime owner 的退出登录操作。 */
 export function MeSettingsPage() {
+  /** toast 统一承载版本检查与退出操作的瞬时结果。 */
+  const { toast } = useAppToast();
   // runtime context 持有远端 logout 与本地清理闭环。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // navigate 在退出完成后 replace 到认证入口。
@@ -24,10 +26,6 @@ export function MeSettingsPage() {
   const [confirming, setConfirming] = useState(false);
   // signingOut 阻止重复退出提交。
   const [signingOut, setSigningOut] = useState(false);
-  // error 显示本地数据库关闭等不能吞掉的失败。
-  const [error, setError] = useState<string | null>(null);
-  // versionStatus 承载最新版本等非错误检查结果。
-  const [versionStatus, setVersionStatus] = useState<string | null>(null);
   // checkingVersion 防止重复触发公开版本检查 operation。
   const [checkingVersion, setCheckingVersion] = useState(false);
   // updateInfo 只保存 SDK 已规范化且需要更新的结果。
@@ -40,37 +38,35 @@ export function MeSettingsPage() {
   const checkVersion = useCallback(async (): Promise<void> => {
     if (!runtime || checkingVersion) return;
     setCheckingVersion(true);
-    setError(null);
-    setVersionStatus(null);
     try {
       // result 来自共享 Gateway operation，不依赖认证 token 或页面 mock。
       const result = await runtime.getClientVersion().check();
       if (result.needUpdate) {
         setUpdateInfo(result);
       } else {
-        setVersionStatus('已是最新版本');
+        toast.success('已是最新版本');
       }
     } catch (cause) {
-      setError(cause instanceof Error && cause.message ? cause.message : '版本检查失败');
+      toast.error(readSettingsOperationError(cause, '版本检查失败'));
     } finally {
       setCheckingVersion(false);
     }
-  }, [checkingVersion, runtime]);
+  }, [checkingVersion, runtime, toast]);
 
   /** 调用唯一 Web runtime 退出链并替换当前历史记录。 */
   const signOut = useCallback(async () => {
     if (!runtime || signingOut) return;
     setSigningOut(true);
-    setError(null);
     try {
       await runtime.signOut();
+      toast.success('已退出登录');
       navigate('/auth/phone', { replace: true });
     } catch (cause) {
-      setError(cause instanceof Error && cause.message ? cause.message : '退出登录失败');
+      toast.error(readSettingsOperationError(cause, '退出登录失败'));
       setSigningOut(false);
       setConfirming(false);
     }
-  }, [navigate, runtime, signingOut]);
+  }, [navigate, runtime, signingOut, toast]);
 
   if (restoring) return <SettingsPageState label="正在恢复设置" />;
   if (!runtime) return <SettingsPageState label="运行配置不可用" detail={startupError} />;
@@ -85,8 +81,6 @@ export function MeSettingsPage() {
           <span />
         </PageNavbar>
         <div className="rn-me-settings-content">
-          <OperationToastFeedback notice={versionStatus} />
-          {error ? <p className="rn-me-settings-error" role="status">{error}</p> : null}
           <SettingsLinkRow
             label="显示"
             value={themeSnapshot.preference === 'system' ? '跟随系统' : themeSnapshot.mode === 'light' ? '浅色模式' : '深色模式'}
@@ -185,4 +179,9 @@ function SettingsPageState({ label, detail }: { readonly label: string; readonly
       {detail ? <span>{detail}</span> : null}
     </main>
   );
+}
+
+/** 将设置操作异常转换为不泄漏运行时细节的 Toast 文案。 */
+function readSettingsOperationError(cause: unknown, fallback: string): string {
+  return cause instanceof Error && cause.message ? cause.message : fallback;
 }

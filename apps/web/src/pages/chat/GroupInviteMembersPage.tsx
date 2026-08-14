@@ -5,17 +5,16 @@ import type {
   WebIMGroupMember,
   WebIMJoinedGroup,
 } from '@im28/im-sdk/web';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
-import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
-import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
-import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { GroupInviteMemberTile } from './GroupInviteMemberTile.js';
+import { GroupMemberPickerModal } from './GroupMemberPickerModal.js';
 import {
   buildGroupInviteMemberCandidates,
   reconcileGroupInviteMemberSelection,
@@ -29,9 +28,11 @@ export function GroupInviteMembersPage() {
   /** navigate 只负责成功后的 RN 返回语义。 */
   const navigate = useNavigate();
   /** runtime 提供当前账号认证与唯一聚合 facade。 */
-  const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  const { runtime, snapshot, restoring } = useWebIMRuntime();
   /** sync 生命周期绑定当前认证 runtime。 */
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
+  /** toast 统一承载邀请成员 mutation 的成功与失败反馈。 */
+  const { toast } = useAppToast();
   /** conversation 保存真实群会话身份。 */
   const [conversation, setConversation] = useState<Conversation | null>(null);
   /** group 保存 shared capability、审核设置与人数快照。 */
@@ -189,77 +190,73 @@ export function GroupInviteMembersPage() {
       }
       setMembers(result.members);
       setSelectedUserIDs(new Set());
-      navigate(settingsURL, { replace: true, state: {
-        notice: result.mode === 'application' ? '入群申请已发送' : '添加成员成功',
-      } });
+      toast.success(result.mode === 'application' ? '入群申请已发送' : '添加成员成功');
+      navigate(settingsURL, { replace: true });
     } catch (cause) {
-      setError(readGroupInviteError(cause));
+      toast.error(readGroupInviteError(cause));
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (restoring) return <GroupInviteMembersState label="正在恢复群成员" />;
-  if (!runtime) return <GroupInviteMembersState label="运行配置不可用" detail={startupError} />;
+  if (restoring || !runtime) return null;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
   if (!conversationID) return <Navigate to="/conversations" replace />;
-  if (loading) return <GroupInviteMembersState label="正在加载可邀请好友" />;
   if (!loading && !error && (!group || !group.permissions.canInviteMembers)) {
     return <Navigate to={settingsURL} replace />;
   }
 
   return (
-    <main
-      className="rn-group-remove-page is-invite"
-      aria-busy={loading || refreshing || submitting}
+    <GroupMemberPickerModal
+      title={`邀请群成员${selectedCount ? `（${selectedCount}）` : ''}`}
+      ariaLabel="邀请群成员"
+      busy={loading || refreshing || submitting}
+      closeDisabled={submitting}
+      invite
+      onClose={() => navigate(settingsURL, { replace: true })}
       onTouchStart={pullRefresh.onTouchStart}
       onTouchMove={pullRefresh.onTouchMove}
       onTouchEnd={pullRefresh.onTouchEnd}
       onTouchCancel={pullRefresh.onTouchCancel}
     >
-      <section className="rn-group-remove-surface">
-        <PageNavbar className="rn-group-remove-header">
-          <Link to={settingsURL} aria-label="返回群设置"><RNAssetIcon assetURL={backIconURL} /></Link>
-          <h1>邀请群成员{selectedCount ? `（${selectedCount}）` : ''}</h1>
-          <span aria-hidden="true" />
-        </PageNavbar>
+      {loading ? <GroupInviteMembersState label="正在加载可邀请好友" /> : (
+        <>
         <label className="rn-group-remove-search">
           <RNAssetIcon assetURL={searchIconURL} />
           <input type="search" value={keyword} placeholder="搜索好友" aria-label="搜索可邀请好友" onChange={event => setKeyword(event.target.value)} />
           {keyword ? <button type="button" aria-label="清除搜索" onClick={() => setKeyword('')}><RNAssetIcon assetURL={clearIconURL} /></button> : null}
         </label>
-        <PullRefreshIndicator
-          refreshing={refreshing}
-          armed={pullRefresh.armed}
-          pullDistance={pullRefresh.pullDistance}
-        />
-        {group?.joinApprovalRequired ? (
-          <label className="rn-group-invite-message">
-            <span>验证消息</span>
-            <input value={message} maxLength={100} placeholder="请输入邀请理由" onChange={event => setMessage(event.target.value)} />
-          </label>
-        ) : null}
-        {error ? <p className="rn-group-remove-error" role="alert">{error}</p> : null}
-        <section className="rn-group-remove-grid" aria-label="可邀请好友">
-          {candidates.map(candidate => (
-            <GroupInviteMemberTile
-              key={candidate.contact.userID}
-              candidate={candidate}
-              selected={selectedUserIDs.has(candidate.contact.userID)}
-              onToggle={toggleMember}
-            />
-          ))}
-        </section>
-        {!loading && !error && !candidates.length ? (
-          <p className="rn-group-remove-empty">{keyword.trim() ? '未找到相关好友' : '暂无可邀请好友'}</p>
-        ) : null}
+        <div className="rn-group-remove-content">
+          <PullRefreshIndicator refreshing={refreshing} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
+          {group?.joinApprovalRequired ? (
+            <label className="rn-group-invite-message">
+              <span>验证消息</span>
+              <input value={message} maxLength={100} placeholder="请输入邀请理由" onChange={event => setMessage(event.target.value)} />
+            </label>
+          ) : null}
+          {error ? <p className="rn-group-remove-error" role="alert">{error}</p> : null}
+          <section className="rn-group-remove-grid" aria-label="可邀请好友">
+            {candidates.map(candidate => (
+              <GroupInviteMemberTile
+                key={candidate.contact.userID}
+                candidate={candidate}
+                selected={selectedUserIDs.has(candidate.contact.userID)}
+                onToggle={toggleMember}
+              />
+            ))}
+          </section>
+          {!error && !candidates.length ? (
+            <p className="rn-group-remove-empty">{keyword.trim() ? '未找到相关好友' : '暂无可邀请好友'}</p>
+          ) : null}
+        </div>
         <footer className="rn-group-remove-footer">
           <button type="button" disabled={!selectedCount || submitting || remoteCompleted} onClick={() => { void submitInvitation(); }}>
             {submitting ? '邀请中' : group?.joinApprovalRequired ? '发送入群申请' : '邀请成员'}
           </button>
         </footer>
-      </section>
-    </main>
+        </>
+      )}
+    </GroupMemberPickerModal>
   );
 }
 
@@ -271,12 +268,11 @@ function readGroupInviteError(cause: unknown): string {
 /** 群成员邀请启动状态参数。 */
 interface GroupInviteMembersStateProps {
   readonly label: string;
-  readonly detail?: string | null;
 }
 
-/** 统一承载 runtime 恢复和配置错误。 */
-function GroupInviteMembersState({ label, detail }: GroupInviteMembersStateProps) {
-  return <main className="rn-group-remove-state"><strong>{label}</strong>{detail ? <span>{detail}</span> : null}</main>;
+/** 统一承载邀请候选的弹窗内加载状态。 */
+function GroupInviteMembersState({ label }: GroupInviteMembersStateProps) {
+  return <div className="rn-group-remove-state"><strong>{label}</strong></div>;
 }
 
 export default GroupInviteMembersPage;

@@ -1,3 +1,11 @@
+import {
+  createBrowserChatVoiceLevelReader,
+  disposeChatVoiceLevelReader,
+  readChatVoiceLevel,
+  SILENT_CHAT_VOICE_LEVEL_READER,
+  type ChatVoiceLevelReader,
+} from './chat-voice-level-reader.js';
+
 /** 浏览器媒体流只暴露本切片需要的 track cleanup。 */
 export interface ChatVoiceMediaStream {
   getTracks(): readonly { stop(): void }[];
@@ -22,6 +30,9 @@ export interface ChatVoiceRecorderDependencies {
     stream: ChatVoiceMediaStream,
     mimeType: string,
   ) => ChatVoiceMediaRecorder;
+  readonly createLevelReader?: (
+    stream: ChatVoiceMediaStream,
+  ) => ChatVoiceLevelReader;
   readonly now: () => number;
 }
 
@@ -35,6 +46,7 @@ export interface ChatVoiceRecordingResult {
 export interface ChatVoiceRecordingSession {
   readonly startedAt: number;
   readonly failure: Promise<Error>;
+  readLevel(): number;
   stop(): Promise<ChatVoiceRecordingResult>;
   cancel(): Promise<void>;
 }
@@ -44,6 +56,7 @@ interface ChatVoiceRecorderState {
   readonly dependencies: ChatVoiceRecorderDependencies;
   readonly stream: ChatVoiceMediaStream;
   readonly recorder: ChatVoiceMediaRecorder;
+  readonly levelReader: ChatVoiceLevelReader;
   readonly requestedMimeType: string;
   readonly startedAt: number;
   readonly chunks: Blob[];
@@ -82,6 +95,9 @@ export async function startChatVoiceRecording(
       stream,
       requestedMimeType,
     );
+    // levelReader 只增强 HUD，Web Audio 缺失不得阻断真实 MediaRecorder。
+    const levelReader = dependencies.createLevelReader?.(stream) ??
+      SILENT_CHAT_VOICE_LEVEL_READER;
     // startedAt 使用注入时钟统一交互和消息时长。
     const startedAt = dependencies.now();
     // failure 将松手前设备异常暴露给页面状态 owner。
@@ -91,6 +107,7 @@ export async function startChatVoiceRecording(
       dependencies,
       stream,
       recorder,
+      levelReader,
       requestedMimeType,
       startedAt,
       chunks: [],
@@ -102,10 +119,16 @@ export async function startChatVoiceRecording(
     };
 
     bindChatVoiceRecorderEvents(state);
-    recorder.start();
+    try {
+      recorder.start();
+    } catch (cause) {
+      disposeChatVoiceLevelReader(levelReader);
+      throw cause;
+    }
     return {
       startedAt,
       failure: state.failure,
+      readLevel: () => readChatVoiceLevel(state.levelReader),
       stop: () => stopChatVoiceRecording(state),
       cancel: async () => {
         await finishChatVoiceRecording(state, true);
@@ -131,6 +154,7 @@ function bindChatVoiceRecorderEvents(state: ChatVoiceRecorderState): void {
       return;
     }
     stopChatVoiceStream(state.stream);
+    disposeChatVoiceLevelReader(state.levelReader);
     state.resolveFailure(error);
   };
 }
@@ -161,6 +185,7 @@ function finishChatVoiceRecording(
   const completion = createChatVoiceCompletion(state, discard);
   state.terminalPromise = completion.finally(() => {
     state.completionReject = null;
+    disposeChatVoiceLevelReader(state.levelReader);
     stopChatVoiceStream(state.stream);
   });
   return state.terminalPromise;
@@ -252,6 +277,7 @@ function createDefaultChatVoiceRecorderDependencies(): ChatVoiceRecorderDependen
       );
       return recorder as unknown as ChatVoiceMediaRecorder;
     },
+    createLevelReader: stream => createBrowserChatVoiceLevelReader(stream),
     now: () => Date.now(),
   };
 }

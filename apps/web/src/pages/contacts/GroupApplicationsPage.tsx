@@ -4,7 +4,7 @@ import { Navigate, useLocation, useParams } from 'react-router-dom';
 
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
-import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
@@ -23,6 +23,8 @@ export function GroupApplicationsPage() {
   const location = useLocation();
   // runtime context 是页面唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  // toast 复用 RN 的群申请操作反馈语义。
+  const { toast } = useAppToast();
   // applications 保存完整 audit 结果以支持直接刷新恢复。
   const [applications, setApplications] = useState<readonly WebIMGroupApplication[]>([]);
   // keyword 驱动单群申请人本地搜索。
@@ -87,13 +89,14 @@ export function GroupApplicationsPage() {
       if (action === 'accept') await runtime.getSync().groupApplications.accept(target.applicationID);
       else await runtime.getSync().groupApplications.reject(target.applicationID);
       setActiveApplication(null);
+      toast.success(action === 'accept' ? '已通过' : '已拒绝');
       await loadApplications();
     } catch (cause) {
-      setError(readGroupApplicationError(cause, action === 'accept' ? '通过申请失败' : '拒绝申请失败'));
+      toast.error(readGroupApplicationError(cause, action === 'accept' ? '通过申请失败' : '拒绝申请失败'));
     } finally {
       setPendingAction(null);
     }
-  }, [activeApplication, loadApplications, pendingAction, runtime]);
+  }, [activeApplication, loadApplications, pendingAction, runtime, toast]);
 
   // entries 生成当前群和搜索条件下的日期 section。
   const entries = useMemo(() => buildGroupApplicationEntries(applications, groupID, keyword), [applications, groupID, keyword]);

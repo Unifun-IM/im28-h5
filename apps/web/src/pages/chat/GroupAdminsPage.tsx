@@ -54,7 +54,6 @@ export function GroupAdminsPage() {
         <div className="rn-group-admin-tip">
           <p>管理员可协助群主管理群聊，拥有移除群成员的能力<br />只有群主具备设置管理员、解散群聊的能力<br />最多可设置{IM_GROUP_ADMIN_LIMIT}个管理员</p>
           {data.error ? <span role="alert">{data.error}</span> : null}
-          {data.notice ? <span role="status">{data.notice}</span> : null}
         </div>
         {data.loading && !data.members.length ? <GroupAdminState label="正在加载群管理员" compact /> : null}
         {!data.loading && canManageAdmins ? (

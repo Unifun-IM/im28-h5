@@ -15,6 +15,7 @@ interface ChatVoiceInputProps {
   readonly disabled: boolean;
   readonly status: ChatVoiceRecordingStatus;
   readonly seconds: number;
+  readonly level: number;
   readonly onToggleMode: () => void;
   readonly onStart: () => void | Promise<void>;
   readonly onSend: () => void | Promise<void>;
@@ -28,6 +29,7 @@ export function ChatVoiceInput({
   disabled,
   status,
   seconds,
+  level,
   onToggleMode,
   onStart,
   onSend,
@@ -56,6 +58,11 @@ export function ChatVoiceInput({
       : status === 'sending'
         ? '发送中...'
         : '按住说话';
+  // activeSignalBars 对齐 RN：静音至少亮一格，最大六格。
+  const activeSignalBars = Math.max(
+    1,
+    Math.min(6, Math.ceil(Math.max(0.08, Math.min(1, level)) * 6)),
+  );
 
   /** pointer down 取得捕获并启动唯一 recorder session。 */
   function handlePointerDown(event: PointerEvent<HTMLButtonElement>) {
@@ -145,16 +152,18 @@ export function ChatVoiceInput({
           aria-label="语音录制音量"
         >
           <div className="rn-chat-voice-overlay-panel">
-            <span className="rn-chat-voice-mic-badge">
-              <RNAssetIcon assetURL={microphoneIconURL} />
-            </span>
-            <span className="rn-chat-voice-signal" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
+            <span className="rn-chat-voice-meter-row">
+              <span className="rn-chat-voice-mic-badge">
+                <RNAssetIcon assetURL={microphoneIconURL} />
+              </span>
+              <span className="rn-chat-voice-signal" aria-hidden="true">
+                {[0, 1, 2, 3, 4, 5].map(index => (
+                  <i
+                    key={index}
+                    className={index >= 6 - activeSignalBars ? 'is-active' : 'is-inactive'}
+                  />
+                ))}
+              </span>
             </span>
             <strong>{canceling ? '松开取消' : '上滑取消'}</strong>
           </div>

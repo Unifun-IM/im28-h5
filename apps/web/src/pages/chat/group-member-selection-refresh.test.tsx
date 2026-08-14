@@ -2,7 +2,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import appSource from '../../app/App.tsx?raw';
 import inviteSource from './GroupInviteMembersPage.tsx?raw';
+import modalSource from './GroupMemberPickerModal.tsx?raw';
 import removeSource from './GroupRemoveMembersPage.tsx?raw';
 
 /** 群成员选择刷新契约锁定两个 RN 列表复用同一手势和提示 owner。 */
@@ -24,5 +26,13 @@ describe('group member selection pull refresh', () => {
     expect(renderToStaticMarkup(
       <PullRefreshIndicator refreshing armed={false} pullDistance={0} />,
     )).toContain('正在刷新');
+  });
+
+  /** 邀请和移除保持可直达 SPA URL，但统一叠加在群设置页的 60% 底部弹窗。 */
+  it('renders both member actions through one settings modal shell', () => {
+    expect(modalSource).toContain('className={`rn-group-member-picker-modal');
+    expect(inviteSource).toContain('<GroupMemberPickerModal');
+    expect(removeSource).toContain('<GroupMemberPickerModal');
+    expect(appSource.match(/<ChatSettingsPage \/>/g)).toHaveLength(3);
   });
 });

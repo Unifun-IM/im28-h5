@@ -5,7 +5,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
-import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
@@ -34,6 +34,8 @@ export function JoinedGroupsPage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // navigate 只负责 React Router SPA 页面切换。
   const navigate = useNavigate();
+  // toast 统一承载打开群聊和退群 mutation 反馈。
+  const { toast } = useAppToast();
   // groups 保存 SQLite 或完整远端同步结果。
   const [groups, setGroups] = useState<readonly WebIMJoinedGroup[]>([]);
   // keyword 驱动群名和群 ID 本地搜索。
@@ -115,12 +117,12 @@ export function JoinedGroupsPage() {
       });
       return conversation;
     } catch (cause) {
-      setError(readJoinedGroupError(cause, '打开群聊失败'));
+      toast.error(readJoinedGroupError(cause, '打开群聊失败'));
       return null;
     } finally {
       setOpeningGroupID('');
     }
-  }, [openingGroupID, runtime]);
+  }, [openingGroupID, runtime, toast]);
 
   /** 解析 canonical Conversation 后进入聊天页。 */
   const openGroup = useCallback(async (group: WebIMJoinedGroup): Promise<void> => {
@@ -177,8 +179,9 @@ export function JoinedGroupsPage() {
       }
       setGroups(current => current.filter(group => group.groupID !== quitTarget.groupID));
       setQuitTarget(null);
+      toast.success('已退出群聊');
     } catch (cause) {
-      setError(readJoinedGroupError(cause, '退出群聊失败'));
+      toast.error(readJoinedGroupError(cause, '退出群聊失败'));
     } finally {
       setLifecycleSubmitting(false);
     }

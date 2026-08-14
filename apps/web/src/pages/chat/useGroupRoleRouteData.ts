@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Conversation, WebIMGroupMember, WebIMJoinedGroup } from '@im28/im-sdk/web';
 
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 
 /** 群角色子路由共用的真实会话、群权限和成员快照。 */
@@ -15,7 +16,6 @@ export interface GroupRoleRouteData {
   readonly group: WebIMJoinedGroup | null;
   readonly members: readonly WebIMGroupMember[];
   readonly error: string | null;
-  readonly notice: string | null;
   readonly refresh: () => Promise<void>;
   readonly addAdmins: (userIDs: readonly string[]) => Promise<boolean>;
   readonly removeAdmin: (userID: string) => Promise<boolean>;
@@ -24,6 +24,8 @@ export interface GroupRoleRouteData {
 
 /** 为管理员和群主转让子路由组合唯一 cache-first SDK 调用链。 */
 export function useGroupRoleRouteData(conversationID: string): GroupRoleRouteData {
+  /** toast 跨路由承载角色操作的瞬时成功与失败。 */
+  const { toast } = useAppToast();
   /** runtimeSnapshot 提供当前账号和 Web SDK composition。 */
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   /** sync 跟随当前认证 runtime，页面不直接接触 Gateway 或 Repository。 */
@@ -40,8 +42,6 @@ export function useGroupRoleRouteData(conversationID: string): GroupRoleRouteDat
   const [submitting, setSubmitting] = useState(false);
   /** error 展示真实 runtime、Gateway 或 SQLite 失败。 */
   const [error, setError] = useState<string | null>(startupError);
-  /** notice 只展示已确认成功的角色变更。 */
-  const [notice, setNotice] = useState<string | null>(null);
 
   /** load 先恢复账号缓存，再用 shared facade 完成权威刷新。 */
   const load = useCallback(async (): Promise<void> => {
@@ -90,7 +90,6 @@ export function useGroupRoleRouteData(conversationID: string): GroupRoleRouteDat
     if (!sync || !conversation || submitting) return false;
     setSubmitting(true);
     setError(null);
-    setNotice(null);
     try {
       /** result 显式区分本地已收敛和远端部分成功。 */
       const result = role === 'admin'
@@ -101,10 +100,10 @@ export function useGroupRoleRouteData(conversationID: string): GroupRoleRouteDat
         setError('服务端操作已完成，本地成员快照尚未刷新；请稍后重新进入页面。');
         return false;
       }
-      setNotice(role === 'admin' ? '管理员已添加' : '已移除管理员权限');
+      toast.success(role === 'admin' ? '管理员已添加' : '已移除管理员权限');
       return true;
     } catch (cause) {
-      setError(readGroupRoleRouteError(cause));
+      toast.error(readGroupRoleRouteError(cause, '群角色操作失败，请稍后重试'));
       return false;
     } finally {
       setSubmitting(false);
@@ -116,7 +115,6 @@ export function useGroupRoleRouteData(conversationID: string): GroupRoleRouteDat
     if (!sync || !conversation || submitting) return false;
     setSubmitting(true);
     setError(null);
-    setNotice(null);
     try {
       /** result 包含转让后的权威或当前可用成员快照。 */
       const result = await sync.groupMembers.transferOwner({
@@ -128,10 +126,10 @@ export function useGroupRoleRouteData(conversationID: string): GroupRoleRouteDat
         setError('服务端操作已完成，本地成员快照尚未刷新；请稍后重新进入页面。');
         return false;
       }
-      setNotice('群主已转让');
+      toast.success('群主已转让');
       return true;
     } catch (cause) {
-      setError(readGroupRoleRouteError(cause));
+      toast.error(readGroupRoleRouteError(cause, '群主转让失败，请稍后重试'));
       return false;
     } finally {
       setSubmitting(false);
@@ -149,7 +147,6 @@ export function useGroupRoleRouteData(conversationID: string): GroupRoleRouteDat
     group,
     members,
     error,
-    notice,
     refresh: load,
     addAdmins: userIDs => changeAdmins(userIDs, 'admin'),
     removeAdmin: userID => changeAdmins([userID], 'member'),
@@ -158,8 +155,8 @@ export function useGroupRoleRouteData(conversationID: string): GroupRoleRouteDat
 }
 
 /** 将群角色子路由异常转换为不包含凭据的可见文案。 */
-function readGroupRoleRouteError(cause: unknown): string {
+function readGroupRoleRouteError(cause: unknown, fallback = '群角色信息加载失败，请稍后重试'): string {
   return cause instanceof Error && cause.message
     ? cause.message
-    : '群角色信息加载失败，请稍后重试';
+    : fallback;
 }

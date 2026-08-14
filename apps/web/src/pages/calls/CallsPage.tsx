@@ -8,7 +8,7 @@ import { Navigate } from 'react-router-dom';
 
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
-import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
@@ -33,6 +33,8 @@ interface CallsPageProps {
 export function CallsPage({ onChromeHiddenChange }: CallsPageProps = {}) {
   // runtime context 是页面唯一 SDK facade owner。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  // toast 统一承载通话记录删除结果，不占用列表错误区域。
+  const { toast } = useAppToast();
   // calls 只从聚合 sync facade 获取，不直接调用 Gateway 或数据库。
   const calls = useMemo(() => runtime?.getSync().calls ?? null, [runtime]);
   // filter 对应 RN 所有通话/未接来电分段控件。
@@ -233,14 +235,19 @@ export function CallsPage({ onChromeHiddenChange }: CallsPageProps = {}) {
       setSelectedIDs(new Set());
       setConfirmingDelete(false);
       setEditing(false);
-      await readFirstPage(calls);
+      toast.success('通话记录已删除');
+      try {
+        await readFirstPage(calls);
+      } catch (cause) {
+        setError(readError(cause));
+      }
     } catch (cause) {
-      setError(readError(cause));
+      toast.error(readError(cause, '通话记录删除失败'));
       setConfirmingDelete(false);
     } finally {
       setDeleting(false);
     }
-  }, [calls, readFirstPage, selectedIDs]);
+  }, [calls, readFirstPage, selectedIDs, toast]);
 
   if (restoring) return <CallPageState label="正在恢复通话记录" />;
   if (!runtime) return <CallPageState label="运行配置不可用" detail={startupError} />;
@@ -343,6 +350,6 @@ function CallPageState({ label, detail }: { readonly label: string; readonly det
 }
 
 /** 将未知异常转换为不含凭据的页面文本。 */
-function readError(cause: unknown): string {
-  return cause instanceof Error && cause.message ? cause.message : '通话记录加载失败';
+function readError(cause: unknown, fallback = '通话记录加载失败'): string {
+  return cause instanceof Error && cause.message ? cause.message : fallback;
 }

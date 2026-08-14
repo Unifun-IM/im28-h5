@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Conversation, WebIMGroupMember, WebIMJoinedGroup } from '@im28/im-sdk/web';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
-import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
-import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
-import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { GroupMemberPickerModal } from './GroupMemberPickerModal.js';
 import { GroupRemoveMemberTile } from './GroupRemoveMemberTile.js';
 import {
   buildGroupRemoveMemberCandidates,
@@ -24,9 +23,11 @@ export function GroupRemoveMembersPage() {
   // navigate 只负责成功后的 RN 返回语义。
   const navigate = useNavigate();
   // runtime 提供当前账号认证与唯一聚合 facade。
-  const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  const { runtime, snapshot, restoring } = useWebIMRuntime();
   // sync 生命周期绑定当前认证 runtime。
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
+  // toast 统一承载移除成员 mutation 的成功与失败反馈。
+  const { toast } = useAppToast();
   // conversation 保存真实群会话身份。
   const [conversation, setConversation] = useState<Conversation | null>(null);
   // group 保存 shared capability 与人数快照。
@@ -173,69 +174,66 @@ export function GroupRemoveMembersPage() {
       setMembers(result.members);
       setSelectedUserIDs(new Set());
       setConfirmOpen(false);
+      toast.success('成员已移除');
       navigate(settingsURL, { replace: true });
     } catch (cause) {
-      setError(readGroupRemoveError(cause));
+      toast.error(readGroupRemoveError(cause));
       setConfirmOpen(false);
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (restoring) return <GroupRemoveMembersState label="正在恢复群成员" />;
-  if (!runtime) return <GroupRemoveMembersState label="运行配置不可用" detail={startupError} />;
+  if (restoring || !runtime) return null;
   if (!snapshot.userID) return <Navigate to="/login" replace />;
   if (!conversationID) return <Navigate to="/conversations" replace />;
-  if (loading) return <GroupRemoveMembersState label="正在加载群成员" />;
   if (!loading && !error && (!group || !group.permissions.canRemoveMembers)) {
     return <Navigate to={settingsURL} replace />;
   }
 
   return (
-    <main
-      className="rn-group-remove-page"
-      aria-busy={loading || refreshing || submitting}
+    <GroupMemberPickerModal
+      title={`移除群成员${selectedCount ? `（${selectedCount}）` : ''}`}
+      ariaLabel="移除群成员"
+      busy={loading || refreshing || submitting}
+      closeDisabled={submitting}
+      onClose={() => navigate(settingsURL, { replace: true })}
       onTouchStart={pullRefresh.onTouchStart}
       onTouchMove={pullRefresh.onTouchMove}
       onTouchEnd={pullRefresh.onTouchEnd}
       onTouchCancel={pullRefresh.onTouchCancel}
     >
-      <section className="rn-group-remove-surface">
-        <PageNavbar className="rn-group-remove-header">
-          <Link to={settingsURL} aria-label="返回群设置"><RNAssetIcon assetURL={backIconURL} /></Link>
-          <h1>移除群成员{selectedCount ? `（${selectedCount}）` : ''}</h1>
-          <span aria-hidden="true" />
-        </PageNavbar>
+      {loading ? <GroupRemoveMembersState label="正在加载群成员" /> : (
+        <>
         <label className="rn-group-remove-search">
           <RNAssetIcon assetURL={searchIconURL} />
           <input type="search" value={keyword} placeholder="搜索" aria-label="搜索群成员" onChange={event => setKeyword(event.target.value)} />
           {keyword ? <button type="button" aria-label="清除搜索" onClick={() => setKeyword('')}><RNAssetIcon assetURL={clearIconURL} /></button> : null}
         </label>
-        <PullRefreshIndicator
-          refreshing={refreshing}
-          armed={pullRefresh.armed}
-          pullDistance={pullRefresh.pullDistance}
-        />
-        {error ? <p className="rn-group-remove-error" role="alert">{error}</p> : null}
-        <section className="rn-group-remove-grid" aria-label="可移出群成员">
-          {candidates.map(candidate => (
-            <GroupRemoveMemberTile
-              key={candidate.member.userID}
-              candidate={candidate}
-              selected={selectedUserIDs.has(candidate.member.userID)}
-              onToggle={toggleMember}
-            />
-          ))}
-        </section>
-        {!loading && !error && !candidates.length ? (
-          <p className="rn-group-remove-empty">{keyword.trim() ? '未找到相关成员' : '暂无可移出成员'}</p>
-        ) : null}
+        <div className="rn-group-remove-content">
+          <PullRefreshIndicator refreshing={refreshing} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
+          {error ? <p className="rn-group-remove-error" role="alert">{error}</p> : null}
+          <section className="rn-group-remove-grid" aria-label="可移出群成员">
+            {candidates.map(candidate => (
+              <GroupRemoveMemberTile
+                key={candidate.member.userID}
+                candidate={candidate}
+                selected={selectedUserIDs.has(candidate.member.userID)}
+                onToggle={toggleMember}
+              />
+            ))}
+          </section>
+          {!error && !candidates.length ? (
+            <p className="rn-group-remove-empty">{keyword.trim() ? '未找到相关成员' : '暂无可移出成员'}</p>
+          ) : null}
+        </div>
         <footer className="rn-group-remove-footer">
           <button type="button" disabled={!selectedCount || submitting || remoteCompleted} onClick={() => setConfirmOpen(true)}>
             {submitting ? '移除中' : '移除成员'}
           </button>
         </footer>
-      </section>
+        </>
+      )}
       {confirmOpen ? (
         <div className="rn-group-remove-confirm-backdrop" role="presentation" onClick={event => { if (!submitting && event.target === event.currentTarget) setConfirmOpen(false); }}>
           <section className="rn-group-remove-confirm" role="alertdialog" aria-modal="true" aria-label="确认移出群成员">
@@ -245,7 +243,7 @@ export function GroupRemoveMembersPage() {
           </section>
         </div>
       ) : null}
-    </main>
+    </GroupMemberPickerModal>
   );
 }
 
@@ -257,12 +255,11 @@ function readGroupRemoveError(cause: unknown): string {
 /** 群成员移除启动状态参数。 */
 interface GroupRemoveMembersStateProps {
   readonly label: string;
-  readonly detail?: string | null;
 }
 
-/** 统一承载 runtime 恢复和配置错误。 */
-function GroupRemoveMembersState({ label, detail }: GroupRemoveMembersStateProps) {
-  return <main className="rn-group-remove-state"><strong>{label}</strong>{detail ? <span>{detail}</span> : null}</main>;
+/** 统一承载移除候选的弹窗内加载状态。 */
+function GroupRemoveMembersState({ label }: GroupRemoveMembersStateProps) {
+  return <div className="rn-group-remove-state"><strong>{label}</strong></div>;
 }
 
 export default GroupRemoveMembersPage;

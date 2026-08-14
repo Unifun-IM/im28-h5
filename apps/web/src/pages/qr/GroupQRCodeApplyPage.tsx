@@ -102,7 +102,7 @@ export default function GroupQRCodeApplyPage() {
       await runtime.getSync().groupApplications.apply({
         groupID: group.groupID,
         message,
-        sourceType: routeState.sourceType,
+        sourceType: routeState.sourceType === 'card' ? 'card' : routeState.sourceType,
       });
       toast.success('入群申请已发送');
       navigate(routeState.backHref, {
@@ -126,8 +126,8 @@ export default function GroupQRCodeApplyPage() {
       const conversation = await runtime.getSync().conversations.openGroup({
         groupID: group.groupID,
       });
-      /** route 只为搜索来源关闭申请层，扫码来源保留既有 push 语义。 */
-      const route = buildConversationRoute(conversation.conversationID, routeState.sourceType === 'search');
+      /** route 为搜索和名片来源关闭申请层，扫码来源保留既有 push 语义。 */
+      const route = buildConversationRoute(conversation.conversationID, routeState.sourceType !== 'qrcode');
       if (!route) throw new Error('该群聊暂不可进入');
       navigate(route.href, { replace: route.replace });
     } catch (cause) {
@@ -150,7 +150,7 @@ export default function GroupQRCodeApplyPage() {
     <main className="rn-group-qr-apply-page" aria-busy={loading || submitting}>
       <section className="rn-group-qr-apply-surface">
         <PageNavbar className="rn-group-qr-apply-header">
-          <button type="button" aria-label={routeState.sourceType === 'search' ? '返回查找群聊' : '返回扫码'} onClick={() => navigate(routeState.backHref, { replace: routeState.sourceType === 'search', state: createGroupApplyReturnState(routeState) })}><RNAssetIcon assetURL={backIconURL} /></button>
+          <button type="button" aria-label={routeState.sourceType === 'search' ? '返回查找群聊' : routeState.sourceType === 'card' ? '返回聊天' : '返回扫码'} onClick={() => navigate(routeState.backHref, { replace: routeState.sourceType !== 'qrcode', state: createGroupApplyReturnState(routeState) })}><RNAssetIcon assetURL={backIconURL} /></button>
           <h1>申请加入群聊</h1><span aria-hidden="true" />
         </PageNavbar>
         {error ? <p className="rn-group-qr-error" role="alert">{error}<button type="button" onClick={() => void loadGroup()}>重试</button></p> : null}

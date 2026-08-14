@@ -7,7 +7,7 @@ import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.reg
 import qrCodeIconURL from '../../assets/rn/assets/icons/imm28/qrcode-small.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
-import { OperationToastFeedback } from '../../components/interaction/index.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { AvatarCropDialog } from '../../components/avatar/AvatarCropDialog.js';
 import { validateAvatarFile } from '../../components/avatar/avatar-crop.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
@@ -29,6 +29,8 @@ export function GroupProfilePage() {
   const navigate = useNavigate();
   // runtime 是会话、群资料和群昵称 mutation 的唯一应用入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  // toast 统一承载群资料交互和 mutation 反馈。
+  const { toast } = useAppToast();
   // source 仅保存当前路由验证通过的群资料。
   const [source, setSource] = useState<GroupProfileSource | null>(null);
   // loading 标记 cache-first 与远端刷新轮次。
@@ -47,10 +49,8 @@ export function GroupProfilePage() {
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   // autoOpenedGroupRef 保证同一群的 query 动作只触发一次。
   const autoOpenedGroupRef = useRef('');
-  // error 呈现真实读取、复制或更新失败。
+  // error 只呈现群资料加载失败。
   const [error, setError] = useState<string | null>(null);
-  // notice 只在真实平台或 shared operation 成功后展示。
-  const [notice, setNotice] = useState<string | null>(null);
 
   /** 从当前账号 shared cache 恢复群资料，再执行 canonical 刷新。 */
   const load = useCallback(async (): Promise<void> => {
@@ -78,12 +78,11 @@ export function GroupProfilePage() {
     /** view 在自动打开时仍执行 shared capability 校验。 */
     const view = buildGroupProfileView(source.conversation, source.group);
     if (!view.canEdit) {
-      setError('仅群主或管理员可以编辑群资料');
+      toast.error('仅群主或管理员可以编辑群资料');
       return;
     }
     setDraft(view.name);
     setError(null);
-    setNotice(null);
     setEditorOpen(true);
   }, [editNameRequested, source]);
 
@@ -93,12 +92,11 @@ export function GroupProfilePage() {
     // view 在打开时重新校验当前角色权限。
     const view = buildGroupProfileView(source.conversation, source.group);
     if (!view.canEdit) {
-      setError('仅群主或管理员可以编辑群资料');
+      toast.error('仅群主或管理员可以编辑群资料');
       return;
     }
     setDraft(view.name);
     setError(null);
-    setNotice(null);
     setEditorOpen(true);
   }
 
@@ -108,7 +106,7 @@ export function GroupProfilePage() {
     // name 与 RN 一致先 trim，空值交给页面立即反馈。
     const name = draft.trim();
     if (!name) {
-      setError('群昵称不能为空');
+      toast.error('群昵称不能为空');
       return;
     }
     setSaving(true);
@@ -118,9 +116,9 @@ export function GroupProfilePage() {
       const group = await runtime.getSync().groups.updateName(source.group.groupID, name);
       setSource(current => current ? { ...current, group } : current);
       setEditorOpen(false);
-      setNotice('群昵称已更新');
+      toast.success('群昵称已更新');
     } catch (cause) {
-      setError(readGroupProfileError(cause, '群昵称更新失败'));
+      toast.error(readGroupProfileError(cause, '群昵称更新失败'));
     } finally {
       setSaving(false);
     }
@@ -132,11 +130,10 @@ export function GroupProfilePage() {
     // view 在文件选择前再次执行 RN owner/admin 权限投影。
     const view = buildGroupProfileView(source.conversation, source.group);
     if (!view.canEdit) {
-      setError('仅群主或管理员可以编辑群资料');
+      toast.error('仅群主或管理员可以编辑群资料');
       return;
     }
     setError(null);
-    setNotice(null);
     avatarInputRef.current?.click();
   }
 
@@ -150,7 +147,7 @@ export function GroupProfilePage() {
       setPendingAvatar(file);
       setError(null);
     } catch (cause) {
-      setError(readGroupProfileError(cause, '无法读取所选群头像'));
+      toast.error(readGroupProfileError(cause, '无法读取所选群头像'));
     }
   }
 
@@ -159,7 +156,6 @@ export function GroupProfilePage() {
     if (!runtime || !source || uploadingAvatar) return;
     setUploadingAvatar(true);
     setError(null);
-    setNotice(null);
     try {
       // group 只有 OSS 上传和 Gateway 响应均成功后才会写入账号 SQLite。
       const group = await runtime.getSync().groups.updateAvatar(source.group.groupID, {
@@ -171,9 +167,9 @@ export function GroupProfilePage() {
       });
       setSource(current => current ? { ...current, group } : current);
       setPendingAvatar(null);
-      setNotice('群头像已更新');
+      toast.success('群头像已更新');
     } catch (cause) {
-      setError(readGroupProfileError(cause, '群头像更新失败'));
+      toast.error(readGroupProfileError(cause, '群头像更新失败'));
     } finally {
       setUploadingAvatar(false);
     }
@@ -183,12 +179,11 @@ export function GroupProfilePage() {
   async function copyGroupID(): Promise<void> {
     if (!source) return;
     setError(null);
-    setNotice(null);
     try {
       await copyGroupProfileID(source.group.groupID);
-      setNotice('复制群ID成功');
+      toast.success('复制群ID成功');
     } catch (cause) {
-      setError(readGroupProfileError(cause, '复制群ID失败'));
+      toast.error(readGroupProfileError(cause, '复制群ID失败'));
     }
   }
 
@@ -209,7 +204,6 @@ export function GroupProfilePage() {
       <section className="rn-group-profile-surface">
         <PageNavbar className="rn-group-profile-header"><button type="button" aria-label="返回" onClick={() => navigate(backURL)}><RNAssetIcon assetURL={backIconURL} /></button><h1>群资料</h1><span /></PageNavbar>
         <div className="rn-group-profile-content">
-          <OperationToastFeedback notice={notice} />
           {error ? <p className="rn-group-profile-error" role="alert">{error}</p> : null}
           {view ? <div className="rn-group-profile-card">
             <button className="rn-group-profile-row" type="button" onClick={chooseAvatar}><span>群头像</span><span className="rn-group-profile-trailing"><span className="rn-group-profile-avatar" style={avatarStyle}><span>{getRNAvatarInitial(view.name, '群')}</span>{view.avatarURL ? <img src={view.avatarURL} alt="" onError={event => { event.currentTarget.hidden = true; }} /> : null}</span>{view.canEdit ? <RNAssetIcon assetURL={arrowIconURL} /> : null}</span></button>
@@ -221,7 +215,7 @@ export function GroupProfilePage() {
       </section>
       <input ref={avatarInputRef} className="rn-group-profile-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="选择群头像" onChange={event => selectAvatar(event.currentTarget.files?.[0])} />
       {editorOpen ? <section className="rn-group-profile-dialog-backdrop" role="presentation" onPointerDown={event => { if (!saving && event.target === event.currentTarget) setEditorOpen(false); }}><div className="rn-group-profile-dialog" role="dialog" aria-modal="true" aria-labelledby="group-name-title"><h2 id="group-name-title">群昵称</h2><input aria-label="群昵称输入框" value={draft} disabled={saving} autoCapitalize="none" autoCorrect="off" onChange={event => setDraft(event.target.value)} /><div><button type="button" disabled={saving} onClick={() => setEditorOpen(false)}>取消</button><button type="button" disabled={saving} onClick={() => { void saveName(); }}>{saving ? '保存中' : '保存'}</button></div></div></section> : null}
-      {pendingAvatar ? <AvatarCropDialog file={pendingAvatar} uploading={uploadingAvatar} imageAlt="待裁剪群头像" errorMessage="群头像裁剪失败" onCancel={() => { if (!uploadingAvatar) setPendingAvatar(null); }} onConfirm={saveAvatar} onError={setError} /> : null}
+      {pendingAvatar ? <AvatarCropDialog file={pendingAvatar} uploading={uploadingAvatar} imageAlt="待裁剪群头像" errorMessage="群头像裁剪失败" onCancel={() => { if (!uploadingAvatar) setPendingAvatar(null); }} onConfirm={saveAvatar} onError={toast.error} /> : null}
     </main>
   );
 }

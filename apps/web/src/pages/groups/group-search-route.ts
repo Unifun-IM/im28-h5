@@ -11,11 +11,26 @@ export interface GroupSearchCreateState {
 
 /** 群申请页允许的来源和返回上下文。 */
 export interface GroupApplyRouteState {
-  readonly sourceType: 'qrcode' | 'search';
-  readonly backHref: '/scan' | '/groups/search' | '/contacts/search';
+  readonly sourceType: 'qrcode' | 'search' | 'card';
+  readonly backHref: '/scan' | '/groups/search' | '/contacts/search' | `/conversations/${string}`;
   readonly searchKeyword: string;
   readonly searchBackHref: ContactSearchBackHref;
   readonly createState: GroupSearchCreateState;
+}
+
+/** 为聊天群名片构造只能返回来源会话的受控申请上下文。 */
+export function createGroupCardApplyRouteState(
+  conversationID: string,
+): GroupApplyRouteState {
+  /** normalizedConversationID 排除空身份并限制异常 Router state 大小。 */
+  const normalizedConversationID = conversationID.trim().slice(0, 200);
+  return {
+    sourceType: 'card',
+    backHref: `/conversations/${encodeURIComponent(normalizedConversationID)}`,
+    searchKeyword: '',
+    searchBackHref: '/contacts',
+    createState: { selectedUserIDs: [], backHref: '/conversations' },
+  };
 }
 
 /** 群申请成功后允许恢复的搜索页 presentation state。 */
@@ -55,6 +70,21 @@ export function readGroupApplyRouteState(state: unknown): GroupApplyRouteState {
   const createState = readGroupSearchCreateState(
     state && typeof state === 'object' ? Reflect.get(state, 'createState') : null,
   );
+  if (state && typeof state === 'object' && Reflect.get(state, 'sourceType') === 'card') {
+    /** rawBackHref 仅用于提取单段编码的会话身份，不直接作为导航地址。 */
+    const rawBackHref = Reflect.get(state, 'backHref');
+    /** match 拒绝额外路径、query 和外部 URL。 */
+    const match = typeof rawBackHref === 'string'
+      ? rawBackHref.match(/^\/conversations\/([^/?#]+)$/)
+      : null;
+    if (match?.[1]) {
+      try {
+        return createGroupCardApplyRouteState(decodeURIComponent(match[1]));
+      } catch {
+        // 非法 URL 编码按不可信 Router state 处理并回退扫码入口。
+      }
+    }
+  }
   if (!state || typeof state !== 'object' || Reflect.get(state, 'sourceType') !== 'search') {
     return {
       sourceType: 'qrcode',

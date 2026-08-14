@@ -194,7 +194,7 @@ export function BroadcastComposePage() {
         <footer className="rn-broadcast-composer">
           <BroadcastMediaActions disabled={sending} onSelectImage={sendImage} onSelectVideo={sendVideo} onSelectFile={sendFile} onError={setError} />
           <div className="rn-broadcast-text-composer">
-            <ChatVoiceInput voiceMode={voiceMode} disabled={sending} status={voiceRecorder.status} seconds={voiceRecorder.seconds} onToggleMode={() => setVoiceMode(current => !current)} onStart={voiceRecorder.start} onSend={voiceRecorder.send} onCancel={voiceRecorder.cancel}>
+            <ChatVoiceInput voiceMode={voiceMode} disabled={sending} status={voiceRecorder.status} seconds={voiceRecorder.seconds} level={voiceRecorder.level} onToggleMode={() => setVoiceMode(current => !current)} onStart={voiceRecorder.start} onSend={voiceRecorder.send} onCancel={voiceRecorder.cancel}>
               <textarea value={draft} aria-label="群发消息输入框" placeholder="发送消息..." rows={1} onChange={event => setDraft(event.target.value)} />
             </ChatVoiceInput>
             {!voiceMode ? <button type="button" disabled={!draft.trim() || sending} onClick={() => { void sendText(); }}>{sending ? '发送中' : '发送'}</button> : null}

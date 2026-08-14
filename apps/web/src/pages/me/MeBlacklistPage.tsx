@@ -4,7 +4,7 @@ import type { WebIMBlacklistUser } from '@im28/im-sdk/web';
 import { Navigate } from 'react-router-dom';
 
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
-import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
@@ -19,6 +19,8 @@ import './me-blacklist-page.css';
 export function MeBlacklistPage() {
   // runtime context 是页面唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  // toast 统一承载解除黑名单的瞬时操作反馈。
+  const { toast } = useAppToast();
   // users 保留服务端顺序的完整黑名单。
   const [users, setUsers] = useState<readonly WebIMBlacklistUser[]>([]);
   // keyword 驱动无请求的 RN 本地搜索。
@@ -83,12 +85,13 @@ export function MeBlacklistPage() {
     try {
       await runtime.getSync().blacklist.remove(target.userID);
       setUsers(current => current.filter(user => user.userID !== target.userID));
+      toast.success('已移出黑名单');
     } catch (cause) {
-      setError(readBlacklistError(cause, '解除黑名单失败'));
+      toast.error(readBlacklistError(cause, '解除黑名单失败'));
     } finally {
       setRemovingUserID(null);
     }
-  }, [pendingUser, removingUserID, runtime]);
+  }, [pendingUser, removingUserID, runtime, toast]);
 
   // visibleUsers 是当前关键字的纯本地筛选结果。
   const visibleUsers = useMemo(() => filterBlacklistUsers(users, keyword), [keyword, users]);

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Conversation, IMMessageCard, Message, PresetEmojiDocument, WebIMGroupMember, WebIMSync } from '@im28/im-sdk/web';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import type { IMMessageCard, Message, PresetEmojiDocument, WebIMGroupMember, WebIMSync } from '@im28/im-sdk/web';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CallTypeActionSheet } from '../../components/call/CallTypeActionSheet.js';
 import {
@@ -15,7 +15,7 @@ import { ChatMessageDeleteSheet } from './ChatMessageDeleteSheet.js';
 import { ChatPageFeedback } from './ChatPageFeedback.js';
 import { ChatPageFooter } from './ChatPageFooter.js';
 import { ChatGroupAnnouncementBanner } from './ChatGroupAnnouncementBanner.js';
-import { ChatPageState, readChatPageError, readInitialChatMessageWindow, upsertVisibleMessage } from './chat-page-helpers.js';
+import { ChatPageState, readChatPageError, upsertVisibleMessage } from './chat-page-helpers.js';
 import { useChatVoiceRecorder } from './useChatVoiceRecorder.js';
 import { useChatCustomEmojiActions } from './useChatCustomEmojiActions.js';
 import { useChatOutgoingMessageActions } from './useChatOutgoingMessageActions.js';
@@ -35,10 +35,12 @@ import { buildChatHeaderPresenceView } from './chat-header-presence-view.js';
 import { createChatGroupProfileRouteState } from './group-profile-route-state.js';
 import { useChatGroupApplicationCount } from './useChatGroupApplicationCount.js';
 import { createGroupApplicationChatRouteState } from '../contacts/group-application-route.js';
+import { createGroupCardApplyRouteState } from '../groups/group-search-route.js';
 import { getConversationTitle } from '../conversations/conversation-list-view.js';
 import type { ChatComposerMentionRequest } from './chat-composer-types.js';
-import { buildChatMessageFocusURL, focusChatMessageRow, readFocusedChatMessageWindow } from './chat-message-focus.js';
+import { buildChatMessageFocusURL } from './chat-message-focus.js';
 import { toIMMessageCard } from './chat-card-picker.js';
+import { useChatPageCacheState } from './useChatPageCacheState.js';
 import './chat-page.css';
 /** RN chat detail 页面只编排 Web SDK cache/pull/send/realtime facade。 */
 export function ChatPage() {
@@ -56,27 +58,10 @@ export function ChatPage() {
   const callOwner = useWebIMCall();
   // sync 与 runtime 生命周期一致，页面不实例化 Gateway 或 Repository。
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
-  // conversation 为 RN header 提供会话缓存身份。
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  // draftDocument 是当前会话已从 SDK SQLite 恢复的规范未发送文档。
-  const [draftDocument, setDraftDocument] = useState<PresetEmojiDocument>({
-    text: '',
-    entities: [],
-  });
-  // messages 保持 Repository newest-first 结果。
-  const [messages, setMessages] = useState<readonly Message[]>([]);
-  // quoteMessage 保存当前 composer 唯一引用来源，不复制到浏览器存储。
-  const [quoteMessage, setQuoteMessage] = useState<Message | null>(null);
-  // loading 标记首次 cache 与 remote history 窗口恢复。
-  const [loading, setLoading] = useState(true);
   // sending 防止 composer 重复提交同一文本。
   const [sending, setSending] = useState(false);
-  // error 显式展示 history/send failure，不回退 fake-success。
-  const [error, setError] = useState<string | null>(null);
   // notice 只呈现已完成的真实非消息 mutation 结果。
   const [notice, setNotice] = useState<string | null>(null);
-  // clipboardActions 统一消息与链接复制的真实浏览器结果反馈。
-  const clipboardActions = useChatMessageClipboard({ setError, setNotice });
   // cardPickerVisible 控制当前聊天唯一名片选择弹层。
   const [cardPickerVisible, setCardPickerVisible] = useState(false);
   // callPickerVisible 只控制单聊语音/视频二次选择层。
@@ -89,13 +74,29 @@ export function ChatPage() {
   const mentionRequestSequenceRef = useRef(0);
   // messageListRef 持有唯一消息滚动容器。
   const messageListRef = useRef<HTMLElement>(null);
-  // messageWindowSizeRef 保留已展开窗口大小，realtime 重读不会裁回首屏 50 条。
-  const messageWindowSizeRef = useRef(50);
-  // historyPage 保存首拉后由 Gateway 确认的上一页状态与精确游标。
-  const [historyPage, setHistoryPage] = useState<{
-    readonly hasMore: boolean;
-    readonly nextCursor?: string;
-  }>({ hasMore: false });
+  /** handleConversationReset 保证切换会话时关闭上一会话的瞬时弹层。 */
+  const handleConversationReset = useCallback(() => {
+    setCardPickerVisible(false);
+    setCallPickerVisible(false);
+  }, []);
+  // cacheState 统一拥有 SQLite 首屏恢复、实时重读和搜索定位状态。
+  const cacheState = useChatPageCacheState({
+    conversationID,
+    focusedMessageID,
+    accountUserID: snapshot.userID,
+    dataVersion: snapshot.dataVersion,
+    sync,
+    messageListRef,
+    onReset: handleConversationReset,
+  });
+  // 页面 mutation 只消费 cache owner 暴露的稳定状态和 setter。
+  const {
+    conversation, setConversation, draftDocument, setDraftDocument,
+    messages, setMessages, quoteMessage, setQuoteMessage,
+    loading, error, setError, historyPage,
+  } = cacheState;
+  // clipboardActions 统一消息与链接复制的真实浏览器结果反馈。
+  const clipboardActions = useChatMessageClipboard({ setError, setNotice });
   /** handleMarkConversationRead 只把可见边界交给现有 shared success-only facade。 */
   const handleMarkConversationRead = useCallback(async (readSeq: string) => {
     if (!sync) throw new Error('聊天服务尚未就绪');
@@ -149,9 +150,6 @@ export function ChatPage() {
     snapshot.relationshipVersion,
     handleDirectRelationshipError,
   );
-  useEffect(() => {
-    messageWindowSizeRef.current = Math.max(50, messages.length);
-  }, [messages.length]);
   // outgoingActions 统一复用 SDK message facade 和页面 operation owner。
   const outgoingActions = useChatOutgoingMessageActions({
     conversationID,
@@ -175,6 +173,7 @@ export function ChatPage() {
   });
   // forwardFlow 统一管理单条、多选、路由预览和 shared facade 提交。
   const forwardFlow = useChatForwardFlow({
+    currentUserID: snapshot.userID ?? '',
     conversation,
     messages,
     sync,
@@ -230,106 +229,6 @@ export function ChatPage() {
     sync,
     onError: setError,
   });
-  useEffect(() => {
-    if (!sync || !snapshot.userID || !conversationID) return;
-    // active 阻止路由切换后的旧请求回写。
-    let active = true;
-    setLoading(true);
-    setError(null);
-    setConversation(null);
-    setDraftDocument({ text: '', entities: [] });
-    setMessages([]);
-    setHistoryPage({ hasMore: false });
-    setQuoteMessage(null);
-    setCardPickerVisible(false);
-    setCallPickerVisible(false);
-    void (async () => {
-      try {
-        // cachedConversations 确认目标属于当前认证账号 SQLite。
-        const cachedConversations = await sync.conversations.listCached({
-          limit: 500,
-        });
-        // target 是当前路由对应的真实缓存会话。
-        const target = cachedConversations.find(
-          item => item.conversationID === conversationID,
-        );
-        if (!target) throw new Error('会话不存在或尚未同步');
-        // cachedDraft 由 shared owner 从 draft 索引与专用 entity 列恢复。
-        const cachedDraft = await sync.conversations.getDraft(conversationID);
-        if (active) {
-          setConversation(target);
-          setDraftDocument(cachedDraft);
-        }
-        // refreshedMessages 按普通或搜索目标模式读取当前账号 SQLite 窗口。
-        const refreshedWindow = await readInitialChatMessageWindow(sync.messages, {
-          conversationID,
-          fromSeq: target.lastMsgSeq ?? '0',
-          focusedMessageID,
-          limit: 50,
-        }, cached => { if (active) setMessages(cached); });
-        if (active) {
-          setMessages(refreshedWindow.messages);
-          setHistoryPage({
-            hasMore: refreshedWindow.hasMore,
-            ...(refreshedWindow.nextCursor
-              ? { nextCursor: refreshedWindow.nextCursor }
-              : {}),
-          });
-        }
-      } catch (cause) {
-        if (active) setError(readChatPageError(cause));
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [conversationID, focusedMessageID, snapshot.userID, sync]);
-  useEffect(() => {
-    if (
-      !sync ||
-      !snapshot.userID ||
-      !conversationID ||
-      snapshot.dataVersion === 0
-    ) {
-      return;
-    }
-    // active 阻止实时 cache 读取在路由切换后回写旧会话。
-    let active = true;
-    void Promise.all([
-      sync.conversations.listCached({ limit: 500 }),
-      focusedMessageID
-        ? readFocusedChatMessageWindow(sync.messages, conversationID, focusedMessageID)
-        : sync.messages.getCachedHistory({
-            conversationID,
-            limit: messageWindowSizeRef.current,
-          }),
-    ])
-      .then(([cachedConversations, cachedMessages]) => {
-        if (!active) return;
-        // target 用当前 cache 刷新 header 的会话资料。
-        const target = cachedConversations.find(
-          item => item.conversationID === conversationID,
-        );
-        if (target) setConversation(target);
-        setMessages(cachedMessages);
-      })
-      .catch(cause => {
-        if (active) setError(readChatPageError(cause));
-      });
-    return () => {
-      active = false;
-    };
-  }, [conversationID, focusedMessageID, snapshot.dataVersion, snapshot.userID, sync]);
-  useEffect(() => {
-    if (!focusedMessageID) return;
-    // frame 等待搜索目标 DOM 完成布局后覆盖普通初始未读锚点。
-    const frame = requestAnimationFrame(() => {
-      focusChatMessageRow(messageListRef.current, focusedMessageID);
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [focusedMessageID, messages.length]);
   /** 接收 SDK 已落库的 sending 实体，不在页面生成消息身份。 */
   function handleLocalSendingMessage(message: Message) {
     setMessages(current => upsertVisibleMessage(current, message));
@@ -351,7 +250,7 @@ export function ChatPage() {
         // cached 包含 facade 持久化的 sent 或 failed 消息状态。
         const cached = await sync.messages.getCachedHistory({
           conversationID,
-          limit: messageWindowSizeRef.current,
+          limit: Math.max(50, messages.length),
         });
         setMessages(cached);
       } catch (cause) {
@@ -453,7 +352,7 @@ export function ChatPage() {
       setError('名片身份不可用');
       return;
     }
-    /** backHref 保证资料或申请页返回当前聊天。 */
+    /** backHref 保证用户资料页返回当前聊天。 */
     const backHref = `/conversations/${encodeURIComponent(conversationID)}`;
     if (view.cardKind !== 'group') {
       navigate(`/contacts/users/${encodeURIComponent(targetID)}`, {
@@ -466,26 +365,30 @@ export function ChatPage() {
       return;
     }
     try {
-      /** groups 先读取 SQLite，未命中再刷新权威已加入群列表。 */
-      let groups = await sync.groups.listCached();
+      /** groups 对齐 RN，每次点击都强制刷新当前账号已加入群列表。 */
+      const groups = await sync.groups.sync({ pageSize: 100 });
       /** joinedGroup 必须精确匹配名片 groupID。 */
-      let joinedGroup = groups.find(group => group.groupID === targetID);
-      if (!joinedGroup) {
-        groups = await sync.groups.sync({ pageSize: 100 });
-        joinedGroup = groups.find(group => group.groupID === targetID);
-      }
-      if (joinedGroup?.conversationID) {
-        navigate(
-          `/conversations/${encodeURIComponent(joinedGroup.conversationID)}/settings/profile`,
-          { state: createChatGroupProfileRouteState(joinedGroup.conversationID) },
-        );
+      const joinedGroup = groups.find(group => group.groupID === targetID);
+      if (joinedGroup) {
+        /** openedConversation 复用 shared owner 校验群身份并收敛会话缓存。 */
+        const openedConversation = await sync.conversations.openGroup({
+          groupID: targetID,
+          conversationID: joinedGroup.conversationID,
+        });
+        navigate(`/conversations/${encodeURIComponent(openedConversation.conversationID)}`);
         return;
       }
       navigate(`/groups/${encodeURIComponent(targetID)}/apply`, {
-        state: { backHref },
+        state: createGroupCardApplyRouteState(conversationID),
       });
     } catch (cause) {
-      setError(readChatPageError(cause));
+      try {
+        /** RN 刷新失败时仍由 openGroup 进行一次权威可进入性校验。 */
+        const openedConversation = await sync.conversations.openGroup({ groupID: targetID });
+        navigate(`/conversations/${encodeURIComponent(openedConversation.conversationID)}`);
+      } catch {
+        setError(readChatPageError(cause));
+      }
     }
   }
   return (
@@ -595,10 +498,8 @@ export function ChatPage() {
               navigate(`/contacts/users/${encodeURIComponent(conversation.targetID)}/add`);
             }}
           />
-        </ChatMediaInteractionProvider>
         <ChatPageFooter
           forwardFlow={forwardFlow}
-          sending={sending}
           unavailableText={composerUnavailableText}
           onDeleteSelected={() => deleteFlow.requestDelete(
             [...forwardFlow.selectedIDs], forwardFlow.cancelMultiSelect,
@@ -608,6 +509,13 @@ export function ChatPage() {
             key={conversationID}
             initialDraftDocument={draftDocument}
             onDraftDocumentChange={handleDraftDocumentChange}
+            forwardDraft={forwardFlow.pending ? {
+              pending: forwardFlow.pending,
+              recipientName: conversation ? getConversationTitle(conversation) : '',
+              onCancel: forwardFlow.clearPendingForward,
+              onChangeTarget: forwardFlow.changeForwardTarget,
+              onSubmit: forwardFlow.submitForward,
+            } : null}
             sending={sending}
             quoteMessage={quoteMessage}
             isGroup={isGroup}
@@ -615,6 +523,7 @@ export function ChatPage() {
             onSendQuote={outgoingActions.sendQuote}
             voiceRecordingStatus={voiceRecorder.status}
             voiceRecordingSeconds={voiceRecorder.seconds}
+            voiceRecordingLevel={voiceRecorder.level}
             onSendText={outgoingActions.sendText}
             onSendMention={outgoingActions.sendMention}
             mentionMembers={mentionMembers.members}
@@ -647,6 +556,7 @@ export function ChatPage() {
             onError={setError}
           />
         </ChatPageFooter>
+        </ChatMediaInteractionProvider>
         <ChatMessageDeleteSheet flow={deleteFlow} />
         <ChatTargetPickerModal
           open={forwardFlow.targetPickerOpen}

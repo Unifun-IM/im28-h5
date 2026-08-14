@@ -9,7 +9,7 @@ import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-route
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
-import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
@@ -45,6 +45,8 @@ export function CreateGroupPage({ fromSingleSettings = false }: CreateGroupPageP
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   /** sync 只在 runtime 完成配置后存在。 */
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
+  /** toast 统一承载建群 mutation 的成功与失败反馈。 */
+  const { toast } = useAppToast();
   /** contacts 保存 cache-first 好友快照。 */
   const [contacts, setContacts] = useState<readonly WebIMContact[]>([]);
   /** profile 只为 RN 默认群名提供当前昵称。 */
@@ -245,6 +247,7 @@ export function CreateGroupPage({ fromSingleSettings = false }: CreateGroupPageP
         setError('群聊已在服务端创建，本地会话尚未保存；请返回会话列表并下拉刷新。');
         return;
       }
+      toast.success('群聊创建成功');
       navigate(`/conversations/${encodeURIComponent(result.conversation.conversationID)}`, {
         replace: true,
       });
@@ -254,7 +257,7 @@ export function CreateGroupPage({ fromSingleSettings = false }: CreateGroupPageP
         setError('服务端已处理创建，但未返回完整会话信息；请返回会话列表并下拉刷新。');
         return;
       }
-      setError(readCreateGroupError(cause, '创建群聊失败，请稍后重试'));
+      toast.error(readCreateGroupError(cause, '创建群聊失败，请稍后重试'));
     } finally {
       setSubmitting(false);
     }

@@ -33,6 +33,8 @@ function createRecorderHarness(mimeType = 'audio/webm;codecs=opus') {
 function createRecorderDependencies(recorder: ChatVoiceMediaRecorder) {
   // stoppedTracks 记录媒体流是否在终态释放。
   let stoppedTracks = 0;
+  // disposedLevelReaders 记录 Web Audio 采样器是否随录音终态释放。
+  let disposedLevelReaders = 0;
   // selectedMimeTypes 保存 adapter 交给 recorder 的选择。
   const selectedMimeTypes: string[] = [];
   // times 提供确定性录音时长。
@@ -53,12 +55,19 @@ function createRecorderDependencies(recorder: ChatVoiceMediaRecorder) {
       selectedMimeTypes.push(mimeType);
       return recorder;
     },
+    createLevelReader: () => ({
+      read: () => 0.75,
+      dispose: () => {
+        disposedLevelReaders += 1;
+      },
+    }),
     now: () => times.shift() ?? 8_400,
   };
   return {
     dependencies,
     selectedMimeTypes,
     getStoppedTracks: () => stoppedTracks,
+    getDisposedLevelReaders: () => disposedLevelReaders,
   };
 }
 
@@ -73,6 +82,8 @@ describe('chat voice recorder', () => {
     // session 是页面唯一可持有的短期录音句柄。
     const session = await startChatVoiceRecording(harness.dependencies);
 
+    expect(session.readLevel()).toBe(0.75);
+
     await expect(session.stop()).resolves.toMatchObject({
       durationSeconds: 7,
       file: {
@@ -82,6 +93,7 @@ describe('chat voice recorder', () => {
     });
     expect(harness.selectedMimeTypes).toEqual(['audio/webm;codecs=opus']);
     expect(harness.getStoppedTracks()).toBe(1);
+    expect(harness.getDisposedLevelReaders()).toBe(1);
   });
 
   // 验证取消录音不会返回可上传文件且仍释放媒体流。
@@ -95,6 +107,7 @@ describe('chat voice recorder', () => {
 
     await expect(session.cancel()).resolves.toBeUndefined();
     expect(harness.getStoppedTracks()).toBe(1);
+    expect(harness.getDisposedLevelReaders()).toBe(1);
   });
 
   // 验证权限/设备失败直接 reject，不创建 recorder 或 fake File。
@@ -131,6 +144,7 @@ describe('chat voice recorder', () => {
       message: 'device disconnected',
     });
     expect(harness.getStoppedTracks()).toBe(1);
+    expect(harness.getDisposedLevelReaders()).toBe(1);
     await expect(session.cancel()).resolves.toBeUndefined();
     expect(harness.getStoppedTracks()).toBe(1);
   });

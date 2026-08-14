@@ -20,16 +20,15 @@ describe('chat composer availability H5 contract', () => {
     expect(hookSource).not.toContain('can_send_message');
   });
 
-  it('多选优先于不可用提示且不可用提示优先于待转发', () => {
-    /** multiIndex 固定底部四态的 RN 顺序。 */
+  it('多选优先于不可用提示，待转发复用普通 Composer', () => {
+    /** multiIndex 固定底部状态门的 RN 顺序。 */
     const multiIndex = footerSource.indexOf('forwardFlow.multiSelecting');
     /** unavailableIndex 是共享规则投影入口。 */
     const unavailableIndex = footerSource.indexOf('if (unavailableText)');
-    /** pendingIndex 是待发送转发预览入口。 */
-    const pendingIndex = footerSource.indexOf('if (forwardFlow.pending)');
     expect(multiIndex).toBeGreaterThan(-1);
     expect(unavailableIndex).toBeGreaterThan(multiIndex);
-    expect(pendingIndex).toBeGreaterThan(unavailableIndex);
+    expect(footerSource).not.toContain('if (forwardFlow.pending)');
+    expect(pageSource).toContain('forwardDraft={forwardFlow.pending ? {');
     expect(pageSource).toContain('mentionMembers.composerUnavailableReason ||');
     expect(pageSource).toContain('directRelationship.presentation.composerUnavailableReason');
   });

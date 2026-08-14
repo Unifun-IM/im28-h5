@@ -6,6 +6,7 @@ import { buildConversationRoute } from '../conversations/conversation-route.js';
 import createGroupPageSource from './CreateGroupPage.tsx?raw';
 import groupSearchPageSource from './GroupSearchPage.tsx?raw';
 import {
+  createGroupCardApplyRouteState,
   createGroupApplyReturnState,
   readGroupApplyRouteState,
   readGroupSearchCreateState,
@@ -56,6 +57,21 @@ describe('group search route state', () => {
     });
   });
 
+  it('群名片申请只恢复来源聊天且拒绝额外路径', () => {
+    /** cardState 对会话身份编码后形成唯一受控返回地址。 */
+    const cardState = createGroupCardApplyRouteState('group/conversation');
+    expect(cardState).toMatchObject({
+      sourceType: 'card',
+      backHref: '/conversations/group%2Fconversation',
+    });
+    expect(readGroupApplyRouteState(cardState)).toEqual(cardState);
+    expect(readGroupApplyRouteState({
+      sourceType: 'card',
+      backHref: '/conversations/group/settings',
+    }).sourceType).toBe('qrcode');
+    expect(createGroupApplyReturnState(cardState)).toBeUndefined();
+  });
+
   it('建群搜索流程内部页面只替换同一个历史项', () => {
     expect(createGroupPageSource.match(/to="\/groups\/search"/g)).toHaveLength(1);
     expect(createGroupPageSource).toContain('replace state={{ selectedUserIDs: [...selectedUserIDs], backHref }}');
@@ -65,7 +81,7 @@ describe('group search route state', () => {
     expect(groupSearchPageSource).toContain("navigate(`/groups/${encodeURIComponent(group.groupID)}/apply`, {");
     expect(groupSearchPageSource).toContain('replace: true,');
     expect(contactSearchPageSource).toContain('replace: true,');
-    expect(groupApplyPageSource).toContain("replace: routeState.sourceType === 'search'");
+    expect(groupApplyPageSource).toContain("replace: routeState.sourceType !== 'qrcode'");
   });
 
   it('已加入群复用唯一会话路由并关闭查群流程', () => {
@@ -77,7 +93,7 @@ describe('group search route state', () => {
     expect(groupSearchPageSource).toContain('navigate(route.href, { replace: route.replace });');
     expect(groupApplyPageSource).toContain('runtime.getSync().conversations.openGroup({');
     expect(groupApplyPageSource).toContain('groupID: group.groupID,');
-    expect(groupApplyPageSource).toContain("buildConversationRoute(conversation.conversationID, routeState.sourceType === 'search')");
+    expect(groupApplyPageSource).toContain("buildConversationRoute(conversation.conversationID, routeState.sourceType !== 'qrcode')");
     expect(groupApplyPageSource).toContain('navigate(route.href, { replace: route.replace });');
     expect(groupApplyPageSource).not.toContain('runtime.getSync().groups.listCached()');
     expect(groupApplyPageSource).not.toContain('runtime.getSync().groups.sync()');

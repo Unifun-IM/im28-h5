@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { WebIMFriendApplication } from '@im28/im-sdk/web';
 import { Navigate, useNavigate } from 'react-router-dom';
 
-import { PullRefreshIndicator } from '../../components/interaction/index.js';
+import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { FriendApplicationConfirmDialog } from './FriendApplicationConfirmDialog.js';
@@ -17,6 +17,8 @@ export function FriendApplicationsPage({ onUnreadChanged }: FriendApplicationsPa
   const navigate = useNavigate();
   // runtime context 是页面唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
+  // toast 统一承载好友申请 mutation 的成功与失败反馈。
+  const { toast } = useAppToast();
   // applications 保留 facade 已排序的完整申请。
   const [applications, setApplications] = useState<readonly WebIMFriendApplication[]>([]);
   // loading 覆盖首次读取和刷新。
@@ -105,13 +107,14 @@ export function FriendApplicationsPage({ onUnreadChanged }: FriendApplicationsPa
       setApplications(current => current.map(application => application.applicationID === target.applicationID
         ? { ...application, status: 'accepted' }
         : application));
+      toast.success('已添加好友');
       await loadApplications();
     } catch (cause) {
-      setError(readFriendApplicationError(cause, '添加好友失败'));
+      toast.error(readFriendApplicationError(cause, '添加好友失败'));
     } finally {
       setHandlingID(null);
     }
-  }, [confirmApplication, handlingID, loadApplications, runtime]);
+  }, [confirmApplication, handlingID, loadApplications, runtime, toast]);
 
   // entries 生成 RN 内嵌验证页的日期 section 和申请行。
   const entries = useMemo(

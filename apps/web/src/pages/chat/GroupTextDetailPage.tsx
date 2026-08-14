@@ -5,7 +5,7 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
-import { OperationToastFeedback } from '../../components/interaction/index.js';
+import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 
 /** 群文本详情页的字段与 RN 文案配置。 */
@@ -65,6 +65,8 @@ export function GroupTextDetailPage({
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // sync 生命周期跟随认证 runtime，页面不创建 Gateway 或 Repository。
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
+  // toast 统一承载群文本校验和 mutation 反馈。
+  const { toast } = useAppToast();
   // state 覆盖 cache-first 恢复、远端刷新和显式失败状态。
   const [state, setState] = useState<GroupTextDetailPageState>({
     group: null,
@@ -75,8 +77,6 @@ export function GroupTextDetailPage({
   const [draft, setDraft] = useState('');
   // saving 禁止重复提交同一 Gateway mutation。
   const [saving, setSaving] = useState(false);
-  // notice 只在真实 shared mutation 成功后展示。
-  const [notice, setNotice] = useState('');
   // confirmOpen 仅用于公告发布等需要显式二次确认的 mutation。
   const [confirmOpen, setConfirmOpen] = useState(false);
   // pendingValue 冻结确认层打开时已完成校验的表单值。
@@ -158,10 +158,7 @@ export function GroupTextDetailPage({
     try {
       normalized = editor.normalize(draft);
     } catch (cause) {
-      setState(current => ({
-        ...current,
-        error: readGroupTextDetailError(cause, fallbackError),
-      }));
+      toast.error(readGroupTextDetailError(cause, fallbackError));
       return;
     }
     if (normalized === selectText(state.group).trim()) {
@@ -176,7 +173,6 @@ export function GroupTextDetailPage({
     // submittedValue 在确认态使用已经冻结的校验结果。
     const submittedValue = confirmed ? pendingValue : normalized;
     setSaving(true);
-    setNotice('');
     setState(current => ({ ...current, error: null }));
     try {
       // updated 必须来自 shared facade 的 Gateway + SQLite 成功结果。
@@ -188,14 +184,11 @@ export function GroupTextDetailPage({
       );
       setState({ group: updated, loading: false, error: null });
       setDraft(selectText(updated));
-      setNotice(editor.successText);
+      toast.success(editor.successText);
       setConfirmOpen(false);
       setPendingValue('');
     } catch (cause) {
-      setState(current => ({
-        ...current,
-        error: readGroupTextDetailError(cause, fallbackError),
-      }));
+      toast.error(readGroupTextDetailError(cause, fallbackError));
     } finally {
       setSaving(false);
     }
@@ -224,7 +217,6 @@ export function GroupTextDetailPage({
           {state.error ? (
             <p className="rn-group-text-detail-error" role="status">{state.error}</p>
           ) : null}
-          <OperationToastFeedback notice={notice} />
           {state.group ? (
             canEdit && editor ? (
               <textarea

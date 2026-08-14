@@ -3,7 +3,7 @@ import { resolveIMGroupMemberDisplayName, type Conversation, type WebIMGroupMemb
 import { Link, Navigate, useParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
-import { InteractionModal, OperationToastFeedback, PullRefreshIndicator } from '../../components/interaction/index.js';
+import { InteractionModal, PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
@@ -37,6 +37,8 @@ export function GroupMutePage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   /** sync 随认证 runtime 生命周期变化。 */
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
+  /** toast 统一承载群禁言 mutation 的成功与失败反馈。 */
+  const { toast } = useAppToast();
   /** conversation 保存已验证的真实群会话。 */
   const [conversation, setConversation] = useState<Conversation | null>(null);
   /** group 保存 shared permission 和群禁言状态。 */
@@ -55,8 +57,6 @@ export function GroupMutePage() {
   const [action, setAction] = useState<GroupMuteAction | null>(null);
   /** error 保留真实 SDK/Gateway/SQLite 失败。 */
   const [error, setError] = useState<string | null>(null);
-  /** notice 只在 shared facade 已收敛后展示。 */
-  const [notice, setNotice] = useState<string | null>(null);
 
   /** manageURL 是页面固定返回目标。 */
   const manageURL = `/conversations/${encodeURIComponent(conversationID)}/settings/manage`;
@@ -133,24 +133,31 @@ export function GroupMutePage() {
     if (!sync || !conversation || !action || submitting) return;
     setSubmitting(true);
     setError(null);
-    setNotice(null);
     try {
       if (action.type === 'scope') {
         /** scope 同时明确两个开关，避免旧范围残留。 */
         const result = await sync.groupManagement.updateMute({ groupID: conversation.targetID, muteAll: action.scope === 'all', muteMember: action.scope === 'normal' });
-        if (result.cacheState === 'remote-only') throw new Error('服务端设置已更新，本地群资料尚未收敛；请稍后刷新。');
+        if (result.cacheState === 'remote-only') {
+          setAction(null);
+          setError('服务端设置已更新，本地群资料尚未收敛；请稍后刷新。');
+          return;
+        }
       } else {
         /** muteUntil 为空只表示解除，否则由选择秒数生成未来 ISO 时间。 */
         const muteUntil = action.type === 'unmute-member' ? '' : new Date(Date.now() + action.seconds * 1000).toISOString();
         const result = await sync.groupManagement.updateMemberMute({ groupID: conversation.targetID, userID: action.userID, muteUntil });
-        if (result.cacheState === 'remote-only') throw new Error('服务端设置已更新，本地成员快照尚未收敛；请稍后刷新。');
+        if (result.cacheState === 'remote-only') {
+          setAction(null);
+          setError('服务端设置已更新，本地成员快照尚未收敛；请稍后刷新。');
+          return;
+        }
       }
       setAction(null);
       setPickerTarget(null);
-      setNotice('设置成功');
+      toast.success('设置成功');
       await load();
     } catch (cause) {
-      setError(readMuteError(cause));
+      toast.error(readMuteError(cause));
       setAction(null);
     } finally {
       setSubmitting(false);
@@ -177,7 +184,6 @@ export function GroupMutePage() {
         <PullRefreshIndicator refreshing={refreshing} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
         <div className="rn-group-action-content">
           {error ? <p className="rn-group-action-error" role="alert">{error}</p> : null}
-          <OperationToastFeedback notice={notice} />
           {loading ? <p className="rn-group-action-empty">正在加载群禁言</p> : null}
           {!loading && group?.permissions.canMuteAll ? <section className="rn-group-action-card"><h2>群禁言范围</h2><MuteScopeOption label="关闭" selected={!group.muteAll && !group.muteMember} disabled={submitting} onSelect={() => setAction({ type: 'scope', scope: 'off' })} /><MuteScopeOption label="全员禁言" selected={group.muteAll === true} disabled={submitting} onSelect={() => setAction({ type: 'scope', scope: 'all' })} /><MuteScopeOption label="仅普通成员禁言" selected={group.muteMember === true && !group.muteAll} disabled={submitting} divided={false} onSelect={() => setAction({ type: 'scope', scope: 'normal' })} /></section> : null}
           {!loading && group?.permissions.canMuteMembers ? <section className="rn-group-action-card"><div className="rn-group-action-section-title"><strong>手动禁言({mutedMembers.length})</strong></div>{mutedMembers.map(member => <MuteMemberRow key={member.userID} member={member} actionLabel="解除" onAction={() => setAction({ type: 'unmute-member', userID: member.userID })} />)}{candidates.map(member => <MuteMemberRow key={member.userID} member={member} actionLabel="禁言" onAction={() => setPickerTarget(member.userID)} />)}{!mutedMembers.length && !candidates.length ? <p className="rn-group-action-empty">暂无可操作成员</p> : null}</section> : null}

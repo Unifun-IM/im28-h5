@@ -7,7 +7,6 @@ import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg
 import { InteractionModal, PullRefreshIndicator } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
-import { OperationToastFeedback } from '../../components/interaction/index.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { getGroupMemberRoleLabel } from './group-members-view.js';
@@ -94,7 +93,6 @@ export function GroupOwnerTransferPage() {
         </PageNavbar>
         {canTransferOwner ? <label className="rn-group-owner-transfer-search"><RNAssetIcon assetURL={searchIconURL} /><span className="sr-only">搜索成员</span><input type="search" value={keyword} placeholder="搜索" onChange={event => setKeyword(event.target.value)} /></label> : null}
         {data.error ? <p className="rn-group-owner-transfer-error" role="alert">{data.error}</p> : null}
-        <OperationToastFeedback notice={data.notice} />
         {data.loading && !data.members.length ? <GroupOwnerTransferState label="正在加载群成员" compact /> : null}
         {!data.loading && canTransferOwner ? (
           <section

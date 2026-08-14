@@ -3,6 +3,7 @@ import {
   canForwardWebIMMessage,
   type Conversation,
   type Message,
+  type WebIMGroupMember,
   type WebIMForwardMessagesResult,
   type WebIMSync,
 } from '@im28/im-sdk/web';
@@ -18,9 +19,11 @@ import {
   type ChatForwardRouteState,
 } from './chat-forward-route.js';
 import { prepareChatForwardTargetDestination } from './forward-target-source.js';
+import { resolveChatForwardSenderNames } from './chat-forward-composer-view.js';
 
 /** ChatPage 转发编排只接收 facade、可见实体和页面反馈入口。 */
 interface UseChatForwardFlowOptions {
+  readonly currentUserID: string;
   readonly conversation: Conversation | null;
   readonly messages: readonly Message[];
   readonly sync: WebIMSync | null;
@@ -37,11 +40,13 @@ interface UseChatForwardFlowOptions {
 export interface ChatPendingForward {
   readonly routeState: ChatForwardRouteState;
   readonly messages: readonly Message[];
+  readonly senderNamesByID: ReadonlyMap<string, string>;
   readonly loading: boolean;
 }
 
 /** 为聊天页提供单条、多选、目标路由和真实批量发送编排。 */
 export function useChatForwardFlow({
+  currentUserID,
   conversation,
   messages,
   sync,
@@ -67,6 +72,8 @@ export function useChatForwardFlow({
   const [targetSubmitting, setTargetSubmitting] = useState(false);
   // previewMessages 从 SDK 当前账号 cache 精确重读。
   const [previewMessages, setPreviewMessages] = useState<readonly Message[]>([]);
+  // previewSenderNamesByID 保存来源会话上下文解析后的发送者展示名。
+  const [previewSenderNamesByID, setPreviewSenderNamesByID] = useState<ReadonlyMap<string, string>>(new Map());
   // previewLoading 区分目标聊天历史和来源预览加载状态。
   const [previewLoading, setPreviewLoading] = useState(false);
   // routeState 缺失代表普通聊天或刷新后安全丢弃。
@@ -96,6 +103,7 @@ export function useChatForwardFlow({
   useEffect(() => {
     if (!sync || !routeState) {
       setPreviewMessages([]);
+      setPreviewSenderNamesByID(new Map());
       setPreviewLoading(false);
       return;
     }
@@ -103,14 +111,40 @@ export function useChatForwardFlow({
     let active = true;
     // 新来源读取期间不保留上一批消息，避免跨目标短暂串用预览。
     setPreviewMessages([]);
+    setPreviewSenderNamesByID(new Map());
     setPreviewLoading(true);
     void sync.messages.getCachedByClientMsgIDs(routeState.sourceClientMsgIDs)
-      .then(cached => {
+      .then(async cached => {
         if (!active) return;
         if (cached.length !== routeState.sourceClientMsgIDs.length) {
           throw new Error('部分转发来源已不在本地缓存，请重新选择');
         }
+        /** sourceConversation 在展示缓存读取失败时保持空值，不阻断已有消息草稿。 */
+        let sourceConversation: Conversation | null = null;
+        /** sourceMembers 缺失时由展示 helper 使用格式化用户名称兜底。 */
+        let sourceMembers: readonly WebIMGroupMember[] = [];
+        try {
+          /** cachedConversations 用于识别来源单聊或群聊，禁止使用目标会话名称。 */
+          const cachedConversations = await sync.conversations.listCached({ limit: 500 });
+          sourceConversation = cachedConversations.find(
+            item => item.conversationID === routeState.sourceConversationID,
+          ) ?? null;
+          if (sourceConversation?.type === 'group' && sourceConversation.targetID) {
+            sourceMembers = await sync.groupMembers.listCached(sourceConversation.targetID);
+          }
+        } catch {
+          // 名称增强失败只降级展示，消息 cache 已完整时仍允许用户继续转发。
+        }
+        /** senderNamesByID 严格按 frozen RN 的本人、群成员和单聊标题语义投影。 */
+        const senderNamesByID = resolveChatForwardSenderNames(cached, {
+          currentUserID,
+          sourceConversation,
+          sourceConversationTitle: routeState.sourceConversationTitle,
+          sourceMembers,
+        });
+        if (!active) return;
         setPreviewMessages(cached);
+        setPreviewSenderNamesByID(senderNamesByID);
       })
       .catch(cause => {
         if (!active) return;
@@ -122,7 +156,7 @@ export function useChatForwardFlow({
         if (active) setPreviewLoading(false);
       });
     return () => { active = false; };
-  }, [location.pathname, navigate, onError, routeState, sync]);
+  }, [currentUserID, location.pathname, navigate, onError, routeState, sync]);
 
   /** 用当前会话和来源 ID 打开当前页目标选择弹窗。 */
   const openTargetSelector = useCallback((sourceClientMsgIDs: readonly string[]) => {
@@ -244,13 +278,13 @@ export function useChatForwardFlow({
     }
   }, [cancelMultiSelect, navigate, onError, sync, targetForwardState, targetSubmitting]);
 
-  /** 调用 shared messages.forward，并按逐项结果呈现真实完成状态。 */
+  /** 调用 shared messages.forward，并向复用 Composer 返回真实完成状态。 */
   const submitForward = useCallback(async (options: {
     readonly sourceClientMsgIDs: readonly string[];
     readonly hideSenderName: boolean;
     readonly comment: string;
-  }): Promise<void> => {
-    if (!sync || !conversation || sending || !options.sourceClientMsgIDs.length) return;
+  }): Promise<boolean> => {
+    if (!sync || !conversation || sending || !options.sourceClientMsgIDs.length) return false;
     // result 仅在 facade 返回真实逐项结果后赋值。
     let result: WebIMForwardMessagesResult | null = null;
     await runMessageOperation(async activeSync => {
@@ -262,15 +296,17 @@ export function useChatForwardFlow({
         onSending: sendingMessages => sendingMessages.forEach(onSending),
       });
     });
-    if (!result) return;
+    if (!result) return false;
     onNotice(buildForwardResultNotice(result));
     clearPendingForward();
+    return true;
   }, [clearPendingForward, conversation, onNotice, onSending, runMessageOperation, sending, sync]);
 
   // pending 只在合法 state 存在时向 composer 暴露精确缓存结果。
   const pending: ChatPendingForward | null = routeState ? {
     routeState,
     messages: previewMessages,
+    senderNamesByID: previewSenderNamesByID,
     loading: previewLoading,
   } : null;
 

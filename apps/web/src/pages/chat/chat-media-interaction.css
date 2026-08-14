@@ -263,26 +263,6 @@
   text-align: center;
 }
 
-.rn-chat-media-feedback {
-  margin: 12px 0 0;
-  color: var(--im-text-secondary);
-  font-size: 13px;
-  line-height: 18px;
-  text-align: center;
-}
-
-.rn-chat-media-preview.is-image > .rn-chat-media-feedback {
-  position: absolute;
-  right: 24px;
-  bottom: calc(var(--im-safe-bottom) + 24px);
-  left: 24px;
-  color: #ffffff;
-}
-
-.rn-chat-media-feedback.is-error {
-  color: var(--im-status-danger);
-}
-
 @keyframes rn-chat-download-spin {
   to {
     transform: rotate(360deg);

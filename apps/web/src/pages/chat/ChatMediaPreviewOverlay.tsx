@@ -3,6 +3,7 @@ import { useState, type MouseEvent } from 'react';
 import backIconURL from '../../assets/rn/components/navbar/nav-arrow-left.svg';
 import downloadIconURL from '../../assets/rn/assets/icons/imm28/cloud-download.dynamic.svg';
 import fileIconURL from '../../assets/rn/assets/icons/imm28/doc.svg';
+import { useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import {
   downloadChatMedia,
@@ -22,13 +23,10 @@ export function ChatMediaPreviewOverlay({
   preview,
   onClose,
 }: ChatMediaPreviewOverlayProps) {
+  /** toast 统一承载媒体打开与下载的瞬时操作结果。 */
+  const { toast } = useAppToast();
   // downloading 锁定一次真实 Blob 下载，防止重复网络请求。
   const [downloading, setDownloading] = useState(false);
-  // feedback 只在真实下载触发后显示成功，失败保留原因。
-  const [feedback, setFeedback] = useState<{
-    readonly kind: 'success' | 'error';
-    readonly text: string;
-  } | null>(null);
   // downloadName 优先使用文件 payload 名称，其次使用原始 URL path。
   const downloadName = getChatMediaDownloadName(
     preview.url,
@@ -40,12 +38,11 @@ export function ChatMediaPreviewOverlay({
   async function handleDownload() {
     if (downloading) return;
     setDownloading(true);
-    setFeedback(null);
     try {
       await downloadChatMedia({ url: preview.url, fileName: downloadName });
-      setFeedback({ kind: 'success', text: '已提交到浏览器下载' });
+      toast.success('已提交到浏览器下载');
     } catch (cause) {
-      setFeedback({ kind: 'error', text: readMediaActionError(cause) });
+      toast.error(readMediaActionError(cause));
     } finally {
       setDownloading(false);
     }
@@ -53,11 +50,10 @@ export function ChatMediaPreviewOverlay({
 
   /** 在新标签页交给浏览器原生文件预览能力。 */
   function handleOpen() {
-    setFeedback(null);
     try {
       openChatMedia(preview.url);
     } catch (cause) {
-      setFeedback({ kind: 'error', text: readMediaActionError(cause) });
+      toast.error(readMediaActionError(cause));
     }
   }
 
@@ -107,7 +103,6 @@ export function ChatMediaPreviewOverlay({
         <FilePreviewBody
           preview={preview}
           downloading={downloading}
-          feedback={feedback}
           onDownload={() => void handleDownload()}
           onOpen={handleOpen}
         />
@@ -142,11 +137,6 @@ export function ChatMediaPreviewOverlay({
           )}
         </div>
       )}
-      {preview.kind === 'image' && feedback ? (
-        <p className={`rn-chat-media-feedback is-${feedback.kind}`} role="status">
-          {feedback.text}
-        </p>
-      ) : null}
     </section>
   );
 }
@@ -175,13 +165,11 @@ function ImagePreviewActions({
 function FilePreviewBody({
   preview,
   downloading,
-  feedback,
   onDownload,
   onOpen,
 }: {
   readonly preview: ChatMediaPreview;
   readonly downloading: boolean;
-  readonly feedback: { readonly kind: 'success' | 'error'; readonly text: string } | null;
   readonly onDownload: () => void;
   readonly onOpen: () => void;
 }) {
@@ -197,7 +185,6 @@ function FilePreviewBody({
         </button>
       </div>
       <p className="rn-chat-file-preview-tip">文件将由浏览器原生能力预览或保存。</p>
-      {feedback ? <p className={`rn-chat-media-feedback is-${feedback.kind}`} role="status">{feedback.text}</p> : null}
     </div>
   );
 }

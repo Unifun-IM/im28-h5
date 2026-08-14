@@ -7,35 +7,33 @@ import {
   type PresetEmojiDocument,
 } from '@im28/im-sdk/web';
 
-import emojiIconURL from '../../assets/rn/assets/icons/imm28/emoji.regular.svg';
-import keyboardIconURL from '../../assets/rn/assets/icons/imm28/keyboard.svg';
-import plusIconURL from '../../assets/rn/assets/icons/imm28/plus-circle.regular.svg';
-import sendIconURL from '../../assets/rn/assets/icons/imm28/send.svg';
-import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { ChatComposerAttachmentControls } from './ChatComposerAttachmentControls.js';
 import { ChatComposerQuotePreview } from './ChatComposerQuotePreview.js';
 import { ChatComposerEditPreview } from './ChatComposerEditPreview.js';
 import { ChatComposerPendingFile } from './ChatComposerPendingFile.js';
 import { ChatSystemEmojiPanel } from './ChatSystemEmojiPanel.js';
-import { PresetEmojiTextContent } from './PresetEmojiTextContent.js';
-import { ChatVoiceInput } from './ChatVoiceInput.js';
+import { ChatComposerInputRow } from './ChatComposerInputRow.js';
 import { useChatComposerDraftEditing } from './useChatComposerDraftEditing.js';
 import { getChatMessageEditDocument } from './chat-message-edit-view.js';
 import { useChatComposerAttachments } from './useChatComposerAttachments.js';
 import { ChatMentionPickerPanel } from './ChatMentionPickerPanel.js';
 import { useChatComposerMentions } from './useChatComposerMentions.js';
-import type { ChatComposerProps } from './chat-composer-types.js';
-
-/** Composer 的两个内嵌面板互斥且不承载发送状态。 */
-type ChatComposerPanel = 'actions' | 'emoji' | null;
+import { ChatForwardComposer } from './ChatForwardComposer.js';
+import type {
+  ChatComposerProps,
+  ChatComposerPanel,
+  ChatForwardSelection,
+} from './chat-composer-types.js';
 
 /** 呈现 RN input pill、发送按钮和真实附件功能面板。 */
 export function ChatComposer({
   initialDraftDocument,
   onDraftDocumentChange,
+  forwardDraft,
   sending,
   voiceRecordingStatus,
   voiceRecordingSeconds,
+  voiceRecordingLevel,
   onSendText,
   onSendMention,
   mentionMembers,
@@ -71,6 +69,8 @@ export function ChatComposer({
   const [activePanel, setActivePanel] = useState<ChatComposerPanel>(null);
   // voiceMode 在文本和 RN 按住说话输入之间切换。
   const [voiceMode, setVoiceMode] = useState(false);
+  // forwardSelection 由顶部转发条回传，发送仍由当前 Composer 统一提交。
+  const [forwardSelection, setForwardSelection] = useState<ChatForwardSelection | null>(null);
   // attachments 隔离浏览器 input、校验和选择异常。
   const attachments = useChatComposerAttachments({
     draftText: draftDocument.text,
@@ -90,7 +90,7 @@ export function ChatComposer({
   });
   // mentions 管理群聊 @ 查询、候选身份与光标恢复。
   const mentions = useChatComposerMentions({
-    enabled: isGroup && !editingMessage && !quoteMessage,
+    enabled: isGroup && !editingMessage && !quoteMessage && !forwardDraft,
     document: draftDocument,
     onChangeDocument: updateDraftDocument,
     textareaRef: draftEditing.textareaRef,
@@ -125,11 +125,16 @@ export function ChatComposer({
     setActivePanel(null);
   }, [editingMessage, isGroup, mentionRequest, mentions.append, quoteMessage]);
   // canSend 统一控制键盘提交与可见发送按钮。
-  const canSend = Boolean(
-    draftDocument.text.trim() ||
-    attachments.pendingMedia ||
-    attachments.pendingFile,
+  const canSend = Boolean(forwardDraft
+    ? forwardSelection?.sourceClientMsgIDs.length && !forwardDraft.pending.loading
+    : draftDocument.text.trim() || attachments.pendingMedia || attachments.pendingFile
   ) && !sending && !voiceMode;
+
+  useEffect(() => {
+    setForwardSelection(null);
+    setVoiceMode(false);
+    setActivePanel(null);
+  }, [forwardDraft?.pending.routeState]);
 
   useEffect(() => {
     if (!editingMessage) return;
@@ -146,6 +151,19 @@ export function ChatComposer({
     if (!canSend) return;
     // document 同步裁剪正文和实体偏移，防止异步期间受后续输入影响。
     const document = trimPresetEmojiDocument(draftDocument);
+    if (forwardDraft) {
+      if (!forwardSelection) return;
+      /** completed 只在 shared 转发确认完成后清空复用输入框。 */
+      const completed = await forwardDraft.onSubmit({
+        ...forwardSelection,
+        comment: document.text,
+      });
+      if (completed && document.text) {
+        updateDraftDocument({ text: '', entities: [] });
+        mentions.clear();
+      }
+      return;
+    }
     // selectedEdit 固定提交瞬间的原消息，失败时保留当前草稿。
     const selectedEdit = editingMessage;
     // pendingMedia/pendingFile 固定本次选择，清空行为与 RN 提交时机一致。
@@ -237,6 +255,15 @@ export function ChatComposer({
     <section
       className={`rn-chat-composer-shell${activePanel ? ' is-panel-open' : ''}`}
     >
+      {forwardDraft ? (
+        <ChatForwardComposer
+          pending={forwardDraft.pending}
+          recipientName={forwardDraft.recipientName}
+          onCancel={forwardDraft.onCancel}
+          onChangeTarget={forwardDraft.onChangeTarget}
+          onSelectionChange={setForwardSelection}
+        />
+      ) : null}
       {quoteMessage ? (
         <ChatComposerQuotePreview
           message={quoteMessage}
@@ -260,96 +287,40 @@ export function ChatComposer({
           onRemove={attachments.clearPendingFile}
         />
       ) : null}
-      <form className="rn-chat-composer" onSubmit={handleSubmit}>
-        <ChatVoiceInput
-          voiceMode={voiceMode}
-          disabled={sending}
-          status={voiceRecordingStatus}
-          seconds={voiceRecordingSeconds}
-          onToggleMode={() => {
-            setActivePanel(null);
-            setVoiceMode(current => !current);
-          }}
-          onStart={onVoiceRecordStart}
-          onSend={onVoiceRecordSend}
-          onCancel={onVoiceRecordCancel}
-        >
-          <label className="rn-chat-composer-pill">
-            <span className="sr-only">消息内容</span>
-            {draftDocument.entities.length ? (
-              <span
-                className="rn-chat-composer-rich-preview"
-                aria-hidden="true"
-              >
-                <PresetEmojiTextContent
-                  text={draftDocument.text}
-                  entities={draftDocument.entities}
-                />
-              </span>
-            ) : null}
-            <textarea
-              ref={draftEditing.textareaRef}
-              rows={1}
-              maxLength={1000}
-              value={draftDocument.text}
-              placeholder="发消息..."
-              disabled={sending}
-              className={
-                draftDocument.entities.length ? 'has-rich-preview' : undefined
-              }
-              onChange={event => draftEditing.changeText(event.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setActivePanel(null)}
-            />
-          </label>
-        </ChatVoiceInput>
-        <button
-          className="rn-chat-composer-icon-button"
-          type="button"
-          disabled={sending}
-          aria-label={
-            activePanel === 'emoji' ? '切换到键盘输入' : '打开表情面板'
-          }
-          aria-expanded={activePanel === 'emoji'}
-          title={activePanel === 'emoji' ? '键盘' : '表情'}
-          onClick={() => {
-            setVoiceMode(false);
-            setActivePanel(current => (current === 'emoji' ? null : 'emoji'));
-          }}
-        >
-          <RNAssetIcon
-            assetURL={activePanel === 'emoji' ? keyboardIconURL : emojiIconURL}
-          />
-        </button>
-        {!voiceMode && (
-          editingMessage ||
-          draftDocument.text.trim() ||
-          attachments.pendingMedia ||
-          attachments.pendingFile
-        ) ? (
-          <button
-            className="rn-chat-send-button"
-            type="submit"
-            disabled={!canSend}
-            aria-label="发送消息"
-          >
-            <RNAssetIcon assetURL={sendIconURL} />
-          </button>
-        ) : (
-          <button
-            className="rn-chat-composer-icon-button"
-            type="button"
-            disabled={sending}
-            aria-label="打开功能面板"
-            aria-expanded={activePanel === 'actions'}
-            onClick={() =>
-              setActivePanel(current => (current === 'actions' ? null : 'actions'))
-            }
-          >
-            <RNAssetIcon assetURL={plusIconURL} />
-          </button>
+      <ChatComposerInputRow
+        draftDocument={draftDocument}
+        textareaRef={draftEditing.textareaRef}
+        sending={sending}
+        canSend={canSend}
+        showSendButton={Boolean(
+          forwardDraft || editingMessage || draftDocument.text.trim() ||
+          attachments.pendingMedia || attachments.pendingFile
         )}
-      </form>
+        forwarding={Boolean(forwardDraft)}
+        voiceMode={voiceMode}
+        voiceRecordingStatus={voiceRecordingStatus}
+        voiceRecordingSeconds={voiceRecordingSeconds}
+        voiceRecordingLevel={voiceRecordingLevel}
+        activePanel={activePanel}
+        onSubmit={handleSubmit}
+        onKeyDown={handleKeyDown}
+        onChangeText={draftEditing.changeText}
+        onFocusText={() => setActivePanel(null)}
+        onToggleVoiceMode={() => {
+          setActivePanel(null);
+          setVoiceMode(current => !current);
+        }}
+        onToggleEmojiPanel={() => {
+          setVoiceMode(false);
+          setActivePanel(current => (current === 'emoji' ? null : 'emoji'));
+        }}
+        onToggleActionsPanel={() => {
+          setActivePanel(current => (current === 'actions' ? null : 'actions'));
+        }}
+        onVoiceRecordStart={onVoiceRecordStart}
+        onVoiceRecordSend={onVoiceRecordSend}
+        onVoiceRecordCancel={onVoiceRecordCancel}
+      />
       {activePanel === 'emoji' ? (
         <ChatSystemEmojiPanel
           onInsert={draftEditing.insertTextAtSelection}

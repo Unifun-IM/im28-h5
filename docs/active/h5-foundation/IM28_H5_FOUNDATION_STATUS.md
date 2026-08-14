@@ -1,8 +1,151 @@
 # IM28 H5 Foundation Status
 
 - status: `active`
-- current_step: `W6.a6.20.149.9 已完成；.149.5b active（自定义表情反馈已收敛）`
-- next_step: `继续拆分剩余列表、群成员管理与通话记录页的 load error / operation result`
+- current_step: `W6.a6.20.149.20 completed-local/browser-readonly-pass/mutation-gated`
+- next_step: `等待 inventory 中的新合同、自然数据、可用 RTC 部署或明确 operation 验收授权；验证码发送继续暂缓`
+
+## W6.a6.20.149.19 Unified Forward Composer Closeout (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 在唯一 `ChatComposer` 顶部渲染 `ForwardComposerPreview`；普通 draft 作为可选转发留言，空留言仍允许发送 | none |
+| H5 owner | `pass` | `ChatForwardComposer` 只负责摘要、预览、反选与隐藏发送者；零 `form/textarea/send icon`；选择结果回传 `ChatComposer` | none |
+| submit chain | `pass-local` | `ChatPageFooter` 不再用转发态替换普通输入；`ChatComposer` 唯一提交按钮调用 `forwardDraft.onSubmit`，成功后才清空既有 draft | real forward send result |
+| verification | `pass` | focused 3 files/12 tests；H5 TypeScript；`build:web/sync:web`；1205-module production build；diff check | existing >500kB chunk warning |
+| browser readonly | `pass-bounded` | 已登录真实群聊仍只有一个“消息内容” textarea、语音/表情/功能入口；未脚本伪造长按或点击发送 | natural pending-forward visual |
+| protection | `pass` | SDK source 零修改；RN protected business source 零修改，只有用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或 `build:package:desktop:web` | none |
+
+Closeout verdict: `.149.19 completed/structural-pass/forward-runtime-gated`。唯一 Composer owner 已收敛；真实长按生成待转发草稿后的视觉与最终发送结果继续保留显式验收门。
+
+## W6.a6.20.149.18 Recorder HUD And Group Card Closeout (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 录音 HUD 为 150×150、52×64 麦克风、38/34/30/26/22/18 六格真实电平；群名片点击每次 force-refresh，已入群直达会话，未入群进入申请 | none |
+| recorder adapter | `pass-local` | 唯一 `chat-voice-recorder` 通过 Web Audio analyser 读取 RMS；不支持/读取失败时静音 fail-closed；stop/cancel/start/error 同步释放 analyser、AudioContext 与 tracks | physical trusted hold + microphone permission + Safari/Firefox |
+| H5 presentation | `pass-local` | HUD 尺寸、间距、字号、最低一格、后 N 格点亮和危险取消态对齐 RN；删除固定 CSS pulse，不伪造音量 | physical upward-cancel pixel |
+| group card runtime | `browser-pass-real` | 真实单聊点击 `donk二大爷的群聊` 后从 type108 直接进入 `/conversations/019ffe07...`，展示群聊天与 `2人在线`；未进入群资料 | non-member card natural sample + real apply mutation |
+| route safety | `pass` | `card` 申请来源只接受单段编码 `/conversations/:id`，成功/返回关闭申请历史项；已入群复用 SDK `conversations.openGroup` | none |
+| verification | `pass` | H5 focused 3 files/11 tests；TypeScript；SDK Web 101 files/426 tests；`build:web/sync:web`；1205-module production build；diff check | existing >500kB chunk warning |
+| protection | `pass` | SDK source 零修改；RN protected business source 零修改，只有用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或 `build:package:desktop:web` | none |
+
+Closeout verdict: `.149.18 completed/card-browser-pass/physical-record-gated`。群名片 production caller 已对齐；录音 HUD 与真实电平链已本地闭环，但没有用不受信任脚本伪造按住、没有录音上传或发送，物理触屏/麦克风矩阵继续保留验收门。
+
+## W6.a6.20.149.17 Outgoing Voice Direction Closeout (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN `soundContentMine` 使用 `row-reverse`，`voiceIconBoxMine` 使用 `rotate(180deg)` | none |
+| H5 presentation | `pass` | `.is-outgoing .rn-chat-audio-content` 反向横排，发送方时长在左、声波在右且旋转 180°；incoming 选择器不受影响 | none |
+| verification | `pass` | 串行 H5 typecheck；1204-module production build；382×786 已登录真实语音列表截图 | existing >500kB chunk warning |
+| browser computed style | `pass` | `flexDirection=row-reverse`；icon transform=`matrix(-1,0,0,-1,0,0)` | Safari/Firefox/device matrix |
+| protection | `pass` | 只改 H5 CSS；SDK source 与 RN protected business source 零改动 | none |
+
+Closeout verdict: `.149.17 completed/browser-pass`。本片不改变语音 URL、播放状态、已读偏好、消息 DTO 或转发发送逻辑。
+
+## W6.a6.20.149.16 Forward-Origin Display Name Closeout (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 只为缺少来源头的消息新建 `forwardOrigin`，发送者名称来自既有消息展示投影；已有历史来源不覆盖 | none |
+| H5 projection | `pass` | `ChatForwardComposer -> senderNamesByID -> ChatForwardPreviewModal -> resolveChatForwardPreviewOrigin`；新来源使用备注/群昵称/昵称结果，不再回退 `im-xxxx` | cache miss remains formatted ID |
+| history safety | `pass` | 消息已有 `forwardOrigin` 时原对象与原名称保持不变，避免再次转发把原发送者错误改成当前发送者 | none |
+| verification | `pass` | focused 2 files/9 tests；full H5 151 files/502 tests；466 assets；H5 typecheck；1204-module production build；diff check | existing >500kB chunk warning |
+| browser readonly | `pass-bounded` | 已登录预览显示名称来源头，未点击最终发送；当前自然样本中的已转发语音继续保留历史来源 `donk` | original raw missing-name sample after fresh selection |
+| protection/cleanup | `pass` | SDK 零改动；RN 仅用户已有 `appVersion.ts`；3 个生产文件 143/245/101 行；P0/P1 zero | none |
+
+Closeout verdict: `.149.16 completed/send-result-gated`。本片只修复 H5 转发预览的新来源展示名，不修改消息 DTO、缓存、route state 或 shared send facade。
+
+## W6.a6.20.149.15 Voice Playback Natural-Data Acceptance (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| natural sample | `pass` | 已登录真实单聊缓存包含 5/7/8 秒语音，本轮选择 5 秒样本，不创建 fixture、不上传、不发送 | signed URL expiry variants |
+| runtime state | `pass-browser-real` | 点击后控件由“播放语音”切换为 `pressed` 的“停止语音”，5 秒结束后自然回落“播放语音” | audible output/device volume not asserted |
+| draft isolation | `pass` | 既有 2 条转发草稿保持完整，未点击“发送转发消息”，消息列表与草稿摘要未被播放终态改写 | none |
+| verification | `pass` | `.149.14` focused 1 file/3 tests、H5 typecheck、diff check；SDK 零改动，RN 仅用户已有 `appVersion.ts` | full suite沿用 `.149.14` 151/500 baseline |
+
+Closeout verdict: `.149.15 completed/chromium-pass/browser-matrix-gated`。真实语音播放默认链已取得 Chromium 自然数据证据；Safari/Firefox、物理设备听感、图片/视频/文件打开下载继续保留独立验收门。
+
+## W6.a6.20.149.14 Forward Composer Sender Summary Closeout (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN/Figma contract | `pass` | RN `getPendingForwardSubtitle/getForwardSourceSummary` 与 Figma `55933:71482` 均要求多条显示来源发送者集合；本人显示“您自己”，按首次出现去重，超过两人显示“等N人” | none |
+| source identity | `pass` | 来源单聊使用来源会话对端名；来源群聊只读 shared group-member cache，并复用备注、群昵称、公开昵称优先级；目标聊天标题不参与 | member cache miss uses formatted ID fallback |
+| failure boundary | `pass` | 消息 cache 完整时，来源会话/成员名称增强失败只降级展示，不使转发草稿失效 | none |
+| browser readonly | `pass` | 382×786 真实已登录链显示“来自：donk二大爷，您自己”；preview=`382×56`、input=`382×52`、document=`382/382`；未点击发送 | Safari/Firefox + physical touch |
+| verification | `pass` | focused 2 files/7 tests；full H5 151 files/500 tests；Web typecheck；1204-module production build；diff check | existing >500kB chunk warning |
+| cleanup/protection | `pass` | helper 81 行且唯一生产消费者；P0/P1 zero；SDK 零改动，RN protected source 未改；仓库无 convergence script | none |
+
+Closeout verdict: `.149.14 completed/send-result-gated`。本片只收敛 H5 转发草稿展示，不修改 route state、消息正文、发送 facade 或真实发送结果。
+
+## W6.a6.20.149.13 Forward Preview RN Parity Closeout (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN structure parity | `pass` | 60% 视口面板、底部 outgoing 气泡、30px 多选、发送者显示切换与四项操作菜单均复用 frozen RN production contract | Figma 登录后像素对照 |
+| shared owner | `pass` | 正文复用 `getChatMessageView + ChatMessageContent + ChatForwardOrigin`；预览组件不持有发送 facade | none |
+| draft safety | `pass` | 反选、隐藏发送者和修改收件人只更新待发送草稿；应用更改不发送，真实提交仍由 Composer 显式触发 | real partial-result/realtime/list-back |
+| browser readonly | `pass` | 382×786 已登录链验证 3 条真实缓存消息、面板与菜单尺寸、反选/恢复、隐藏/恢复及零 warning/error | Safari/Firefox + physical touch |
+| full verification | `pass` | focused 2 files/7 tests；H5 150 files/497 tests；466 assets；Web typecheck；1203-module production build | existing >500kB chunk warning |
+| protection | `pass` | SDK source/generated 与 RN protected source 零改动；未运行 SDK/RN/Desktop/all build/sync；未点击发送 | none |
+
+Closeout verdict: `.149.13 completed/send-result-gated`。当前 inventory 没有新的无条件本地实现缺口；保持验证码发送 contract blocked，不制造 fake success。
+
+## W6.a6.20.149.12 Chat Settings Responsibility Split Closeout (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| responsibility split | `pass` | `ChatSettingsPage.tsx` 只保留加载、presence、mutation、权限投影与确认层编排；首卡、成员预览、头像、搜索和清空入口迁入 `ChatSettingsCards.tsx` | none |
+| size boundary | `pass` | 页面由 539 行降至 343 行；展示模块 202 行，均低于 cleanup 阈值 | none |
+| behavior guardrail | `pass` | 定向 4 files/29 tests；route、shared facade、permission、Toast、remote-only 与 destructive semantics 未改 | real mutation remains gated |
+| browser readonly | `pass` | 现有账号单聊设置 4 cards、群设置 5 cards；群资料/成员/搜索/清空/退出入口可见；zero console error；未点击 mutation | Safari/Firefox + operation pixels |
+| full verification | `pass` | H5 149 files/493 tests；466 assets；Web typecheck；production build；diff check | existing >500kB chunk warning |
+| cleanup/protection | `pass` | 无新增 TODO/FIXME/HACK、调试日志、孤立导出或重复 owner；SDK 未改；RN 仅有用户已有 `src/config/appVersion.ts` | none |
+
+Closeout verdict: `.149.12 completed/no-behavior-change`。本片仅拆分 H5 presentation owner；未修改 RN、SDK、路由、权限、缓存、同步或 mutation 逻辑。
+
+## W6.a6.20.149.11 Settings Operation Feedback Closeout (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| permission update | `pass-local` | success/error 使用 `useAppToast`；加载失败继续由页面 error + retry owner 承载 | real changed-value mutation |
+| version check | `pass-local` | latest/error 使用 Toast；need-update 继续使用可操作 update dialog | update-available sample |
+| sign-out | `pass-local` | success/error 使用 Toast；成功后仍由 runtime 完整清理并 replace 到 phone auth | real logout cleanup pixel |
+| verification | `pass` | focused 1 file/13 tests；full H5 149 files/493 tests；466 assets；Web typecheck；production build；diff check | existing >500kB chunk warning |
+| protection | `pass` | SDK 与 generated package 未改；RN 仅有用户已有 `src/config/appVersion.ts`；未运行 RN/Desktop/all 或 `build:package:desktop:web` | none |
+
+Closeout verdict: `.149.11 local-complete/authenticated-action-gated`。本片仅改变 H5 feedback projection，未执行权限写入、版本更新或退出 mutation。
+
+## W6.a6.20.149.10 RN/H5 Parity Residual Inventory (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| route surface | `pass-read-only` | frozen RN screen/routes 与 H5 60+ React Router paths 按认证、四主 Tab、联系人、通话、聊天、群、群发、二维码、个人设置逐域映射 | no confirmed ordinary route gap |
+| runtime ownership | `pass-read-only` | H5 page 只持有 route/UI/browser I/O；DTO、Gateway、Repository、cache/realtime/mutation 继续由 shared SDK owner 持有 | RN remains frozen |
+| anti-fake | `pass` | 忘记密码使用 RN 同款替代方式；验证码缺口只显示固定 `666666` contract；网络代理/cache cleanup 未创建无效 Web 页面 | none |
+| inventory SSOT | `written` | `IM28_H5_RN_PARITY_INVENTORY.md` 记录 complete/partial/acceptance/contract/platform 状态与 activation gate | living inventory |
+| next bounded slice | `selected` | `.149.11`: permission update、version check、sign-out failure 三个同域反馈 consumer | no real mutation |
+
+Closeout verdict: `.149.10 completed/read-only`。确认普通 RN production route 缺口为 0；开发残留以 consumer/contract/platform/acceptance 分类，不以“文件存在”冒充 capability complete。
+
+## W6.a6.20.149.5b Operation Feedback Closeout (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN truth | `pass` | frozen RN 只作为反馈文案、操作边界和页面结构参考；未改 RN 业务调用、DTO、缓存、事件或 UI 逻辑 | RN business unchanged |
+| feedback split | `pass-local` | 好友/群申请、黑名单、通话删除、群设置、管理员/群主、建群、邀请/移除成员、群资料/文本、群生命周期、已加入群和媒体打开/下载的 mutation success/error 进入唯一 `useAppToast`；加载、刷新、分页、权限、remote-only/cache 恢复和媒体结构错误继续由页面 owner 承载 | authenticated operation pixel |
+| success boundary | `pass` | 通话删除与删除后 cache 重读分开判定；已成功的服务端删除不会因随后列表重读失败被误报为删除失败 | none |
+| cross-route Toast | `pass` | 添加管理员和转让群主由共用 hook 在导航前直接触发全局 Toast，不依赖即将卸载页面的反馈适配器 | none |
+| media feedback | `pass` | 图片/文件下载成功失败和文件打开失败使用全局 Toast；旧 inline feedback state 与 CSS 已删除 | authenticated download/open pixel |
+| verification | `pass` | focused 3 files/18 tests；full H5 149 files/492 tests；466 assets；Web typecheck；production build；diff check | existing >500kB chunk warning |
+| cleanup P0/P1 | `zero` | 触达范围无旧 feedback state/CSS、重复 Toast owner、TODO/FIXME/HACK、调试日志或孤立 import；canonical owner 为 `AppToastProvider/useAppToast` | none |
+| accepted P3 debt | `registered` | `ChatSettingsPage.tsx` 539 行超过 cleanup 建议的 400 行页面阈值，但低于仓库触达 1000 行强制拆分门；本片不做无关结构重写 | `.149.10` responsibility inventory |
+| API gap | `accepted` | Gateway OpenAPI 暂无验证码发送 operation；继续显示固定 `666666` 联调约束，不接不存在的接口、不制造发送成功和倒计时 | backend send-code contract |
+| protection | `pass` | 未修改 SDK source/generated package；未改 `im28-phone/src/**`，RN 仅存在用户已有 `src/config/appVersion.ts` 改动；未执行 RN/Desktop/all 或 `build:package:desktop:web` | none |
+
+Closeout verdict: `.149.5b local-complete/authenticated-action-gated`。未执行接受/拒绝、解除黑名单、删除通话、群成员/角色/生命周期、建群或媒体下载等真实 mutation，不将静态契约和构建结果写成操作期浏览器验收完成；下一步重新生成 RN parity residual inventory。
 
 ## W6.a6.20.149.9 RTC Startup Failure Convergence (2026-08-14)
 
@@ -47,7 +190,7 @@ Closeout verdict: `.149.7 completed/transfer-and-leave-mutation-gated`。本片�
 
 | gate | status | evidence | residual |
 | :--- | :--- | :--- | :--- |
-| feedback split | `pass-local` | 添加、删除、排序 success/error 直接进入全局 `useAppToast`；初始化同步失败继续由 `loadError` 页面状态承载 | 其他 `.149.5b` consumers |
+| feedback split | `pass-local` | 添加、删除、排序 success/error 直接进入全局 `useAppToast`；初始化同步失败继续由 `loadError` 页面状态承载 | none |
 | cleanup | `pass` | 删除 `notice` 状态、`OperationToastFeedback` 间接消费和 `.is-success` 横幅 CSS | none |
 | browser | `pass-readonly` | 412px 真实表情页：inline success=0、Toast host=1、viewport/scrollWidth=412/412、零 warning/error；未重复 mutation | 真实下一次操作 Toast 活动帧 |
 | verification | `pass` | focused 2 files/7 tests；full 147 files/476 tests；Web typecheck；1198-module production build | existing >500kB chunk warning |
@@ -72,7 +215,7 @@ Closeout verdict: `.149.6 completed/send-action-gated`。目标选择与消息�
 | gate | status | evidence | residual |
 | :--- | :--- | :--- | :--- |
 | global owner | `pass-local` | App 顶层唯一 `AppToastProvider/useAppToast`；`OperationToastFeedback` 只接收已分类的瞬时 success/error | authenticated mutation pixel |
-| consumers | `pass-local` | 23 个生产页面/反馈 owner 已接入；覆盖聊天、四类单选好友分享、二维码下载、资料保存/复制、账号安全、通知、联系人动作和好友/群申请 | 剩余列表、群成员管理、群创建和通话记录动作在 `.149.5b` |
+| consumers | `pass-local` | 23 个生产页面/反馈 owner 已接入；覆盖聊天、四类单选好友分享、二维码下载、资料保存/复制、账号安全、通知、联系人动作和好友/群申请 | `.149.5b` 后续批次已关闭 |
 | structural states | `pass` | load、权限、空态、媒体内联状态、RTC 持久错误和带重试错误继续由页面结构呈现；未机械替换全部 `role=status/alert` | none |
 | focus/reset | `pass-browser` | 删除全部输入壳 `:focus-within` 描边；1280px 登录输入聚焦为 `border:0/box-shadow:none/outline:none`；按钮/链接键盘 focus-visible 保留 | mobile physical keyboard |
 | browser | `pass-guest` | 5176 验证码 contract 提示显示为顶部成功 Toast；1280/1280 无横向溢出；未登录标签未调用真实认证或发送 mutation | 已登录分享/保存/失败 Toast |
@@ -80,7 +223,7 @@ Closeout verdict: `.149.6 completed/send-action-gated`。目标选择与消息�
 | verification | `pass` | focused 6 files/28 tests；full 147 files/473 tests；Web typecheck；1198-module production build；5176 HTTP 200 | existing >500kB chunk warning |
 | protection | `pass` | RN business 未改；未执行 RN/Desktop/all 或 `build:package:desktop:web`；SDK 仅沿既有 H5 typecheck 执行允许的 `build:web/sync:web` | none |
 
-Closeout verdict: `.149.5a clean/local-complete/authenticated-action-gated`。本片不将未执行的真实名片/二维码发送、账号修改、好友/群申请或联系人 mutation 写成浏览器验收完成；`.149.5` 总项保持 active，继续 `.149.5b`。
+Closeout verdict: `.149.5a clean/local-complete/authenticated-action-gated`。本片不将未执行的真实名片/二维码发送、账号修改、好友/群申请或联系人 mutation 写成浏览器验收完成；后续 `.149.5b` 已于同日关闭。
 
 ## W6.a6.20.149.3/.149.4 Card Settings Recorder And RTC (2026-08-14)
 
@@ -2872,6 +3015,20 @@ Residual ledger addition: `Chat visible unread read convergence` 已闭合 share
 | verification | focused 5 files/14 tests、Web typecheck、2 route HTTP 200、RN/SDK boundary/diff；运行时零改动 |
 | acceptance_gate | 可控 real partial-result、Safari/Firefox、物理长按与实体设备继续 gated |
 
+## Closed Slice W6.a6.20.149.13
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.149.13-forward-preview-rn-parity` |
+| goal | 将 H5 转发预览收敛为冻结 RN 生产结构，并保持草稿不自动发送 |
+| primary_path | `ChatForwardComposer -> ChatForwardPreviewModal -> getChatMessageView/ChatMessageContent -> existing forward submit` |
+| deliverable_verdict | `complete-local/browser-readonly-pass/send-result-gated` |
+| visual | 382×786；panel=`350×471.6`、menu=`200×192`、selector=`30×30`、3 outgoing bubbles、零 warning/error |
+| interaction | 反选标题 `3 -> 2 -> 3`；隐藏发送者 subtitle `会看到 -> 看不到` 且来源头 `3 -> 0 -> 3`；未触发发送 |
+| verification | focused 2/7、H5 full 150/497、466 assets、Web typecheck、1203-module build、diff check |
+| preserved_boundaries | SDK 与 RN protected source 零改动；未执行任何 SDK/RN/Desktop/all build/sync 或 `build:package:desktop:web` |
+| acceptance_gate | Figma 登录后像素对照、Safari/Firefox、物理触摸和真实 forward partial-result/list-back 仍 gated |
+
 ## Closed Slice W6.a6.20.125
 
 | field | value |
@@ -2909,3 +3066,29 @@ Residual ledger addition: `Chat visible unread read convergence` 已闭合 share
 | visual | 412×786 light，viewport/scrollWidth=`412/412`，warning/error=`0` |
 | safety | 未打开聊天、未 mark-read；无 fixture、上传、发送、下载、Gateway mutation、SDK/RN/runtime 改动 |
 | acceptance_gate | 任一当前会话自然出现 type102/104/105 后补非空预览活动帧；跨浏览器和实体设备仍 gated |
+
+## Closed Slice W6.a6.20.149.20
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.149.20-group-member-picker-modal-parity` |
+| goal | 将邀请群成员与移除群成员从独立全屏页收敛为群设置页上的共用底部选择弹窗 |
+| deliverable_verdict | `completed-local/browser-readonly-pass/mutation-gated` |
+| primary_path | `ChatSettingsPage modal route -> GroupMemberPickerModal -> existing invite/remove presentation -> WebIMSync.groupMembers` |
+| visual | 382x786 light + dark；dialog=`382x471.59`、100% 宽、60dvh 高、设置背景存在、底部贴边、零横向溢出；深色搜索、候选、空态与禁用 CTA 无浅色硬编码 |
+| verification | focused 4 files/20 tests、H5 full 152 files/505 tests、typecheck、1206-module production build；真实邀请空态、移除 2 位候选、disabled、关闭 replace 与 Chromium dark 只读验收 |
+| preserved_boundaries | 未执行邀请/移除 mutation；SDK source/generated 零改动；RN 仅用户已有 `src/config/appVersion.ts`；未运行 RN/Desktop/all 或 `build:package:desktop:web` |
+| acceptance_gate | 真实 mutation/第二账号 realtime/list-back、Safari/Firefox 和物理触摸仍 gated |
+
+## Closed Slice W6.a6.20.149.21
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.149.21-chat-page-cache-owner-split` |
+| goal | 收敛聊天页首屏恢复、实时缓存重读与搜索定位职责，不改变现有消息业务链 |
+| deliverable_verdict | `completed-local/structural-pass/browser-readonly-pass` |
+| primary_path | `ChatPage -> useChatPageCacheState -> WebIMSync conversations/messages cache facade -> ChatPage presentation` |
+| structure | `ChatPage.tsx 698 -> 595`；新 hook 159 行、单一生产消费者；发送/转发/删除/录音/名片/通话 owner 不移动 |
+| verification | focused 73 files/245 tests、H5 full 152 files/505 tests、typecheck、1207-module production build、diff check；382x786 真实群聊恢复与 Composer 只读烟测 |
+| preserved_boundaries | SDK source/generated 零改动；RN 仅用户既有 `src/config/appVersion.ts`；未运行 SDK/RN/Desktop/all build/sync 或 `build:package:desktop:web` |
+| acceptance_gate | 本片不扩大任何业务能力完成声明；现有 mutation、自然数据、RTC、跨浏览器/设备和验证码合同 gate 保持不变 |

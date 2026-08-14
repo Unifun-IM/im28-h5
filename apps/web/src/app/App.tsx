@@ -374,17 +374,19 @@ export function App() {
           <Route
             path="/conversations/:conversationID/settings/members/invite"
             element={(
-              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
-                <GroupInviteMembersPage />
-              </Suspense>
+              <>
+                <Suspense fallback={<ChatSettingsRouteLoadingState />}><ChatSettingsPage /></Suspense>
+                <Suspense fallback={null}><GroupInviteMembersPage /></Suspense>
+              </>
             )}
           />
           <Route
             path="/conversations/:conversationID/settings/members/remove"
             element={(
-              <Suspense fallback={<ChatSettingsRouteLoadingState />}>
-                <GroupRemoveMembersPage />
-              </Suspense>
+              <>
+                <Suspense fallback={<ChatSettingsRouteLoadingState />}><ChatSettingsPage /></Suspense>
+                <Suspense fallback={null}><GroupRemoveMembersPage /></Suspense>
+              </>
             )}
           />
           <Route
