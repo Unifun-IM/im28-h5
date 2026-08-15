@@ -161,7 +161,7 @@
   width: 100%;
   align-items: flex-start;
   gap: 12px;
-  padding: 0 16px calc(var(--im-safe-bottom) + 12px);
+  padding: 0 0 var(--im-safe-bottom);
   pointer-events: none;
   flex-direction: column;
 }
@@ -174,7 +174,7 @@
   height: 60dvh;
   min-height: 0;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 12px 12px 0 0;
   color: var(--im-text-primary);
   background: var(--im-chat-background);
   flex-direction: column;

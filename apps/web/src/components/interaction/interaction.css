@@ -91,6 +91,34 @@
   background: transparent;
 }
 
+.im-interaction-modal[data-placement='bottom'] {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  overflow: hidden;
+}
+
+.im-interaction-modal[data-placement='bottom'][open] {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.im-interaction-modal[data-placement='bottom']:not([open]) {
+  display: none;
+}
+
+.im-interaction-modal[data-placement='bottom'] > .im-modal-sheet {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
 .im-interaction-modal[open] {
   animation: im-modal-enter var(--im-motion-base) var(--im-motion-ease-out) both;
 }

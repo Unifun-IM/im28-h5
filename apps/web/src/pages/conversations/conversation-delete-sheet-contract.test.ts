@@ -8,6 +8,7 @@ describe('conversation delete sheet contract', () => {
     expect(sheetSource).toContain('createPortal(');
     expect(sheetSource).toContain('document.body');
     expect(sheetSource).toContain('className="rn-conversation-delete-backdrop"');
+    expect(sheetSource).toContain('placement="bottom"');
     expect(sheetSource).toContain('className="rn-conversation-delete-sheet im-modal-sheet"');
   });
 

@@ -17,7 +17,7 @@ export function AvatarSourceActionSheet({
   onClose,
 }: AvatarSourceActionSheetProps) {
   return (
-    <InteractionModal open={visible} ariaLabel="选择头像来源" className="rn-avatar-source-modal" onRequestClose={onClose}>
+    <InteractionModal open={visible} ariaLabel="选择头像来源" className="rn-avatar-source-modal" placement="bottom" onRequestClose={onClose}>
       <section className="im-modal-sheet rn-avatar-source-sheet">
         <div>
           <button type="button" onClick={onAlbum}>从相册选一张</button>

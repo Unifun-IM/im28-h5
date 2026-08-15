@@ -5,13 +5,14 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 0 8px calc(var(--im-safe-bottom) + 8px);
+  padding: 0;
   background: var(--im-bg-overlay);
 }
 
 .rn-contact-sheet {
   display: flex;
-  width: min(100%, 464px);
+  width: 100%;
+  max-width: none;
   gap: 8px;
   flex-direction: column;
 }
@@ -19,9 +20,12 @@
 .rn-contact-sheet-group,
 .rn-contact-sheet > button {
   overflow: hidden;
-  border-radius: 8px;
   background: var(--im-bg-card);
 }
+
+.rn-contact-sheet-group { border-radius: 12px 12px 0 0; }
+
+.rn-contact-sheet > button { padding-bottom: var(--im-safe-bottom); }
 
 .rn-contact-sheet-group p {
   margin: 0;

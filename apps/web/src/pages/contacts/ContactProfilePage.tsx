@@ -20,12 +20,12 @@ import {
   resolveContactProfileBackHref,
   readContactProfileGroupConversationID,
 } from './contact-profile-view.js';
-import { createContactCardShareLocationState } from './contact-action-view.js';
 import { createContactProfileChildRouteState } from './contact-profile-route-state.js';
 import { ContactProfileSurface } from './ContactProfileSurface.js';
 import { useContactProfilePresence } from './useContactProfilePresence.js';
 import { useContactProfileGroupContext } from './useContactProfileGroupContext.js';
 import { useContactProfileActions } from './useContactProfileActions.js';
+import { useChatShareModal } from '../share/ChatShareModalProvider.js';
 import './contact-profile-page.css';
 
 /** RN 联系人资料核心页只调用 Web SDK peerProfile facade。 */
@@ -46,6 +46,8 @@ export function ContactProfilePage() {
   const groupConversationID = readContactProfileGroupConversationID(location.state);
   // navigate 仅负责资料子路由的 SPA 切换。
   const navigate = useNavigate();
+  /** shareModal 统一持有好友/群聊目标选择与名片发送。 */
+  const shareModal = useChatShareModal();
   // profile 保存 Gateway 归一化的资料和关系状态。
   const [profile, setProfile] = useState<WebIMPeerProfile | null>(null);
   /** commonGroupsCount 展示 SDK 完整分页后的共同群数量。 */
@@ -184,8 +186,11 @@ export function ContactProfilePage() {
       onOpenCommonGroups={() => profile && navigate(`/contacts/users/${encodeURIComponent(profile.userID)}/groups`, {
         state: profileRouteState,
       })}
-      onShareCard={() => profile && navigate(`/contacts/users/${encodeURIComponent(profile.userID)}/share`, {
-        state: createContactCardShareLocationState(profile),
+      onShareCard={() => profile && shareModal.openShare({
+        kind: 'user-card',
+        userID: profile.userID,
+        displayName: profile.displayName,
+        avatarURL: profile.avatarURL,
       })}
     >
       <ProfileRemarkDialog

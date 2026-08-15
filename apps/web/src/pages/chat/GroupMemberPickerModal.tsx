@@ -2,12 +2,13 @@ import type { PointerEventHandler, ReactNode, TouchEventHandler } from 'react';
 
 import closeIconURL from '../../assets/rn/assets/icons/imm28/xmark.regular.svg';
 import { InteractionModal } from '../../components/interaction/index.js';
-import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
+import './group-member-picker.css';
 
 /** 群成员选择弹窗参数只描述共用展示壳，不持有邀请或移除业务状态。 */
 interface GroupMemberPickerModalProps {
   readonly title: string;
+  readonly selectedCount?: number;
   readonly ariaLabel: string;
   readonly busy: boolean;
   readonly closeDisabled?: boolean;
@@ -27,6 +28,7 @@ interface GroupMemberPickerModalProps {
 /** 统一投影 RN 群设置上的邀请与移除成员底部选择层。 */
 export function GroupMemberPickerModal({
   title,
+  selectedCount = 0,
   ariaLabel,
   busy,
   closeDisabled = false,
@@ -47,6 +49,7 @@ export function GroupMemberPickerModal({
       open
       ariaLabel={ariaLabel}
       className={`rn-group-member-picker-modal${invite ? ' is-invite' : ''}`}
+      placement="bottom"
       closeOnBackdrop={!closeDisabled}
       onRequestClose={onClose}
     >
@@ -62,7 +65,7 @@ export function GroupMemberPickerModal({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
       >
-        <PageNavbar className="rn-group-remove-header">
+        <header className="rn-group-remove-header">
           <button
             type="button"
             aria-label={`关闭${ariaLabel}`}
@@ -72,8 +75,12 @@ export function GroupMemberPickerModal({
             <RNAssetIcon assetURL={closeIconURL} />
           </button>
           <h1>{title}</h1>
-          <span aria-hidden="true" />
-        </PageNavbar>
+          {selectedCount > 0 ? (
+            <span className="rn-group-remove-selected-count" aria-label={`已选择${selectedCount}人`}>
+              {selectedCount}
+            </span>
+          ) : null}
+        </header>
         {children}
       </section>
     </InteractionModal>

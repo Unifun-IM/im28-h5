@@ -9,6 +9,9 @@
   font-synthesis: none;
   font-weight: var(--im-global-font-weight);
   text-rendering: optimizeLegibility;
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 * {
@@ -19,6 +22,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  touch-action: pan-x pan-y;
 }
 
 #root {

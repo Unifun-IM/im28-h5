@@ -213,6 +213,7 @@ export function ChatPage() {
   });
   /** 接收 SDK 已落库的 sending 实体，不在页面生成消息身份。 */
   function handleLocalSendingMessage(message: Message) {
+    unreadNavigation.requestLatestForOutgoingMessage();
     setMessages(current => upsertVisibleMessage(current, message));
   }
   if (restoring) return <ChatPageState label="正在恢复会话" />;

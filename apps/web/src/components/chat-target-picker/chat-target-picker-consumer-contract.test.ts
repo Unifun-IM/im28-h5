@@ -7,12 +7,17 @@ import chatSurfaceSource from '../../pages/chat/ChatPageSurface.tsx?raw';
 import contactCardSource from '../../pages/contacts/ContactCardSharePage.tsx?raw';
 import groupCardSource from '../../pages/chat/GroupCardSharePage.tsx?raw';
 import qrSource from '../../pages/qr/QRCodeSharePage.tsx?raw';
+import shareProviderSource from '../../pages/share/ChatShareModalProvider.tsx?raw';
 
 /** 结构回归阻止好友/群聊选择再次分裂为多个页面实现。 */
 describe('chat target picker consumer contract', () => {
   it('uses the shared modal for every send or share target flow', () => {
-    for (const source of [broadcastSource, chatSurfaceSource, contactCardSource, groupCardSource, qrSource]) {
+    for (const source of [broadcastSource, chatSurfaceSource, shareProviderSource]) {
       expect(source).toContain('<ChatTargetPickerModal');
+    }
+    for (const compatibilityPage of [contactCardSource, groupCardSource, qrSource]) {
+      expect(compatibilityPage).not.toContain('<ChatTargetPickerModal');
+      expect(compatibilityPage).toContain('useChatShareModal');
     }
   });
 
@@ -25,14 +30,12 @@ describe('chat target picker consumer contract', () => {
     expect(chatSurfaceSource).not.toContain('ChatCardPickerDialog');
   });
 
-  it('名片和二维码分享只允许单选好友目标', () => {
-    for (const source of [contactCardSource, groupCardSource, qrSource]) {
-      expect(source).toContain('selectionMode="single"');
-      expect(source).toContain("allowedKinds={['friend']}");
-      expect(source).not.toContain('IM_BROADCAST_MAX_TARGETS');
-      expect(source).not.toContain('selectionMode="multiple"');
-      expect(source).toContain("toast.success('");
-    }
+  it('名片和二维码由根级弹窗统一单选好友或群聊', () => {
+    expect(shareProviderSource).toContain('selectionMode="single"');
+    expect(shareProviderSource).toContain("allowedKinds={['friend', 'group']}");
+    expect(shareProviderSource).toContain('messageBroadcast.sendCard');
+    expect(shareProviderSource).toContain('messageBroadcast.sendImage');
+    expect(shareProviderSource).not.toContain('selectionMode="multiple"');
   });
 
   it('keeps the legacy path redirect-only without restoring a target page', () => {

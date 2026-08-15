@@ -1,7 +1,7 @@
 .rn-call-type-modal {
-  width: min(calc(100vw - 16px), 464px);
-  max-width: min(calc(100vw - 16px), 464px);
-  margin-block: auto calc(var(--im-safe-bottom) + 8px);
+  width: 100%;
+  max-width: none;
+  margin: 0;
 }
 
 .rn-call-type-sheet {
@@ -14,9 +14,10 @@
 .rn-call-type-group,
 .rn-call-type-sheet > button {
   overflow: hidden;
-  border-radius: 8px;
   background: var(--im-bg-card);
 }
+
+.rn-call-type-group { border-radius: 12px 12px 0 0; }
 
 .rn-call-type-group p {
   margin: 0;

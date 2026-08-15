@@ -175,7 +175,7 @@
   margin-bottom: 12px;
   overflow: hidden;
   border-radius: 8px;
-  background: var(--im-bg-card);
+  background: transparent;
 }
 
 .rn-contact-profile-quick-actions button {

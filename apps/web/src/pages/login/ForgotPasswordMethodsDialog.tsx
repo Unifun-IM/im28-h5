@@ -28,7 +28,7 @@ export function ForgotPasswordMethodsDialog({
 
   return (
     <>
-      <InteractionModal open={visible && !supportVisible} ariaLabel="忘记密码方式" className="auth-forgot-methods-modal" onRequestClose={onClose}>
+      <InteractionModal open={visible && !supportVisible} ariaLabel="忘记密码方式" className="auth-forgot-methods-modal" placement="bottom" onRequestClose={onClose}>
         <section className="im-modal-sheet auth-forgot-methods-sheet">
           <div className="auth-forgot-methods-group">
             <p>使用已绑定的手机，邮箱可直接登录后自行修改密码</p>

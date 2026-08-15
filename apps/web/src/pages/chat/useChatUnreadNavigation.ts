@@ -13,7 +13,13 @@ import {
   type RefObject,
 } from 'react';
 
-import { canReportChatVisibleUnread } from './chat-unread-read-gate.js';
+import {
+  CHAT_UNREAD_READ_IDLE_MS,
+  canReportChatVisibleUnread,
+  isChatUnreadAtLatestEdge,
+  isChatUnreadRowReadable,
+  shouldChatFollowLatest,
+} from './chat-unread-read-gate.js';
 
 /** H5 初始未读导航只接收当前路由事实和唯一滚动容器。 */
 interface ChatUnreadNavigationOptions {
@@ -65,6 +71,10 @@ export function useChatUnreadNavigation({
   const allowProgrammaticReadRef = useRef(false);
   /** reportedReadSeqRef 阻止同一可见边界重复提交。 */
   const reportedReadSeqRef = useRef('');
+  /** readIdleTimerRef 合并滚动期间的高频 read 尝试。 */
+  const readIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** forceLatestAfterOutgoingRef 标记本端 sending 实体必须触发置底。 */
+  const forceLatestAfterOutgoingRef = useRef(false);
 
   useEffect(() => {
     initializedRef.current = false;
@@ -75,6 +85,9 @@ export function useChatUnreadNavigation({
     hasUserInteractedRef.current = false;
     allowProgrammaticReadRef.current = false;
     reportedReadSeqRef.current = '';
+    forceLatestAfterOutgoingRef.current = false;
+    if (readIdleTimerRef.current) clearTimeout(readIdleTimerRef.current);
+    readIdleTimerRef.current = null;
     setNavigation(EMPTY_UNREAD_NAVIGATION);
     setRemainingUnreadCount(0);
   }, [conversationID]);
@@ -107,11 +120,21 @@ export function useChatUnreadNavigation({
       userInteracted: hasUserInteractedRef.current,
       programmaticReadAllowed: allowProgrammaticReadRef.current,
     })) return;
-    /** visibleMessageIDs 只收集达到 RN 80% 阈值的稳定身份。 */
+    allowProgrammaticReadRef.current = false;
+    /** atLatestEdge 对齐 RN：到达最新端必须消费当前窗口全部未读。 */
+    const atLatestEdge = isChatUnreadAtLatestEdge({
+      contentHeight: container.scrollHeight,
+      viewportHeight: container.clientHeight,
+      scrollTop: container.scrollTop,
+    });
+    /** visibleMessageIDs 在最新端收集全部身份，其余位置保持 RN 80% 阈值。 */
     const visibleMessageIDs = new Set<string>();
     container.querySelectorAll<HTMLElement>('[data-client-message-id]')
       .forEach(row => {
-        if (getVisibleRatio(container, row) < 0.8) return;
+        if (!isChatUnreadRowReadable({
+          atLatestEdge,
+          visibleRatio: getVisibleRatio(container, row),
+        })) return;
         /** identity 同 shared 规则使用 server 优先。 */
         const identity = row.dataset.serverMessageId?.trim() ||
           row.dataset.clientMessageId?.trim();
@@ -127,7 +150,6 @@ export function useChatUnreadNavigation({
     );
     if (!nextReadSeq) return;
     reportedReadSeqRef.current = nextReadSeq;
-    allowProgrammaticReadRef.current = false;
     void onMarkRead(nextReadSeq).catch(() => {
       if (reportedReadSeqRef.current === nextReadSeq) {
         reportedReadSeqRef.current = '';
@@ -135,12 +157,27 @@ export function useChatUnreadNavigation({
     });
   }, [hasUnreadMessages, lastReadSeq, messages, onMarkRead]);
 
+  /** 在滚动停止后重新读取当前 DOM 位置并提交唯一最高可见序列。 */
+  const scheduleVisibleUnreadReport = useCallback(() => {
+    if (readIdleTimerRef.current) clearTimeout(readIdleTimerRef.current);
+    readIdleTimerRef.current = setTimeout(() => {
+      readIdleTimerRef.current = null;
+      /** container 在停滚时重新读取，禁止使用滚动事件发生时的旧位置。 */
+      const container = listRef.current;
+      if (container) reportVisibleUnread(container);
+    }, CHAT_UNREAD_READ_IDLE_MS);
+  }, [listRef, reportVisibleUnread]);
+
   /** 更新最新端状态并累计达到可见阈值的初始未读消息。 */
   const updateScrollState = useCallback(() => {
     /** container 是聊天页唯一消息滚动 owner。 */
     const container = listRef.current;
     if (!container) return;
-    atLatestRef.current = isChatListAtLatestEdge(container);
+    atLatestRef.current = isChatUnreadAtLatestEdge({
+      contentHeight: container.scrollHeight,
+      viewportHeight: container.clientHeight,
+      scrollTop: container.scrollTop,
+    });
     /** canConsumeVisible 拒绝初始长列表程序化定位产生的伪阅读。 */
     const canConsumeVisible = canReportChatVisibleUnread({
       positioned: positionedRef.current,
@@ -164,8 +201,8 @@ export function useChatUnreadNavigation({
         navigation.unreadMessageIDs.length - nextViewed.size,
       ));
     }
-    reportVisibleUnread(container);
-  }, [listRef, navigation, reportVisibleUnread]);
+    scheduleVisibleUnreadReport();
+  }, [listRef, navigation, scheduleVisibleUnreadReport]);
 
   useEffect(() => {
     /** container 直接监听 passive scroll，列表保持纯展示组件。 */
@@ -177,12 +214,16 @@ export function useChatUnreadNavigation({
       allowProgrammaticReadRef.current = false;
     };
     container.addEventListener('scroll', updateScrollState, { passive: true });
-    container.addEventListener('touchmove', markUserInteraction, { passive: true });
+    container.addEventListener('touchstart', markUserInteraction, { passive: true });
+    container.addEventListener('pointerdown', markUserInteraction, { passive: true });
     container.addEventListener('wheel', markUserInteraction, { passive: true });
     return () => {
       container.removeEventListener('scroll', updateScrollState);
-      container.removeEventListener('touchmove', markUserInteraction);
+      container.removeEventListener('touchstart', markUserInteraction);
+      container.removeEventListener('pointerdown', markUserInteraction);
       container.removeEventListener('wheel', markUserInteraction);
+      if (readIdleTimerRef.current) clearTimeout(readIdleTimerRef.current);
+      readIdleTimerRef.current = null;
     };
   }, [listRef, updateScrollState]);
 
@@ -191,24 +232,34 @@ export function useChatUnreadNavigation({
     /** container 必须等消息 DOM 完成提交后再执行锚定或跟随。 */
     const container = listRef.current;
     if (!container) return;
-    /** shouldFollowLatest 冻结 DOM 更新前的最新端状态。 */
-    const shouldFollowLatest = atLatestRef.current;
+    /** outgoingMessageRequested 冻结当前布局提交是否来自本端发送。 */
+    const outgoingMessageRequested = forceLatestAfterOutgoingRef.current;
+    /** shouldFollowLatestValue 保留实时消息旧规则并放行本端强制置底。 */
+    const shouldFollowLatestValue = shouldChatFollowLatest(
+      atLatestRef.current,
+      outgoingMessageRequested,
+    );
     if (!positionedRef.current) {
       positionInitialUnreadBoundary(container, navigation);
       positionedRef.current = true;
       setPositionedConversationID(conversationID);
     } else if (
-      messages.length !== previousMessageCountRef.current &&
-      shouldFollowLatest
+      (messages.length !== previousMessageCountRef.current || outgoingMessageRequested) &&
+      shouldFollowLatestValue
     ) {
       allowProgrammaticReadRef.current = true;
       container.scrollTop = container.scrollHeight;
+      atLatestRef.current = true;
     }
+    forceLatestAfterOutgoingRef.current = false;
     previousMessageCountRef.current = messages.length;
     updateScrollState();
-    /** 最新端跟随许可只属于当前布局提交，outgoing 增长不得残留。 */
-    allowProgrammaticReadRef.current = false;
-  }, [conversationID, listRef, messages.length, navigation, updateScrollState]);
+  }, [conversationID, listRef, messages, navigation, updateScrollState]);
+
+  /** 本端 sending 实体写入视图前请求下一次消息布局强制置底。 */
+  const requestLatestForOutgoingMessage = useCallback(() => {
+    forceLatestAfterOutgoingRef.current = true;
+  }, []);
 
   /** 显式用户动作定位下一条尚未看过的初始未读消息。 */
   const scrollToNextUnread = useCallback(() => {
@@ -239,6 +290,7 @@ export function useChatUnreadNavigation({
     remainingUnreadCount,
     initialPositioned: positionedConversationID === conversationID,
     scrollToNextUnread,
+    requestLatestForOutgoingMessage,
   };
 }
 
@@ -280,11 +332,6 @@ function findChatMessageRow(
     row.dataset.clientMessageId === messageID ||
     row.dataset.serverMessageId === messageID,
   ) ?? null;
-}
-
-/** 判断消息列表是否处于距最新端 40px 的 RN 容错区。 */
-function isChatListAtLatestEdge(container: HTMLElement): boolean {
-  return container.scrollHeight - container.scrollTop - container.clientHeight <= 40;
 }
 
 /** 计算消息行在滚动容器中的可见比例。 */

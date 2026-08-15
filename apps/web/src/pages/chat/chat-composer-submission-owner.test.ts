@@ -7,7 +7,8 @@ import submissionSource from './useChatComposerSubmission.ts?raw';
 describe('chat composer submission owner', () => {
   it('Composer 只组合提交 hook，不再内联消息类型分支', () => {
     expect(composerSource).toContain('useChatComposerSubmission({');
-    expect(composerSource).toContain('onSubmit={submission.submit}');
+    expect(composerSource).toContain('onSubmit={handleSubmit}');
+    expect(composerSource).toContain('await submission.submit(event)');
     expect(composerSource).not.toContain('createIMComposerSubmissionPlan');
     expect(composerSource).not.toContain('onSendSubmission(');
     expect(composerSource).not.toContain('onSendQuote(');
@@ -23,6 +24,6 @@ describe('chat composer submission owner', () => {
     expect(submissionSource).toContain('options.composer.onSendQuote(');
     expect(submissionSource).toContain('options.composer.onSendMention(');
     expect(submissionSource).toContain('options.composer.onSendText(document)');
-    expect(submissionSource).toContain("options.updateDraftDocument({ text: '', entities: [] })");
+    expect(submissionSource).toContain('options.clearSubmittedDraft(document)');
   });
 });

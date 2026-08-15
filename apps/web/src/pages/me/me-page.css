@@ -99,6 +99,8 @@
 .rn-me-qr-action .rn-asset-icon { width: 16px; height: 16px; }
 
 .rn-me-identity button.rn-me-qr-action {
+  margin-right: 8px;
+  margin-left: auto;
   margin-top: 0;
   padding: 0;
   border: 0;

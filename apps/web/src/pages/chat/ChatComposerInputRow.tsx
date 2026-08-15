@@ -1,6 +1,7 @@
 import type {
   FormEventHandler,
   KeyboardEventHandler,
+  PointerEvent,
   RefObject,
 } from 'react';
 import type { PresetEmojiDocument } from '@im28/im-sdk/web';
@@ -38,6 +39,11 @@ interface ChatComposerInputRowProps {
   readonly onVoiceRecordStart: () => void;
   readonly onVoiceRecordSend: () => void;
   readonly onVoiceRecordCancel: () => void;
+}
+
+/** 阻止发送按钮在 pointerdown 阶段夺走 textarea 焦点。 */
+function preventComposerSubmitBlur(event: PointerEvent<HTMLButtonElement>): void {
+  event.preventDefault();
 }
 
 /** 呈现 RN 语音切换、输入 pill、表情和发送/功能按钮。 */
@@ -93,7 +99,7 @@ export function ChatComposerInputRow({
             maxLength={1000}
             value={draftDocument.text}
             placeholder="发消息..."
-            disabled={sending}
+            readOnly={sending}
             className={draftDocument.entities.length ? 'has-rich-preview' : undefined}
             onChange={event => onChangeText(event.target.value)}
             onKeyDown={onKeyDown}
@@ -118,6 +124,7 @@ export function ChatComposerInputRow({
           type="submit"
           disabled={!canSend}
           aria-label={forwarding ? '发送转发消息' : '发送消息'}
+          onPointerDown={preventComposerSubmitBlur}
         >
           <RNAssetIcon assetURL={sendIconURL} />
         </button>

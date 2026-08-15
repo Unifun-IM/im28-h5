@@ -9,7 +9,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 import { useAppToast } from '../../components/interaction/index.js';
-import { buildGroupCardShareRoute } from '../chat/group-card-share-route.js';
+import { useChatShareModal } from '../share/ChatShareModalProvider.js';
 import {
   buildJoinedGroupProfileRoute,
   getJoinedGroupActionMenuState,
@@ -65,6 +65,8 @@ export function useJoinedGroupsPageState({
   const navigate = useNavigate();
   // toast 统一承载打开群聊和退群 mutation 反馈。
   const { toast } = useAppToast();
+  /** shareModal 统一持有群名片目标选择和真实发送。 */
+  const shareModal = useChatShareModal();
   // groups 保存 SQLite 或完整远端同步结果。
   const [groups, setGroups] = useState<readonly WebIMJoinedGroup[]>([]);
   // keyword 驱动群名和群 ID 本地搜索。
@@ -184,6 +186,15 @@ export function useJoinedGroupsPageState({
     const group = actionMenu?.group;
     setActionMenu(null);
     if (!group) return;
+    if (action === 'share-card') {
+      shareModal.openShare({
+        kind: 'group-card',
+        groupID: group.groupID,
+        displayName: group.name,
+        avatarURL: group.avatarURL,
+      });
+      return;
+    }
     if (action === 'quit') {
       // mode 只按 shared capability 区分普通成员、群主和不可用入口。
       const mode = getJoinedGroupQuitMode(group);
@@ -209,13 +220,11 @@ export function useJoinedGroupsPageState({
       setQuitMode(mode);
       return;
     }
-    // conversation 为分享和资料路由提供 canonical 身份。
+    // conversation 为群资料路由提供 canonical 身份。
     const conversation = await resolveGroupConversation(group);
     if (!conversation) return;
-    navigate(action === 'share-card'
-      ? buildGroupCardShareRoute(conversation.conversationID)
-      : buildJoinedGroupProfileRoute(conversation.conversationID, true));
-  }, [actionMenu?.group, lifecycleSubmitting, navigate, resolveGroupConversation, runtime, toast]);
+    navigate(buildJoinedGroupProfileRoute(conversation.conversationID, true));
+  }, [actionMenu?.group, lifecycleSubmitting, navigate, resolveGroupConversation, runtime, shareModal, toast]);
 
   /** 普通成员或已具备管理员继任条件的群主只调用 shared groupLifecycle.leave。 */
   const leaveGroup = useCallback(async (clearHistory: boolean): Promise<void> => {

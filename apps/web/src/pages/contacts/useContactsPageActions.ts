@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMCall } from '../../runtime/index.js';
+import { useChatShareModal } from '../share/ChatShareModalProvider.js';
 import {
-  createContactCardShareLocationState,
   getContactActionMenuState,
   type ContactActionKey,
   type ContactActionMenuState,
@@ -44,8 +44,10 @@ export function useContactsPageActions(
 ): ContactsPageActions {
   /** runtime 和回调解构后形成稳定、可审计的 Hook 依赖。 */
   const { runtime, onContactDeleted } = options;
-  /** navigate 只处理用户明确选择后的 SPA 路由切换。 */
+  /** navigate 只处理会话等真实 SPA 页面切换。 */
   const navigate = useNavigate();
+  /** shareModal 统一持有名片目标选择和发送。 */
+  const shareModal = useChatShareModal();
   /** callOwner 是 Web 全局唯一通话生命周期 owner。 */
   const callOwner = useWebIMCall();
   /** toast 与 RN 统一承载通话启动等瞬时反馈。 */
@@ -160,13 +162,16 @@ export function useContactsPageActions(
       return;
     }
     if (action === 'share-card') {
-      navigate(`/contacts/users/${encodeURIComponent(contact.userID)}/share`, {
-        state: createContactCardShareLocationState(contact),
+      shareModal.openShare({
+        kind: 'user-card',
+        userID: contact.userID,
+        displayName: contact.displayName,
+        avatarURL: contact.avatarURL,
       });
       return;
     }
     setDeleteTarget(contact);
-  }, [actionMenu, navigate, openConversation]);
+  }, [actionMenu, openConversation, shareModal]);
 
   /** closeCallTarget 取消通话类型二次选择。 */
   const closeCallTarget = useCallback((): void => {

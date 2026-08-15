@@ -17,9 +17,9 @@ import { GroupInviteMemberTile } from './GroupInviteMemberTile.js';
 import { GroupMemberPickerModal } from './GroupMemberPickerModal.js';
 import {
   buildGroupInviteMemberCandidates,
+  canSubmitGroupInvitation,
   reconcileGroupInviteMemberSelection,
 } from './group-invite-members-view.js';
-import './group-remove-members-page.css';
 
 /** RN 群成员邀请选择页只调用 shared groupMembers facade。 */
 export function GroupInviteMembersPage() {
@@ -154,6 +154,15 @@ export function GroupInviteMembersPage() {
   const settingsURL = `/conversations/${encodeURIComponent(conversationID)}/settings`;
   /** selectedCount 直接来自稳定身份集合。 */
   const selectedCount = selectedUserIDs.size;
+  /** requiresApproval 决定是否展示并校验入群申请理由。 */
+  const requiresApproval = group?.joinApprovalRequired === true;
+  /** canSubmit 同时收敛候选、审核理由和请求生命周期约束。 */
+  const canSubmit = canSubmitGroupInvitation({
+    selectedCount,
+    requiresApproval,
+    reason: message,
+    blocked: submitting || remoteCompleted,
+  });
 
   useEffect(() => {
     setSelectedUserIDs(current => reconcileGroupInviteMemberSelection(current, allCandidates));
@@ -173,7 +182,7 @@ export function GroupInviteMembersPage() {
 
   /** 提交只调用 shared 单次写入 owner，不在页面判断 endpoint。 */
   async function submitInvitation(): Promise<void> {
-    if (!sync || !conversation || !selectedCount || submitting || remoteCompleted) return;
+    if (!sync || !conversation || !canSubmit) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -181,7 +190,7 @@ export function GroupInviteMembersPage() {
       const result = await sync.groupMembers.inviteMembers({
         groupID: conversation.targetID,
         userIDs: [...selectedUserIDs],
-        ...(group?.joinApprovalRequired && message.trim() ? { message: message.trim() } : {}),
+        ...(requiresApproval ? { message: message.trim() } : {}),
       });
       if (result.cacheState === 'remote-only') {
         setRemoteCompleted(true);
@@ -208,7 +217,8 @@ export function GroupInviteMembersPage() {
 
   return (
     <GroupMemberPickerModal
-      title={`邀请群成员${selectedCount ? `（${selectedCount}）` : ''}`}
+      title="选择好友"
+      selectedCount={selectedCount}
       ariaLabel="邀请群成员"
       busy={loading || refreshing || submitting}
       closeDisabled={submitting}
@@ -227,17 +237,11 @@ export function GroupInviteMembersPage() {
         <>
         <label className="rn-group-remove-search">
           <RNAssetIcon assetURL={searchIconURL} />
-          <input type="search" value={keyword} placeholder="搜索好友" aria-label="搜索可邀请好友" onChange={event => setKeyword(event.target.value)} />
+          <input type="search" value={keyword} placeholder="搜索" aria-label="搜索可邀请好友" onChange={event => setKeyword(event.target.value)} />
           {keyword ? <button type="button" aria-label="清除搜索" onClick={() => setKeyword('')}><RNAssetIcon assetURL={clearIconURL} /></button> : null}
         </label>
         <div className="rn-group-remove-content">
           <PullRefreshIndicator refreshing={refreshing} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
-          {group?.joinApprovalRequired ? (
-            <label className="rn-group-invite-message">
-              <span>验证消息</span>
-              <input value={message} maxLength={100} placeholder="请输入邀请理由" onChange={event => setMessage(event.target.value)} />
-            </label>
-          ) : null}
           {error ? <p className="rn-group-remove-error" role="alert">{error}</p> : null}
           <section className="rn-group-remove-grid" aria-label="可邀请好友">
             {candidates.map(candidate => (
@@ -254,8 +258,19 @@ export function GroupInviteMembersPage() {
           ) : null}
         </div>
         <footer className="rn-group-remove-footer">
-          <button type="button" disabled={!selectedCount || submitting || remoteCompleted} onClick={() => { void submitInvitation(); }}>
-            {submitting ? '邀请中' : group?.joinApprovalRequired ? '发送入群申请' : '邀请成员'}
+          {requiresApproval ? (
+            <input
+              className="rn-group-invite-reason"
+              value={message}
+              maxLength={100}
+              required
+              aria-label="入群申请理由"
+              placeholder="输入入群申请理由"
+              onChange={event => setMessage(event.target.value)}
+            />
+          ) : null}
+          <button type="button" disabled={!canSubmit} onClick={() => { void submitInvitation(); }}>
+            {submitting ? '邀请中' : requiresApproval ? '发送入群申请' : '添加'}
           </button>
         </footer>
         </>

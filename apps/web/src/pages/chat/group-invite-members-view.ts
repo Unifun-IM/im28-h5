@@ -10,6 +10,22 @@ export interface GroupInviteMemberCandidate {
   readonly displayName: string;
 }
 
+/** 群邀请提交可用性参数只覆盖页面选择与审核输入约束。 */
+export interface GroupInvitationSubmissionState {
+  readonly selectedCount: number;
+  readonly requiresApproval: boolean;
+  readonly reason: string;
+  readonly blocked: boolean;
+}
+
+/** 审核群必须选择好友并填写非空理由，直邀群不展示也不校验理由。 */
+export function canSubmitGroupInvitation(
+  state: GroupInvitationSubmissionState,
+): boolean {
+  if (state.blocked || state.selectedCount < 1) return false;
+  return !state.requiresApproval || state.reason.trim().length > 0;
+}
+
 /** 复用 SDK 好友权限规则并按名称、身份过滤邀请候选。 */
 export function buildGroupInviteMemberCandidates(
   contacts: readonly WebIMContact[],

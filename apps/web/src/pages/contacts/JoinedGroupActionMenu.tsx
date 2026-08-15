@@ -89,6 +89,7 @@ export function JoinedGroupQuitModal({
       open={Boolean(mode)}
       ariaLabel="确认退出群聊"
       className="rn-joined-group-quit-backdrop"
+      placement="bottom"
       closeOnBackdrop={!submitting}
       onRequestClose={onCancel}
     >

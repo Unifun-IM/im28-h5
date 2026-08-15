@@ -21,7 +21,7 @@ interface UseChatComposerSubmissionOptions {
   readonly voiceMode: boolean;
   readonly attachments: ReturnType<typeof useChatComposerAttachments>;
   readonly mentions: ReturnType<typeof useChatComposerMentions>;
-  readonly updateDraftDocument: (document: PresetEmojiDocument) => void;
+  readonly clearSubmittedDraft: (document: PresetEmojiDocument) => boolean;
   readonly resetEditingDraft: () => void;
   readonly closePanel: () => void;
 }
@@ -73,8 +73,7 @@ async function submitForwardDraft(
     comment: document.text,
   });
   if (completed && document.text) {
-    options.updateDraftDocument({ text: '', entities: [] });
-    options.mentions.clear();
+    if (options.clearSubmittedDraft(document)) options.mentions.clear();
   }
 }
 
@@ -148,8 +147,7 @@ async function submitAttachmentDraft(
     pendingFile,
   );
   if (completed && document.text) {
-    options.updateDraftDocument({ text: '', entities: [] });
-    options.mentions.clear();
+    if (options.clearSubmittedDraft(document)) options.mentions.clear();
     if (selectedQuote) options.composer.onCancelQuote();
   }
 }
@@ -169,7 +167,7 @@ async function submitTextDraft(
       document.text,
     );
     if (completed) {
-      options.updateDraftDocument({ text: '', entities: [] });
+      options.clearSubmittedDraft(document);
       options.composer.onCancelQuote();
     }
     return;
@@ -183,12 +181,11 @@ async function submitTextDraft(
       visibleMentions,
     );
     if (completed) {
-      options.updateDraftDocument({ text: '', entities: [] });
-      options.mentions.clear();
+      if (options.clearSubmittedDraft(document)) options.mentions.clear();
     }
     return;
   }
   /** completed 只在 shared message 状态机确认成功后清空草稿。 */
   const completed = await options.composer.onSendText(document);
-  if (completed) options.updateDraftDocument({ text: '', entities: [] });
+  if (completed) options.clearSubmittedDraft(document);
 }

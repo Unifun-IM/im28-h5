@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  createContactCardShareLocationState,
   getContactActionMenuState,
   readContactCardShareLocationState,
 } from './contact-action-view.js';
@@ -43,9 +42,9 @@ describe('contact action view', () => {
     expect(menu).toMatchObject({ left: 144, top: 264, placement: 'above' });
   });
 
-  it('round-trips valid card route state and rejects mismatched users', () => {
-    /** state 是路由允许携带的公开名片投影。 */
-    const state = createContactCardShareLocationState(contact);
+  it('reads legacy card route state and rejects mismatched users', () => {
+    /** state 模拟旧版本已写入浏览器历史的公开名片投影。 */
+    const state = { card: { userID: contact.userID, displayName: contact.displayName, avatarURL: contact.avatarURL } };
     expect(readContactCardShareLocationState(state, 'friend-1')).toEqual(state);
     expect(readContactCardShareLocationState(state, 'friend-2')).toBeNull();
     expect(readContactCardShareLocationState({}, 'friend-1')).toBeNull();

@@ -71,6 +71,7 @@ export function CreateGroupSelectedFriends({
         open={open}
         ariaLabel="已选好友"
         className="rn-create-group-selected-modal"
+        placement="bottom"
         onRequestClose={onCloseReview}
       >
         <section className="rn-create-group-selected-sheet im-modal-sheet">

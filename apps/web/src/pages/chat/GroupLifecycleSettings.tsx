@@ -79,6 +79,7 @@ export function GroupLifecycleConfirmModal({
         open
         ariaLabel="确认退出群聊"
         className="rn-group-owner-quit-modal"
+        placement="bottom"
         closeOnBackdrop={!submitting}
         onRequestClose={onCancel}
       >
@@ -136,6 +137,7 @@ export function GroupOwnerQuitModal({
       open={open}
       ariaLabel={admin ? '确认退出群聊' : '无法退出群聊'}
       className="rn-group-owner-quit-modal"
+      placement="bottom"
       closeOnBackdrop={!submitting}
       onRequestClose={onCancel}
     >

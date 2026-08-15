@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react';
 import {
   resolveIMGroupMemberDisplayName,
   type PresetEmojiDocument,
@@ -88,6 +95,11 @@ export function ChatComposer(props: ChatComposerProps) {
     document: draftDocument,
     onChangeDocument: updateDraftDocument,
   });
+  /** draftDocumentRef 为异步发送完成后的条件清理保存最新草稿。 */
+  const draftDocumentRef = useRef(draftDocument);
+  draftDocumentRef.current = draftDocument;
+  /** restoreTextFocusAfterSendRef 只记录由文本 Composer 发起的提交。 */
+  const restoreTextFocusAfterSendRef = useRef(false);
   // mentions 管理群聊 @ 查询、候选身份与光标恢复。
   const mentions = useChatComposerMentions({
     enabled: isGroup && !editingMessage && !quoteMessage && !forwardDraft,
@@ -147,10 +159,42 @@ export function ChatComposer(props: ChatComposerProps) {
     voiceMode,
     attachments,
     mentions,
-    updateDraftDocument,
+    clearSubmittedDraft: submittedDocument => {
+      if (!isSameComposerDocument(draftDocumentRef.current, submittedDocument)) {
+        return false;
+      }
+      updateDraftDocument({ text: '', entities: [] });
+      return true;
+    },
     resetEditingDraft: () => setDraftDocument(initialDraftDocument),
     closePanel: () => setActivePanel(null),
   });
+
+  /** 恢复发送前 textarea 焦点并把光标放回当前草稿末尾。 */
+  const restoreTextFocusAfterSend = useCallback(() => {
+    if (!restoreTextFocusAfterSendRef.current || voiceMode) return;
+    /** textarea 仍由当前 Composer 实例唯一持有。 */
+    const textarea = draftEditing.textareaRef.current;
+    if (!textarea) return;
+    restoreTextFocusAfterSendRef.current = false;
+    textarea.focus({ preventScroll: true });
+    /** selectionEnd 使用完成发送后仍保留的最新草稿长度。 */
+    const selectionEnd = textarea.value.length;
+    textarea.setSelectionRange(selectionEnd, selectionEnd);
+  }, [draftEditing.textareaRef, voiceMode]);
+
+  useEffect(() => {
+    if (!sending) restoreTextFocusAfterSend();
+  }, [restoreTextFocusAfterSend, sending]);
+
+  /** 记录连续发送焦点意图并复用唯一 submission owner。 */
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+    if (submission.canSend && !voiceMode) {
+      restoreTextFocusAfterSendRef.current = true;
+    }
+    await submission.submit(event);
+    restoreTextFocusAfterSend();
+  }
 
   /** Enter 发送、Shift+Enter 换行，并尊重中文输入法合成态。 */
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -216,7 +260,7 @@ export function ChatComposer(props: ChatComposerProps) {
         voiceRecordingSeconds={voiceRecordingSeconds}
         voiceRecordingLevel={voiceRecordingLevel}
         activePanel={activePanel}
-        onSubmit={submission.submit}
+        onSubmit={handleSubmit}
         onKeyDown={handleKeyDown}
         onChangeText={draftEditing.changeText}
         onFocusText={() => setActivePanel(null)}
@@ -264,4 +308,13 @@ export function ChatComposer(props: ChatComposerProps) {
       />
     </section>
   );
+}
+
+/** 判断异步发送完成时草稿是否仍是提交快照，保护后续连续输入。 */
+function isSameComposerDocument(
+  current: PresetEmojiDocument,
+  submitted: PresetEmojiDocument,
+): boolean {
+  return current.text === submitted.text &&
+    JSON.stringify(current.entities) === JSON.stringify(submitted.entities);
 }

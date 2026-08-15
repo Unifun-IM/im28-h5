@@ -4,7 +4,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import clearIconURL from '../../assets/rn/assets/icons/imm28/xmark-circle.solid.svg';
 import searchIconURL from '../../assets/rn/assets/icons/imm28/search.regular.svg';
-import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
+import { InteractionModal, PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
@@ -193,7 +193,8 @@ export function GroupRemoveMembersPage() {
 
   return (
     <GroupMemberPickerModal
-      title={`移除群成员${selectedCount ? `（${selectedCount}）` : ''}`}
+      title="移除群成员"
+      selectedCount={selectedCount}
       ariaLabel="移除群成员"
       busy={loading || refreshing || submitting}
       closeDisabled={submitting}
@@ -238,15 +239,21 @@ export function GroupRemoveMembersPage() {
         </footer>
         </>
       )}
-      {confirmOpen ? (
-        <div className="rn-group-remove-confirm-backdrop" role="presentation" onClick={event => { if (!submitting && event.target === event.currentTarget) setConfirmOpen(false); }}>
-          <section className="rn-group-remove-confirm" role="alertdialog" aria-modal="true" aria-label="确认移出群成员">
+      <InteractionModal
+        open={confirmOpen}
+        ariaLabel="确认移出群成员"
+        className="rn-group-remove-confirm-modal"
+        placement="bottom"
+        closeOnBackdrop={!submitting}
+        onRequestClose={() => { if (!submitting) setConfirmOpen(false); }}
+      >
+          <section className="rn-group-remove-confirm im-modal-sheet">
             <h2>移除群成员</h2>
             <p>确定将选中的 {selectedCount} 位成员移出群聊吗？</p>
-            <div><button type="button" disabled={submitting} onClick={() => setConfirmOpen(false)}>取消</button><button className="is-danger" type="button" disabled={submitting} onClick={() => { void confirmRemoval(); }}>{submitting ? '移除中' : '移除'}</button></div>
+            <button className="is-danger" type="button" disabled={submitting} onClick={() => { void confirmRemoval(); }}>{submitting ? '移除中' : '移除成员'}</button>
+            <button type="button" disabled={submitting} onClick={() => setConfirmOpen(false)}>取消</button>
           </section>
-        </div>
-      ) : null}
+      </InteractionModal>
     </GroupMemberPickerModal>
   );
 }

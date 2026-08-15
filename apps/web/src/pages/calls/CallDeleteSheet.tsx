@@ -29,6 +29,7 @@ export function CallDeleteSheet({
       open={open}
       ariaLabel="删除通话记录"
       className="rn-call-sheet-backdrop"
+      placement="bottom"
       closeOnBackdrop={!deleting}
       onRequestClose={onCancel}
     >

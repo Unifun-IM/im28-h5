@@ -6,6 +6,7 @@ import { InteractionModal } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { loadGroupProfileSource } from '../chat/group-profile-source.js';
 import { buildGroupProfileView } from '../chat/group-profile-view.js';
+import { useChatShareModal } from '../share/ChatShareModalProvider.js';
 
 /** 二维码展示组件保持路由级懒加载，避免 QR 生成器进入应用首包。 */
 const QRCodeDisplay = lazy(() => import('./QRCodeDisplay.js').then(module => ({ default: module.QRCodeDisplay })));
@@ -43,6 +44,8 @@ export function QRCodeModalProvider({ children }: { readonly children: ReactNode
   const location = useLocation();
   /** navigate 仅在用户明确选择扫码或分享后切换 SPA 页面。 */
   const navigate = useNavigate();
+  /** shareModal 将二维码分享目标选择提升到应用根级 owner。 */
+  const shareModal = useChatShareModal();
   /** target 控制当前全局弹窗请求。 */
   const [target, setTarget] = useState<QRCodeModalTarget | null>(null);
   /** content 保存从 shared owner 恢复并验证后的展示资料。 */
@@ -128,18 +131,18 @@ export function QRCodeModalProvider({ children }: { readonly children: ReactNode
     navigate('/scan', { state: { backHref: originPath } });
   }, [closeQRCode, navigate, target]);
 
-  /** 分享动作复用既有单选好友发送页，并携带受控返回页。 */
+  /** 分享动作直接打开全局好友/群聊目标弹窗，不再创建伪装页面。 */
   const openShare = useCallback((): void => {
-    if (!target) return;
-    /** sharePath 只由弹窗稳定类型和群会话 ID 生成。 */
-    const sharePath = target.kind === 'group'
-      ? `/conversations/${encodeURIComponent(target.conversationID)}/settings/qrcode/share`
-      : '/me/qrcode/share';
-    /** originPath 让分享取消或成功后回到真实入口页。 */
-    const originPath = target.originPath;
+    if (!content) return;
+    shareModal.openShare({
+      kind: 'qr-code',
+      qrKind: content.kind,
+      identity: content.identity,
+      displayName: content.displayName,
+      payload: content.payload,
+    });
     closeQRCode();
-    navigate(sharePath, { state: { backHref: originPath } });
-  }, [closeQRCode, navigate, target]);
+  }, [closeQRCode, content, shareModal]);
 
   /** actions 保持稳定引用，避免入口页面因 Provider 状态变化重渲染。 */
   const actions = useMemo<QRCodeModalActions>(() => ({ openUserQRCode, openGroupQRCode }), [openGroupQRCode, openUserQRCode]);
@@ -151,8 +154,10 @@ export function QRCodeModalProvider({ children }: { readonly children: ReactNode
         <Suspense fallback={<QRCodeModalState label="正在生成二维码" onClose={closeQRCode} />}>
           <QRCodeDisplay {...content} closeLabel="关闭二维码" sourceError={error} onClose={closeQRCode} onScan={openScanner} onShare={openShare} />
         </Suspense>
-      ) : target ? (
-        <QRCodeModalState label={loading ? '正在加载二维码' : '二维码加载失败'} detail={error} retry={loading ? undefined : loadContent} onClose={closeQRCode} />
+      ) : target ? loading ? (
+        <QRCodeModalState label="正在加载二维码" detail={error} onClose={closeQRCode} />
+      ) : (
+        <QRCodeModalState label="二维码加载失败" detail={error} retry={loadContent} onClose={closeQRCode} />
       ) : null}
     </QRCodeModalContext.Provider>
   );
@@ -169,7 +174,7 @@ export function useQRCodeModal(): QRCodeModalActions {
 /** 加载和失败也使用同一底部弹窗，不回退成全屏状态页面。 */
 function QRCodeModalState({ label, detail, retry, onClose }: { readonly label: string; readonly detail?: string | null; readonly retry?: () => void; readonly onClose: () => void }) {
   return (
-    <InteractionModal open ariaLabel="二维码" className="rn-qr-display-modal" onRequestClose={onClose}>
+    <InteractionModal open ariaLabel="二维码" className="rn-qr-display-modal" placement="bottom" onRequestClose={onClose}>
       <section className="rn-qr-display-surface rn-qr-display-state im-modal-sheet">
         <button type="button" aria-label="关闭二维码" onClick={onClose}>×</button>
         <strong>{label}</strong>

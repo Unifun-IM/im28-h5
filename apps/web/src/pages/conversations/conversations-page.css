@@ -456,7 +456,8 @@
 
 .rn-conversation-delete-sheet {
   display: flex;
-  width: min(100%, 520px);
+  width: 100%;
+  max-width: none;
   padding-bottom: var(--im-safe-bottom);
   overflow: hidden;
   border-radius: 12px 12px 0 0;

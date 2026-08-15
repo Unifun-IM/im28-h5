@@ -22,12 +22,6 @@ export interface ContactCardShareLocationState {
   readonly card: Pick<WebIMContact, 'userID' | 'displayName' | 'avatarURL'>;
 }
 
-/** 名片分享路由允许列表联系人或资料页的最小公开投影。 */
-export type ContactCardShareSource = Pick<
-  WebIMContact,
-  'userID' | 'displayName' | 'avatarURL'
->;
-
 /** RN 联系人动作气泡的固定宽度。 */
 const CONTACT_ACTION_MENU_WIDTH = 168;
 /** RN 联系人动作气泡的固定高度。 */
@@ -75,19 +69,6 @@ export function getContactActionMenuState(options: {
   /** top 将最终位置限制在可见视口。 */
   const top = Math.min(Math.max(rawTop, minTop), maxTop);
   return { contact: options.contact, top, left, placement };
-}
-
-/** 构造 React Router 名片分享状态，避免页面间传递完整业务 owner。 */
-export function createContactCardShareLocationState(
-  contact: ContactCardShareSource,
-): ContactCardShareLocationState {
-  return {
-    card: {
-      userID: contact.userID,
-      displayName: contact.displayName,
-      avatarURL: contact.avatarURL,
-    },
-  };
 }
 
 /** 校验未知 history state 是否属于当前名片用户。 */

@@ -376,21 +376,18 @@
 }
 
 .rn-joined-group-quit-modal p {
-  margin: 0;
-  letter-spacing: 0;
-  text-align: center;
-}
-
-.rn-joined-group-quit-modal p {
   display: grid;
   min-height: 48px;
   place-items: center;
+  margin: 0;
   padding: 16px;
   border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
   color: var(--im-text-secondary);
   background: var(--im-bg-card);
   font-size: 12px;
+  letter-spacing: 0;
   line-height: 16px;
+  text-align: center;
 }
 
 .rn-joined-group-quit-actions {

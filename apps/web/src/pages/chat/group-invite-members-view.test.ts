@@ -3,6 +3,7 @@ import type { WebIMContact } from '@im28/im-sdk/web';
 
 import {
   buildGroupInviteMemberCandidates,
+  canSubmitGroupInvitation,
   reconcileGroupInviteMemberSelection,
 } from './group-invite-members-view.js';
 
@@ -50,5 +51,26 @@ describe('group invite members view', () => {
       new Set(['friend-1', 'friend-2']),
       candidates,
     )]).toEqual(['friend-1']);
+  });
+
+  it('审核群填写理由后才允许提交，直邀群不校验理由', () => {
+    expect(canSubmitGroupInvitation({
+      selectedCount: 1,
+      requiresApproval: true,
+      reason: '   ',
+      blocked: false,
+    })).toBe(false);
+    expect(canSubmitGroupInvitation({
+      selectedCount: 1,
+      requiresApproval: true,
+      reason: '请同意入群',
+      blocked: false,
+    })).toBe(true);
+    expect(canSubmitGroupInvitation({
+      selectedCount: 1,
+      requiresApproval: false,
+      reason: '',
+      blocked: false,
+    })).toBe(true);
   });
 });

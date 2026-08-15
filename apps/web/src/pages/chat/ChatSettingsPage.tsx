@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { selectIMEarliestGroupAdmin } from '@im28/im-sdk/web';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
-
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { useChatShareModal } from '../share/ChatShareModalProvider.js';
 import {
   buildChatSettingsMemberViews,
   buildChatSettingsView,
@@ -49,6 +49,8 @@ export function ChatSettingsPage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // toast 统一承载聊天设置 mutation 的成功与失败反馈。
   const { toast } = useAppToast();
+  /** shareModal 统一持有群名片目标选择和发送。 */
+  const shareModal = useChatShareModal();
   // data 统一恢复当前会话、群资料和成员的 shared cache-first 快照。
   const {
     sync,
@@ -205,6 +207,7 @@ export function ChatSettingsPage() {
                     clearError();
                     toast.success(message);
                   }}
+                  onShareCard={() => shareModal.openShare({ kind: 'group-card', groupID: view.targetID, displayName: view.title, avatarURL: view.avatarURL })}
                 />
               ) : null}
               {sync ? (
@@ -293,5 +296,4 @@ export function ChatSettingsPage() {
 function ChatSettingsPageState({ label, detail = '' }: { readonly label: string; readonly detail?: string | null }) {
   return <main className="rn-chat-page-state"><strong>{label}</strong>{detail ? <span>{detail}</span> : null}</main>;
 }
-
 export default ChatSettingsPage;

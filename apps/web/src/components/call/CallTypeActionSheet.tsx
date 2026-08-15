@@ -23,6 +23,7 @@ export function CallTypeActionSheet({
       open={open}
       ariaLabel={`与${peerName || '对方'}音视频通话`}
       className="rn-call-type-modal"
+      placement="bottom"
       closeOnBackdrop={!pending}
       onRequestClose={() => { if (!pending) onClose(); }}
     >

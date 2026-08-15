@@ -88,6 +88,7 @@ export function QRCodeDisplay(props: QRCodeDisplayProps) {
       open
       ariaLabel={props.kind === 'group' ? '群二维码' : '我的二维码'}
       className="rn-qr-display-modal"
+      placement="bottom"
       onRequestClose={props.onClose}
     >
       <section className="rn-qr-display-surface im-modal-sheet" aria-busy={rendering}>

@@ -18,6 +18,7 @@ describe('CallTypeActionSheet', () => {
     );
 
     expect(markup).toContain('aria-label="与donk二大爷音视频通话"');
+    expect(markup).toContain('data-placement="bottom"');
     expect(markup).toContain('语音通话');
     expect(markup).toContain('视频通话');
     expect(markup).toContain('取消音视频通话');

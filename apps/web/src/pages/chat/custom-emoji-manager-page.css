@@ -207,7 +207,8 @@
 .rn-custom-emoji-manager-sheet {
   display: grid;
   gap: 8px;
-  width: min(calc(100% - 24px), 456px);
+  width: 100%;
+  max-width: none;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
@@ -216,12 +217,14 @@
   min-height: 52px;
   margin: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: 0;
   background: var(--im-bg-card);
   color: var(--im-text-primary);
   font: inherit;
   text-align: center;
 }
+
+.rn-custom-emoji-manager-sheet p:first-child { border-radius: 12px 12px 0 0; }
 
 .rn-custom-emoji-manager-sheet p {
   display: grid;

@@ -51,7 +51,6 @@
   justify-content: center;
   padding: 16px;
   flex-direction: column;
-  gap: 28px;
 }
 
 .rn-avatar-crop-stage {
@@ -86,22 +85,6 @@
   border-radius: 50%;
   inset: 0;
   pointer-events: none;
-}
-
-.rn-avatar-crop-zoom {
-  display: grid;
-  width: min(82vw, 360px);
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  color: rgba(255, 255, 255, 0.72);
-  gap: 12px;
-  font-size: 14px;
-  letter-spacing: 0;
-}
-
-.rn-avatar-crop-zoom input {
-  width: 100%;
-  accent-color: var(--im-brand-primary);
 }
 
 .rn-avatar-crop-footer {

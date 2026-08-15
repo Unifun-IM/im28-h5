@@ -17,6 +17,7 @@ describe('AvatarSourceActionSheet', () => {
     );
 
     expect(markup).toContain('aria-label="选择头像来源"');
+    expect(markup).toContain('data-placement="bottom"');
     expect(markup).toContain('从相册选一张');
     expect(markup).toContain('拍一张照片');
     expect(markup).toContain('取消');

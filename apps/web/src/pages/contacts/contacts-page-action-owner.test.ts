@@ -19,6 +19,7 @@ describe('contacts page action owner', () => {
     expect(contactsActionsSource).toContain('.openConversation(contact.userID)');
     expect(contactsActionsSource).toContain('.contacts.deleteFriend({');
     expect(contactsActionsSource).toContain('await callOwner.startOutgoing({');
-    expect(contactsActionsSource).toContain('createContactCardShareLocationState(contact)');
+    expect(contactsActionsSource).toContain('shareModal.openShare({');
+    expect(contactsActionsSource).toContain("kind: 'user-card'");
   });
 });

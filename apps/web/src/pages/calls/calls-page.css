@@ -204,7 +204,7 @@
 .rn-call-sheet-backdrop { width: 100%; max-width: none; height: 100%; max-height: none; align-items: flex-end; justify-content: center; margin: 0; padding: 0; background: transparent; }
 .rn-call-sheet-backdrop[open] { display: flex; }
 .rn-call-sheet-backdrop:not([open]) { display: none; }
-.rn-call-sheet { width: min(100%, 480px); padding: 0 0 max(8px, var(--im-safe-bottom)); overflow: hidden; border-radius: 12px 12px 0 0; background: var(--im-bg-page); }
+.rn-call-sheet { width: 100%; max-width: none; padding: 0 0 max(8px, var(--im-safe-bottom)); overflow: hidden; border-radius: 12px 12px 0 0; background: var(--im-bg-page); }
 .rn-call-sheet p { margin: 0; padding: 16px; color: var(--im-text-muted); background: var(--im-bg-card); font-size: 12px; line-height: 18px; text-align: center; }
 .rn-call-sheet button { width: 100%; min-height: 48px; border: 0; color: var(--im-text-primary); background: var(--im-bg-card); cursor: pointer; font-size: 16px; }
 .rn-call-sheet button:last-child { margin-top: 8px; }

@@ -29,6 +29,6 @@ export function readQRCodeShareBackHref(state: unknown, kind: 'user' | 'group', 
     return backHref === '/scan' || backHref === '/me/profile' || backHref === '/me' ? backHref : fallbackHref;
   }
   /** groupProfileHref 绑定当前会话，禁止借分享路由跳到其他群。 */
-  const groupProfileHref = `/conversations/${encodeURIComponent(conversationID)}/settings/profile`;
+  const groupProfileHref = `/conversations/${encodeURIComponent(conversationID)}/settings/profile` as const;
   return backHref === groupProfileHref ? groupProfileHref : fallbackHref;
 }

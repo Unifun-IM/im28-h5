@@ -1,10 +1,14 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 
+/** 模态层定位模式区分居中对话框与全宽底部升窗。 */
+export type InteractionModalPlacement = 'center' | 'bottom';
+
 /** 通用模态层只负责浏览器焦点、遮罩和关闭生命周期。 */
 interface InteractionModalProps {
   readonly open: boolean;
   readonly ariaLabel: string;
   readonly className?: string;
+  readonly placement?: InteractionModalPlacement;
   readonly closeOnBackdrop?: boolean;
   readonly children: ReactNode;
   readonly onRequestClose: () => void;
@@ -25,6 +29,7 @@ export function InteractionModal({
   open,
   ariaLabel,
   className = '',
+  placement = 'center',
   closeOnBackdrop = true,
   children,
   onRequestClose,
@@ -87,6 +92,7 @@ export function InteractionModal({
     <dialog
       ref={dialogRef}
       className={`im-interaction-modal ${className}`.trim()}
+      data-placement={placement}
       aria-label={ariaLabel}
       onCancel={handleCancel}
       onClick={handleBackdropClick}

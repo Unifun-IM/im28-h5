@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 import arrowIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-right.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { getSelfGroupNickname } from './chat-settings-view.js';
-import { buildGroupCardShareRoute } from './group-card-share-route.js';
 import type { ChatSettingsView } from './chat-settings-view.js';
 import './chat-self-nickname-sheet.css';
 
@@ -18,6 +17,7 @@ interface ChatGroupProfileSettingsCardProps {
   readonly onUpdated: (member: WebIMGroupMember) => void;
   readonly onError: (cause: unknown) => void;
   readonly onNotice: (message: string) => void;
+  readonly onShareCard: () => void;
 }
 
 /** 呈现 RN 同顺序的本人昵称与群简介，并持有昵称编辑交互。 */
@@ -29,6 +29,7 @@ export function ChatGroupProfileSettingsCard({
   onUpdated,
   onError,
   onNotice,
+  onShareCard,
 }: ChatGroupProfileSettingsCardProps) {
   // sheetOpen 控制 RN 同语义的当前成员昵称编辑层。
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -41,8 +42,6 @@ export function ChatGroupProfileSettingsCard({
   // introductionURL 使用当前真实会话 ID 构造可深链子页。
   const introductionURL =
     `/conversations/${encodeURIComponent(view.conversationID)}/settings/introduction`;
-  // shareGroupCardURL 使用当前真实会话身份构造可刷新动作路由。
-  const shareGroupCardURL = buildGroupCardShareRoute(view.conversationID);
 
   /** 打开编辑层时从当前成员快照初始化草稿。 */
   function openSheet(): void {
@@ -90,10 +89,10 @@ export function ChatGroupProfileSettingsCard({
           </span>
           <RNAssetIcon assetURL={arrowIconURL} />
         </Link>
-        <Link className="rn-chat-settings-row" to={shareGroupCardURL} aria-label="分享群名片">
+        <button className="rn-chat-settings-row rn-chat-settings-button-row" type="button" aria-label="分享群名片" onClick={onShareCard}>
           <span>分享群名片</span>
           <RNAssetIcon assetURL={arrowIconURL} />
-        </Link>
+        </button>
       </div>
       {sheetOpen ? (
         <ChatSelfNicknameSheet

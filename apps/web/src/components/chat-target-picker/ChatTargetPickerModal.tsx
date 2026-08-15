@@ -167,7 +167,7 @@ export function ChatTargetPickerModal({
   return (
     <>
     <OperationToastFeedback error={operationError} />
-    <InteractionModal open={open} ariaLabel="选择分享对象" className="rn-chat-target-picker-modal" closeOnBackdrop={false} onRequestClose={requestClose}>
+    <InteractionModal open={open} ariaLabel="选择分享对象" className="rn-chat-target-picker-modal" placement="bottom" closeOnBackdrop={false} onRequestClose={requestClose}>
       <section className="rn-chat-target-picker-sheet im-modal-sheet" aria-busy={loading || pending}>
         <header className="rn-chat-target-picker-header">
           <button type="button" aria-label="关闭选择分享对象" disabled={pending} onClick={requestClose}><RNAssetIcon assetURL={closeIconURL} /></button>

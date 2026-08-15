@@ -28,9 +28,14 @@ describe('group member selection pull refresh', () => {
     )).toContain('正在刷新');
   });
 
-  /** 邀请和移除保持可直达 SPA URL，但统一叠加在群设置页的 60% 底部弹窗。 */
+  /** 邀请和移除保持可直达 SPA URL，并按各自 RN 高度叠加在群设置页底部。 */
   it('renders both member actions through one settings modal shell', () => {
     expect(modalSource).toContain('className={`rn-group-member-picker-modal');
+    expect(modalSource).toContain('rn-group-remove-selected-count');
+    expect(inviteSource).toContain('title="选择好友"');
+    expect(inviteSource).toContain('className="rn-group-invite-reason"');
+    expect(inviteSource).toContain('required');
+    expect(removeSource).toContain('title="移除群成员"');
     expect(inviteSource).toContain('<GroupMemberPickerModal');
     expect(removeSource).toContain('<GroupMemberPickerModal');
     expect(chatRoutesSource.match(/<ChatSettingsPage \/>/g)).toHaveLength(3);

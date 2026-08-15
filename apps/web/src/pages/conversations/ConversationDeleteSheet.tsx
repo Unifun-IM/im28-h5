@@ -42,6 +42,7 @@ export function ConversationDeleteSheet({
       open={Boolean(target)}
       ariaLabel="删除聊天记录"
       className="rn-conversation-delete-backdrop"
+      placement="bottom"
       onRequestClose={onClose}
     >
       <section
