@@ -128,6 +128,7 @@ export function OfflineChatPage({ reader, userID }: OfflineChatPageProps) {
               onMentionGroupMember={() => undefined}
               unreadNavigation={{ unreadMessageIDs: [] }}
               remainingUnreadCount={0}
+              initialPositioned
               onScrollToNextUnread={() => undefined}
               onOpenQuotedMessage={() => undefined}
               exitingMessageIDs={new Set<string>()}

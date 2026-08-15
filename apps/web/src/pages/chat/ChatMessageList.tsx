@@ -8,7 +8,10 @@ import type {
 import { ChatMessageBubble } from './ChatMessageBubble.js';
 import { ChatMessageSkeleton } from './ChatMessageSkeleton.js';
 import { ChatRelationshipNotice } from './ChatRelationshipNotice.js';
-import { buildChatMessageListEntries } from './chat-message-list-view.js';
+import {
+  buildChatMessageListEntries,
+  isChatInitialPositionPending,
+} from './chat-message-list-view.js';
 import type { ChatMessageView } from './chat-message-view.js';
 import {
   resolveChatQuoteSource,
@@ -51,6 +54,7 @@ interface ChatMessageListProps {
   readonly onMentionGroupMember: (member: WebIMGroupMember) => void;
   readonly unreadNavigation: IMInitialUnreadNavigation;
   readonly remainingUnreadCount: number;
+  readonly initialPositioned: boolean;
   readonly onScrollToNextUnread: () => void;
   readonly onOpenQuotedMessage: (message: Message) => void;
   readonly exitingMessageIDs: ReadonlySet<string>;
@@ -93,6 +97,7 @@ export function ChatMessageList({
   onMentionGroupMember,
   unreadNavigation,
   remainingUnreadCount,
+  initialPositioned,
   onScrollToNextUnread,
   onOpenQuotedMessage,
   exitingMessageIDs,
@@ -143,7 +148,11 @@ export function ChatMessageList({
         aria-label="消息记录"
         aria-busy={loading}
       >
-        <div className="rn-chat-message-stack">
+        <div className={`rn-chat-message-stack${
+          isChatInitialPositionPending(messages.length, initialPositioned)
+            ? ' is-initial-position-pending'
+            : ''
+        }`}>
         {historyLoading ? (
           <p className="rn-chat-history-loading" role="status">正在加载更早消息</p>
         ) : null}

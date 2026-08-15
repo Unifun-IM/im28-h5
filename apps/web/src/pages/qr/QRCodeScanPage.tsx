@@ -10,6 +10,7 @@ import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
 import { decodeBrowserQRCodeImage, startBrowserQRCodeScan, type StopBrowserQRCodeScan } from './browser-qr-decoder.js';
 import { readQRCodeBackHref } from './qr-route.js';
+import { useQRCodeModal } from './QRCodeModalProvider.js';
 import './qr-code-page.css';
 
 /** RN 扫一扫在 Web 的摄像头与相册实现，业务协议来自 shared SDK。 */
@@ -20,6 +21,8 @@ export default function QRCodeScanPage() {
   const location = useLocation();
   /** navigate 分发已解析的用户或群业务目标。 */
   const navigate = useNavigate();
+  /** openUserQRCode 允许扫一扫页在原地打开全局个人二维码弹窗。 */
+  const { openUserQRCode } = useQRCodeModal();
   /** backHref 保证返回只落到已迁移主 tab。 */
   const backHref = readQRCodeBackHref(location.state);
   /** videoRef 绑定 ZXing 的摄像头预览元素。 */
@@ -131,7 +134,7 @@ export default function QRCodeScanPage() {
           <button
             className="rn-qr-my-code"
             type="button"
-            onClick={() => navigate('/me/qrcode', { state: { backHref: '/scan' } })}
+            onClick={openUserQRCode}
           >
             我的二维码
           </button>

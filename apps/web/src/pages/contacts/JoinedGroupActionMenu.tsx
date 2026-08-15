@@ -93,29 +93,26 @@ export function JoinedGroupQuitModal({
       onRequestClose={onCancel}
     >
       <section className="rn-joined-group-quit-modal im-modal-sheet" role="alertdialog">
-        <h2>退出群聊</h2>
-        <p>
-          {unavailable
-            ? '当前群聊未授予退出权限，请刷新群资料后重试。'
-            : `确定要退出${groupName || '该群聊'}吗 ?`}
-        </p>
-        {mode === 'leave' ? (
-          <div className="rn-joined-group-quit-actions">
-            <button className="is-danger" type="button" disabled={submitting} onClick={() => onLeave(false)}>
-              {submitting ? '处理中' : '退出群聊'}
-            </button>
-            <button className="is-danger" type="button" disabled={submitting} onClick={() => onLeave(true)}>
-              退出, 并删除我发的群消息
-            </button>
-            <button type="button" disabled={submitting} onClick={onCancel}>取消</button>
-          </div>
-        ) : (
-          <div className="rn-joined-group-quit-actions">
-            <button type="button" disabled={submitting} onClick={onCancel}>
-              {unavailable ? '我知道了' : '取消'}
-            </button>
-          </div>
-        )}
+        <div className="rn-joined-group-quit-actions">
+          <p>
+            {unavailable
+              ? '当前群聊未授予退出权限，请刷新群资料后重试。'
+              : `确定要退出${groupName || '该群聊'}吗 ?`}
+          </p>
+          {mode === 'leave' ? (
+            <>
+              <button className="is-danger" type="button" disabled={submitting} onClick={() => onLeave(false)}>
+                {submitting ? '处理中' : '退出群聊'}
+              </button>
+              <button className="is-danger" type="button" disabled={submitting} onClick={() => onLeave(true)}>
+                退出, 并删除我发的群消息
+              </button>
+            </>
+          ) : null}
+        </div>
+        <button className="rn-joined-group-quit-cancel" type="button" disabled={submitting} onClick={onCancel}>
+          {unavailable ? '我知道了' : '取消'}
+        </button>
       </section>
     </InteractionModal>
   );

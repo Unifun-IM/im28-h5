@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   GatewayCall,
   WebIMCallAnswerStatus,
@@ -58,6 +58,12 @@ export function useCallsPageState({
   const [filter, setFilter] = useState<WebIMCallAnswerStatus>('all');
   // keyword 只参与 SQLite 昵称/用户 ID 搜索。
   const [keyword, setKeyword] = useState('');
+  /** filterRef 让仅按账号执行的首入同步读取当前筛选而不重复触发网络。 */
+  const filterRef = useRef(filter);
+  filterRef.current = filter;
+  /** keywordRef 让仅按账号执行的首入同步读取当前关键词而不重复触发网络。 */
+  const keywordRef = useRef(keyword);
+  keywordRef.current = keyword;
   // items 保存当前缓存分页。
   const [items, setItems] = useState<readonly GatewayCall[]>([]);
   // total 保存当前筛选结果总数。
@@ -115,20 +121,35 @@ export function useCallsPageState({
 
   useEffect(() => {
     if (!calls || !userID) return;
-    // active 防止路由卸载后的同步状态回写。
+    // active 防止路由卸载后的缓存或同步状态回写。
     let active = true;
     setLoading(true);
     setError(null);
-    void calls.sync()
-      .then(() => {
-        if (active) setCacheRevision(current => current + 1);
+    /** initialFilter 冻结本次进入 Tab 时的可见筛选。 */
+    const initialFilter = filterRef.current;
+    /** initialKeyword 冻结本次进入 Tab 时的可见关键词。 */
+    const initialKeyword = keywordRef.current;
+    void calls.listCached({
+      answerStatus: initialFilter,
+      keyword: initialKeyword,
+      limit: PAGE_SIZE,
+    })
+      .then(result => {
+        if (!active) return;
+        setItems(result.list);
+        setTotal(result.total);
       })
       .catch(cause => {
         if (active) setError(readError(cause));
       })
       .finally(() => {
         if (active) setLoading(false);
-      });
+      })
+      .then(() => calls.sync())
+      .then(() => {
+        if (active) setCacheRevision(current => current + 1);
+      })
+      .catch(() => undefined);
     return () => {
       active = false;
     };

@@ -60,7 +60,10 @@ async function fetchAllArchivedConversations(gatewayClient, pageSize) {
             limit: pageSize,
             ...(pageToken ? { page_token: pageToken } : {}),
         });
-        conversations.push(...(response.conversations ?? []));
+        if (!Array.isArray(response.conversations)) {
+            throw createWebIMSyncError('ARCHIVED_CONVERSATION_INVALID_RESPONSE', 'Gateway archived conversation list did not explicitly return conversations.');
+        }
+        conversations.push(...response.conversations);
         /** nextToken 只接受非空游标。 */
         const nextToken = response.next_page_token?.trim();
         if (!nextToken)

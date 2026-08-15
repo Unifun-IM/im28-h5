@@ -309,8 +309,11 @@ async function fetchAllGatewayCalls(gatewayClient) {
     for (let page = 1; page <= 1000; page += 1) {
         // response 复用共享 SDK 的 v2 envelope 归一化。
         const response = await gatewayClient.fetchCallList({ page, page_size: pageSize });
+        if (!Array.isArray(response.list)) {
+            throw new Error('Gateway call list did not explicitly return a list array.');
+        }
         // pageCalls 忽略缺少稳定 call_id 的无效缓存记录。
-        const pageCalls = (response.list ?? []).filter(call => Boolean(call.call_id?.trim()));
+        const pageCalls = response.list.filter(call => Boolean(call.call_id?.trim()));
         if (page === 1)
             total = normalizeTotal(response.total, pageCalls.length);
         if (!pageCalls.length) {

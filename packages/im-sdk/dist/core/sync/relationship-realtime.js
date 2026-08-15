@@ -5,6 +5,18 @@ const NON_RELATIONSHIP_FRIEND_EVENTS = new Set([
     'onFriendApplicationRejected',
     'onFriendApplicationDeleted',
 ]);
+/** 这些申请事件要求刷新好友或群验证计数，不等同于普通消息缓存变化。 */
+const VERIFICATION_EVENTS = new Set([
+    'friend_application_created',
+    'onFriendApplicationAdded',
+    'onFriendApplicationAccepted',
+    'onFriendApplicationRejected',
+    'onFriendApplicationDeleted',
+    'onGroupApplicationAdded',
+    'onGroupApplicationAccepted',
+    'onGroupApplicationRejected',
+    'onGroupApplicationDeleted',
+]);
 /** 判断 Gateway realtime 事件是否要求重新读取单聊关系事实。 */
 export function isIMRelationshipRealtimeEvent(event) {
     if (event.type === 'friend_deleted')
@@ -14,6 +26,14 @@ export function isIMRelationshipRealtimeEvent(event) {
     /** eventNames 保留归一化前事件名，用于排除仅变更申请列表的通知。 */
     const eventNames = collectGatewayEventNames(event);
     return !eventNames.some(name => NON_RELATIONSHIP_FRIEND_EVENTS.has(name));
+}
+/** 判断 Gateway realtime 事件是否要求重新读取好友或群验证计数。 */
+export function isIMVerificationRealtimeEvent(event) {
+    if (event.type === 'friend_application_created')
+        return true;
+    if (event.type !== 'friend' && event.type !== 'group')
+        return false;
+    return collectGatewayEventNames(event).some(name => VERIFICATION_EVENTS.has(name));
 }
 /** 从标准事件及原始 Gateway 信封中收集候选事件名。 */
 function collectGatewayEventNames(event) {

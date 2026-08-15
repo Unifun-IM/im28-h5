@@ -74,20 +74,21 @@ export function ArchivedConversationsPage() {
     return page;
   }, [snapshot.userID, sync]);
 
-  /** loadPage 先读缓存，再静默同步权威归档端点并重读首屏。 */
+  /** loadPage 读完缓存即结束首屏 loading，再静默同步权威归档端点。 */
   const loadPage = useCallback(async () => {
     if (!sync || !snapshot.userID) return;
     setLoading(true);
     setError(null);
     try {
       await readFirstPage();
-      await sync.conversations.syncArchived();
-      await readFirstPage();
     } catch (cause) {
       setError(readArchivePageError(cause));
     } finally {
       setLoading(false);
     }
+    void sync.conversations.syncArchived({ pageSize: 100 })
+      .then(() => readFirstPage())
+      .catch(() => undefined);
   }, [readFirstPage, snapshot.userID, sync]);
 
   /** refreshPage 强制执行共享归档快照同步。 */

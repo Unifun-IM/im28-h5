@@ -32,8 +32,8 @@ export function ContactsPage() {
   const pageRef = useRef<HTMLElement | null>(null);
   // runtime context 是页面唯一允许消费的 SDK owner。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
-  // contacts facade 不向页面暴露 Gateway client 或 token。
-  const contactsFacade = useMemo(() => runtime?.getSync().contacts ?? null, [runtime]);
+  // sync 只公开共享联系人和已加入群 facade，不向页面暴露 Gateway client 或 token。
+  const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
   // contacts 保存已完成分页和归一化的好友记录。
   const [contacts, setContacts] = useState<readonly WebIMContact[]>([]);
   // loading 控制首次加载和刷新状态。
@@ -59,45 +59,48 @@ export function ContactsPage() {
     onContactDeleted: removeDeletedContact,
   });
 
-  /** 先读账号 SQLite cache，再调用唯一 contacts facade 完成远端刷新。 */
+  /** 先渲染账号 SQLite 好友缓存，再独立静默同步好友和我的群聊全量快照。 */
   const loadContacts = useCallback(async () => {
-    if (!contactsFacade || !snapshot.userID) return;
+    if (!sync || !snapshot.userID) return;
     setLoading(true);
     setError(null);
     try {
-      try {
-        /** cachedContacts 保证离线或慢网时先展示当前账号已有好友。 */
-        const cachedContacts = await contactsFacade.listCached();
-        setContacts(cachedContacts);
-      } catch {
-        // cache 不可用仍允许 canonical 远端读取给出最终结果。
-      }
-      setContacts(await contactsFacade.list());
+      /** cachedContacts 保证离线或慢网时先展示当前账号已有好友。 */
+      const cachedContacts = await sync.contacts.listCached();
+      setContacts(cachedContacts);
     } catch {
-      setError('加载失败，请稍后重试');
+      setError('加载本地通讯录失败，请稍后重试');
     } finally {
       setLoading(false);
     }
-  }, [contactsFacade, snapshot.userID]);
+    /** results 让好友和群聊任一端点失败时另一份成功快照仍能落库。 */
+    const results = await Promise.allSettled([
+      sync.contacts.list(),
+      sync.groups.sync(),
+    ]);
+    if (results[0].status === 'fulfilled') setContacts(results[0].value);
+  }, [snapshot.userID, sync]);
 
-  /** 下拉刷新只执行共享 contacts facade，不在页面复制 Gateway 调用。 */
+  /** 下拉刷新独立同步好友、我的群聊和验证计数，单项失败不撤销其他成功快照。 */
   const refreshContacts = useCallback(async () => {
-    if (!contactsFacade || !snapshot.userID || refreshing) return;
+    if (!sync || !snapshot.userID || refreshing) return;
     setRefreshing(true);
     setError(null);
     try {
-      // contacts 与 verification counts 对齐 RN 同一次下拉刷新入口。
-      const [nextContacts] = await Promise.all([
-        contactsFacade.list(),
+      // results 允许三个远端 owner 独立完成并保留各自旧缓存。
+      const results = await Promise.allSettled([
+        sync.contacts.list(),
+        sync.groups.sync(),
         refreshVerificationCounts(),
       ]);
-      setContacts(nextContacts);
-    } catch {
-      setError('加载失败，请稍后重试');
+      if (results[0].status === 'fulfilled') setContacts(results[0].value);
+      if (results.some(result => result.status === 'rejected')) {
+        setError('部分通讯录数据同步失败，请稍后重试');
+      }
     } finally {
       setRefreshing(false);
     }
-  }, [contactsFacade, refreshVerificationCounts, refreshing, snapshot.userID]);
+  }, [refreshVerificationCounts, refreshing, snapshot.userID, sync]);
 
   /** pullRefresh 复用跨列表触摸适配器并注入联系人 canonical refresh。 */
   const pullRefresh = usePullRefresh({

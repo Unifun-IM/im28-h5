@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import chatRoutesSource from '../../app/AppChatRoutes.tsx?raw';
 import coreRoutesSource from '../../app/AppCoreRoutes.tsx?raw';
 import displaySource from './QRCodeDisplay.tsx?raw';
+import providerSource from './QRCodeModalProvider.tsx?raw';
 import pageSource from './QRCodeSharePage.tsx?raw';
 import pickerSource from '../../components/chat-target-picker/ChatTargetPickerModal.tsx?raw';
 
@@ -21,7 +22,7 @@ describe('QR code in-app share route', () => {
     expect(pageSource).toContain('width: 320');
     expect(pageSource).not.toContain('loadChatForwardTargets');
     expect(pageSource).not.toContain('resolveChatForwardTargetConversationID');
-    expect(pageSource).not.toContain('location.state');
+    expect(pageSource).toContain('readQRCodeShareBackHref(location.state');
     expect(pageSource).not.toContain('gatewayClient');
     expect(pageSource).not.toContain('sendImageMessage');
     expect(pageSource).toContain('selectionMode="single"');
@@ -29,6 +30,7 @@ describe('QR code in-app share route', () => {
   });
 
   it('个人与群二维码共用全局模态展示 owner', () => {
+    expect(providerSource).toContain('<QRCodeDisplay');
     expect(displaySource).toContain('<InteractionModal');
     expect(displaySource).toContain('className="rn-qr-display-modal"');
     expect(displaySource).not.toContain('className="rn-qr-display-page"');

@@ -15,6 +15,9 @@ describe('calls page state owner', () => {
   });
 
   it('owns cache-first, full selection scan and deletion in the state hook', () => {
+    expect(stateSource.indexOf('calls.listCached({')).toBeLessThan(
+      stateSource.indexOf('.then(() => calls.sync())'),
+    );
     expect(stateSource).toContain('refreshCallListPage(calls, filter, keyword, PAGE_SIZE)');
     expect(stateSource).toContain('while (offset < total)');
     expect(stateSource).toContain('await calls.delete([...selectedIDs])');

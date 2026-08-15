@@ -141,7 +141,10 @@ async function fetchAllJoinedGroups(gatewayClient, pageSize) {
             limit: pageSize,
             ...(pageToken ? { page_token: pageToken } : {}),
         });
-        for (const group of response.groups ?? []) {
+        if (!Array.isArray(response.groups)) {
+            throw createWebIMSyncError('JOINED_GROUP_INVALID_RESPONSE', 'Gateway joined group list did not explicitly return groups.');
+        }
+        for (const group of response.groups) {
             // groupID 是去重、缓存和路由的稳定主键。
             const groupID = group.group_id?.trim() ?? '';
             if (groupID)

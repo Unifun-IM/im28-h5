@@ -1,6 +1,6 @@
 .rn-group-owner-quit-modal {
-  width: min(100vw, 480px);
-  max-width: min(100vw, 480px);
+  width: 100% !important;
+  max-width: 100% !important;
   max-height: 100dvh;
   margin: auto auto 0;
 }

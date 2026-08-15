@@ -156,6 +156,7 @@ function ChatPageMessageTimeline(props: ChatPageSurfaceProps) {
       onMentionGroupMember={props.composerState.requestMention}
       unreadNavigation={props.unreadNavigation.navigation}
       remainingUnreadCount={props.unreadNavigation.remainingUnreadCount}
+      initialPositioned={props.unreadNavigation.initialPositioned}
       onScrollToNextUnread={props.unreadNavigation.scrollToNextUnread}
       onOpenQuotedMessage={props.navigationActions.openQuotedMessage}
       exitingMessageIDs={props.deleteExit.exitingMessageIDs}

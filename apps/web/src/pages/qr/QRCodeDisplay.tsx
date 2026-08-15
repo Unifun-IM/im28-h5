@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 
-import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
+import closeIconURL from '../../assets/rn/assets/icons/imm28/xmark.regular.svg';
 import downloadIconURL from '../../assets/rn/assets/icons/imm28/share-ios.svg';
 import { InteractionModal, useAppToast } from '../../components/interaction/index.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
@@ -92,7 +92,7 @@ export function QRCodeDisplay(props: QRCodeDisplayProps) {
     >
       <section className="rn-qr-display-surface im-modal-sheet" aria-busy={rendering}>
         <PageNavbar className="rn-qr-display-header">
-          <button type="button" aria-label={props.closeLabel} onClick={props.onClose}><RNAssetIcon assetURL={backIconURL} /></button>
+          <button type="button" aria-label={props.closeLabel} onClick={props.onClose}><RNAssetIcon assetURL={closeIconURL} /></button>
           <h1>二维码</h1>
           <button type="button" aria-label="下载二维码" disabled={!ready} onClick={() => void downloadQRCode()}><RNAssetIcon assetURL={downloadIconURL} /></button>
         </PageNavbar>

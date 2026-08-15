@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import backIconURL from '../../assets/rn/assets/icons/imm28/nav-arrow-left.regular.svg';
 import copyIconURL from '../../assets/rn/assets/icons/imm28/copy.dynamic.svg';
@@ -12,6 +12,7 @@ import { AvatarCropDialog } from '../../components/avatar/AvatarCropDialog.js';
 import { validateAvatarFile } from '../../components/avatar/avatar-crop.js';
 import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-avatar-view.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { useQRCodeModal } from '../qr/QRCodeModalProvider.js';
 import { buildGroupProfileView, copyGroupProfileID } from './group-profile-view.js';
 import { loadGroupProfileSource, type GroupProfileSource } from './group-profile-source.js';
 import { resolveGroupProfileBackHref } from './group-profile-route-state.js';
@@ -31,6 +32,8 @@ export function GroupProfilePage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // toast 统一承载群资料交互和 mutation 反馈。
   const { toast } = useAppToast();
+  /** openGroupQRCode 将群二维码交给应用根级底部弹窗。 */
+  const { openGroupQRCode } = useQRCodeModal();
   // source 仅保存当前路由验证通过的群资料。
   const [source, setSource] = useState<GroupProfileSource | null>(null);
   // loading 标记 cache-first 与远端刷新轮次。
@@ -194,8 +197,6 @@ export function GroupProfilePage() {
   const view = source ? buildGroupProfileView(source.conversation, source.group) : null;
   // backURL 仅允许当前聊天来源覆盖默认群设置目标。
   const backURL = resolveGroupProfileBackHref(location.state, conversationID);
-  // qrCodeURL 保持群二维码属于群资料子路由。
-  const qrCodeURL = `/conversations/${encodeURIComponent(conversationID)}/settings/qrcode`;
   // avatarStyle 使用群 ID 生成 RN 稳定 fallback 渐变。
   const avatarStyle = { '--group-profile-avatar-gradient': getRNAvatarGradient(view?.groupID ?? '') } as CSSProperties;
 
@@ -208,7 +209,7 @@ export function GroupProfilePage() {
           {view ? <div className="rn-group-profile-card">
             <button className="rn-group-profile-row" type="button" onClick={chooseAvatar}><span>群头像</span><span className="rn-group-profile-trailing"><span className="rn-group-profile-avatar" style={avatarStyle}><span>{getRNAvatarInitial(view.name, '群')}</span>{view.avatarURL ? <img src={view.avatarURL} alt="" onError={event => { event.currentTarget.hidden = true; }} /> : null}</span>{view.canEdit ? <RNAssetIcon assetURL={arrowIconURL} /> : null}</span></button>
             <button className="rn-group-profile-row" type="button" onClick={openNameEditor}><span>群昵称</span><span className="rn-group-profile-trailing"><span>{view.name}</span>{view.canEdit ? <RNAssetIcon assetURL={arrowIconURL} /> : null}</span></button>
-            <Link className="rn-group-profile-row" to={qrCodeURL}><span>群二维码</span><span className="rn-group-profile-trailing rn-group-profile-qr-trailing"><RNAssetIcon assetURL={qrCodeIconURL} /><RNAssetIcon assetURL={arrowIconURL} /></span></Link>
+            <button className="rn-group-profile-row" type="button" onClick={() => openGroupQRCode(conversationID)}><span>群二维码</span><span className="rn-group-profile-trailing rn-group-profile-qr-trailing"><RNAssetIcon assetURL={qrCodeIconURL} /><RNAssetIcon assetURL={arrowIconURL} /></span></button>
             <button className="rn-group-profile-row" type="button" onClick={() => { void copyGroupID(); }}><span>群ID</span><span className="rn-group-profile-trailing"><span>{view.groupID}</span><RNAssetIcon assetURL={copyIconURL} /></span></button>
           </div> : loading ? <p className="rn-group-profile-state">正在加载群资料</p> : null}
         </div>

@@ -68,24 +68,25 @@ export function useConversationsPageState({
     setArchivedItems(cachedArchivedItems);
   }, [accountUserID, sync]);
 
-  /** 首屏先读账号 SQLite cache，再同步远端并重读组合列表。 */
+  /** 首屏读完账号 SQLite 即结束 loading，再静默独立同步普通和归档快照。 */
   const loadConversations = useCallback(async (): Promise<void> => {
     if (!sync || !accountUserID) return;
     setLoading(true);
     setError(null);
     try {
       await reloadCachedConversations();
-      await sync.conversations.sync({ forceFullSnapshot: true, pageSize: 100 });
-      await reloadCachedConversations();
-      /** 归档端点独立失败时保留旧 cache，不阻断普通会话首屏。 */
-      void sync.conversations.syncArchived()
-        .then(() => sync.conversations.listCachedItems({ archived: true, limit: 100 }))
-        .then(setArchivedItems)
-        .catch(() => undefined);
     } catch (cause) {
       setError(readConversationPageError(cause));
     } finally {
       setLoading(false);
+    }
+    /** results 保证任一列表完整成功后都能独立落库，失败不会阻断另一条同步。 */
+    const results = await Promise.allSettled([
+      sync.conversations.sync({ forceFullSnapshot: true, pageSize: 100 }),
+      sync.conversations.syncArchived({ pageSize: 100 }),
+    ]);
+    if (results.some(result => result.status === 'fulfilled')) {
+      await reloadCachedConversations().catch(() => undefined);
     }
   }, [accountUserID, reloadCachedConversations, sync]);
 
@@ -95,11 +96,16 @@ export function useConversationsPageState({
     setRefreshing(true);
     setError(null);
     try {
-      await sync.conversations.sync({ forceFullSnapshot: true, pageSize: 100 });
-      /** 归档端点失败不覆盖普通会话刷新结果。 */
-      await sync.conversations.syncArchived().catch(() => undefined);
+      /** results 让普通和归档任一成功结果都保留，且不把另一条失败伪装成成功。 */
+      const results = await Promise.allSettled([
+        sync.conversations.sync({ forceFullSnapshot: true, pageSize: 100 }),
+        sync.conversations.syncArchived({ pageSize: 100 }),
+      ]);
       await reloadCachedConversations();
       await refreshPresence();
+      if (results.some(result => result.status === 'rejected')) {
+        setError('部分会话数据同步失败，请稍后重试');
+      }
     } catch (cause) {
       setError(readConversationPageError(cause));
     } finally {

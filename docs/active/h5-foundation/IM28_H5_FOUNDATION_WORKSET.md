@@ -4,13 +4,26 @@
 
 | field | value |
 | :--- | :--- |
-| status | `.149.99 ordinary video/file system Safari acceptance completed-readonly; external activation gated` |
-| owner | `shared friend/group application facades -> H5 verification list/profile routes -> external activation ledger` |
+| status | `.149.100 QR display converged to one global bottom-sheet owner; external activation gated` |
+| owner | `shared QR/profile/group facades -> H5 QRCodeModalProvider -> entry pages` |
 | target | 等待真实自然数据、明确 mutation 授权、RTC/相机/实体设备环境或新 OpenAPI contract 激活下一片；保持 shared/H5 owner 不变 |
 | non-claim | route 存在不等于 capability complete；readonly browser、编译和静态合同不证明真实 send/mutation/RTC/cross-browser 成功 |
 | verification | 新激活项必须复用 production path，记录 result/cache/realtime/list-back/visual evidence；禁止 fixture、fake success 或第二业务 owner |
 | protected | RN business 继续冻结；shared defect 只改 `im28-sdk` 并走 `build:web/sync:web`；验证码 operation 未提供前保持 blocked |
 | next | 回到 pending 申请、自然通话、RTC/相机/实体设备、明确 mutation 授权或新 OpenAPI contract 的 activation ledger；验证码发送 operation 未提供前保持 blocked |
+
+## Closed Slice W6.a6.20.149.100 Global QR Bottom-Sheet Owner
+
+| field | value |
+| :--- | :--- |
+| capability | 个人中心、个人资料、扫一扫和群资料在当前 URL 原地打开同一个全宽贴底二维码弹窗 |
+| primary path | `entry page -> QRCodeModalProvider -> shared profile/group source + QR payload -> lazy QRCodeDisplay` |
+| route convergence | 删除 `ProfileQRCodePage/GroupQRCodePage`；旧 `/me/qrcode` 和群二维码展示地址只做 replace 兼容跳转；分享页保留并返回真实来源页 |
+| browser proof | 382x786 登录态；群弹窗 `width=382`、`bottom=786`、URL 保持群资料；个人中心和扫一扫均在原 URL 打开；旧地址分别跳转 `/me` 与群资料 |
+| verification | H5 typecheck、二维码 3 文件/8 测试、1241-module production build 通过；无 mock、fake-success、页面第二 owner 或 SDK/RN 改动 |
+| historical note | `.149.93/.149.96` 的 Safari 下载与 payload 反解证据仍有效；其中旧页面路径已由本切片的全局 Provider owner 取代 |
+| non-claim | 不外推相机权限、实体设备扫码、二维码最终分享发送或跨浏览器触控表现 |
+| status | `completed-local/global-bottom-sheet-converged` |
 
 ## Closed Slice W6.a6.20.149.99 Ordinary Video/File System Safari Acceptance
 
@@ -3328,3 +3341,14 @@ Next bounded slice: `W6.a6.18.3.13.4-admin-owner-contract-core`；冻结管理�
 - tooling gate: 系统 Safari 截图持续只捕获黑色媒体背景，无法把跨域图片合成层形成像素证据；不据此修改 production code，也不声明 Safari 像素显示通过或失败。
 - protected: 未点击保存/分享、未发送或修改消息；H5/SDK/RN production source 零改动，未运行任何 SDK/RN/Desktop/all build/sync。
 - next: 等待普通视频/文件自然样本、可捕获 Safari 媒体合成层的工具或实体设备，以及其余 natural-data/business-mutation/deployment/backend-contract 激活条件。
+
+## W6.a6.20.149.91 Main Tab Cache-First Verification Realtime
+
+- status: `implemented-local/dual-account-realtime-gated`。
+- owner chain: `Gateway WS verification event -> Web runtime verificationVersion -> verification unread facades -> PrimaryTabs badge`；`Activity tab entry -> shared listCached -> silent full facade sync -> array-gated Repository replacement -> cache reread`。
+- completed: `type=1200/friend_application_created` 与好友/群申请生命周期事件触发通讯录角标权威重读；通讯录进入时先恢复 SQLite，再独立同步好友列表和我的群聊；消息进入时先恢复普通/归档会话，再同步两份全量快照；归档页与通话页同样 cache-first 后静默校准。
+- failure contract: collection operation 必须成功且明确返回数组才允许替换 SQLite；分页、字段、账号或持久化失败保留旧 cache，显式成功空数组可清空；verification revision 不猜增量、不先把现有角标置零。
+- verification: SDK focused 5 files/29 tests、`typecheck:web`、`build:web/sync:web`；H5 focused 4 files/10 tests、production build；H5 全量 typecheck 仅被既有 QR/Node test 三处无关错误阻断。
+- cleanup: shared DTO/array guard/realtime revision 位于 SDK，H5 只有 tab lifecycle 编排；无 fake-success、console、第二套 Gateway mapper 或 Repository writer；`im28-phone` worktree clean。
+- protected: 未运行 RN/Desktop/all build/sync 或 `build:package:desktop:web`；RN business/source 未改。
+- gated: 真实第二账号申请后 badge、好友/群/普通/归档/通话列表 Network -> SQLite -> reload 证据，及现有 H5 三处无关 typecheck 错误的独立修复。

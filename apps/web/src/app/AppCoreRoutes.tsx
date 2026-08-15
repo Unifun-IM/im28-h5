@@ -47,8 +47,6 @@ const BroadcastComposePage = lazy(() => import('../pages/broadcast/BroadcastComp
 const QRCodeScanPage = lazy(() => import('../pages/qr/QRCodeScanPage.js'));
 /** 群二维码申请页按识别结果路由加载。 */
 const GroupQRCodeApplyPage = lazy(() => import('../pages/qr/GroupQRCodeApplyPage.js'));
-/** 个人二维码页按动作路由加载，QR 生成器不进入个人中心首包。 */
-const ProfileQRCodePage = lazy(() => import('../pages/qr/ProfileQRCodePage.js'));
 /** 二维码应用内分享页按确认动作路由加载，不进入展示页首包。 */
 const QRCodeSharePage = lazy(() => import('../pages/qr/QRCodeSharePage.js'));
 
@@ -88,7 +86,7 @@ export function renderCoreRoutes() {
       <Route path="/broadcast/compose" element={<Suspense fallback={<ContactsRouteLoadingState />}><BroadcastComposePage /></Suspense>} />
       <Route path="/scan" element={<Suspense fallback={<ContactsRouteLoadingState />}><QRCodeScanPage /></Suspense>} />
       <Route path="/groups/:groupID/apply" element={<Suspense fallback={<ContactsRouteLoadingState />}><GroupQRCodeApplyPage /></Suspense>} />
-      <Route path="/me/qrcode" element={<Suspense fallback={<ContactsRouteLoadingState />}><ProfileQRCodePage /></Suspense>} />
+      <Route path="/me/qrcode" element={<Navigate to="/me" replace />} />
       <Route path="/me/qrcode/share" element={<Suspense fallback={<ContactsRouteLoadingState />}><QRCodeSharePage kind="user" /></Suspense>} />
       <Route path="/contacts/search" element={<ContactSearchPage />} />
       <Route path="/contacts/users/:userID/share" element={<Suspense fallback={<ContactsRouteLoadingState />}><ContactCardSharePage /></Suspense>} />

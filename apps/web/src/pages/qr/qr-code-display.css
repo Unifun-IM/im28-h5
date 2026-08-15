@@ -17,7 +17,7 @@
 
 .rn-qr-display-surface {
   width: 100%;
-  max-height: calc(100dvh - var(--im-safe-top));
+  max-height: min(92dvh, 760px);
   margin: 0;
   overflow-x: hidden;
   overflow-y: auto;
@@ -25,6 +25,28 @@
   background: var(--im-bg-page);
   box-shadow: 0 16px 36px rgb(0 0 0 / 18%);
 }
+
+.rn-qr-display-state {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  padding: 20px;
+  gap: 12px;
+}
+
+.rn-qr-display-state > button:first-child {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  font-size: 28px;
+}
+
+.rn-qr-display-state > span { color: var(--im-text-muted); text-align: center; }
+.rn-qr-display-state > button:last-child { min-width: 96px; min-height: 40px; border: 0; border-radius: 8px; color: var(--im-text-inverse); background: var(--im-brand-primary); }
 
 .rn-qr-display-header {
   display: grid;

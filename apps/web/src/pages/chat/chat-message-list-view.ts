@@ -22,6 +22,14 @@ export type ChatMessageListEntry =
       readonly showSenderAvatar: boolean;
     };
 
+/** 长消息栈在首次滚动锚定前不得进入可见帧。 */
+export function isChatInitialPositionPending(
+  messageCount: number,
+  initialPositioned: boolean,
+): boolean {
+  return messageCount > 0 && !initialPositioned;
+}
+
 /** 将 Repository newest-first 消息构造成 RN 阅读顺序与连续气泡关系。 */
 export function buildChatMessageListEntries(
   messages: readonly Message[],

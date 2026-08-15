@@ -325,6 +325,10 @@
   justify-content: flex-end;
 }
 
+.rn-chat-message-stack.is-initial-position-pending {
+  visibility: hidden;
+}
+
 .rn-chat-history-loading {
   display: block;
   margin: 0 auto 8px;
@@ -336,10 +340,8 @@
 }
 
 .rn-chat-bottom-notice {
-  display: flex;
+  display: block;
   padding: 10px 20px 14px;
-  align-items: center;
-  justify-content: center;
   color: var(--im-text-muted);
   font-size: 12px;
   letter-spacing: 0;
@@ -348,12 +350,15 @@
 }
 
 .rn-chat-bottom-notice button {
+  display: inline;
   padding: 0;
   border: 0;
+  margin-left: 4px;
   color: var(--im-brand-primary);
   background: transparent;
   font: inherit;
   letter-spacing: 0;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -416,4 +421,3 @@
   letter-spacing: 0;
   cursor: pointer;
 }
-

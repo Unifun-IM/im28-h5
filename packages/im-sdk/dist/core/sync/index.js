@@ -10,7 +10,7 @@ export { createWebIMBlacklistSync } from './blacklist-sync.js';
 /** 创建不复制资料或黑名单 owner 的单聊关系组合 facade。 */
 export { createIMDirectChatRelationshipSync } from './direct-chat-relationship-sync.js';
 /** 判断 realtime 通知是否要求重新读取好友与黑名单关系事实。 */
-export { isIMRelationshipRealtimeEvent } from './relationship-realtime.js';
+export { isIMRelationshipRealtimeEvent, isIMVerificationRealtimeEvent, } from './relationship-realtime.js';
 /** 创建认证账号绑定的通讯录读取 service。 */
 export { createWebIMContactSync } from './contact-sync.js';
 /** 创建 RN、Web、Desktop 共用的联系人写动作 facade。 */

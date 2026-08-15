@@ -16,6 +16,7 @@ import {
   buildAvatarUpload,
 } from '../../components/avatar/avatar-upload.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { useQRCodeModal } from '../qr/QRCodeModalProvider.js';
 import { MeProfileHeader } from './MeProfileHeader.js';
 import {
   getProfileGenderLabel,
@@ -30,6 +31,8 @@ export function MeProfilePage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   /** toast 只承载剪贴板操作结果。 */
   const { toast } = useAppToast();
+  /** openUserQRCode 复用应用根级个人二维码底部弹窗。 */
+  const { openUserQRCode } = useQRCodeModal();
   // location 只承载应用内部的受控快捷动作，不参与资料业务状态。
   const location = useLocation();
   // navigate 在消费快捷动作后清空当前 history entry 的瞬时 state。
@@ -173,12 +176,12 @@ export function MeProfilePage() {
               <span className="rn-me-profile-label">ID</span>
               <span className="rn-me-profile-trailing"><strong>{userID}</strong></span>
             </button>
-            <Link className="rn-me-profile-row" to="/me/qrcode" state={{ backHref: '/me/profile' }}>
+            <button className="rn-me-profile-row" type="button" onClick={openUserQRCode}>
               <span className="rn-me-profile-label">二维码</span>
               <span className="rn-me-profile-trailing">
                 <RNAssetIcon assetURL={qrCodeIconURL} />
               </span>
-            </Link>
+            </button>
             <ProfileLinkRow label="个性签名" value={bio || '未设置'} href="/me/profile/bio" last />
           </div>
         </div>

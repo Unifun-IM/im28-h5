@@ -91,5 +91,11 @@ export function useVerificationUnreadCounts() {
     };
   }, [refresh, runtime, snapshot.userID]);
 
+  useEffect(() => {
+    // 验证类 WS revision 只重新读取权威计数，不把现有角标短暂清零。
+    if (snapshot.verificationVersion <= 0) return;
+    void refresh();
+  }, [refresh, snapshot.verificationVersion]);
+
   return { counts, refresh } as const;
 }

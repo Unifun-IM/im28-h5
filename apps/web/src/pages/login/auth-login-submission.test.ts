@@ -14,6 +14,7 @@ function createSnapshot(userID: string): WebIMRuntimeSnapshot {
     userID,
     dataVersion: 0,
     relationshipVersion: 0,
+    verificationVersion: 0,
     incomingCall: { phase: 'idle', call: null, revision: 0 },
   };
 }

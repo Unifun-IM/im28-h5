@@ -51,6 +51,25 @@
   justify-content: flex-end;
 }
 
+.rn-chat-message-action-stack.is-mine .rn-chat-message-action-preview .rn-chat-bubble {
+  color: var(--im-chat-self-text);
+  background: var(--im-chat-self-bubble);
+}
+
+.rn-chat-message-action-stack.is-mine .rn-chat-message-action-preview .rn-chat-bubble time {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.rn-chat-message-action-stack.is-mine .rn-chat-message-action-preview .rn-chat-sender-identity {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.rn-chat-message-action-stack.is-other .rn-chat-message-action-preview .rn-chat-bubble {
+  border: var(--im-hairline-width) solid var(--im-border-subtle);
+  color: var(--im-chat-peer-text);
+  background: var(--im-chat-peer-bubble);
+}
+
 .rn-chat-message-action-menu {
   width: 200px;
   max-width: 100%;

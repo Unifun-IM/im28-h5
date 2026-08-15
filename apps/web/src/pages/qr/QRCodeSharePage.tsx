@@ -6,7 +6,7 @@ import {
   type GatewayUser,
   type WebIMSync,
 } from '@im28/im-sdk/web';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { ChatTargetPickerModal, type ChatTargetPickerItem } from '../../components/chat-target-picker/index.js';
 import { useAppToast } from '../../components/interaction/index.js';
@@ -15,6 +15,7 @@ import { useWebIMRuntime } from '../../runtime/index.js';
 import { loadGroupProfileSource } from '../chat/group-profile-source.js';
 import { buildGroupProfileView } from '../chat/group-profile-view.js';
 import { createBrowserQRCodeShareFile } from './browser-qr-image.js';
+import { readQRCodeShareBackHref } from './qr-route.js';
 
 /** 二维码应用内分享的可刷新来源类型。 */
 export type QRCodeShareKind = 'user' | 'group';
@@ -31,6 +32,8 @@ interface QRCodeShareSource {
 export default function QRCodeSharePage({ kind }: { readonly kind: QRCodeShareKind }) {
   /** conversationID 仅在群二维码路由存在。 */
   const { conversationID = '' } = useParams();
+  /** location 只恢复全局二维码弹窗登记的真实来源页。 */
+  const location = useLocation();
   /** navigate 关闭弹窗后返回二维码展示页。 */
   const navigate = useNavigate();
   /** runtime 提供资料与媒体群发 shared facade。 */
@@ -47,10 +50,8 @@ export default function QRCodeSharePage({ kind }: { readonly kind: QRCodeShareKi
   const [shareCompleted, setShareCompleted] = useState(false);
   /** error 显示真实读取、上传或逐目标发送失败。 */
   const [error, setError] = useState<string | null>(null);
-  /** backHref 严格返回当前二维码展示路由。 */
-  const backHref = kind === 'group'
-    ? `/conversations/${encodeURIComponent(conversationID)}/settings/qrcode`
-    : '/me/qrcode';
+  /** backHref 严格返回打开全局底部弹窗的真实页面。 */
+  const backHref = readQRCodeShareBackHref(location.state, kind, conversationID);
 
   /** 从 shared profile 或群资料 owner 恢复二维码来源。 */
   const load = useCallback(async (): Promise<void> => {

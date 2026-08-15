@@ -32,6 +32,8 @@ export interface WebIMRuntimeSnapshot {
     readonly dataVersion: number;
     /** 好友与我方黑名单领域事件的单调版本，不随消息事件推进。 */
     readonly relationshipVersion: number;
+    /** 好友与群验证事件的单调版本，供全局角标重新读取权威计数。 */
+    readonly verificationVersion: number;
     readonly incomingCall: IMIncomingCallSnapshot;
 }
 /** Web runtime 对页面开放的最小认证与连接 API。 */

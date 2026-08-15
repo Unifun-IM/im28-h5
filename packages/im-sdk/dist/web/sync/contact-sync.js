@@ -86,7 +86,11 @@ class WebIMContactSyncImpl {
                 page_size: pageSize,
             });
             // friends 保留当前页原始顺序供 addedAt 排序稳定回退。
-            const friends = response.friends ?? [];
+            if (!Array.isArray(response.friends)) {
+                throw createWebIMSyncError('CONTACT_INVALID_RESPONSE', 'Gateway friend list did not explicitly return friends.');
+            }
+            // friends 只有明确数组响应才参与分页完成判定和缓存替换。
+            const friends = response.friends;
             for (const friend of friends) {
                 // contact 丢弃没有稳定用户 ID 的无效记录。
                 const contact = normalizeWebIMContact(friend);

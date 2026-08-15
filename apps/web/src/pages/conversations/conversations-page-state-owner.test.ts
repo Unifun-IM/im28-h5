@@ -13,7 +13,7 @@ describe('conversations page state owner contract', () => {
     expect(stateHookSource).toContain('await reloadCachedConversations()');
     expect(stateHookSource).toContain('sync.conversations.sync({ forceFullSnapshot: true, pageSize: 100 })');
     expect(stateHookSource).not.toContain('await sync.conversations.sync()');
-    expect(stateHookSource).toContain('sync.conversations.syncArchived()');
+    expect(stateHookSource).toContain('sync.conversations.syncArchived({ pageSize: 100 })');
     expect(stateHookSource).toContain('dataVersion');
   });
 

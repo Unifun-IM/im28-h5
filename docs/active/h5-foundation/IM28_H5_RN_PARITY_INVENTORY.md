@@ -38,7 +38,7 @@
 | group profile/member/admin/management | RN group edit/member/manage screens | group settings/profile/members/manage child routes -> shared group owners | `acceptance-gated` | role-specific natural data、authorized member/admin/owner mutations |
 | group create/search/apply/card open | RN create/server-search/application + type108 card action | `/groups/create|search|:id/apply` + chat card -> shared group owners | `acceptance-gated` | 已加入群名片 real browser 直达会话已通过；create/apply/non-member card mutation、persistence and second-account list-back |
 | broadcast | RN broadcast select/compose | `/broadcast/select|compose` -> shared batch owners | `acceptance-gated` | real text/media batch send、partial results |
-| QR scan/display/share | RN QR screens | `/scan`、profile/group QR routes + global share picker | `acceptance-gated` | 真实个人/群二维码 PNG 下载与 payload 反解均已通过；camera permission/device scan、share final send 仍 gated |
+| QR scan/display/share | RN QR screens | `/scan` + global `QRCodeModalProvider` + single-friend share picker | `acceptance-gated` | 个人中心/资料、扫一扫、群资料已共用全宽贴底弹窗；真实个人/群二维码 PNG 下载与 payload 反解均已通过；camera permission/device scan、share final send 仍 gated |
 | profile/display/terms | RN `ProfileScreen` routes | `/me/profile*`、display、terms | `acceptance-gated` | changed-value update、device/cross-browser evidence |
 | notification/permission settings | RN notification/permission screens | `/me/settings/notifications|permissions` -> shared settings facade | `acceptance-gated` | operation feedback converged；real changed-value result/rollback and cross-browser evidence |
 | blacklist | RN blacklist route | `/me/settings/blacklist` -> shared blacklist facade | `acceptance-gated` | non-empty sample、authorized removal/list-back |

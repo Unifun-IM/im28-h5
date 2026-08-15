@@ -2,6 +2,7 @@ import { BrowserRouter } from 'react-router-dom';
 
 import { AppToastProvider, RouteMotionController } from '../components/interaction/index.js';
 import { AuthOnboardingProvider } from '../pages/login/AuthOnboardingProvider.js';
+import { QRCodeModalProvider } from '../pages/qr/QRCodeModalProvider.js';
 import { OfflineRuntimeBoundary, WebIMCallProvider, WebIMRuntimeProvider } from '../runtime/index.js';
 import { AppRouteTree } from './AppRouteTree.js';
 
@@ -14,8 +15,10 @@ export function App() {
           <OfflineRuntimeBoundary>
             <WebIMCallProvider>
               <AuthOnboardingProvider>
-                <RouteMotionController />
-                <AppRouteTree />
+                <QRCodeModalProvider>
+                  <RouteMotionController />
+                  <AppRouteTree />
+                </QRCodeModalProvider>
               </AuthOnboardingProvider>
             </WebIMCallProvider>
           </OfflineRuntimeBoundary>

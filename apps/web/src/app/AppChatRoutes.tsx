@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Route } from 'react-router-dom';
+import { Navigate, Route, useParams } from 'react-router-dom';
 
 import { ChatForwardCompatibilityRedirect } from '../pages/chat/ChatForwardCompatibilityRedirect.js';
 import { ChatPage } from '../pages/chat/ChatPage.js';
@@ -39,8 +39,6 @@ const GroupSpeechFrequencyPage = lazy(() => import('../pages/chat/GroupSpeechFre
 const ChatAutoDeletePage = lazy(() => import('../pages/chat/ChatAutoDeletePage.js'));
 /** 发起群聊页按单聊设置动作加载，不进入聊天首包。 */
 const CreateGroupPage = lazy(() => import('../pages/groups/CreateGroupPage.js'));
-/** 群二维码页按群资料动作路由加载，共用二维码生成器。 */
-const GroupQRCodePage = lazy(() => import('../pages/qr/GroupQRCodePage.js'));
 /** 二维码应用内分享页按确认动作路由加载，不进入展示页首包。 */
 const QRCodeSharePage = lazy(() => import('../pages/qr/QRCodeSharePage.js'));
 
@@ -55,7 +53,7 @@ export function renderChatRoutes() {
       <Route path="/conversations/:conversationID/settings" element={<Suspense fallback={<ChatSettingsRouteLoadingState />}><ChatSettingsPage /></Suspense>} />
       <Route path="/conversations/:conversationID/settings/create-group" element={<Suspense fallback={<ChatSettingsRouteLoadingState />}><CreateGroupPage fromSingleSettings /></Suspense>} />
       <Route path="/conversations/:conversationID/settings/profile" element={<Suspense fallback={<ChatSettingsRouteLoadingState />}><GroupProfilePage /></Suspense>} />
-      <Route path="/conversations/:conversationID/settings/qrcode" element={<Suspense fallback={<ChatSettingsRouteLoadingState />}><GroupQRCodePage /></Suspense>} />
+      <Route path="/conversations/:conversationID/settings/qrcode" element={<GroupQRCodeCompatibilityRedirect />} />
       <Route path="/conversations/:conversationID/settings/qrcode/share" element={<Suspense fallback={<ChatSettingsRouteLoadingState />}><QRCodeSharePage kind="group" /></Suspense>} />
       <Route path="/conversations/:conversationID/settings/manage" element={<Suspense fallback={<ChatSettingsRouteLoadingState />}><GroupManagementPage /></Suspense>} />
       <Route path="/conversations/:conversationID/settings/manage/mute" element={<Suspense fallback={<ChatSettingsRouteLoadingState />}><GroupMutePage /></Suspense>} />
@@ -78,6 +76,15 @@ export function renderChatRoutes() {
       <Route path="/conversations/:conversationID/settings/share-group-card" element={<Suspense fallback={<ChatSettingsRouteLoadingState />}><GroupCardSharePage /></Suspense>} />
     </>
   );
+}
+
+/** 旧群二维码收藏地址只回到真实群资料页，不再装配伪装弹窗页面。 */
+function GroupQRCodeCompatibilityRedirect() {
+  /** conversationID 用于重建当前群资料的稳定 SPA 路径。 */
+  const { conversationID = '' } = useParams();
+  /** profileHref 对路由身份编码，拒绝将参数拼进查询或状态。 */
+  const profileHref = `/conversations/${encodeURIComponent(conversationID)}/settings/profile`;
+  return <Navigate to={profileHref} replace />;
 }
 
 /** 聊天搜索路由块下载期间保持明确且可访问的页面状态。 */

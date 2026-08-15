@@ -1,8 +1,13 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import joinedGroupsSource from './useJoinedGroupsPageState.ts?raw';
+import joinedGroupActionMenuSource from './JoinedGroupActionMenu.tsx?raw';
 import groupProfileSource from '../chat/GroupProfilePage.tsx?raw';
 import ownerTransferSource from '../chat/GroupOwnerTransferPage.tsx?raw';
+
+/** 群列表样式源码用于锁定退出 ActionSheet 的全宽与分组约束。 */
+const joinedGroupsStyleSource = readFileSync(new URL('./joined-groups-page.css', import.meta.url), 'utf8');
 
 /** 群列表长按动作必须复用既有 SPA route 和 shared lifecycle owner。 */
 describe('joined group actions route contract', () => {
@@ -26,5 +31,12 @@ describe('joined group actions route contract', () => {
     expect(joinedGroupsSource).toContain('settings/manage/admins');
     expect(joinedGroupsSource).not.toContain('buildJoinedGroupOwnerTransferRoute');
     expect(ownerTransferSource).not.toContain('groupLifecycle.leave');
+  });
+
+  it('普通成员退出弹窗保持 RN 全宽底部 ActionSheet 结构', () => {
+    expect(joinedGroupActionMenuSource).not.toContain('<h2>退出群聊</h2>');
+    expect(joinedGroupActionMenuSource).toContain('rn-joined-group-quit-cancel');
+    expect(joinedGroupsStyleSource).toMatch(/\.rn-joined-group-quit-modal\s*\{[^}]*width:\s*100%/s);
+    expect(joinedGroupsStyleSource).toMatch(/\.rn-joined-group-quit-modal\s*\{[^}]*gap:\s*8px/s);
   });
 });

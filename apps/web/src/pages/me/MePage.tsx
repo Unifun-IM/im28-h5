@@ -15,6 +15,7 @@ import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { copyUserIDToClipboard } from '../../components/clipboard/user-id-clipboard.js';
 import { useAppToast } from '../../components/interaction/index.js';
 import { useWebIMRuntime } from '../../runtime/index.js';
+import { useQRCodeModal } from '../qr/QRCodeModalProvider.js';
 import './me-page.css';
 
 /** RN 个人中心首页只呈现已有真实 owner 的资料和设置入口。 */
@@ -23,6 +24,8 @@ export function MePage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   /** toast 承载复制动作结果，不改变资料加载错误。 */
   const { toast } = useAppToast();
+  /** openUserQRCode 将个人二维码交给应用根级底部弹窗。 */
+  const { openUserQRCode } = useQRCodeModal();
   // profile 保存 Gateway 当前用户详情，不使用本地假数据回退。
   const [profile, setProfile] = useState<GatewayUser | null>(null);
   // loading 覆盖 current-detail 请求。
@@ -99,9 +102,9 @@ export function MePage() {
               <Link className="rn-me-name-action" aria-label="编辑昵称" to="/me/profile/nickname">
                 <strong>{displayName || '加载中'}</strong>
               </Link>
-              <Link className="rn-me-qr-action" aria-label="我的二维码" to="/me/qrcode" state={{ backHref: '/me' }}>
+              <button className="rn-me-qr-action" type="button" aria-label="我的二维码" onClick={openUserQRCode}>
                 <RNAssetIcon assetURL={qrCodeIconURL} />
-              </Link>
+              </button>
             </span>
             <button type="button" disabled={!userID} onClick={() => void copyUserID()}>
               <span>ID：{userID || '--'}</span>

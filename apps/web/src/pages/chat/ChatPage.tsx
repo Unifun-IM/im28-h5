@@ -76,8 +76,9 @@ export function ChatPage() {
       : {}),
     messages,
     hasUnreadMessages: (conversation?.unreadCount ?? 0) > 0,
-    ready: !focusedMessageID && !loading &&
-      conversation?.conversationID === conversationID,
+    ready: !focusedMessageID &&
+      conversation?.conversationID === conversationID &&
+      (messages.length > 0 || !loading),
     listRef: messageListRef,
     onMarkRead: handleMarkConversationRead,
   });

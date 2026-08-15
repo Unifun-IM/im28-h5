@@ -47,6 +47,8 @@ export function useChatUnreadNavigation({
   );
   /** remainingUnreadCount 只表示本页尚未达到 80% 可见的初始未读消息。 */
   const [remainingUnreadCount, setRemainingUnreadCount] = useState(0);
+  /** positionedConversationID 只在当前会话首屏定位完成后放行消息可见性。 */
+  const [positionedConversationID, setPositionedConversationID] = useState('');
   /** initializedRef 保证同一路由只计算一次初始边界。 */
   const initializedRef = useRef(false);
   /** positionedRef 区分首次锚定和后续新消息跟随。 */
@@ -77,7 +79,7 @@ export function useChatUnreadNavigation({
     setRemainingUnreadCount(0);
   }, [conversationID]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!ready || initializedRef.current || !conversationID) return;
     /** ordered 将 Repository newest-first 结果转换为 RN 阅读顺序。 */
     const ordered = [...messages].reverse();
@@ -86,7 +88,14 @@ export function useChatUnreadNavigation({
     initializedRef.current = true;
     setNavigation(nextNavigation);
     setRemainingUnreadCount(nextNavigation.unreadMessageIDs.length);
-  }, [conversationID, lastReadSeq, messages, ready]);
+    /** container 在同一布局提交中使用 nextNavigation，不等待旧 state 重渲染。 */
+    const container = listRef.current;
+    if (!container) return;
+    positionInitialUnreadBoundary(container, nextNavigation);
+    positionedRef.current = true;
+    previousMessageCountRef.current = messages.length;
+    setPositionedConversationID(conversationID);
+  }, [conversationID, lastReadSeq, listRef, messages, ready]);
 
   /** 提交当前允许消费的最高可见未读序列，失败后允许重试。 */
   const reportVisibleUnread = useCallback((container: HTMLElement) => {
@@ -184,25 +193,22 @@ export function useChatUnreadNavigation({
     if (!container) return;
     /** shouldFollowLatest 冻结 DOM 更新前的最新端状态。 */
     const shouldFollowLatest = atLatestRef.current;
-    /** frame 合并本轮布局与唯一滚动命令。 */
-    const frame = requestAnimationFrame(() => {
-      if (!positionedRef.current) {
-        positionInitialUnreadBoundary(container, navigation);
-        positionedRef.current = true;
-      } else if (
-        messages.length !== previousMessageCountRef.current &&
-        shouldFollowLatest
-      ) {
-        allowProgrammaticReadRef.current = true;
-        container.scrollTop = container.scrollHeight;
-      }
-      previousMessageCountRef.current = messages.length;
-      updateScrollState();
-      /** 最新端跟随许可只属于当前布局帧，outgoing 增长不得残留。 */
-      allowProgrammaticReadRef.current = false;
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [listRef, messages.length, navigation, updateScrollState]);
+    if (!positionedRef.current) {
+      positionInitialUnreadBoundary(container, navigation);
+      positionedRef.current = true;
+      setPositionedConversationID(conversationID);
+    } else if (
+      messages.length !== previousMessageCountRef.current &&
+      shouldFollowLatest
+    ) {
+      allowProgrammaticReadRef.current = true;
+      container.scrollTop = container.scrollHeight;
+    }
+    previousMessageCountRef.current = messages.length;
+    updateScrollState();
+    /** 最新端跟随许可只属于当前布局提交，outgoing 增长不得残留。 */
+    allowProgrammaticReadRef.current = false;
+  }, [conversationID, listRef, messages.length, navigation, updateScrollState]);
 
   /** 显式用户动作定位下一条尚未看过的初始未读消息。 */
   const scrollToNextUnread = useCallback(() => {
@@ -228,7 +234,12 @@ export function useChatUnreadNavigation({
     }
   }, [listRef, navigation]);
 
-  return { navigation, remainingUnreadCount, scrollToNextUnread };
+  return {
+    navigation,
+    remainingUnreadCount,
+    initialPositioned: positionedConversationID === conversationID,
+    scrollToNextUnread,
+  };
 }
 
 /** 首入页把最后已读消息贴近底边；无已读上下文时显示首条未读。 */
