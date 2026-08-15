@@ -22,6 +22,6 @@ export async function sendWebIMTextMessage(context, options, dependencies) {
         contentType: 101,
         payload: { text: { text } },
         ...(entities.length ? { entities } : {}),
-    }, { text: { text } }, dependencies, gatewayEntities);
+    }, { text: { text } }, dependencies, gatewayEntities, options.onSending);
 }
 //# sourceMappingURL=message-text-send.js.map

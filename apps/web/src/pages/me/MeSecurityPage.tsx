@@ -56,8 +56,8 @@ export function MeSecurityPage() {
         <div className="rn-me-security-content">
           {error ? <div className="rn-me-security-error" role="status"><span>{error}</span><button type="button" onClick={() => void loadProfile()}>重试</button></div> : null}
           <div className="rn-me-security-card">
-            <SecurityStaticRow label="手机号" value={phoneDisplay} />
-            <SecurityStaticRow label="邮箱" value={email} />
+            <SecurityContactRow label="手机号" value={phoneDisplay} href="/me/security/phone" />
+            <SecurityContactRow label="邮箱" value={email} href="/me/security/email" />
             <Link className="rn-me-security-row" to={account ? '/me/security/password' : '/me/security/account'}>
               <span>{account ? '重置密码' : '账号密码'}</span><strong>{account}</strong><RNAssetIcon assetURL={arrowIconURL} />
             </Link>
@@ -68,9 +68,9 @@ export function MeSecurityPage() {
   );
 }
 
-/** 只读联系方式行不渲染尚无完整验证码 owner 的箭头。 */
-function SecurityStaticRow({ label, value }: { readonly label: string; readonly value: string }) {
-  return <div className="rn-me-security-row is-static"><span>{label}</span><strong>{value}</strong></div>;
+/** 联系方式行统一进入首次绑定或换绑流程。 */
+function SecurityContactRow({ label, value, href }: { readonly label: string; readonly value: string; readonly href: string }) {
+  return <Link className="rn-me-security-row" to={href}><span>{label}</span><strong>{value}</strong><RNAssetIcon assetURL={arrowIconURL} /></Link>;
 }
 
 /** 统一承载账号安全启动状态。 */

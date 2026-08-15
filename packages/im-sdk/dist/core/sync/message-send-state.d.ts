@@ -42,7 +42,7 @@ export declare function completeWebIMMessageSend(prepared: PreparedWebIMMessageS
 /** 将远端任一步失败持久化到同一 optimistic row。 */
 export declare function failWebIMMessageSend(prepared: PreparedWebIMMessageSend, cause: unknown): Promise<never>;
 /** 为无需平台上传的 body 执行完整 optimistic send 状态机。 */
-export declare function executeWebIMMessageSend(context: WebIMSyncContext, definition: WebIMMessageSendDefinition, body: GatewayClientMessageBody, dependencies: WebIMMessageSendDependencies, entities?: readonly GatewayPresetEmojiEntity[], mentions?: readonly GatewayMentionTarget[], execution?: WebIMMessageSendExecutionOptions): Promise<Message>;
+export declare function executeWebIMMessageSend(context: WebIMSyncContext, definition: WebIMMessageSendDefinition, body: GatewayClientMessageBody, dependencies: WebIMMessageSendDependencies, entities?: readonly GatewayPresetEmojiEntity[], onSending?: (message: Message) => void, mentions?: readonly GatewayMentionTarget[], execution?: WebIMMessageSendExecutionOptions): Promise<Message>;
 /** 创建并校验本地消息幂等 ID。 */
 export declare function createWebIMClientMessageID(dependencies: WebIMMessageSendDependencies): string;
 //# sourceMappingURL=message-send-state.d.ts.map

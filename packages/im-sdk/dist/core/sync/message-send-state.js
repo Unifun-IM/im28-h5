@@ -97,7 +97,7 @@ export async function failWebIMMessageSend(prepared, cause) {
     throw cause;
 }
 /** 为无需平台上传的 body 执行完整 optimistic send 状态机。 */
-export async function executeWebIMMessageSend(context, definition, body, dependencies, entities, mentions, execution) {
+export async function executeWebIMMessageSend(context, definition, body, dependencies, entities, onSending, mentions, execution) {
     // prepared 保证 Gateway 调用前已有可见 sending row。
     const prepared = await prepareWebIMMessageSend(context, definition, dependencies);
     // onSending 在本地 sending 行可读取后、任何远端 I/O 前通知平台层。
@@ -107,6 +107,7 @@ export async function executeWebIMMessageSend(context, definition, body, depende
     // lastCause 保存最后一次真实发送或状态收敛错误。
     let lastCause;
     try {
+        onSending?.(prepared.localMessage);
         for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
             try {
                 return await completeWebIMMessageSend(prepared, body, dependencies, execution?.entities ?? entities, execution?.mentions ?? mentions);

@@ -9,7 +9,7 @@ export async function sendWebIMCardMessage(context, options, dependencies) {
         conversationID: options.conversationID,
         contentType: 108,
         payload: body,
-    }, body, dependencies, undefined, undefined, options.onSending ? { onSending: options.onSending } : undefined);
+    }, body, dependencies, undefined, options.onSending);
 }
 /** 从平台中立名片构造 Gateway 规范 body，并冻结展示快照。 */
 export function createWebIMCardBody(card) {

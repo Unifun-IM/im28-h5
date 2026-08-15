@@ -4,8 +4,23 @@ import type { IMMediaUploadInput, IMMediaUploadPort } from './message-media-send
 export interface WebIMProfileSync {
     getCurrent(): Promise<GatewayUser>;
     update(patch: WebIMProfileUpdate): Promise<GatewayUser>;
+    saveContact(input: WebIMProfileContactInput): Promise<WebIMProfileContactResult>;
     uploadAvatar(input: IMMediaUploadInput): Promise<string>;
     updateAvatar(input: IMMediaUploadInput): Promise<GatewayUser>;
+}
+/** 当前账号联系方式只开放手机号和邮箱两类。 */
+export type WebIMProfileContactKind = 'phone' | 'email';
+/** 联系方式提交同时携带 Gateway 验证码和手机号区号。 */
+export interface WebIMProfileContactInput {
+    readonly kind: WebIMProfileContactKind;
+    readonly account: string;
+    readonly verificationCode: string;
+    readonly phoneAreaCode?: '+86';
+}
+/** 联系方式 mutation 明确返回首次绑定或换绑结果。 */
+export interface WebIMProfileContactResult {
+    readonly mode: 'bind' | 'update';
+    readonly profile: GatewayUser;
 }
 /** Web 资料编辑开放 RN 完善资料与个人资料共用的字段。 */
 export type WebIMProfileUpdate = Pick<GatewayUpdateUserProfileRequest, 'nickname' | 'gender' | 'bio' | 'avatar_url'>;

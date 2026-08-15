@@ -50,6 +50,41 @@ export function createWebIMProfileSync(dependencies) {
             const updated = await dependencies.gatewayClient.updateUserProfile(normalizeWebIMProfileUpdate(patch));
             return requireMatchingProfile(userID, updated);
         },
+        saveContact: async (input) => {
+            // userID 冻结联系人读取与 mutation 的账号边界。
+            const userID = requireAuthenticatedUser();
+            // normalized 在任何网络 mutation 前收敛联系方式和验证码。
+            const normalized = normalizeWebIMProfileContact(input);
+            // current 决定首次绑定或换绑，客户端不得重复维护分流规则。
+            const current = requireMatchingProfile(userID, await dependencies.gatewayClient.getCurrentUserDetail());
+            // existing 只读取当前联系方式类型的远端真实值。
+            const existing = String(current[normalized.kind] ?? '').trim();
+            if (existing && existing.toLowerCase() === normalized.account.toLowerCase()) {
+                throw createWebIMSyncError('PROFILE_CONTACT_UNCHANGED', 'New profile contact must differ from the current contact.');
+            }
+            if (!existing) {
+                // updated 只有首次绑定接口成功并回显同一账号后才可返回。
+                const updated = await dependencies.gatewayClient.bindContact({
+                    type: normalized.kind,
+                    account: normalized.account,
+                    verification_code: normalized.verificationCode,
+                    ...(normalized.kind === 'phone' ? { phone_area_code: normalized.phoneAreaCode } : {}),
+                });
+                return { mode: 'bind', profile: requireMatchingProfile(userID, updated) };
+            }
+            // updated 由联系方式类型选择唯一换绑接口。
+            const updated = normalized.kind === 'phone'
+                ? await dependencies.gatewayClient.updatePhone({
+                    phone: normalized.account,
+                    phone_area_code: normalized.phoneAreaCode,
+                    verification_code: normalized.verificationCode,
+                })
+                : await dependencies.gatewayClient.updateEmail({
+                    email: normalized.account,
+                    verification_code: normalized.verificationCode,
+                });
+            return { mode: 'update', profile: requireMatchingProfile(userID, updated) };
+        },
         uploadAvatar: async (input) => {
             // userID 在任何平台上传前冻结，防止结果被后续账号使用。
             const userID = requireAuthenticatedUser();
@@ -68,6 +103,25 @@ export function createWebIMProfileSync(dependencies) {
             return { ...requireMatchingProfile(userID, updated), avatar_url: updated.avatar_url?.trim() || avatarURL };
         },
     };
+}
+/** 归一化联系方式并在 Gateway mutation 前拒绝无效输入。 */
+function normalizeWebIMProfileContact(input) {
+    // account 统一去除首尾空白，邮箱比较保持大小写无关。
+    const account = input.account.trim();
+    // verificationCode 对齐 RN 六位验证码约束。
+    const verificationCode = input.verificationCode.trim();
+    // phoneAreaCode 当前 Gateway contract 仅允许中国区号。
+    const phoneAreaCode = input.phoneAreaCode ?? '+86';
+    if (verificationCode.length !== 6) {
+        throw createWebIMSyncError('PROFILE_CONTACT_CODE_INVALID', 'Profile contact verification code must contain 6 characters.');
+    }
+    if (input.kind === 'phone' && (phoneAreaCode !== '+86' || !/^1\d{10}$/.test(account))) {
+        throw createWebIMSyncError('PROFILE_PHONE_INVALID', 'Profile phone must be a valid mainland China mobile number.');
+    }
+    if (input.kind === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(account)) {
+        throw createWebIMSyncError('PROFILE_EMAIL_INVALID', 'Profile email address is invalid.');
+    }
+    return { kind: input.kind, account, verificationCode, phoneAreaCode };
 }
 /** 对齐 RN 昵称、性别和签名约束并拒绝空更新。 */
 function normalizeWebIMProfileUpdate(patch) {

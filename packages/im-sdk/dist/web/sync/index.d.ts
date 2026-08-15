@@ -230,7 +230,7 @@ export type { WebIMSendVideoMessageOptions } from './message-video-send.js';
 /** 导出与 RN 一致的视频文件大小限制。 */
 export { WEB_IM_VIDEO_MAX_BYTES } from './message-video-send.js';
 /** 导出当前账号资料 facade contract。 */
-export type { WebIMProfileSync, WebIMProfileSyncDependencies, WebIMProfileUpdate, } from './profile-sync.js';
+export type { WebIMProfileContactInput, WebIMProfileContactKind, WebIMProfileContactResult, WebIMProfileSync, WebIMProfileSyncDependencies, WebIMProfileUpdate, } from './profile-sync.js';
 /** 导出 realtime event 持久化 contract。 */
 export type { WebIMRealtimeSync, WebIMRealtimeSyncDependencies, } from './realtime-sync.js';
 //# sourceMappingURL=index.d.ts.map

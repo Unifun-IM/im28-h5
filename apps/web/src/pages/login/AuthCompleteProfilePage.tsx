@@ -179,8 +179,8 @@ export function AuthCompleteProfilePage() {
             </button>
             <label className="auth-complete-nickname"><span>昵称</span><input value={profileDraft?.nickname ?? ''} maxLength={ONBOARDING_NICKNAME_MAX_LENGTH} disabled={saving} placeholder="请输入昵称" onChange={event => updateProfileDraft({ nickname: event.target.value })} /></label>
             <section className="auth-complete-group"><p>完善联系方式,可以帮助账号找回,并更好的服务你</p><div className="auth-complete-card">
-              <ProfileRow label="手机号" value={profileDraft?.phone || '绑定手机号'} muted={!profileDraft?.phone} />
-              <ProfileRow label="邮箱" value={profileDraft?.email || '绑定邮箱'} muted={!profileDraft?.email} />
+              <ProfileRow label="手机号" value={profileDraft?.phone || '绑定手机号'} muted={!profileDraft?.phone} {...(profileDraft?.phone ? {} : { href: '/auth/complete-profile/phone' })} />
+              <ProfileRow label="邮箱" value={profileDraft?.email || '绑定邮箱'} muted={!profileDraft?.email} {...(profileDraft?.email ? {} : { href: '/auth/complete-profile/email' })} />
             </div></section>
             <section className="auth-complete-group"><div className="auth-complete-card">
               <ProfileRow label="性别" value={getProfileGenderLabel(profileDraft?.gender)} href="/auth/complete-profile/gender" />
@@ -208,9 +208,9 @@ interface ProfileRowProps {
   readonly href?: string;
 }
 
-/** 渲染 RN 56px 资料行；无真实能力的联系方式保持只读。 */
+/** 渲染 RN 56px 资料行；已绑定联系方式保持只读。 */
 function ProfileRow({ label, value, muted = false, href }: ProfileRowProps) {
-  // navigate 只处理已冻结的 gender/bio 子路由。
+  // navigate 只处理允许编辑或首次绑定的子路由。
   const navigate = useNavigate();
   // content 保持静态行和按钮行完全同构。
   const content = <><span>{label}</span><strong className={muted ? 'is-muted' : ''}>{value}</strong>{href ? <RNAssetIcon assetURL={arrowRightURL} /> : null}</>;

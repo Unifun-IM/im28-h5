@@ -1,4 +1,5 @@
 export { statement } from './database.js';
+export { createDatabaseRPCAdapter } from './rpc-database-adapter.js';
 export { getSchemaVersion, getTargetSchemaVersion, runMigrations, SDK_MIGRATIONS } from './migrations.js';
 export { Repository } from './repository.js';
 export { parseJsonColumn, readOptionalNumber, readOptionalString, readRequiredNumber, readRequiredString, } from './row.js';

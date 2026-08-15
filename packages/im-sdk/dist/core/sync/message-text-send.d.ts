@@ -6,6 +6,7 @@ export interface WebIMSendTextMessageOptions {
     readonly conversationID: string;
     readonly text: string;
     readonly entities?: readonly PresetEmojiEntity[];
+    readonly onSending?: (message: Message) => void;
 }
 /** 校验文本并复用通用 optimistic send 状态机。 */
 export declare function sendWebIMTextMessage(context: WebIMSyncContext, options: WebIMSendTextMessageOptions, dependencies: WebIMMessageSendDependencies): Promise<Message>;

@@ -20,6 +20,7 @@ import { MePermissionSettingsPage } from '../pages/me/MePermissionSettingsPage.j
 import { MeProfileEditorPage } from '../pages/me/MeProfileEditorPage.js';
 import { MeProfilePage } from '../pages/me/MeProfilePage.js';
 import { MeSecurityCredentialPage } from '../pages/me/MeSecurityCredentialPage.js';
+import { MeSecurityContactPage } from '../pages/me/MeSecurityContactPage.js';
 import { MeSecurityPage } from '../pages/me/MeSecurityPage.js';
 import { MeSettingsPage } from '../pages/me/MeSettingsPage.js';
 import { MeTermsPage } from '../pages/me/MeTermsPage.js';
@@ -64,6 +65,8 @@ export function renderCoreRoutes() {
       <Route path="/auth/complete-profile" element={<AuthCompleteProfilePage />} />
       <Route path="/auth/complete-profile/gender" element={<AuthOnboardingProfileEditorPage mode="gender" />} />
       <Route path="/auth/complete-profile/bio" element={<AuthOnboardingProfileEditorPage mode="bio" />} />
+      <Route path="/auth/complete-profile/phone" element={<MeSecurityContactPage kind="phone" source="onboarding" />} />
+      <Route path="/auth/complete-profile/email" element={<MeSecurityContactPage kind="email" source="onboarding" />} />
       <Route element={<PrimaryTabsLayout />}>
         <Route path="/conversations" element={<></>} />
         <Route path="/contacts" element={<></>} />
@@ -100,6 +103,8 @@ export function renderCoreRoutes() {
       <Route path="/me/settings/blacklist" element={<MeBlacklistPage />} />
       <Route path="/me/settings/terms" element={<MeTermsPage />} />
       <Route path="/me/security" element={<MeSecurityPage />} />
+      <Route path="/me/security/phone" element={<MeSecurityContactPage kind="phone" source="security" />} />
+      <Route path="/me/security/email" element={<MeSecurityContactPage kind="email" source="security" />} />
       <Route path="/me/security/account" element={<MeSecurityCredentialPage mode="account" />} />
       <Route path="/me/security/password" element={<MeSecurityCredentialPage mode="password" />} />
       <Route path="/me/profile" element={<MeProfilePage />} />

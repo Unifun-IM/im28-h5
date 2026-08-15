@@ -41,7 +41,7 @@ export async function sendWebIMMentionMessage(context, options, dependencies) {
         payload: body,
         mentions,
         ...(entities.length ? { entities } : {}),
-    }, body, dependencies, gatewayEntities, gatewayMentions, {
+    }, body, dependencies, gatewayEntities, undefined, gatewayMentions, {
         entities: gatewayEntities,
         mentions: gatewayMentions,
         ...(options.maxAttempts === undefined ? {} : { maxAttempts: options.maxAttempts }),
