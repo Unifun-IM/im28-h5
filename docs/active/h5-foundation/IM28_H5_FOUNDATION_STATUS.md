@@ -1,8 +1,940 @@
 # IM28 H5 Foundation Status
 
-- status: `active`
-- current_step: `W6.a6.20.149.20 completed-local/browser-readonly-pass/mutation-gated`
-- next_step: `等待 inventory 中的新合同、自然数据、可用 RTC 部署或明确 operation 验收授权；验证码发送继续暂缓`
+- status: `active/activation-gated`
+- current_step: `W6.a6.20.149.99 Ordinary Video/File System Safari Acceptance/completed-readonly`
+- next_step: `等待 pending 好友/群申请自然样本或审核授权、自然通话记录/详情样本、麦克风权限桥接、新 contract、RTC 联调、实体设备与其余业务 mutation 验收；验证码发送 operation 未提供前保持 blocked`
+
+## W6.a6.20.149.99 Ordinary Video/File System Safari Acceptance (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| activation | `pass` | 用户手动解锁 macOS 并允许 Safari 远程自动化；系统 Safari 26.4 的 `safaridriver` 成功建立真实会话并打开 production 登录页 | none |
+| ordinary file | `pass-readonly` | 独立 Safari automation session 登录 `donk`，等待真实会话列表同步后点击目标单聊；展示 `IM28-H5-FILE-ACCEPTANCE.txt / 137 B`，route reload 后仍可读 | 大文件、下载内容、失败重试 |
+| ordinary video | `pass-playback` | 展示 `0:02` 视频入口；Safari 原生 `video.play()` 成功，`readyState=4`、`320x180`、duration=2s、timeline=0.30s、`errorCode=null`；截图含真实蓝色视频帧 | 其他编码、全屏/下载、后台生命周期、实体设备 |
+| layout/persistence | `pass` | 382x786 聊天/播放截图目检通过，document=`382/382`；刷新后同一文件卡片和视频入口均由正式 route/SQLite 恢复 | refresh 截图短暂显示联系人关系恢复，不影响消息回读 |
+| mutation protection | `pass` | 未发送、下载、mark-read 或执行 Gateway/SQLite mutation；H5/SDK/RN production source 零改动 | none |
+
+Closeout verdict: `.149.99 completed-readonly/system-safari-playback-pass`。普通文件/视频已保留生产消息的 system Safari“登录 -> 会话列表 -> 文件卡片/视频入口 -> 真实解码播放 -> route reload 回读”门禁关闭；不外推到其他编码、大文件、下载内容、失败恢复、后台生命周期或实体设备。
+
+## W6.a6.20.149.98 Ordinary Video/File Cross-Browser Acceptance (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| isolated production path | `pass-readonly` | Firefox/WebKit 分别使用全新独立 profile 登录发送方 `donk`，等待真实会话列表完成同步后点击目标单聊；未重复发送或注入缓存 | none |
+| ordinary file | `pass-readonly` | 两端均展示 `IM28-H5-FILE-ACCEPTANCE.txt / 137 B` 正式文件卡片，route reload 后仍可见 | 大文件、下载内容校验、失败重试 |
+| ordinary video | `pass-playback` | 两端均展示 `0:02` 视频入口；原生 `video.play()` 成功，`readyState=4`、`320x180`、duration=2s，时间轴推进至约 0.26s | system Safari、其他编码、全屏/下载、后台生命周期 |
+| layout/runtime | `pass` | 382x786 消息与预览截图完成目检；document=`382/382`；两端 console/page/request/HTTP blocking errors 均为 0 | physical device |
+| persistence/protection | `pass` | Firefox/WebKit reload 后文件与视频均保持可见；无 send/download/Gateway/SQLite mutation，H5/SDK/RN production source 零改动 | none |
+
+Closeout verdict: `.149.98 completed-readonly/firefox-webkit-playback-pass`。普通文件/视频已保留自然消息的跨浏览器“会话恢复 -> 文件卡片/视频入口 -> 视频真实解码播放 -> route reload 回读”门禁关闭；不外推到 system Safari、实体设备、其他编码、大文件、下载校验、失败恢复或断线补洞。
+
+## W6.a6.20.149.97 Ordinary Video/File Dual-Account Acceptance (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| exact authorization | `pass` | 用户在最终发送前明确确认；发送端 `donk`，接收端 `donk三大爷`，目标会话 `019ff6cd-c8df-7aa1-82ad-bb39e1aa4b02` | none |
+| ordinary file | `pass-production` | `IM28-H5-FILE-ACCEPTANCE.txt` 137 B 经正式 Composer 显式提交；发送端与接收端活动聊天均展示文件卡片 | 大文件、失败重试与下载内容校验 |
+| ordinary video | `pass-production` | 320x180、约 2 秒 H.264 MP4 经正式相册/媒体链发送；双端活动聊天均展示可播放视频消息和 `0:02` 时长 | Firefox/WebKit 读取与播放已由 `.149.98` 关闭；system Safari、编码矩阵、全屏播放与下载仍 gated |
+| WebSocket realtime | `pass` | 接收端保持目标聊天 route，文件和视频均在不离开页面的情况下出现；未靠列表往返触发重读 | 断线、重连、补洞和多窗口竞争 |
+| SQLite persistence | `pass` | 双端同时 reload 后文件和视频仍存在；接收端列表摘要更新为 `[视频]`，时间 `13:55`，未读 `5 -> 7` | 长历史分页、清理与容量压力 |
+| runtime/repository protection | `pass` | 双端 warning/error 为 0；仅 Vite debug/React DevTools info；H5/SDK/RN production source 零改动，未运行 SDK build/sync | Firefox/WebKit 已由 `.149.98` 关闭；system Safari/device 仍 gated |
+
+Closeout verdict: `.149.97 completed-production/dual-account-realtime-persisted`。普通文件和普通视频的“正式发送 -> 接收端活动页 WebSocket -> message/conversation SQLite -> 双端刷新回读 -> 会话摘要”链已关闭；Firefox/WebKit 只读播放由 `.149.98` 补证，不外推到大文件、失败/断线恢复、system Safari、实体设备或媒体下载。
+
+## W6.a6.20.149.96 Personal QR Safari Download Acceptance (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| authenticated source | `pass` | system Safari 真实登录态打开 `/me/qrcode`，展示 `donk / 68078541335` 与“下载二维码”正式动作 | none |
+| file contract | `pass` | 生成 `im28-user-qr-68078541335.png`；`13,673 bytes`、`472x472`、8-bit RGBA、non-interlaced PNG | none |
+| payload decode | `pass` | macOS Vision 反解为 `{"source":"myCard","payload":{"id":"68078541335"}}` | none |
+| cleanup | `pass` | 验收后仅删除本次可重新下载的目标 PNG；无消息、关系、群、Gateway 或 SQLite mutation | none |
+| runtime protection | `pass` | H5/SDK/RN production source 零改动，未运行任何 SDK/RN/Desktop/all build 或 sync | camera scan、应用内分享最终发送、实体设备 |
+
+Closeout verdict: `.149.96 completed-production/local-file-decoded`。个人二维码的“展示 -> Safari 下载 -> PNG 落盘 -> payload 反解”链已关闭，并继续复用与群二维码相同的 Web 导出 owner；结论不外推到相机扫码、应用内分享最终发送或实体设备。
+
+## W6.a6.20.149.95 Production Vendor Chunk Convergence (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| build ownership | `pass` | `vite.config.ts` 仅按 node_modules 路径拆出 React、Zod、qrcode vendor；页面、runtime、SDK、SQLite、WS 和业务 owner 不变 | none |
+| chunk convergence | `pass` | app index `547.7 -> 369.5 kB`；shared runtime `612.4 -> 492.5 kB`；React `228.9 kB`、validation `68.5 kB`、QR `23.5 kB` 独立 | LiveKit 单依赖 `505.5 kB` 仍略高于 Vite 500 kB 默认阈值 |
+| production preview | `pass` | 1242-module build 后独立 preview 进入 `/auth/phone`；入口 JS/CSS 与新 vendor chunks 全部 HTTP 200，浏览器 warning/error 为 0 | authenticated production-preview route 未重复启动第二 SQLite writer |
+| verification | `pass` | H5 182 files/589 tests、Web typecheck、466 assets、production build、preview smoke、diff check | none |
+| personal QR activation | `blocked-environment` | 当前真实资料 `/me/qrcode` 恢复 `donk / 68078541335` 与 472x472 canvas；内嵌浏览器不产生可追踪 download event，system Safari 被 macOS 锁屏阻断 | 解锁系统后复用既有 Safari 下载链完成个人 PNG 落盘与 payload 反解 |
+| repository protection | `pass` | SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；未运行 SDK/RN/Desktop/all build/sync | none |
+
+Closeout verdict: `.149.95 completed-local/vendor-chunks-converged/livekit-warning-retained`。本地可安全收敛的 app/runtime 聚合告警已关闭；LiveKit 保持独立 lazy chunk 且只超阈值约 5.5 kB，不通过抬高阈值隐藏。个人二维码真实 Safari 下载仍是锁屏环境门禁，不声明完成。
+
+## W6.a6.20.149.94 Migration Final Local Closeout Audit (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| local capability inventory | `pass` | parity matrix 没有 `partial` 行；剩余项均为 natural data、真实 mutation、RTC、camera/browser/device 或缺失 OpenAPI contract gate | 需要外部激活条件，不得自动执行 |
+| anti-mock/fake-success | `pass` | production source 无 `parityRuntime`、`localMock`、test-mode 业务分支、`setTimeout(resolve)` 或 fake-success path | none |
+| architecture/owner | `pass` | 页面/组件无 Gateway client、Repository、SQL/WebSocket 直连；唯一页面 `fetch` 位于已登记的浏览器媒体下载 adapter | UI preference/localStorage、clipboard、media/browser I/O 保持 H5 platform owner |
+| cleanup | `pass` | 无 TODO/FIXME/HACK/WIP、调试 console、未实现异常、重复导出名或 >300 行生产 TS/TSX；唯一零生产入边文件是被 10 个测试消费的 fixture | 既有 >500 kB chunk performance warning |
+| verification | `pass` | H5 182 files/589 tests、Web typecheck、466 assets、1242-module production build、HTTP 200、`git diff --check` | none |
+| repository protection | `pass` | SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；本片未运行 SDK/RN/Desktop/all build/sync | none |
+
+Closeout verdict: `.149.94 completed-local/P0-P1-zero/external-activation-gated`。当前 H5 迁移在本地可实现范围内没有未登记 P0/P1，也没有可安全自动激活的下一片；整体不能标为产品验收完成，后续必须由真实自然数据、明确 mutation 授权、可用 RTC/相机/设备环境或新 OpenAPI contract 激活。
+
+## W6.a6.20.149.93 Group QR Download And Shared Export Owner (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| production group QR | `pass` | 真实群 `donk的群聊 / 97524759106` 在 system Safari 点击“下载二维码”，生成 `im28-group-qr-97524759106.png` | none |
+| file and decode | `pass` | 文件为 13,277 字节、472x472 RGBA PNG；ZXing 反解为 `{"source":"groupCard","payload":{"id":"97524759106"}}` | none |
+| shared owner | `pass-contract` | `ProfileQRCodePage` 与 `GroupQRCodePage` 都直接消费唯一 `QRCodeDisplay`；Canvas、PNG 导出、下载 Toast 与底部模态没有第二实现 | 个人二维码实际下载仍需独立登录态运行时取证 |
+| cleanup | `pass` | 只删除本次明确下载文件；群、关系、消息、SQLite 和路由状态均未修改 | none |
+| runtime protection | `pass` | production code、SDK、RN 零改动；未运行 SDK/RN/Desktop/all build/sync | none |
+
+Closeout verdict: `.149.93 completed-production-local-file-decoded`。真实群二维码的“展示 -> 下载 -> PNG 落盘 -> payload 反解”链已关闭，并证明个人/群二维码共用同一 Web 导出 owner；结论不外推到个人二维码实际落盘、应用内分享最终发送、相机扫描或实体设备。
+
+## W6.a6.20.149.92 Safari Ordinary Image Final Download (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| system permission | `pass` | 在 `.149.91` 已验证的 Safari 下载提示中点击“允许”，正式图片完成本地保存 | Safari 已记录本地开发站点下载授权 |
+| file identity | `pass` | 文件名 `a0c68aa4-4da1-480f-8275-aff22f12c07b.png`，大小 29,509 字节，格式为 8-bit RGBA non-interlaced PNG | none |
+| dimensions | `pass` | `file` 与 `sips` 均确认 640x360，与消息 payload/预览自然尺寸一致 | none |
+| byte integrity | `pass` | 本地文件与 OSS 原 URL 的 SHA-256 均为 `1fdfbee8720797719d27cb3a4e63e2b1fe8870b873efb7cb6d2890f2e8dbe95d` | none |
+| cleanup | `pass` | 只删除本次明确文件；下载目录不再存在目标文件，消息、SQLite、关系和群状态不变 | none |
+| runtime protection | `pass` | 本片 production code、SDK、RN 零改动；未运行任何 SDK/RN/Desktop/all build/sync | none |
+
+Closeout verdict: `.149.92 completed-production-local-file-verified`。普通图片在 system Safari 的“预览 -> 保存 -> 权限 -> 文件落盘 -> 字节一致性”链已完整关闭；结论不外推到普通视频、文件消息、过期 signed URL 或物理移动设备。
+
+## W6.a6.20.149.91 Safari Ordinary Image Save Boundary (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| defect reproduction | `pass-fixed` | 原 Blob 路径在 Safari 点击后无权限提示、无下载文件；异步 `fetch` 已越过 Safari 用户手势窗口 | none |
+| platform branch | `pass` | 安全 HTTP(S) URL 与清理后文件名保持统一；Safari 在同步 click 内直接提交 OSS URL，其他浏览器仍先校验 HTTP 响应再走 Blob 下载 | Safari 依赖服务端 `Content-Disposition` 驱动保存 |
+| system Safari boundary | `pass` | 真实图片“保存图片”触发系统提示“你要允许 127.0.0.1 上的下载吗？”，提示中远端 URL 与消息图片一致 | 用户授权后的最终文件与内容校验 |
+| cancellation protection | `pass` | 验证只点击“取消”；下载目录无目标文件，消息/关系/群/SQLite 均未修改 | none |
+| verification | `pass` | focused 1 file/6 tests、Web typecheck、1242-module production build、`git diff --check` | 既有 >500 kB chunk warning |
+| runtime protection | `pass` | SDK/RN 零改动；未运行 SDK/RN/Desktop/all build/sync 或 `build:package:desktop:web` | none |
+
+Closeout verdict: `.149.91 completed-local/system-safari-permission-boundary-pass/final-file-gated`。Safari 保存动作已经从丢失用户手势的无响应路径修复为真实浏览器下载权限链；由于验收主动取消授权，不声明文件最终落盘或字节内容通过。
+
+## W6.a6.20.149.90 Ordinary Image Runtime Recheck (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| production sample | `pass` | 复用 `.149.68` 正式上传发送的 640x360 PNG；系统 Safari 与 H5 内嵌浏览器均从真实会话/SQLite 恢复同一图片消息 | 过期 URL、视频与文件样本 |
+| H5 image lifecycle | `pass` | 缩略图自然尺寸 640x360、展示尺寸 180x101；全屏预览自然尺寸 640x360，关闭后 reload 仍完整解码 | none |
+| system Safari structure | `pass-readonly` | Safari 可访问树确认“预览图片 -> 图片预览/关闭图片预览/保存图片”；关闭和 reload 后预览入口仍在 | 未点击保存，避免无关下载写入 |
+| Safari pixel evidence | `tooling-gated` | 系统截图持续只捕获黑色预览背景，尽管可访问树保留已加载图片节点；同 URL 的 H5 内嵌浏览器截图和原始 640x360 PNG 均显示正常 | 需要可可靠捕获 Safari 跨域媒体合成层的工具或实体设备目视 |
+| mutation protection | `pass` | 未保存、分享、发送或修改消息；H5/SDK/RN production source 零改动 | none |
+
+Closeout verdict: `.149.90 completed-production-readonly-safari-pixel-evidence-gated`。普通图片的 URL、解码、比例、预览、关闭与刷新回读链已经关闭；Safari 的结构与生命周期通过，但当前控制层截图不能证明像素主体，因此既不归因为产品黑屏，也不把 Safari 像素显示声明为通过。
+
+## W6.a6.20.149.89 System Safari Voice Playback Acceptance (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| production sample | `pass` | macOS 系统 Safari 复用真实登录态和单聊缓存，当前页面含 7 条真实语音消息 | 过期 URL、后台/中断与物理设备听感 |
+| playback lifecycle | `pass` | 7 秒语音经历“播放语音 -> 正在加载语音 -> 停止语音/on”；截图确认活动态；等待超过音频时长后 7 个控件全部恢复“播放语音/off” | 手动停止的稳定时序未单独宣称 |
+| runtime boundary | `pass-readonly` | 真实 Safari 页面、真实媒体 URL 和既有 `ChatMediaInteractionProvider`；无 fixture、mock、fake-success 或页面媒体旁路 | none |
+| mutation protection | `pass` | 未录音、未发送、未修改消息或关系；H5/SDK/RN production source 零改动 | none |
+
+Closeout verdict: `.149.89 completed-production-readonly`。系统 Safari 已证明真实语音能够加载、进入活动播放态并在自然结束后复位；该结论不外推到录音权限、上滑取消、后台中断、过期签名 URL 或实体设备听感。
+
+## W6.a6.20.149.88 System Safari Microphone Activation Audit (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| natural-data activation | `not-activated` | 当前好友验证仅 3 条已完成历史、群验证为空；4 条真实会话的已加载历史未出现普通视频/文件；黑名单为空 | pending application、普通视频/文件、非空黑名单继续等待自然样本 |
+| system Safari runtime | `pass-readonly` | macOS 系统 Safari 真实手机号验证码登录成功，恢复 4 条会话；进入含 7 条真实语音的单聊并切换到“语音消息/按住说话”模式 | physical touch、后台/中断与成功采集 |
+| microphone activation | `tooling-gated` | 普通 click 不产生录音或消息；Computer Use 对 Safari 持续按压/上滑返回 `noWindowsAvailable`，无法到达权限 prompt，故不把系统权限桥接声明为通过或失败 | 可产生 pointerdown hold/up 的 Safari 控制器或实体设备 |
+| mutation protection | `pass` | 未发送语音、未改变联系人/群/黑名单/申请状态；H5/SDK/RN production source 零改动 | none |
+
+Closeout verdict: `.149.88 completed-readonly/tooling-gated`。系统 Safari 的登录、SQLite 会话恢复、真实聊天渲染与语音输入模式可达；权限请求、拒绝恢复、上滑取消和成功采集仍需要可持续按压的运行环境，不能由普通 click 或 WebKit 自动化结果外推。
+
+## W6.a6.20.149.87 Visible Unread Read Natural Acceptance (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| natural unread sample | `pass` | 复用 `.149.86` 真实第二账号消息形成的 2 条未读；列表 reload 后仍显示 2，证明验收起点来自 SQLite 而非页面拼装 | none |
+| initial long-list guard | `pass-rn-parity` | 首入长列表正确展示未读分割线和“2条未读”；仅等待 2.8 秒不会清零，符合 RN 禁止初始程序化锚定伪已读的门禁 | none |
+| explicit unread action | `pass` | 点击“2条未读”后，当前可见 incoming 最高 seq 经 `conversations.markRead` 成功收敛，列表群角标与总角标均清零 | 真实 wheel/touchmove 与 latest-edge realtime 分支仍按既有门禁独立验收 |
+| SQLite cold read | `pass` | 会话列表整页 reload 后角标保持 0；重进目标聊天后未读分割线与入口均不存在 | none |
+| runtime protection | `pass` | 浏览器日志只有 Vite/React DevTools debug/info，无 error；H5/SDK/RN production source 零改动 | none |
+
+Closeout verdict: `.149.87 completed-production-natural-sample`。本片证明长列表不会因初始定位误清未读，明确未读入口会把真实可见边界提交给 shared success-only facade，并在 Gateway 成功后持久化到 Conversation SQLite。该结论不外推到物理触摸、断线重试、跨窗口分页或媒体消息。
+
+## W6.a6.20.149.86 Realtime Message.Batch Dual-Account Acceptance (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| real sender | `pass` | 隔离 H5 标签通过手机号 `15555555553` + 固定联调验证码登录 `donk三大爷`，进入同一真实群聊并发送唯一文本 `WS-14985-验收` | 测试环境保留一条可识别联调消息 |
+| active chat realtime | `pass` | 接收端始终停留在 `/conversations/019ff8b7-b24f-7e71-afe1-332d40294c00`；发送后约 2.5 秒直接出现消息，未退出会话或重新进入 | none |
+| conversation convergence | `pass` | 返回列表后首行 latest 为 `donk三大爷：WS-14985-验收`、时间为 `12:05`，群未读由 1 增至 2，总未读为 2 | none |
+| SQLite cold read | `pass` | 整页 reload 后 latest、时间和 2 条未读保持，证明接收帧已写入 message/conversation SQLite，而非仅内存态渲染 | none |
+| browser runtime | `pass` | 发送端与接收端验收完成后的 console error 均为 0 | none |
+| anti-shortcut | `pass` | 使用真实登录、真实 Gateway send 与真实 WS 接收；无 fixture、mock、手工注入 frame、页面补写 SQL 或 fake success | none |
+| protection | `pass` | 本片只产生一条明确标识的联调文本并回写文档；未改 H5/SDK/RN production source，未执行退群、删除、建群、审核或 RTC mutation | none |
+
+Closeout verdict: `.149.86 completed-production-dual-account`。`.149.85` 的部署后运行证据门已关闭：真实第二账号消息可在接收端活动聊天即时出现，Conversation latest/unread 同步更新，reload 后仍从 SQLite 恢复。该结论只覆盖 `message.batch` 文本接收链，不外推到媒体、申请审核、群管理 mutation、RTC 或跨浏览器能力。
+
+## W6.a6.20.149.85 Realtime Message.Batch SQLite Visibility (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| defect reproduction | `pass-fixed` | 真实 WS frame 的子消息无 `sent_at/updated_at`、仅批次有 `server_time`；旧 mapper 写入 `send_time=0`，当前聊天按时间窗口重读时可能裁掉新消息 | none |
+| canonical owner | `pass` | `normalizeIMRealtimeMessages` 仅在子消息无显式时间时继承最近批次 `server_time`；SQLite、seq gap、unread/latest/cursor 与 `dataVersion` owner 均保持 shared SDK 单路径 | none |
+| persistence/runtime | `pass-production` | 用户 frame shape normalization 回归；真实 sql.js Repository 验证 `send_time`、幂等 replay 与 conversation cursor；Web runtime WS bridge 验证 SQLite history + `dataVersion`；`.149.86` 完成双账号活动页、latest/unread 与 reload 冷读 | none |
+| SDK verification | `pass` | focused 3 files / 13 tests；Web full 101 files / 432 tests；全平台 typecheck + runtime boundary；`build:web/sync:web` | none |
+| H5 verification | `pass` | focused chat 2 files / 5 tests；full 182 files / 588 tests；Web app typecheck；1242-module production build | 既有 >500 kB chunk warning |
+| protection | `pass` | `im28-phone/src/**` 零改动；未运行 `build:rn/sync:rn/build:all/build:package:desktop:web`；无 Gateway mutation | none |
+
+Closeout verdict: `.149.85 completed-local/accepted-by-.149.86`。批次消息现在先以有效时间写入当前账号 SQLite，事务成功后通过既有 `dataVersion` 让活动聊天页重读；不新增 H5 SQL 写入、DTO mapper 或 realtime 分支。真实双账号运行证据已由 `.149.86` 关闭。
+
+## W6.a6.20.149.84 Chat Draft Delete-Permission Cache Identity (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| dependency audit | `pass-fixed` | 删除权限 hook 是聊天页最后一个会随草稿产生的新 `Conversation` 引用重读群缓存的 effect；现改为稳定 `groupID + conversationID` | none |
+| owner protection | `pass` | 仅收敛 `groups.listCached()` 触发身份；删除范围判断、确认层、shared delete facade、DTO 与 SQLite owner 均未改变 | real delete remains authorized-only |
+| regression | `pass` | focused 3 files / 10 tests；H5 full 182 files / 588 tests；Web typecheck；1242-module production build | 既有 >500 kB chunk warning |
+| authenticated browser | `pass-readonly` | 真实群聊输入/清空临时草稿；整页刷新后输入框保持空，刷新后 warning/error=0；未发送 | network recorder unavailable |
+| tooling boundary | `partial-tooling` | 当前页面控制层不暴露 Resource Timing、`fetch`、XHR 或网络事件；不为验收新增产品日志/探针，不声明逐请求抓包通过 | DevTools/CDP network recorder |
+| runtime protection | `pass` | SDK/RN 零改动，无消息发送或其他业务 mutation，未运行 SDK/RN/Desktop/all build/sync | none |
+
+Closeout verdict: `.149.84 completed-local/browser-smoke/network-recorder-tooling-gated`。逐字草稿现在不会重复触发群远端同步，也不会重复读取删除权限群缓存；其余完整会话引用只用于同步计算、事件回调或无活动 route state 的早退路径，没有同类 I/O effect。
+
+## W6.a6.20.149.83 Chat Draft Stable Group-Sync Identity (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| trigger isolation | `pass-fixed` | 草稿继续逐字写入 shared SQLite；群成员/资料同步和群申请角标只依赖稳定 `groupID`，不再依赖草稿保存返回的新 `Conversation` 对象引用 | none |
+| request chain | `pass-fixed` | 输入字符不再重复触发 `group/application/audit/list`、`group/my/list`、`group/member/list`、`user/batch-detail`；切换群、runtime 恢复与 `dataVersion` 变化仍保留原同步入口 | production network recorder |
+| regression | `pass` | focused 2 files / 6 tests；H5 full 182 files / 587 tests；Web typecheck；1242-module production build | 既有 >500 kB chunk warning |
+| authenticated browser | `partial-tooling` | 真实群聊加载成功，临时草稿字符写入后已清空，warning/error=0；当前 in-app browser 无 Resource Timing，未伪造逐请求网络证据 | 可用 network recorder 的登录态复验 |
+| runtime protection | `pass` | 未发送消息、未执行业务 mutation；SDK/RN 零改动，未运行 SDK/RN/Desktop/all build/sync | none |
+
+Closeout verdict: `.149.83 completed-local/browser-smoke/network-recorder-tooling-gated`。逐字草稿持久化保持不变，重复 HTTP 链已通过稳定身份依赖和回归合同移除；浏览器网络抓包仍需具备 Resource Timing 或 DevTools recorder 的环境补证。
+
+## W6.a6.20.149.82 H5 Global PC Pull-Refresh Convergence (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| global consumer contract | `pass` | 17 个生产 `usePullRefresh` 页面均接入 Touch 与 mouse Pointer down/move/up/cancel；邀请/移除成员共用弹窗完成类型透传 | physical touch/device |
+| interaction safety | `pass-fixed` | 删除页面祖先 `setPointerCapture/releasePointerCapture`，避免截断会话行长按、列表按钮和成员选择的子 Pointer 生命周期 | physical long-press matrix |
+| regression | `pass` | focused 4 files / 12 tests；H5 full 182 files / 586 tests；workspace typecheck；1242-module production build | 既有 >500 kB chunk warning |
+| authenticated browser | `pass-pc` | 真实建群页鼠标下拉出现“正在刷新”并恢复“下拉刷新”；刷新后好友可选中/取消，创建 CTA 最终 disabled，warning/error=0 | 其余 16 页逐页像素、实体触摸 |
+| runtime protection | `pass` | 未创建群、未发送、未删除、未退群；SDK/RN 零改动，未运行 RN/Desktop/all build/sync | none |
+
+Closeout verdict: `.149.82 completed-global-pc-browser-pass/physical-touch-gated`。PC 下拉能力已从会话单页收敛为全局平台适配，同时保持每个页面原有刷新 owner 和 Touch Events；无 mock、fixture、fake success、第二业务路径或未登记 compat。
+
+## W6.a6.20.149.81 H5 PC Pointer Conversation Refresh (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| pointer adapter | `pass` | `usePullRefresh` 仅接受鼠标主键 Pointer Events；touch/pen/right button 被拒绝，原 Touch Events 保留 | physical touch device |
+| canonical owner | `pass` | `ConversationsPage -> useConversationsPageState.refreshConversations -> SDK forceFullSnapshot -> success-only SQLite replace`；未新增页面同步或缓存实现 | second-account realtime/list-back |
+| regression | `pass` | focused 3 files / 8 tests；H5 full 182 files / 584 tests；workspace typecheck；1242-module production build | 既有 >500 kB chunk warning |
+| authenticated browser | `pass-pc` | 真实登录态恢复 4 条 SQLite 会话；鼠标下拉出现“正在刷新”，完成后回到“下拉刷新”，4 条会话稳定且未新增 runtime error | physical touch/system Safari/device |
+| runtime protection | `pass` | 未执行发送、删除、退群、建群等 mutation；未改 SDK/RN，未运行 RN/Desktop/all build/sync | none |
+
+Closeout verdict: `.149.81 completed-pc-browser-pass/physical-touch-gated`。PC 鼠标与移动触摸现在共享同一手势适配器和正式会话刷新 owner；无 mock、fixture、fake success 或第二业务路径。浏览器日志中的旧 realtime stable-identity 错误早于本片验收，单独保留为既有 realtime 残留，不归因或吞并。
+
+## W6.a6.20.149.80 SDK/H5 Web Full Regression Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| SDK Web regression | `pass` | `npm run test:web`；runtime boundary 通过；101 files / 431 tests 全绿 | none |
+| asset parity | `pass` | `npm run assets:check`；RN 同源 assets 466 files 无漂移 | none |
+| type safety | `pass` | SDK `typecheck:web` 与 H5 workspace typecheck 均通过 | none |
+| production build | `pass-with-warning` | Vite 1242 modules 构建成功；仅保留既有 >500 kB chunk warning | bundle split 为非阻断性能债 |
+| runtime protection | `pass` | 未运行 RN/Desktop/all build/sync，未改 frozen RN，未执行 Gateway/SQLite/business mutation | none |
+
+Closeout verdict: `.149.80 completed-regression/no-new-activation`。当前 Web 生产链回归稳定；剩余能力仍必须由自然数据、明确 mutation 目标、RTC/浏览器设备或新后端 contract 激活。
+
+## W6.a6.20.149.79 Migration Closeout SSOT Reconciliation (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| plan convergence | `pass` | `.149.78` 的全量会话刷新、普通成员退出、成功替换语义和冻结边界已登记到 stable PLAN | none |
+| inventory convergence | `pass` | parity inventory 新增 shared owner、H5 production caller、RN frozen 与 destructive/second-account activation gate | none |
+| cleanup verdict | `pass` | canonical owner 仍为 SDK conversation/group lifecycle；H5 仅持有 cache-first/手势/UI；没有第二业务 owner、compat wrapper 或 fake success | none |
+| browser readonly | `partial-tooling` | 当前登录态从 SQLite 恢复 4 条会话且 warning/error=0；桌面控制层鼠标拖拽不能触发 touch-only 下拉手势，因此不伪造 refresh 通过 | physical touch 或可合成 touch 的实体/浏览器验收 |
+| runtime protection | `pass` | 本片无 production/SDK/RN 代码改动、无 Gateway/SQLite mutation、无 forbidden build/sync | none |
+
+Closeout verdict: `.149.79 completed-docs/no-new-activation`。迁移执行包已恢复为一致 SSOT；当前仍无可无授权自动推进的业务能力，后续必须由自然数据、明确 mutation 目标、可用 RTC/浏览器设备或新后端 contract 激活。
+
+## W6.a6.20.149.78 Conversation Full Refresh + Member Leave RN Parity Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| cache-first list | `pass` | 会话页首次进入继续先读取 Web SQLite；后台同步和下拉刷新统一调用 `sync({ forceFullSnapshot: true, pageSize: 100 })`，完成后从 SQLite 重载视图 | 第二账号 realtime/list-back |
+| full Gateway snapshot | `pass-local` | shared sync 强制绕过 Difference，分页调用 `listConversations`；Gateway OpenAPI transport 对应 `postV1ConversationList` | 当前浏览器控制层未提供 network recorder，不声明浏览器网络抓包证据 |
+| success-only replace | `pass` | 缺少明确 `conversations` 数组时抛出 `SYNC_INVALID_RESPONSE` 并保留缓存；显式空数组才允许清空非归档快照；非空数组成功后替换 SQLite 并由 H5 重载 | 生产错误响应自然样本 |
+| ordinary member leave | `pass-readonly` | 真实普通成员群设置展示 RN 同款底部层：退出群聊、退出并删除我发的群消息、取消；取消后页面与成员关系保持不变 | 两种真实退出结果、第二账号回读 |
+| verification | `pass` | SDK conversation sync 9/9、Gateway transport、typecheck、`build:web/sync:web`；H5 focused 6/6、typecheck、production build；浏览器只读验收通过 | full H5 suite 未重复执行 |
+| protection | `pass` | 未执行真实退群/删消息；未修改 `im28-phone/src/**`，未运行 RN/all/desktop SDK 发布脚本 | RN consumer convergence 需独立授权 |
+
+Closeout verdict: `.149.78 completed-local-readonly/destructive-and-second-account-gated`。会话列表已收敛为 SQLite 首屏 + `postV1ConversationList` 全量快照的单一 shared 路径，只有明确成功数据可替换本地缓存；普通成员退群交互已与 RN 对齐，但破坏性结果仍按授权门禁管理。
+
+## W6.a6.20.149.77 Create-Group Desktop Responsive Regression Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| desktop shell | `pass-fixed` | 1280x800 验收发现建群主体为 1280px、Footer/已选复核层为 480px；H5 为主体恢复 `max-width: 480px`，三者统一为 `x=400/width=480` | system Safari/实体设备 |
+| mobile regression | `pass` | 382x786 下主体/Footer/复核层均为 `x=0/width=382`；document `382/382` | physical touch |
+| production readonly | `pass` | 真实 2 位好友；初始创建 CTA disabled；ALL 后“已选 2 位好友”、CTA enabled；复核层标题/行数为 2/2 | 真实 create、持久化与第二账号 list-back |
+| runtime boundary | `pass-with-known-environment-noise` | 页面 blocking error=0；仅记录 favicon 404 与全局 incoming-call refresh 的既有 `Gateway network is unavailable` | RTC/Gateway deployment |
+| verification | `pass` | focused 3 files/9 tests；H5 typecheck；`git diff --check` | full suite/build 未因单行 CSS 重复执行 |
+| protection | `pass` | 未点击创建 CTA、未执行 Gateway/SQLite mutation；SDK/RN runtime 零改动 | none |
+
+Closeout verdict: `.149.77 completed-responsive-readonly/create-and-device-gated`。建群主体桌面壳层回归已修复并用 CSS contract 固化；既有 shared 人数规则和创建事务未改，本片不声明真实创建结果。
+
+## W6.a6.20.149.76 Verification Desktop Responsive Regression Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| desktop shell | `pass-fixed` | 验收发现验证中心与单群申请 Surface 在 1280x800 被拉伸为 1280px；H5 为两个既有 Surface 恢复 `max-width: 480px` + `margin: 0 auto` | system Safari/实体设备 |
+| production readonly | `pass` | dark desktop 下好友验证、群验证聚合、群 `97524759106` 单群申请三路 Surface 均为 `x=400/width=480`；好友真实历史刷新前后均为 3 条 | pending row、审核 action、角标与第二账号 realtime/list-back |
+| mobile regression | `pass` | light 382x786 下三路 Surface 均为 `x=0/width=382`；document `382/382`，无横向溢出 | dark mobile 已由 `.149.75` 关闭 |
+| runtime boundary | `partial-environment` | 好友历史缓存读与 reload 正常；群聚合/单群保持真实空态 | 当前环境群申请远端刷新报告 `Gateway network is unavailable`，不得声明远端审核链成功 |
+| verification | `pass` | CSS contract 1/1；H5 typecheck；`git diff --check` | full suite/build 未因两行 CSS 重复执行 |
+| protection | `pass` | 未接受/拒绝申请、未执行 Gateway/SQLite mutation；SDK 与 RN runtime 零改动 | none |
+
+Closeout verdict: `.149.76 completed-responsive-readonly/pending-actions-and-gateway-gated`。`.149.75` 的 desktop gate 已关闭，并用静态 CSS 合约保护移动宽度壳层；本片不扩大申请审核、远端刷新或 realtime 完成声明。
+
+## W6.a6.20.149.75 Verification Dark Readonly Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| friend history dark | `pass-readonly` | `/contacts/verifications/friend` 在 `data-theme=dark/color-scheme=dark` 下恢复 3 条真实已添加记录；页面/Surface 背景分别为 `rgb(17,19,24)` / `rgb(15,17,21)` | pending/non-terminal 状态与 action |
+| group verification dark | `pass-empty-state` | 群聊验证聚合页与群 `97524759106` 单群申请页均在 dark 下保持真实空态 | pending group row、审核权限与结果 |
+| layout/runtime | `pass-mobile` | 382x786，document `382/382`；三页 warning/error=0 | controller 无 viewport resize API；desktop 需独立真实宽屏证据 |
+| state restoration | `pass` | 通过既有显示设置恢复 `data-theme=light/color-scheme=light`，最终回到好友验证列表，3 条历史仍在 | system-following/system Safari |
+| protection | `pass` | 未接受/拒绝申请、未发送好友申请、未执行 Gateway/SQLite mutation；H5/SDK/RN runtime 均未修改 | none |
+
+Closeout verdict: `.149.75 completed-dark-readonly/desktop-gated`。验证消息链的 Chromium mobile dark token、空态、历史回读与偏好恢复已闭合；desktop 不因源码 token 或移动端结果外推为通过，须在可控宽屏 viewport 下另验。
+
+## W6.a6.20.149.74 Verification-History Readonly Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| friend history | `pass-readonly` | `/contacts/verifications/friend` 恢复最近三天 3 条真实记录；覆盖 incoming ID 来源与两条 outgoing 申请，来源、申请文案和“已添加”终态正确 | pending/non-terminal 状态、角标与 accept action |
+| profile round-trip | `pass-readonly` | 点击 `donk二大爷` 进入 `/contacts/users/94424103659`；备注名、原昵称、来源、添加时间和共同群聊恢复；返回目标为 `/contacts/verifications/friend` | stranger/pending applicant profile、history forward/reload |
+| group verification | `pass-empty-state` | 群聊验证聚合页为空；直达真实群 `97524759106` 的单群审核页同样显示暂无入群申请 | pending group row、owner/admin 权限、accept/reject result |
+| layout/runtime | `pass` | 382x786，document `382/382`；warning/error=0；最终返回好友验证列表 | dark/system Safari/physical device |
+| protection | `pass` | 未接受/拒绝申请、未发送好友申请、未执行 Gateway/SQLite mutation；H5/SDK/RN runtime 均未修改 | none |
+
+Closeout verdict: `.149.74 completed-readonly/pending-actions-gated`。真实好友申请历史与资料往返链已验收；当前没有 pending 好友/群申请，因此按钮、确认层、审核结果、角标和第二账号 realtime/list-back 继续按自然数据或动作授权 gate 管理。
+
+## W6.a6.20.149.73 Call-Record Activation Audit Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| production data | `empty-natural-sample` | 当前真实登录态进入 `/calls` 后同步结果为 0 条，不能复用历史 2 条记录或伪造 callID 证明详情链 | 等待自然通话记录后验收列表 row、`/calls/:callID`、同日记录与返回链 |
+| list interaction | `pass-empty-state` | 所有通话/未接来电分段切换正常；搜索 `donk` 展示“暂无搜索结果”，清除后恢复“暂无通话记录” | 非空筛选、分页、详情和 realtime list-back |
+| layout/runtime | `pass` | 382x786，document `382/382`；warning/error=0；最终恢复所有通话、空搜索词 | dark/system Safari/physical device |
+| protection | `pass` | 未拨号、未进入 RTC、未删除记录、未访问伪造详情；H5/SDK/RN runtime 均未修改 | none |
+
+Closeout verdict: `.149.73 audited-empty/natural-call-data-gated`。当前证据只关闭真实空态与列表筛选交互的运行健康复核，不覆盖历史非空样本、通话详情、删除、RTC 或第二账号链路；这些能力继续按 activation gate 管理。
+
+## W6.a6.20.149.72 Group-State Owner Browser Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| joined groups | `pass-readonly` | `/contacts/groups` 恢复 2 个真实群；owner 群展示“我创建/群主”；`7452` 只命中目标群 ID；右键等价长按菜单完整展示分享群名片/退出群聊/修改群名称并通过页面点击关闭 | physical touch long-press、真实分享/退出/改名结果 |
+| group members | `pass-readonly` | 真实群 `97524759106` 恢复 3 人；本人在线、群主和两位管理员角色正确；“备注名”搜索只保留 `94424103659`；成员索引存在 | remote refresh race、presence 变更、成员/角色 mutation |
+| layout/runtime | `pass` | 两页均为 382x786，document `382/382`；warning/error=0；搜索值已清空，未保留菜单或选择态 | dark/system Safari/physical device |
+| protection | `pass` | 仅真实 production read path；未执行 send、share、leave、rename、invite、remove、role 或其他 Gateway/SQLite mutation | none |
+
+Closeout verdict: `.149.72 completed-readonly/group-mutations-gated`。此前 `.149.32/.149.33` 的 browser-login gate 已由当前真实账号关闭；该证据只证明已有生产快照、搜索、角色/presence 投影和菜单 presentation，不外推任何 mutation 结果。
+
+## W6.a6.20.149.71 Group-Owner Leave RN Parity Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| frozen RN/Figma truth | `pass` | `GroupSettingsScreen + GroupOwnerQuitActionSheets + getEarliestAdminGroupMember`：无管理员阻断并进入管理员设置；有管理员按 `admin_since` 最早者展示；确认后只调用 `quitGroup` | none |
+| shared SDK owner | `pass-local` | `selectIMEarliestGroupAdmin` 稳定选择继任者；owner 无管理员 fail-closed，有管理员时只执行一次 Gateway leave，不显式 transfer；完整群域事务保持 | 真实 Gateway leave/自动转移/第二账号回读 |
+| H5 consumer | `pass-local` | 群设置页删除 transfer-first route intent，复用 RN 两分支全宽底部面板；两个退出按钮分别传 `clearHistory=false/true` | authenticated light/dark pixel proof |
+| authenticated browser | `pass-has-admin` | 真实群 `97524759106` 打开群主退出层，展示最早管理员 `donk二大爷备注名 / 94424103659`；382x786 面板贴底、document `382/382`、warning/error=0；取消后群和会话保持不变 | 无管理员群主自然样本、dark/system Safari、最终退出与第二账号回读 |
+| create-group readonly audit | `pass` | 真实 2 好友数据验证普通入口、已有群入口、ALL、2 人选中、已选复核层、disabled/enabled CTA 与 2–998 shared rule；清空本地选择后离开，未创建群 | 真实 create/persistence/second-account list-back |
+| verification | `pass` | SDK 104 files/433 tests、typecheck、`build:web/sync:web`；H5 focused 5 files/22 tests、typecheck、1242-module production build | H5 full suite 未在本片重复执行 |
+| protection | `pass` | `im28-phone/src/**` 未修改；RN generated package 未同步；未执行 `build:rn/sync:rn/build:all` 或 `build:package:desktop:web` | RN consumer convergence 仍需独立授权 |
+
+Closeout verdict: `.149.71 completed-local/has-admin-browser-pass/no-admin-and-destructive-gated`。旧 `.149.7` 的显式 transfer-first H5 编排已被 RN 真实合同替代；代码、测试和 Web 生成包已收敛。有管理员分支已使用真实登录态完成只读像素/内容验收；当前账号没有“群主且无管理员”的自然样本，且最终退群属于破坏性操作，因此二者继续按 activation gate 管理。
+
+## W6.a6.20.149.70 Cross-Browser Gateway Transport Audit Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| Gateway CORS | `pass` | friend unread、group audit、call pending 的标准 OPTIONS 均为 204；未认证实际 POST 均为 HTTP 200/业务未登录且保留 CORS 头 | production deployment 仍需保持同一响应 contract |
+| WebKit header matrix | `pass` | 从 H5 Origin 逐项加入 Content-Type、X-Request-ID、X-Device-ID、Authorization、Accept-Language，五组请求均可读取 HTTP 200 | none |
+| authenticated branch | `pass-readonly` | 同一已登录 WebKit session 内 friend unread 与 group audit 均返回 HTTP 200/code 0；凭据和业务 data 未进入输出 | none |
+| harness correction | `closed-false-positive` | 删除登录后冗余 `page.goto('/conversations')`；该导航此前中止刚挂载的 unread/pending 请求，WebKit 报 access-control checks、Firefox 报 network unavailable | test-only script 不进入仓库 |
+| final browser gate | `pass` | Firefox/WebKit 均为 640x360 decode、180x101 thumbnail、preview opacity=1、reload readback、382/382，runtime blocking errors 0 | system Safari/device、其他媒体仍 gated |
+| boundary | `pass` | H5/SDK/RN runtime 均未修改；无发送、下载、保存或业务 mutation | none |
+
+Closeout verdict: `.149.70 completed-audit/no-product-defect/harness-false-positive-closed`。不得为本次测试中止假阳性新增 dev proxy、SDK swallow 或页面兼容分支；`.149.69` 的 Firefox/WebKit 普通图片读取门禁同步提升为 runtime-clean pass。
+
+## W6.a6.20.149.69 Firefox/WebKit Ordinary-Image Readonly Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| Firefox image | `pass-readonly/runtime-clean` | isolated production login -> real conversation row -> retained 640x360 image；thumbnail 180x101 / `object-fit: cover`；full preview visible；reload readback；382/382；corrected harness errors 0 | none |
+| WebKit image | `pass-readonly/runtime-clean` | same production path；640x360 decode、180x101 thumbnail、full preview after transition settles、reload readback、382/382；page/node screenshots visually inspected；corrected harness errors 0 | none |
+| animation control | `pass` | preview screenshot waits for decoded image、visible node and final `opacity=1`；pre-transition blank capture rejected as timing false negative | none |
+| regression | `pass` | H5 focused 2 files / 5 tests | full suite unchanged from `.149.67` |
+| boundary | `pass` | no new message、download、save、Gateway/SQLite mutation or H5/SDK/RN runtime edit | none |
+
+Closeout verdict: `.149.69 completed-image-readonly/firefox-webkit-runtime-clean-pass`。普通图片跨浏览器读取、比例、预览和刷新链已闭合；`.149.70` 已证明此前 Gateway/CORS 记录来自验收脚本登录后冗余导航造成的请求中止，不是产品运行时缺陷。
+
+## W6.a6.20.149.68 Authorized Image Send Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| exact mutation | `pass` | 用户明确授权主账号仅向 `donk三大爷` 发送一张无敏感测试图片并保留；相册选图按现有生产交互自动触发唯一一次发送 | no second send |
+| upload/send/render | `pass-chromium` | 640x360 PNG 进入 production media upload/send owner；聊天页新增普通图片消息，缩略图、全屏预览与保存入口均可见 | actual save、video/file、cross-browser/device |
+| convergence/list-back | `pass-local-and-server-list` | 会话列表立即更新为 `[图片]` 与同一时间；重新进入并整页刷新后图片仍由 production route 回读 | 接收账号未在发送前在线，不能把本证据外推为第二客户端 WebSocket realtime |
+| ratio contract | `pass` | production `ChatMediaMessageContent -> getChatImageDisplaySize` 使用 Gateway 宽高或浏览器 natural size，按 RN 180px 上限等比展示；focused 2 files/5 tests | browser computed pixel probe unavailable in current controller |
+| boundary | `pass` | H5/SDK/RN runtime source 零改动；SDK clean；RN 仅用户既有 `src/config/appVersion.ts` | none |
+
+Closeout verdict: `.149.68 completed/authorized-image-send/chromium-pass/receiver-realtime-gated`。普通图片的 production 上传、发送、当前端收敛、会话摘要、刷新回读和预览链已形成真实证据；由于接收账号未在发送前保持在线，本片不宣称双端 WebSocket 实时接收或接收端 SQLite 回读。
+
+## W6.a6.20.149.67 H5 Cleanup Audit Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| baseline | `pass` | H5 TypeScript；Vitest 180 files/579 tests | production build remains `.149.65` baseline |
+| P0/P1 | `zero` | production TS/TSX 最大 299 行；TODO/FIXME/HACK/WIP、debug console、not-implemented=0 | none |
+| P3 | `accepted` | CSS 最大为 `login-page.css` 830 行，低于仓库 1000 行强制拆分门槛；无业务 owner drift 证据，不为体量单独重构 | split only when touched responsibility requires it |
+| tooling | `accepted-gap` | repo 无 `scripts/check-convergence.sh`；使用 typecheck、Vitest、source scan、Git boundary 代替 | future deterministic convergence helper |
+| boundary | `pass` | production/SDK/RN runtime 零改动；SDK clean；RN 仅用户既有 `src/config/appVersion.ts` | none |
+
+Closeout verdict: `.149.67 cleanup-audited/p0-p1-zero/no-new-activation`。没有可证明的死代码、重复 owner、临时实现或编译基线问题；禁止为制造进度进行无证据 P3 拆分，active slice 继续为 `none`。
+
+## W6.a6.20.149.66 Activation Audit Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| authenticated runtime | `pass-readonly` | 使用已授权主账号恢复 production H5；4 个会话均无未读标记，console error=0 | physical device/system Safari |
+| natural media | `blocked-natural-data` | 4 个已读会话共 16 条可见消息；普通图片/视频/文件均为 0；现有样本仍为文本、语音、转发、名片/系统消息 | real ordinary image/video/file sample |
+| external activation | `unchanged` | Gateway verification-code operation 仍缺失；RTC 可用部署、成功麦克风采集及业务 mutation 授权均未出现 | backend/deployment/authorization |
+| boundary | `pass` | 未上传、发送、下载、删除或调用群/设置 mutation；SDK clean；RN 仅用户既有 `src/config/appVersion.ts` | none |
+
+Closeout verdict: `.149.66 audited-readonly/no-new-activation`。当前没有可在不造数据、不改 RN 业务且不执行未授权 mutation 的新切片；active slice 保持 `none`，等待 ledger 中任一真实激活条件。
+
+## W6.a6.20.149.65 Microphone Failure Recovery Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| failure projection | `pass` | `NotAllowedError/SecurityError` 归一化为“无法访问麦克风，请检查浏览器权限”；缺失/占用设备分别有稳定中文提示 | browser-specific uncommon DOMException |
+| Firefox denial | `pass` | Firefox 141 原生 `permissions.default.microphone=2`；真实 `getUserMedia` 拒绝后 error Toast 可见、HUD=0、按钮恢复、URL 稳定 | successful capture、physical microphone |
+| mutation safety | `pass` | 录音手势后非 GET 请求 0、upload/message mutation 0；console/page errors 0；无 File/MediaRecorder/send | authorized audio upload/send |
+| WebKit denial | `blocked-env` | Playwright WebKit 26 顶层 `getUserMedia` 在默认、空权限覆盖及 `Permissions-Policy` 下均停留系统询问态；iframe policy probe 无 `mediaDevices`，未伪造 API | system permission bridge or real Safari session |
+| regression | `pass` | H5 focused 6 files/27 tests；SDK Web 101 files/426 tests；Web typecheck；1241-module build；382x786 Firefox screenshot | existing >500kB chunk warning；system Safari、device/background/interruption |
+
+Closeout verdict: `.149.65 completed-local/firefox-microphone-denial-pass/webkit-permission-bridge-gated`。Firefox 的真实权限拒绝、中文 Toast 和 fail-closed 恢复链已通过；WebKit 运行时无法在无系统交互的 Playwright 会话中形成拒绝终态，因此保持环境门禁。本证据不证明成功录音、音量、电平、上传、发送、系统 Safari 或实体设备行为。
+
+## W6.a6.20.149.64 Firefox/WebKit Audio Playback Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| natural data | `pass` | 主账号无未读单聊恢复 7 条真实可播放语音；账号 2/3 无样本，未造 fixture | ordinary image/video/file samples |
+| Firefox playback | `pass` | 5 秒真实 `.m4a`：播放 false -> 停止 true/is-playing -> natural ended -> 播放 false；OSS HTTP 206 | system Safari、physical audio output |
+| WebKit playback | `pass` | 同一真实消息完成相同状态链和 natural ended；URL 稳定、无 error | system Safari、WebKit media request classification |
+| visual | `pass` | 两端 382x786 playing/ended 截图中发送方 icon 位于右侧，消息、Header、Composer 无越界遮挡 | animation frame pixel、device safe-area |
+| regression/protection | `pass` | focused 4 files / 14 tests；console/page/request/HTTP errors 0；无 send、Gateway/SQLite、SDK/RN/production edit | background/interruption、expired URL |
+
+Closeout verdict: `.149.64 completed-local/firefox-webkit-audio-playback-pass`。Firefox/WebKit 的真实语音播放与自然结束链已通过；WebKit 未把请求归类为 Playwright `media`，但真实 `playing/ended` 状态成立。本证据不外推到系统 Safari、实体设备听感、后台中断或过期签名 URL。
+
+## W6.a6.20.149.63 Firefox/WebKit Long-Press Menu Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| conversation long-press | `pass-readonly` | Firefox/WebKit 真实鼠标指针按住 430ms；五项 RN 顺序菜单完整出现；遮罩关闭后 URL 不变 | physical touch、all menu actions |
+| message long-press | `pass-readonly` | 两端真实消息按住 650ms；消息预览及 5/6 个适用动作完整出现；Esc 关闭后 URL 不变 | physical touch、all message actions |
+| visual | `pass` | 四张 382x786 截图中菜单、预览和动作项均在视口内，无空白、越界或 Composer 遮挡 | system Safari、device safe-area |
+| route/runtime | `pass` | 两端关闭消息菜单并返回后恢复 4 rows；console/page/request/HTTP errors 0 | browser back/forward gesture |
+| regression/protection | `pass` | focused 2 files / 6 tests；没有点击 menuitem、执行 clipboard/send/delete/forward/RTC/Gateway mutation 或修改 production/SDK/RN | none |
+
+Closeout verdict: `.149.63 completed-local/firefox-webkit-longpress-menu-pass`。Firefox/WebKit 的会话行和消息气泡桌面指针长按已取得只读证据；不外推到实体触控、系统 Safari 或任一菜单动作执行结果。
+
+## W6.a6.20.149.62 Firefox/WebKit Chat Readonly Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| unread safety | `pass` | Firefox/WebKit 均先读取会话行可访问未读标签，只打开 `unreadLabel=''` 的真实群聊 | future unread conversations remain protected |
+| Firefox chat | `pass-readonly` | account 2；1 real message；`2人在线`；Composer present；message stack `flex-end`；382/382；list bottom 720 = composer top 720 | message/media interaction matrix |
+| WebKit chat | `pass-readonly` | account 3；2 real messages；`1人在线`；Composer present；message stack `flex-end`；382/382；list bottom 722 = composer top 722 | message/media interaction matrix |
+| visual | `pass` | Firefox 短消息底部渲染；WebKit 群主文本与管理员长表情完整可见；Header、消息区、Composer 无遮挡 | system Safari、physical touch |
+| route/runtime | `pass` | 两端 `返回会话` 后恢复 4 rows；chat/back stable phase console/page/request/HTTP errors 0 | back/forward gesture on physical device |
+| regression/protection | `pass` | focused 3 files / 6 tests；无消息/媒体点击、send、RTC、Gateway mutation、production/SDK/RN edit | none |
+
+Closeout verdict: `.149.62 completed-local/firefox-webkit-chat-readonly-pass`。Firefox/WebKit 的真实聊天页壳层、短消息底部布局、群身份/长表情渲染和返回导航已取得只读证据；不外推到媒体播放、长按、录音、权限、RTC、系统 Safari 或实体设备。
+
+## W6.a6.20.149.61 Firefox/WebKit Core-Route Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| runtime | `pass` | official Playwright Firefox 141 / WebKit 26 installed outside repo dependencies | system Safari、physical device |
+| isolated auth | `pass` | Firefox account 2、WebKit account 3；真实手机号固定码登录；独立临时 profile；未读取/复制 Chromium token | send-code operation remains absent |
+| conversation route | `pass-readonly` | each browser restored 4 real rows；382/382 width；stable phase 0 console/page/request/HTTP errors | message/media interaction matrix |
+| contacts route | `pass-readonly` | each browser restored 2 real rows；382/382 width；stable phase 0 console/page/request/HTTP errors | profile/mutation interaction matrix |
+| navigation cancellation control | `pass` | first sample exposed route-switch cancellation；final run separated stable phases and eliminated all failures | none |
+| protection | `pass` | no unread chat open、send、RTC、Gateway mutation、token inspection or production/SDK/RN edit | none |
+
+Closeout verdict: `.149.61 completed-local/firefox-webkit-core-route-pass`。基础认证、会话列表和通讯录的 Firefox/WebKit 环境门禁已解除；结果不外推到系统 Safari、媒体、长按、权限、RTC 或实体设备。
+
+## W6.a6.20.149.60 Production Action-Chain Residual Audit Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| interaction stubs | `pass` | production H5 无空 `onClick/onSubmit`、`href/to="#"`、`暂未实现/功能开发中` | none |
+| fake-success markers | `pass` | 命中项均为真实 timer、状态 predicate、capability fallback 或 fail-visible 文案；无默认成功 shortcut | none |
+| page ownership | `pass` | 最大 TSX 299 行；验证、搜索、群文本详情等非直达 Page 均有唯一生产消费者 | existing CSS owners above 300 lines are presentation debt, not runtime-chain gaps |
+| RN screen-family coverage | `pass` | auth、home、conversation、contacts、calls、chat、group、QR、profile/settings 屏幕族逐项映射到 route/modal/platform exclusion | external acceptance gates only |
+| route assembly | `pass` | `app-route-owner-contract` + `primary-tab-scene-contract`：2 files / 6 tests | none |
+| protection | `pass` | 生产代码、SDK、RN business 零改动 | none |
+
+Closeout verdict: `.149.60 completed-local/production-action-chain-ledger-clean`。当前未发现可无条件激活的本地 capability gap；重复扫描相同静态面不再产生新证据，下一片必须由 inventory activation gate 触发。
+
+## W6.a6.20.149.59 Auth Entry Residual Audit Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| forgot-password entry | `complete-local` | RN `ForgotPasswordMethodsScreen` 对应 H5 `ForgotPasswordMethodsDialog`；账号登录页打开手机号/邮箱替代登录和客服说明 | support channel product config |
+| fake-request boundary | `pass` | H5 回归锁定不调用 `runtime.forgotPassword`；Gateway 旧端点不可用时不制造成功态 | backend contract remains absent |
+| network settings | `web-not-applicable` | RN `NetworkSettingsScreen` 依赖 native HTTP/OpenIM HTTP/SOCKS proxy；browser fetch/WebSocket 无 per-app proxy 注入 | Desktop future platform adapter |
+| route ledger | `pass` | RN auth 可见入口与 H5 React Router/Modal owner 逐项核对；无新增普通生产入口缺口 | external activation ledger only |
+| protection | `pass` | 仅更新执行文档；H5 production、SDK、RN business 零改动 | none |
+
+Closeout verdict: `.149.59 completed-local/auth-entry-ledger-clean`。忘记密码已是可执行的替代登录交互，网络设置是明确平台排除；不新增无效页面，也不把缺失后端 operation 包装成完成能力。
+
+## W6.a6.20.149.58 Migration Phase Regression And Browser-Runtime Gate Audit Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| H5 full regression | `pass` | Vitest 179 files / 576 tests | none |
+| TypeScript/assets | `pass` | Web `tsc --noEmit`；RN assets 466 files | none |
+| production build | `pass` | Vite 1241 modules | existing >500kB chunk warning |
+| anti-mock/fake-success | `pass` | production source 无 parityRuntime/localMock/test-mode business branch/setTimeout(resolve) | none |
+| cleanup/static boundary | `pass` | 无 console.log/TODO/FIXME/HACK；无 >1000-line touched source candidate；diff check clean | existing CSS files above 300 lines are not current touched-source blockers |
+| runtime/repo protection | `pass` | dev route HTTP 200；SDK clean；RN 仅用户既有 appVersion 修改 | none |
+| Firefox/WebKit | `blocked-env` | 本机无 Playwright browser runtime 或可复用登录态；未下载、未复制 token | installed runtime + authorized session |
+
+Closeout verdict: `.149.58 completed-local/regression-pass/browser-matrix-blocked-env`。当前累积 H5 迁移在本地代码门禁上保持全绿；跨浏览器仍是明确环境门禁，不能由 Chromium 或构建结果外推。
+
+## W6.a6.20.149.57 Current-Account Ordinary-Media Inventory Audit Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| unread safety | `pass` | 当前 4 个会话列表均无未读角标后才进入；未制造 mark-read 副作用 | future unread conversations remain protected |
+| production inventory | `pass-readonly` | 4 routes、16 visible rows；文本、群名片 1、语音 7、forward origin 3、自定义表情 1 | ordinary media samples |
+| ordinary image | `blocked-natural-data` | 4 个会话均为 0 | real cached image message |
+| video | `blocked-natural-data` | 4 个会话均为 0 | real cached video message |
+| file | `blocked-natural-data` | 4 个会话均为 0 | real cached file message |
+| custom emoji cross-check | `pass-existing` | 最终 `complete=true`、`750x1624`；不把首屏异步占位文本当最终失败 | owned by `.149.56` |
+| safety/protection | `pass` | 无 click/play/send/RTC/Gateway/SQLite mutation；生产代码、SDK、RN 零改动；恢复原 route | external gates retained |
+
+Closeout verdict: `.149.57 completed-local/blocked-natural-data`。当前账号没有可用于普通图片、视频、文件验收的自然样本；本轮只证明门禁尚未满足，不声明这些能力已完成或失败。
+
+## W6.a6.20.149.56 Incoming Admin Custom-Emoji Natural-Sample Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| natural data | `pass` | 已读真实群聊 2 rows；1 incoming 管理员自定义表情；无 fixture/发送 | ordinary image/video/file samples |
+| shared sender projection | `pass` | 备注名 `donk二大爷备注名`、角色 `管理员`；未回退 userID | none |
+| RN media parity | `pass` | frozen RN 只限制 180 最大宽度并保持比例；资源 `750x1624` 正确渲染 `180x390` | cross-browser image decode |
+| light/dark layout | `pass` | 382x786；hash color `#FF9850`；头像/气泡/Composer 无越界遮挡；横向 overflow 0 | browser/device matrix |
+| runtime/state | `pass` | focused 2 files/8 tests；image complete、natural size 非零、console warning/error 0；恢复 light/default viewport/original route | none |
+| safety/protection | `pass` | 无 emoji click/send/mark-read/RTC/Gateway mutation；生产代码、SDK、RN 零改动 | external gates retained |
+
+Closeout verdict: `.149.56 completed-local/browser-readonly-pass`。incoming 管理员身份与自定义表情已取得真实自然样本证据；长图比例严格保留 frozen RN 合同，不外推到普通图片、视频、文件或跨浏览器/设备。
+
+## W6.a6.20.149.55 Incoming Group Bubble Natural-Sample Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| shared sender projection | `pass` | 真实 incoming 群主消息展示 `donk二大爷备注名` 和 `群主`；未回退 userID | admin/member natural samples |
+| hash color | `pass` | light/dark 中昵称与角色标签均解析为 `#FF9850` / `rgb(255, 152, 80)` | other userID color samples |
+| mobile layout | `pass` | 382x786；头像可见、气泡在视口内、Composer 不遮挡、横向 overflow 0 | cross-browser/device |
+| dark theme | `pass` | peer bubble `rgb(46, 46, 46)`；sender identity token 保持稳定 | none |
+| runtime/state | `pass` | console warning/error 0；恢复 light、默认 viewport 和原 chat route | none |
+| safety/protection | `pass` | 无 message/avatar click、send、mark-read、RTC/Gateway mutation；生产代码、SDK、RN 零改动 | external gates retained |
+
+Closeout verdict: `.149.55 completed-local/browser-readonly-pass`。incoming 群消息的 shared 名称/角色投影与 H5 气泡展示已取得真实自然样本证据；不外推到未出现的媒体、其他角色、跨浏览器或实体设备。
+
+## W6.a6.20.149.54 Rich Message CSS Natural-Sample Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| natural data | `pass` | production cache 11 rows：群名片 1、语音 7、forward origin 3、普通文本；无 fixture | incoming/image/video/file natural samples |
+| light/dark mobile | `pass` | 382x786；11 outgoing；语音 icon 右侧；气泡边界有效；scrollWidth=clientWidth=382 | cross-browser/device |
+| composer/layout | `pass` | Composer 可见且与可见消息不相交；群名片/文本/语音/转发 origin 同屏活动帧 | none |
+| runtime errors | `pass` | console warning/error 0；dev route HTTP 200 | none |
+| state restoration | `pass` | light 偏好、默认 viewport 和原目标群聊恢复 | none |
+| safety/protection | `pass` | 无 playback/card click/send/mark-read/RTC/Gateway mutation；生产代码、SDK、RN 零改动 | external gates retained |
+
+Closeout verdict: `.149.54 completed-local/browser-readonly-pass`。message/composer CSS owner 已取得当前真实名片、语音和转发样本证据；不外推到未出现的消息方向/类型或跨运行时。
+
+## W6.a6.20.149.53 Chat Page CSS Visual Acceptance Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| authenticated runtime | `pass` | 当前授权账号真实登录；目标群会话无未读角标；验证码发送 operation 未调用 | none |
+| mobile light/dark | `pass` | 382x786；Header/list/Composer 可见；短消息底部布局；scrollWidth=clientWidth=382 | richer natural message samples |
+| desktop light/dark | `pass` | 1280x800；Header/list/Composer 可见；既有 full-width surface；scrollWidth=clientWidth=1280 | product desktop-width refinement outside slice |
+| runtime errors | `pass` | console warning/error 0；route HTTP 200 | none |
+| state restoration | `pass` | 原 light 偏好恢复；viewport reset；标签返回目标 chat route | none |
+| safety/protection | `pass` | 无 send/mark-read/RTC/Gateway mutation；生产代码、SDK、RN 零改动 | cross-browser/device and RTC remain gated |
+
+Closeout verdict: `.149.53 completed-local/browser-readonly-pass`。`.149.52` CSS owner 拆分已取得真实 light/dark、mobile/desktop 视觉证据；不扩大业务 capability 完成声明。
+
+## W6.a6.20.149.52 Chat Page CSS Owner Split Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| owner split | `pass` | `chat-page.css 1067 -> facade 57 + shell 419 + message 289 + composer 282 + state 25` | none |
+| behavior preservation | `pass` | 原文件按区间重组与拆分产物逐字一致；selector、声明、级联、dark/mobile/reduced-motion、DOM/import 不变 | none |
+| contract | `pass` | Node 文件系统测试锁定 import 顺序、四类 canonical selector 与 Composer owner 唯一性 | none |
+| verification | `pass` | focused 3/9；H5 179/576；SDK Web 101/426；Web/H5 typecheck；466 assets；1241-module build；`npm run verify`；HTTP 200；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | CSS 规则序列逐字等价且 DOM/route 不变；生产构建与 route HTTP 健康 | real visual/browser/device matrix remains gated |
+| cleanup/protection | `pass` | P0/P1 zero；无 orphan/compat/duplicate/TODO/debug/fake-success；SDK clean；RN 仅用户既有 `appVersion.ts` | convergence script absent |
+
+Closeout verdict: `.149.52 completed-local/structural-pass`。唯一超千行 H5 源文件已关闭；本片不新增业务能力或 RN/Web convergence 声明，下一步回到 inventory activation gate。
+
+## W6.a6.20.149.51 Active Call Control And Cleanup Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 活动控制、结束返回和资源释放合同零修改；RN 业务源码零修改 | none |
+| owner convergence | `pass` | `WebIMCallProvider -> useWebIMActiveCallControls -> current SDK call owner/LiveKit port` | none |
+| behavior preservation | `pass` | dispose 引用隔离/状态清理/SDK 释放顺序、结束前来源捕获、replace 返回、媒体错误呈现及 logout/unmount cleanup 不变 | real dual-account RTC remains gated |
+| structure | `pass` | Provider `321 -> 278`，满足 H5 300 行约束；Hook 117 行；无 call owner 构造、compat/orphan/test-only production path | none |
+| verification | `pass` | focused 5/14；H5 178/574；SDK Web 101/426；Web/H5 typecheck；466 assets；1241-module build；`npm run verify`；HTTP 200；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只搬迁相同控制和 cleanup effect；DOM/CSS/route contract/operation 不变 | dual-account active controls、permission/weak-network/background and browser matrix |
+| cleanup/protection | `pass` | unique owner contract；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.51 completed-local/structural-pass`。本片只收敛 H5 活动通话控制/清理 owner，不新增 SDK DTO、Gateway/SQLite、RTC 能力或 RN/Web convergence 声明；Provider LoC 债务已关闭。
+
+## W6.a6.20.149.50 Outgoing Call Startup Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 呼出、媒体与路由合同零修改；RN 业务源码零修改 | none |
+| owner convergence | `pass` | `WebIMCallProvider -> useWebIMOutgoingCallStartup -> SDK outgoing/media owner -> /calls/active` | none |
+| behavior preservation | `pass` | 登录/来电/重复启动守卫、stale dispose、失败透传及 `start -> owner/snapshot/subscription -> route` 顺序不变 | real dual-account outgoing RTC remains gated |
+| structure | `pass-with-debt` | Provider `365 -> 321`；Hook 115 行；SDK outgoing 创建只有一个生产 owner，无 compat/orphan/test-only production path | Provider remains 21 lines over H5 limit; active-control/cleanup split queued |
+| verification | `pass` | focused 4/11；H5 177/571；SDK Web 101/426；Web/H5 typecheck；466 assets；1240-module build；`npm run verify`；HTTP 200；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只搬迁相同呼出生命周期；DOM/CSS/route contract/operation 不变 | dual-account outgoing、permission/weak-network and browser matrix |
+| cleanup/protection | `pass` | unique owner contract；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.50 completed-local/structural-pass`。本片只收敛 H5 呼出启动 owner，不新增 SDK DTO、Gateway/SQLite、RTC 能力或 RN/Web convergence 声明；Provider 21 行超限作为 `.149.51` 候选债务保留。
+
+## W6.a6.20.149.49 Remote Terminal Lifecycle Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 通话终态与路由合同零修改；RN 业务源码零修改 | none |
+| owner convergence | `pass` | `WebIMCallProvider -> useWebIMCallRemoteTerminal -> SDK active call owner -> tone/dispose/React Router replace` | none |
+| behavior preservation | `pass` | 只处理当前 callID 和六类终态；严格保持 `handleRemoteTerminal -> hangup tone -> dispose -> replace` 与既有错误呈现 | real dual-account RTC remains gated |
+| structure | `pass` | Provider `386 -> 365`；Hook 72 行；订阅、白名单和终态顺序只有一个生产 owner，无 compat/orphan/test-only production path 或第二 lifecycle | Provider >300 lines remains a separately guarded split debt |
+| verification | `pass` | focused 4/10；H5 177/570；SDK Web 101/426；Web/H5 typecheck；466 assets；1239-module build；`npm run verify`；HTTP 200；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只搬迁相同 effect；DOM/CSS/route/operation 不变 | dual-account terminal/list-back、permission/weak-network and browser matrix |
+| cleanup/protection | `pass` | owner contract；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.49 completed-local/structural-pass`。本片只收敛 H5 远端终态生命周期 owner，不新增 SDK DTO、Gateway/SQLite、RTC 能力或 RN/Web convergence 声明。
+
+## W6.a6.20.149.48 Call Context Contract Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 通话合同与业务源码零修改；H5 通话公共方法签名不变 | none |
+| owner convergence | `pass` | `runtime facade -> WebIMCallContext public contract/hook -> WebIMCallProvider unique lifecycle -> SDK Web call/media owners` | none |
+| behavior preservation | `pass` | Provider value、缺失 Provider 错误、呼出/接听/拒绝、LiveKit port、媒体控制、终态信令和 Router 提交均原位 | real dual-account RTC remains gated |
+| structure | `pass` | Provider `423 -> 386`；Context 46 行；页面无 Provider 深层 import，无 compat/orphan/test-only production path 或第二 lifecycle | Provider >300 lines remains a separately guarded split debt |
+| verification | `pass` | focused 3/7；H5 176/567；SDK Web 101/426；Web/H5 typecheck；466 assets；1238-module build；`npm run verify`；HTTP 200；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动相同 Context/type/hook 与 import；DOM/CSS/route/operation 不变 | dual-account RTC、permission/weak-network/list-back and browser matrix |
+| cleanup/protection | `pass` | owner contract；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.48 completed-local/structural-pass`。本片只收敛 H5 通话公共 Context 契约 owner，不新增 SDK DTO、Gateway/SQLite、RTC 能力或 RN/Web convergence 声明。
+
+## W6.a6.20.149.47 Incoming Call Presentation Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 通话身份、展示形态和媒体合同未改变；RN 业务源码零修改 | none |
+| owner convergence | `pass` | `WebIMCallProvider call lifecycle -> useWebIMIncomingCallPresentation browser presentation -> IncomingCallOverlay` | none |
+| behavior preservation | `pass` | answer/reject、Gateway、LiveKit port、活动 owner、终态信令和 React Router 提交顺序留在原 Provider；仅迁移资料、形态、铃声、visibility refresh 与 autoplay 恢复 | real dual-account RTC remains gated |
+| structure | `pass` | Provider `488 -> 423`；来电表现 Hook 179 行且只有一个生产消费者；Hook 无媒体创建、route navigation 或 call runtime | active-call lifecycle Provider remains >300 lines pending a separately safe boundary |
+| verification | `pass` | focused 3/8；H5 175/564；SDK Web 101/426；Web typecheck；466 assets；1237-module production build；最终 `npm run verify`；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动相同来电表现状态/effect，Overlay DOM/CSS 与正式 operation 未改变 | dual-account invite/answer/reject/timeout、background multi-tab、permission/weak-network/browser matrix |
+| cleanup/protection | `pass` | owner contract；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.47 completed-local/structural-pass`。本片只收敛 H5 来电表现 owner，不新增 SDK DTO、Gateway/SQLite、RTC 能力或 RN/Web convergence 声明。
+
+## W6.a6.20.149.46 App Route Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 页面、导航和业务源码零修改；H5 既有 React Router 路径合同不变 | none |
+| owner convergence | `pass` | `App providers -> AppRouteTree unique Routes -> AppCoreRoutes/AppChatRoutes domain ledgers -> pages` | none |
+| behavior preservation | `pass` | provider 顺序、redirect、Primary Tab children、lazy import、Suspense fallback、页面元素和 wildcard 均原样搬迁 | browser/device matrix remains gated |
+| structure | `pass` | `App 475 -> 26`；route tree 16、core ledger 133、chat ledger 91 行；无第二 Routes/wildcard、compat wrapper 或 transport owner | `WebIMCallProvider.tsx` deployment-gated owner remains >300 lines |
+| verification | `pass` | focused 9/31；H5 174/562；Web typecheck；1236-module production build；diff check；最终 `npm run verify` | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只搬迁相同 JSX/import；DOM、CSS、URL、operation 与 runtime provider 顺序不变 | Safari/Firefox/device and natural operation data |
+| cleanup/protection | `pass` | route-owner contract + full regression；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.46 completed-local/structural-pass`。本片只收敛 H5 应用装配与路由账本 owner，不新增业务能力、SDK DTO、Gateway/SQLite、RN caller 或跨端 convergence 声明。
+
+## W6.a6.20.149.45 Chat Settings Data Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 单聊/群聊设置、权限和危险操作合同未改变；RN 业务源码零修改 | none |
+| owner convergence | `pass` | `ChatSettingsPage interaction/router/mutations -> useChatSettingsData cache-first data -> existing WebIMSync facades` | none |
+| behavior preservation | `pass` | conversation cache/sync、group cache/sync、member cache/sync 顺序、错误文案和 remote-only 常驻状态保持一致 | real settings/group mutation remains gated |
+| structure | `pass` | page `343 -> 292`；Hook 139 行且只有一个生产消费者；页面不再持有 cache load，Hook 不持有 Router/toast/destructive mutation | none |
+| verification | `pass` | focused 4/19；chat 83/276；H5 173/559；SDK Web 101/426；typecheck；`npm run verify`；1233-module production build；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动同一数据 effect 与本地更新动作，DOM/CSS/route/operation 不变 | natural data + browser/device matrix |
+| cleanup/protection | `pass` | owner contract + domain/full regression；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.45 completed-local/structural-pass`。本片只收敛 H5 聊天设置 cache-first 数据 owner；React Router、toast、清空记录、退群/解散、确认层和 shared mutation 仍归页面及既有 SDK owner，不新增 RN/Web convergence 声明。
+
+## W6.a6.20.149.44 Contact Profile Surface Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 联系人资料展示、路由和 action 合同未改变；RN 业务源码零修改 | none |
+| owner convergence | `pass` | `ContactProfilePage runtime/state/router/dialog/actions -> ContactProfileSurface presentation -> existing shared profile components` | none |
+| behavior preservation | `pass` | 资料加载、presence、群上下文、动作回调、子路由 state 和弹窗 DOM 层级保持原样 | real profile mutation/RTC remains gated |
+| structure | `pass` | page `344 -> 224`；Surface 205 行且只有一个生产消费者；旧内联正文删除，无 compat/orphan/第二 runtime owner | none |
+| verification | `pass` | focused 4 files/10 tests；contacts 27/91；H5 172/556；SDK Web 101/426；typecheck；`npm run verify`；1232-module production build；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动同一 JSX、资源和回调映射，保持原 DOM/CSS/route/operation | natural profile data + browser/device matrix |
+| cleanup/protection | `pass` | contract + domain/full regression；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.44 completed-local/structural-pass`。本片只收敛 H5 联系人资料 presentation owner；runtime、资料恢复、presence、群上下文、Router、弹窗状态和 mutation 继续归页面及既有 action/shared owner，不新增 RN/Web convergence 声明。
+
+## W6.a6.20.149.43 Chat Voice Recorder Platform Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 按住录音、上滑取消、时长和发送合同未改变；RN 业务源码零修改 | none |
+| owner convergence | `pass` | `useChatVoiceRecorder -> chat-voice-recorder session lifecycle -> chat-voice-recorder-platform + chat-voice-level-reader` | none |
+| behavior preservation | `pass` | start/stop/cancel/error、exactly-once terminal、MIME 顺序、Blob/File、时长上限和 track cleanup 原样迁移 | physical microphone/record/upload/send remains gated |
+| structure | `pass` | recorder `314 -> 224`；platform owner 103 行且有生产消费者；旧内联 browser primitives 删除，无 re-export/compat/第二 recorder | none |
+| verification | `pass` | focused 3 files/8 tests；chat 82/273；H5 171/554；typecheck；`npm run verify`；production build；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动浏览器媒体 adapter 与类型入口，未改变 DOM、CSS、gesture、route 或 operation | trusted hold + permission + browser/device matrix |
+| cleanup/protection | `pass` | contract + behavior tests；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.43 completed-local/structural-pass`。本片只拆分 H5 录音会话终态与浏览器媒体能力 owner；shared audio upload/Gateway/SQLite 继续归 SDK，录音 HUD/手势继续归既有 H5 组件，真实麦克风、上传和发送不作完成声明。
+
+## W6.a6.20.149.42 Conversation Preview Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 草稿、消息类型、@ 提及、群发送者与列表摘要合同未改变 | none |
+| owner convergence | `pass` | `ConversationRow/archive -> conversation-preview-view -> shared draft/mention/system-message projection` | none |
+| behavior preservation | `pass` | 草稿优先、静音 mention、群发送者前缀、系统/好友消息与未知类型 fallback 原样迁移 | natural uncommon preview payload remains gated |
+| structure | `pass` | `conversation-list-view 353 -> 96`；preview owner 263 行且两个生产消费者；旧内联实现删除，无 re-export/compat/第二 parser | none |
+| verification | `pass` | focused 4 files/21 tests；conversations 15/47；H5 170/552；SDK Web 101/426；typecheck；466 assets；1231-module build；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动纯 projection 与 import，未改变 DOM、CSS、route 或 operation；5176 route HTTP 200 | natural preview data + browser/device matrix |
+| cleanup/protection | `pass` | contract + behavior tests；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.42 completed-local/structural-pass`。本片只收敛 H5 会话摘要 projection owner；标题、未读、循环定位、badge 与时间继续归 `conversation-list-view`，不新增 SDK DTO、缓存、Gateway/SQLite、发送或 RN/Web convergence 声明。
+
+## W6.a6.20.149.41 Chat Message View Primitives Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 消息类型、正文、媒体元数据和短时钟展示合同未改变 | none |
+| owner convergence | `pass` | `getChatMessageView unique dispatcher -> chat-message-view-primitives safe narrowing/formatting -> existing shared parsers` | none |
+| behavior preservation | `pass` | 字符串空白、UTF-16 原文、数值、媒体尺寸、时长、文件大小及秒/毫秒时间戳规则原样迁移 | natural uncommon payload remains gated |
+| structure | `pass` | dispatcher owner `370 -> 294`；primitive 87 行、唯一生产消费者；无 contentType/SDK/Gateway/SQLite/Router，旧内联实现删除 | none |
+| verification | `pass` | focused 3 files/19 tests；chat 81/271；H5 169/550；SDK Web 101/426；typecheck；466 assets；1230-module build；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动纯函数并保持原模块重导出，未改变 DOM、CSS、route 或 operation | natural uncommon payload + browser/device matrix |
+| cleanup/protection | `pass` | behavior + contract tests；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.41 completed-local/structural-pass`。本片只收敛 H5 消息 payload 安全取值与展示格式化 primitive，不新增第二消息 parser，不扩大 SDK DTO、缓存、发送或 RN/Web convergence 声明。
+
+## W6.a6.20.149.40 Chat Bubble Chrome Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 发送中、失败重试、不可重试失败与双主题气泡尾角合同未改变 | none |
+| owner convergence | `pass` | `ChatMessageBubble orchestration -> ChatMessageBubbleChrome presentation -> shared canRetryWebIMMessage + RN assets` | none |
+| behavior preservation | `pass` | class、ARIA、disabled、clientMsgID 回调、尾角资源及明暗主题结构原样迁移 | natural failed-retry operation remains gated |
+| structure | `pass` | bubble `339 -> 278`；新 chrome 78 行、唯一生产消费者；旧内联实现删除，无 compat/orphan/test-only path | none |
+| verification | `pass` | focused 3 files/13 tests；chat 80/267；H5 168/546；SDK Web 101/426；typecheck；466 assets；1229-module build；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动同一 JSX/资源 import，未改变 DOM、CSS、route 或 operation | natural failed/retry pixels + browser/device matrix |
+| cleanup/protection | `pass` | behavior + contract tests；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.40 completed-local/structural-pass`。本片只收敛 H5 气泡 chrome presentation owner，不扩大 SDK 重试、消息发送、缓存、资源或 RN/Web convergence 声明。
+
+## W6.a6.20.149.39 Pending Forward Recovery Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 转发预览恢复、名称优先级和显式发送合同未改变 | none |
+| owner convergence | `pass` | `useChatForwardFlow selection/target/send -> useChatPendingForward -> existing WebIMSync cache + sender-name projection` | none |
+| behavior preservation | `pass` | 稳定 ID 精确回读、来源不完整失效、名称增强降级、旧请求隔离和 Router state 清理顺序保持一致 | real forward result remains gated |
+| structure | `pass` | flow `353 -> 286`；新 Hook 101 行、唯一生产消费者；两个类型消费者直连新 owner，旧 re-export 删除 | none |
+| verification | `pass` | focused 5 files/19 tests + final 2/6；chat 79/262；H5 167/541；SDK Web 101/426；typecheck；466 assets；1228-module build；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动缓存恢复 effect 和类型入口，DOM/CSS/route/operation 未改变 | natural result + browser/device matrix |
+| cleanup/protection | `pass` | contract test；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.39 completed-local/structural-pass`。本片只收敛 H5 待转发缓存恢复 owner，不扩大消息转发、SDK DTO/状态机、SQLite 语义或 RN/Web convergence 声明。
+
+## W6.a6.20.149.38 Chat Composer Submission Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 转发、编辑、组合媒体、引用、提及与文本提交顺序未改变 | none |
+| owner convergence | `pass` | `ChatComposer state/view -> useChatComposerSubmission -> SDK submission plan + existing page actions` | none |
+| behavior preservation | `pass` | 互斥校验、pending 清理、成功后草稿/mention/quote 清理与失败保留时机保持一致 | natural operation results remain gated |
+| structure | `pass` | Composer `353 -> 267`；Hook 194 行、唯一生产消费者；旧内联提交分支删除，无 compat/orphan/test-only path | none |
+| verification | `pass` | chat-domain 78 files/260 tests；H5 166 files/539 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1227-module build；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动客户端提交编排，DOM/CSS/route 与 operation 均未改变 | natural results + browser/device matrix |
+| cleanup/protection | `pass` | contract tests 指向唯一 owner；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script/system contract absent |
+
+Closeout verdict: `.149.38 completed-local/structural-pass`。本片只收敛 H5 Composer 提交编排 owner，不扩大消息 mutation、SDK DTO/状态机、缓存、RTC 或 RN/Web convergence 声明。
+
+## W6.a6.20.149.37 Chat Page Surface Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN Header/消息/Composer/弹层合同与 H5 既有组件、hooks 和 action 链保持不变 | none |
+| owner convergence | `pass` | `ChatPage Router/runtime/hooks -> ChatPageSurface presentation -> existing component/action owners` | none |
+| behavior preservation | `pass` | media Provider、输入三态、转发/名片单选、关系提示、群名片和各弹层 callback 未改变 | natural operation pixels remain gated |
+| structure | `pass` | page `399 -> 255`；Surface 247 行、唯一生产消费者；页面无列表/Composer/target modal JSX，Surface 无 state/effect/runtime/Gateway | none |
+| verification | `pass` | focused 8 files/26 tests；H5 165 files/537 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1226-module build；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动既有 JSX 与属性映射，未执行发送、通话、转发或删除 operation | natural data + browser/device matrix |
+| cleanup/protection | `pass` | contract tests 已转向新 owner；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script/system contract absent |
+
+Closeout verdict: `.149.37 completed-local/structural-pass`。本片只收敛 H5 聊天页面 presentation owner，不扩大 shared DTO、缓存、消息 operation、RTC 或 RN/Web convergence 声明。
+
+## W6.a6.20.149.36 Chat Text Presentation Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 引用/文本/系统降级合同与 H5 既有 view、quote source、entity renderer 和页面 action 链保持不变 | none |
+| owner convergence | `pass` | `ChatMessageContent dispatcher -> ChatTextMessageContent presentation -> existing quote/entity/page actions` | none |
+| behavior preservation | `pass` | 引用来源优先级、删除禁用、回复正文、链接动作、preset emoji 和 unsupported class 未改变 | natural quote/deleted-source pixels remain gated |
+| structure | `pass` | dispatcher `98 -> 60`；文本组件 93 行、唯一生产消费者；无 mapper/quote resolver/WebIMSync/Gateway | none |
+| verification | `pass` | focused 6 files/21 tests；H5 165 files/536 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1225-module build；diff check | existing >500kB chunk warning |
+| browser evidence | `not-rerun` | 本片只移动同一 JSX，未执行复制、引用跳转、发送或其他 operation | natural uncommon payload + browser/device matrix |
+| cleanup/protection | `pass` | contract + behavior tests；P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script/system contract absent |
+
+Closeout verdict: `.149.36 completed-local/structural-pass`。本片只收敛 H5 文本族 presentation owner，不扩大引用解析、消息 DTO、发送、缓存或 RN/Web convergence 声明。
+
+## W6.a6.20.149.35 Chat Media Presentation Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 通话/图片/视频/语音/文件展示合同与 H5 既有 `ChatMessageView`、媒体 Provider、页面 action 链保持不变 | none |
+| owner convergence | `pass` | `ChatMessageContent dispatcher -> ChatMediaMessageContent presentation -> ChatMediaInteractionProvider/page action` | none |
+| behavior preservation | `pass` | URL 安全化、图片比例/自然尺寸、视频预览、语音身份/已播放状态、文件预览及 RTC action 未改变 | image/video/file natural-data operations remain gated |
+| structure | `pass` | dispatcher `272 -> 98`；媒体组件 232 行、唯一生产消费者；无 Router/WebIMSync/`new Audio` | quote/text family may be a later structural slice |
+| verification | `pass` | focused 6 files/19 tests；H5 164 files/531 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1224-module build；diff check | existing >500kB chunk warning |
+| browser evidence | `prior-proof` | `.149.15` 已证明真实 5 秒语音播放与终态；本片只移动同一 JSX，未执行 operation | image/video/file natural sample + browser/device matrix |
+| cleanup/protection | `pass` | P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script/system contract absent |
+
+Closeout verdict: `.149.35 completed-local/structural-pass`。本片只收敛 H5 媒体 presentation owner，不扩大媒体发送/下载、RTC、缓存或 RN/Web convergence 声明。
+
+## W6.a6.20.149.34 Chat Card Presentation Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 用户/群名片点击合同与 H5 既有 `ChatMessageView/onOpenCard` 链保持不变 | none |
+| owner convergence | `pass` | `ChatMessageContent kind dispatcher -> ChatCardMessageContent pure presentation -> existing page action` | none |
+| behavior preservation | `pass` | 头像 fallback、用户/群 aria-label、缺 target/action 禁用及真实卡片 route 均未改变 | non-member apply/send mutation remains gated |
+| structure | `pass` | dispatcher `307 -> 272`；名片组件 41 行、唯一生产消费者；无 Router/WebIMSync/SDK runtime | dispatcher 主函数后续可继续按消息族拆分 |
+| verification | `pass` | focused 3 files/7 tests；H5 163 files/527 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1223-module build；diff check | existing >500kB chunk warning |
+| browser evidence | `prior-proof` | `.149.18` 已证明真实已加入群名片进入 canonical 群会话；本片只移动同一 JSX，未执行 operation | fresh non-member natural sample |
+| cleanup/protection | `pass` | P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script/system contract absent |
+
+Closeout verdict: `.149.34 completed-local/structural-pass`。本片只收敛 H5 名片 presentation owner，不扩大名片发送、申请入群、消息 DTO 或 RN/Web convergence 声明。
+
+## W6.a6.20.149.33 Group Members Page State Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 与 H5 均保持真实群身份、cache-first、主动刷新、名称/拼音/角色和 normal-group presence 规则 | none |
+| owner convergence | `pass` | `GroupMembersPage route/gesture/index/presentation -> useGroupMembersPageState -> existing WebIMSync/group-members-view/presence owners` | none |
+| behavior preservation | `pass` | cache 失败继续远端同步、旧请求禁止写回、成员资料 backHref 和错误重试保持原规则 | real authenticated sync/presence visual |
+| structure | `pass` | page `312 -> 178`；Hook 186 行、唯一生产消费者；页面无 `getSync/groupMembers.sync/useObservedUserPresence` | none |
+| verification | `pass` | focused 3 files/9 tests；H5 162 files/525 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1222-module build；diff check | existing >500kB chunk warning |
+| browser readonly | `pass-via-.149.72` | 当前真实账号在群 `97524759106` 恢复 3 人、online、群主/管理员、备注搜索与索引；382px 零溢出、clean console | remote refresh race、presence 变更、真实 mutation |
+| cleanup/protection | `pass` | P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.33 completed-local/structural-pass/browser-login-gated`。本片只收敛 H5 群成员完整页状态 owner，不扩大真实成员同步、presence、mutation 或 RN/Web convergence 声明。
+
+## W6.a6.20.149.32 Joined Groups Page State Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 与 H5 均保持 cache-first、主动刷新、canonical 群会话、普通成员退群选项和群主先转让 | none |
+| owner convergence | `pass` | `JoinedGroupsPage auth/gesture/presentation -> useJoinedGroupsPageState -> existing WebIMSync/groupLifecycle/view owners` | none |
+| behavior preservation | `pass` | share/profile route、remote-only 防重放、错误区域与 mutation Toast 保持既有规则 | real leave/transfer/list-back |
+| structure | `pass` | page `325 -> 138`；Hook 265 行、唯一生产消费者；页面无 groups/conversations/lifecycle/Toast 直调 | none |
+| verification | `pass` | focused 4 files/20 tests；H5 161 files/523 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1221-module build；diff check | existing >500kB chunk warning |
+| browser readonly | `pass-via-.149.72` | 当前真实账号恢复 2 个群、owner 标签、ID 搜索和三项右键等价长按菜单；382px 零溢出、clean console | physical touch、真实 share/leave/rename |
+| cleanup/protection | `pass` | P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.32 completed-local/structural-pass/browser-login-gated`。本片只收敛 H5 已加入群页面状态 owner，不扩大真实退群、群主转让、登录态视觉或 RN/Web convergence 声明。
+
+## W6.a6.20.149.31 Calls Page State Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 与 H5 均保持 cache-first、强制同步、筛选/搜索清选择、全量缓存分页全选和 SDK-first 删除 | none |
+| owner convergence | `pass` | `CallsPage chrome/presentation -> useCallsPageState -> existing WebIMCallSync/call-list-view owners` | none |
+| behavior preservation | `pass` | 首屏 cache/sync、dataVersion 重读、offset 分页、删除 Toast 与失败保留旧列表保持既有规则 | real delete/list-back、duration samples |
+| structure | `pass` | page `355 -> 145`；Hook 285 行、唯一生产消费者；页面无 sync/listCached/delete/Toast 直调 | none |
+| verification | `pass` | focused 4 files/23 tests；H5 160 files/521 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1220-module build；diff check | existing >500kB chunk warning |
+| browser readonly | `login-gated` | 新受控标签 `/calls` 可达并按真实路由守卫进入手机号登录；未接管用户既有登录标签或提交验证码 | 登录态 list/edit visual、real delete |
+| cleanup/protection | `pass` | P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.31 completed-local/structural-pass/browser-login-gated`。本片只收敛 H5 通话列表状态 owner，不扩大通话删除、RTC、详情自然数据或 RN/Web convergence 声明。
+
+## W6.a6.20.149.30 Contact Search State Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| RN contract | `pass` | frozen RN 与 H5 均保持本地好友+已加入群、服务器好友/群聊双 Tab、Enter 仅收键盘 | none |
+| owner convergence | `pass` | `ContactSearchPage Router/presentation -> useContactSearchPageState -> existing WebIMSync/contact-search-view owners` | none |
+| behavior preservation | `pass` | 三 facade 独立加载、cache-first 群快照、会话 fallback、request generation、关系三态和受控返回保持既有规则 | real remote result/open/apply |
+| structure | `pass` | page `384 -> 208`；Hook 241 行、唯一生产消费者；页面无 search/cache/openGroup 直调 | none |
+| verification | `pass` | focused 7 files/31 tests；H5 159 files/519 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1219-module build；diff check | existing >500kB chunk warning |
+| browser readonly | `login-gated` | 临时标签登录页正常；固定验证码提交后被既有预览标签的 sql.js 单实例锁明确拒绝 | 关闭现有标签后补真实搜索/双 Tab visual |
+| cleanup/protection | `pass` | P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.30 completed-local/structural-pass/browser-login-gated`。本片只收敛 H5 联系人搜索状态 owner，不扩大真实远端搜索结果、打开会话、好友申请、入群申请或 RN/Web convergence 声明。
+
+## W6.a6.20.149.29 Create Group State Owner Closeout (2026-08-15)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| owner convergence | `pass` | `CreateGroupPage -> useCreateGroupPageState -> existing WebIMSync/create-group-view owners` | none |
+| behavior preservation | `pass` | cache-first 好友、固定单聊对端、普通/筛选全选差异、2–998 人门槛、remote-only 防重放保持原规则 | real create/list-back |
+| structure | `pass` | page `388 -> 187`；Hook 283 行、唯一生产消费者；页面无 contacts/conversations/groups/Toast 直调 | none |
+| verification | `pass` | focused 4 files/27 tests；H5 158 files/517 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1218-module build；diff check | existing >500kB chunk warning |
+| browser readonly | `pass` | 已登录真实建群页 2 位好友；单选禁用创建，全选显示 2 位并启用；恢复选择后零新增 error | create mutation 未执行 |
+| cleanup/protection | `pass` | P0/P1 zero；SDK clean；RN 仅用户既有 `appVersion.ts`；无 RN/Desktop/all 或禁用脚本 | convergence script absent |
+
+Closeout verdict: `.149.29 completed-local/structural-pass/browser-readonly-pass`。本片只收敛 H5 建群状态 owner，不扩大真实创建、缓存 list-back、realtime 或 RN/Web convergence 声明。
+
+## W6.a6.20.149.28 Conversation Search State Owner Closeout (2026-08-14)
+
+| gate | status | evidence | residual |
+| :--- | :--- | :--- | :--- |
+| owner convergence | `pass` | `ConversationSearchPage -> useConversationSearchState -> existing WebIMSync cache facade + conversation-home-search pure projection` | none |
+| behavior preservation | `pass` | 四 cache 并行读取、interaction request generation、8 条消息分页、分区展开与十条历史上限保持原规则；无远端搜索/mutation | cross-browser/physical gesture |
+| structure | `pass` | page `376 -> 203`；Hook 271 行、唯一生产消费者；页面无 cache/history/race 直调 | Hook 主函数长度登记为后续结构候选，不阻塞本片 |
+| verification | `pass` | focused 2 files/8 tests；H5 157 files/514 tests；SDK Web 101 files/426 tests；typecheck；466 assets；1217-module build；diff check | existing >500kB chunk warning |
+| browser readonly | `pass` | 已登录链：会话列表 -> 搜索历史 -> `123` -> 2 会话/3 消息 -> 目标聊天；使用真实当前账号 sql.js cache | Safari/Firefox + physical pull gesture |
+| protection | `pass` | SDK source clean；RN protected business source 零改动，仅用户既有 `appVersion.ts`；未运行 RN/Desktop/all 或 `build:package:desktop:web` | none |
+
+Closeout verdict: `.149.28 completed-local/structural-pass/browser-readonly-pass`。本片只收敛 H5 页面状态 owner，不扩大搜索、发送、mutation 或跨客户端 convergence 声明。
 
 ## W6.a6.20.149.19 Unified Forward Composer Closeout (2026-08-14)
 
@@ -178,13 +1110,13 @@ Closeout verdict: `.149.8 completed/destructive-action-gated`。权限与展示�
 | gate | status | evidence | residual |
 | :--- | :--- | :--- | :--- |
 | RN truth | `pass` | frozen RN 群主设置同时呈现退出/解散；退出必须先完成权限交接语义 | RN 服务端自动管理员承接不复制到 H5 |
-| capability boundary | `pass-local` | 页面仅消费 shared `canTransferOwner/canDismissGroup/canQuitGroup`；SDK 继续拒绝群主直接 leave | none |
-| two-step flow | `pass-local` | 群主退出进入既有 owner-transfer route；转让成功返回 `?lifecycle=leave`，设置页消费一次意图并打开确认层；未自动执行 leave | 真实 transfer + leave 需破坏性授权 |
+| capability boundary | `superseded` | `.149.71` 已将 SDK 群主 leave 改为管理员继任条件 + single leave | 见 `.149.71` |
+| two-step flow | `superseded` | 旧 owner-transfer route intent 不再是退群主路径 | 见 `.149.71` |
 | browser | `pass-auth-readonly` | 真实 owner 群同时显示“退出群聊/解散群聊”；退出进入 2 位真实候选页，关闭返回原设置；412/412 无横向溢出 | 转让、退出、第二账号 list-back |
 | verification | `pass` | focused 3 files/17 tests；full 147 files/478 tests；Web typecheck；1198-module production build | existing >500kB chunk warning |
 | protection | `pass` | 仅 H5 route/UI/tests/docs；SDK/RN business 未修改；未执行 RN/Desktop/all 或 `build:package:desktop:web` | none |
 
-Closeout verdict: `.149.7 completed/transfer-and-leave-mutation-gated`。本片证明群主入口和两步路由编排，不把未执行的真实转让、退群、解散写成运行验收完成。
+Closeout verdict: `.149.7 superseded-by-.149.71`。本片保留为历史证据；当前群主退群合同以 `.149.71` 的 earliest-admin + single-leave/Gateway-auto-transfer 为准。
 
 ## W6.a6.20.149.5b Custom Emoji Feedback Progress (2026-08-14)
 
@@ -1908,7 +2840,7 @@ Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-media-data-
 | :--- | :--- | :--- | :--- |
 | RN interaction parity | `done-local` | 群行支持 `300ms` 长按、移动超过 `8px` 取消、右键等价入口；菜单顺序为分享群名片、退出群聊、管理角色修改群名称，位置按动作数量翻转并限制在视口 | 当前真实账号返回空群列表，非空菜单视觉和触屏实机手势未取得运行态证据 |
 | shared owner | `shared-core-ready/web-consumed/rn-frozen` | 菜单只消费 `WebIMJoinedGroup.permissions`；分享/改名先调用 `conversations.openGroup` 获得 canonical Conversation；普通退群只调用 `groupLifecycle.leave({clearHistory})`，不复制 Gateway/SQL/角色数字 | RN `GroupRowActionMenu`、owner auto-transfer/quit 业务保持冻结；未宣称双端 convergence |
-| owner quit semantics | `explicit-two-step` | 群主点击退出时进入既有 `/owner-transfer?from=joined-groups`，取消或成功均回 `/contacts/groups`；不隐式串联第二次 destructive leave | 转让后需由用户重新长按并确认退出；真实转让、权限刷新、再退出和第二账号回读未授权 |
+| owner quit semantics | `superseded-by-.149.71` | 群主长按退出改为 shared 完整成员同步、earliest-admin 双分支和同一 `groupLifecycle.leave`；不调用 owner-transfer route | 真实退群、Gateway 自动转移和第二账号回读未授权 |
 | route reuse | `done-local` | 分享复用 `/settings/share-group-card`；改名复用 `/settings/profile?edit=name` 并继续执行原 capability 校验和 `groups.updateName`；没有新增业务 route owner | 真实分享、改名 mutation 未执行 |
 | structure | `clean` | 纯 view helper、菜单/modal、群行手势和页面 orchestration 各自分层；无页面 Gateway/SQL/OpenIM、role magic、fake-success、TODO/debug log，触及文件均 `<300` 行 | 自动 convergence script 不存在 |
 | verification | `green-local/data-gated` | focused 3 files/10 tests；full verify 包含 466 assets、runtime boundary、SDK/H5 typecheck、SDK Web 85 files/357 tests、1106-module build；diff-check 通过 | build 仅有既有 large-chunk warning；浏览器只证明已登录空群态 |
@@ -3092,3 +4024,82 @@ Residual ledger addition: `Chat visible unread read convergence` 已闭合 share
 | verification | focused 73 files/245 tests、H5 full 152 files/505 tests、typecheck、1207-module production build、diff check；382x786 真实群聊恢复与 Composer 只读烟测 |
 | preserved_boundaries | SDK source/generated 零改动；RN 仅用户既有 `src/config/appVersion.ts`；未运行 SDK/RN/Desktop/all build/sync 或 `build:package:desktop:web` |
 | acceptance_gate | 本片不扩大任何业务能力完成声明；现有 mutation、自然数据、RTC、跨浏览器/设备和验证码合同 gate 保持不变 |
+
+## Closed Slice W6.a6.20.149.22
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.149.22-chat-composer-input-row-split` |
+| goal | 收敛聊天输入行展示职责，同时保持唯一提交与业务编排 owner |
+| deliverable_verdict | `completed-local/structural-pass/browser-readonly-pass` |
+| primary_path | `ChatComposer orchestration -> ChatComposerInputRow -> existing ChatVoiceInput/text/emoji/action controls` |
+| structure | `ChatComposer.tsx 419 -> 353`；新输入行 138 行、单一生产消费者；发送/转发/录音/附件/提及 owner 不移动 |
+| verification | focused 4 files/14 tests、H5 full 152 files/505 tests、typecheck、1208-module production build、diff check；382x786 真实群聊输入与面板只读烟测 |
+| preserved_boundaries | SDK source/generated 零改动；RN 仅用户既有 `src/config/appVersion.ts`；未运行 SDK/RN/Desktop/all build/sync 或 `build:package:desktop:web` |
+| acceptance_gate | 本片不扩大任何业务能力完成声明；现有 mutation、自然数据、RTC、跨浏览器/设备和验证码合同 gate 保持不变 |
+
+## Closed Slice W6.a6.20.149.23
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.149.23-chat-page-navigation-owner-split` |
+| goal | 收敛聊天页 SPA 导航职责，不改变 shared runtime 或业务 mutation 链 |
+| deliverable_verdict | `completed-local/structural-pass/browser-readonly-pass` |
+| primary_path | `ChatPage -> useChatPageNavigationActions -> existing React Router routes/shared groups/conversations facade` |
+| structure | `ChatPage.tsx 595 -> 514`；新 Hook 156 行、单一生产消费者；发送/cache/RTC/录音 owner 不移动 |
+| verification | focused 4 files/10 tests、H5 full 152 files/505 tests、typecheck、1209-module production build、diff check；382x786 群资料往返只读验收 |
+| preserved_boundaries | SDK source/generated 零改动；RN 仅用户既有 `src/config/appVersion.ts`；未运行 SDK/RN/Desktop/all build/sync 或 `build:package:desktop:web` |
+| acceptance_gate | 名片、群申请、公告、发送等 mutation 未执行；现有自然数据、RTC、跨浏览器/设备和验证码合同 gate 保持不变 |
+
+## Closed Slice W6.a6.20.149.24
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.149.24-chat-page-action-owner-split` |
+| goal | 收敛聊天页消息 operation 与瞬时 UI 状态，同时保持 shared mutation/RTC/缓存语义不变 |
+| deliverable_verdict | `completed-local/structural-pass/browser-readonly-pass` |
+| primary_path | `ChatPage -> message/transient/composer/header hooks -> existing WebIMSync/WebIMCallProvider/presentation owners` |
+| structure | `ChatPage.tsx 514 -> 399`；4 个页面 owner 独立持有消息 operation、名片/通话、草稿/提及和头部投影；cache owner 不再反向回调 UI |
+| verification | focused 4 files/11 tests、H5 full 153 files/508 tests、Web typecheck、466 assets、1213-module production build、diff check；382x786 群名片/单聊通话弹层只读验收 |
+| preserved_boundaries | 仅执行允许的 SDK `build:web/sync:web` 且 SDK clean；RN 仅用户既有 `src/config/appVersion.ts`；未运行 RN/Desktop/all 或 `build:package:desktop:web` |
+| acceptance_gate | 未点击分享、发送或正式呼出；真实 mutation/RTC、跨浏览器/设备和验证码合同 gate 保持不变 |
+
+## Closed Slice W6.a6.20.149.25
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.149.25-contact-profile-action-owner-split` |
+| goal | 收敛联系人资料页动作编排，不改变 shared 联系人、通话、缓存或路由语义 |
+| deliverable_verdict | `completed-local/structural-pass/browser-readonly-pass` |
+| primary_path | `ContactProfilePage -> useContactProfileActions -> existing contacts/peerProfile/WebIMCallProvider/clipboard owners` |
+| structure | `ContactProfilePage.tsx 467 -> 344`；新 Hook 208 行、单一生产消费者；页面保留读取、presence、群上下文与展示职责 |
+| verification | focused 4 files/21 tests、H5 full 154 files/510 tests、Web typecheck、466 assets、1214-module production build、diff check；382x786 真实好友资料 cold reload/弹层只读验收 |
+| preserved_boundaries | 仅执行允许的 SDK `build:web/sync:web` 且 SDK clean；RN 仅用户既有 `src/config/appVersion.ts`；未运行 RN/Desktop/all 或 `build:package:desktop:web` |
+| acceptance_gate | 未执行复制、打开会话、通话、星标、备注、黑名单或删除好友；真实 mutation/RTC、跨浏览器/设备和验证码合同 gate 保持不变 |
+
+## Closed Slice W6.a6.20.149.26
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.149.26-contacts-page-action-owner-split` |
+| goal | 收敛通讯录联系人动作编排，不改变 shared 联系人、通话、缓存、刷新或路由语义 |
+| deliverable_verdict | `completed-local/structural-pass/browser-readonly-pass` |
+| primary_path | `ContactsPage list owner -> useContactsPageActions -> existing peerProfile/contacts/WebIMCallProvider/React Router owners` |
+| structure | `ContactsPage.tsx 406 -> 290`；新 Hook 200 行、单一生产消费者；页面保留 cache-first 读取、刷新、分组索引与列表展示 |
+| verification | focused 3 files/7 tests、H5 full 155 files/512 tests、Web typecheck、466 assets、1215-module production build、diff check；382x786 真实 2 联系人列表只读验收 |
+| preserved_boundaries | 仅执行允许的 SDK `build:web/sync:web` 且 SDK clean；RN 仅用户既有 `src/config/appVersion.ts`；未运行 RN/Desktop/all 或 `build:package:desktop:web` |
+| acceptance_gate | 未执行打开会话、分享名片、正式呼出或删除好友；真实 mutation/RTC、跨浏览器/设备和验证码合同 gate 保持不变 |
+
+## Closed Slice W6.a6.20.149.27
+
+| field | value |
+| :--- | :--- |
+| slice_id | `W6.a6.20.149.27-conversations-page-state-owner-split` |
+| goal | 收敛普通会话列表的缓存与刷新状态，不改变 shared 同步、presence、动作、路由或展示语义 |
+| deliverable_verdict | `completed-local/structural-pass/browser-readonly-pass` |
+| primary_path | `ConversationsPage presentation/navigation -> useConversationsPageState -> existing WebIMSync/useConversationPresence owners` |
+| structure | `ConversationsPage.tsx 398 -> 279`；新 Hook 152 行、单一生产消费者；`useConversationActions` 继续独立拥有 mutation |
+| verification | focused 4 files/4 tests、H5 full 156 files/513 tests、Web typecheck、466 assets、1216-module production build、diff check；已登录 4 会话列表只读烟测 |
+| cleanup | `P0/P1 zero`；无孤立导出、重复 owner、compat wrapper、TODO/FIXME/HACK 或调试日志；仓库无 convergence script |
+| preserved_boundaries | 仅执行允许的 SDK `build:web/sync:web` 且 SDK clean；RN 仅用户既有 `src/config/appVersion.ts`；未运行 RN/Desktop/all 或 `build:package:desktop:web` |
+| acceptance_gate | 未执行下拉刷新、打开会话、已读、置顶、静音、归档或删除；真实 mutation、realtime 双端结果、跨浏览器/设备和验证码合同 gate 保持不变 |

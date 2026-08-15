@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import appSource from '../../app/App.tsx?raw';
+import chatRoutesSource from '../../app/AppChatRoutes.tsx?raw';
 import profileSource from '../chat/GroupProfilePage.tsx?raw';
 import pageSource from './GroupQRCodePage.tsx?raw';
 
 describe('group QR code production route', () => {
   it('群资料入口进入可刷新的 React Router 子路由', () => {
-    expect(appSource).toContain('path="/conversations/:conversationID/settings/qrcode"');
-    expect(appSource).toContain('path="/conversations/:conversationID/settings/qrcode/share"');
+    expect(chatRoutesSource).toContain('path="/conversations/:conversationID/settings/qrcode"');
+    expect(chatRoutesSource).toContain('path="/conversations/:conversationID/settings/qrcode/share"');
     expect(profileSource).toContain('to={qrCodeURL}');
     expect(profileSource).toContain('群二维码');
   });

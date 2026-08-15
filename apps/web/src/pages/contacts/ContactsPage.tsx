@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatIMUserDisplayName, type WebIMContact } from '@im28/im-sdk/web';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
 import bellIconURL from '../../assets/rn/assets/icons/imm28/bell.solid.svg';
 import groupsIconURL from '../../assets/rn/assets/icons/imm28/contact-groups.svg';
@@ -10,40 +10,28 @@ import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { usePrimaryTabBadges } from '../../components/primary-tabs/index.js';
 import { CallTypeActionSheet } from '../../components/call/CallTypeActionSheet.js';
 import { HomeActionMenu } from '../../components/home-actions/HomeActionMenu.js';
-import { PullRefreshIndicator, useAppToast } from '../../components/interaction/index.js';
+import { PullRefreshIndicator } from '../../components/interaction/index.js';
 import { usePullRefresh } from '../../hooks/use-pull-refresh.js';
-import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
+import { useWebIMRuntime } from '../../runtime/index.js';
 import { ContactActionMenu } from './ContactActionMenu.js';
 import { ContactDeleteSheet } from './ContactActionSheets.js';
 import { ContactRow } from './ContactRow.js';
 import { VerificationCountBadge } from './VerificationCountBadge.js';
-import {
-  createContactCardShareLocationState,
-  getContactActionMenuState,
-  type ContactActionKey,
-  type ContactActionMenuState,
-  type ContactActionPoint,
-} from './contact-action-view.js';
 import {
   STARRED_CONTACT_INDEX,
   buildContactListEntries,
   getContactIndexes,
   getContactSectionID,
 } from './contact-list-view.js';
+import { useContactsPageActions } from './useContactsPageActions.js';
 import './contacts-page.css';
 
 /** RN 通讯录核心页通过 Web SDK facade 读取真实 Gateway 好友列表。 */
 export function ContactsPage() {
   /** pageRef 用于在保留式主场景内定位独立滚动容器。 */
   const pageRef = useRef<HTMLElement | null>(null);
-  /** navigate 只处理用户明确选择后的 SPA 路由切换。 */
-  const navigate = useNavigate();
   // runtime context 是页面唯一允许消费的 SDK owner。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
-  /** callOwner 是 Web 全局唯一通话生命周期 owner。 */
-  const callOwner = useWebIMCall();
-  /** toast 与 RN 统一承载通话启动等操作反馈。 */
-  const { toast } = useAppToast();
   // contacts facade 不向页面暴露 Gateway client 或 token。
   const contactsFacade = useMemo(() => runtime?.getSync().contacts ?? null, [runtime]);
   // contacts 保存已完成分页和归一化的好友记录。
@@ -56,21 +44,20 @@ export function ContactsPage() {
   const [error, setError] = useState<string | null>(null);
   /** activeIndex 投影 RN 索引栏当前选择态。 */
   const [activeIndex, setActiveIndex] = useState('');
-  /** actionMenu 保存当前联系人和 RN 视口定位结果。 */
-  const [actionMenu, setActionMenu] = useState<ContactActionMenuState | null>(null);
-  /** callTarget 等待用户在语音和视频间二次选择。 */
-  const [callTarget, setCallTarget] = useState<WebIMContact | null>(null);
-  /** deleteTarget 等待用户确认删除范围。 */
-  const [deleteTarget, setDeleteTarget] = useState<WebIMContact | null>(null);
-  /** actionPending 阻止联系人写动作和通话重复提交。 */
-  const [actionPending, setActionPending] = useState(false);
-  /** actionError 呈现真实 facade 或通话启动失败。 */
-  const [actionError, setActionError] = useState<string | null>(null);
   // verificationCounts 读取主导航壳的唯一计数快照，避免通讯录重复请求两个 facade。
   const {
     verificationUnreadCounts: verificationCounts,
     refreshVerificationUnreadCounts: refreshVerificationCounts,
   } = usePrimaryTabBadges();
+  /** removeDeletedContact 只在 shared 删除成功后更新当前列表投影。 */
+  const removeDeletedContact = useCallback((userID: string): void => {
+    setContacts(current => current.filter(item => item.userID !== userID));
+  }, []);
+  /** actions 集中持有长按菜单、会话、分享、通话和删除动作。 */
+  const actions = useContactsPageActions({
+    runtime,
+    onContactDeleted: removeDeletedContact,
+  });
 
   /** 先读账号 SQLite cache，再调用唯一 contacts facade 完成远端刷新。 */
   const loadContacts = useCallback(async () => {
@@ -156,106 +143,6 @@ export function ContactsPage() {
     });
   }, []);
 
-  /** openContactActions 按 RN 固定尺寸把长按点转换为菜单位置。 */
-  const openContactActions = useCallback((
-    contact: WebIMContact,
-    point: ContactActionPoint,
-  ) => {
-    setActionError(null);
-    setActionMenu(getContactActionMenuState({
-      contact,
-      point,
-      viewportWidth: globalThis.innerWidth,
-      viewportHeight: globalThis.innerHeight,
-    }));
-  }, []);
-
-  /** openConversation 通过 shared peer facade 解析真实单聊后进入聊天页。 */
-  const openConversation = useCallback(async (contact: WebIMContact): Promise<void> => {
-    if (!runtime || actionPending) return;
-    setActionPending(true);
-    setActionError(null);
-    try {
-      /** conversation 是 Gateway 与 SQLite 收敛后的 canonical 单聊。 */
-      const conversation = await runtime.getSync().peerProfile.openConversation(contact.userID);
-      navigate(`/conversations/${encodeURIComponent(conversation.conversationID)}`);
-    } catch (cause) {
-      setActionError(readContactActionError(cause, '打开聊天失败'));
-    } finally {
-      setActionPending(false);
-    }
-  }, [actionPending, navigate, runtime]);
-
-  /** startContactCall 在二次选择后解析单聊并交给全局通话 owner。 */
-  const startContactCall = useCallback(async (
-    mediaType: 'audio' | 'video',
-  ): Promise<void> => {
-    /** contact 固定用户确认时的目标，随后立即关闭选择层。 */
-    const contact = callTarget;
-    if (!runtime || !contact || actionPending) return;
-    setCallTarget(null);
-    setActionPending(true);
-    setActionError(null);
-    try {
-      /** conversationID 必须来自 shared facade，禁止在页面拼接。 */
-      const conversation = await runtime.getSync().peerProfile.openConversation(contact.userID);
-      await callOwner.startOutgoing({
-        conversationID: conversation.conversationID,
-        peerName: contact.displayName || formatIMUserDisplayName(contact.userID),
-        peerAvatarURL: contact.avatarURL,
-        mediaType,
-      });
-    } catch (cause) {
-      toast.error(readContactActionError(cause, '发起通话失败'));
-    } finally {
-      setActionPending(false);
-    }
-  }, [actionPending, callOwner, callTarget, runtime, toast]);
-
-  /** deleteContact 在明确清理范围后调用 shared success-only 删除状态机。 */
-  const deleteContact = useCallback(async (scope: 'self' | 'both'): Promise<void> => {
-    /** contact 固定本次破坏性操作目标。 */
-    const contact = deleteTarget;
-    if (!contactsFacade || !contact || actionPending) return;
-    setActionPending(true);
-    setActionError(null);
-    try {
-      await contactsFacade.deleteFriend({
-        friendUserID: contact.userID,
-        clearScope: scope,
-      });
-      setContacts(current => current.filter(item => item.userID !== contact.userID));
-      setDeleteTarget(null);
-    } catch (cause) {
-      setActionError(readContactActionError(cause, '删除好友失败'));
-    } finally {
-      setActionPending(false);
-    }
-  }, [actionPending, contactsFacade, deleteTarget]);
-
-  /** handleContactAction 仅打开下一层或调用已拥有的真实能力。 */
-  function handleContactAction(action: ContactActionKey): void {
-    /** contact 固定关闭菜单前的目标。 */
-    const contact = actionMenu?.contact;
-    setActionMenu(null);
-    if (!contact) return;
-    if (action === 'message') {
-      void openConversation(contact);
-      return;
-    }
-    if (action === 'call') {
-      setCallTarget(contact);
-      return;
-    }
-    if (action === 'share-card') {
-      navigate(`/contacts/users/${encodeURIComponent(contact.userID)}/share`, {
-        state: createContactCardShareLocationState(contact),
-      });
-      return;
-    }
-    setDeleteTarget(contact);
-  }
-
   if (restoring) return <ContactsPageState label="正在恢复会话" />;
   if (!runtime) {
     return <ContactsPageState label="运行配置不可用" detail={startupError} />;
@@ -270,6 +157,10 @@ export function ContactsPage() {
       onTouchMove={pullRefresh.onTouchMove}
       onTouchEnd={pullRefresh.onTouchEnd}
       onTouchCancel={pullRefresh.onTouchCancel}
+      onPointerDown={pullRefresh.onPointerDown}
+      onPointerMove={pullRefresh.onPointerMove}
+      onPointerUp={pullRefresh.onPointerUp}
+      onPointerCancel={pullRefresh.onPointerCancel}
     >
       <section className="rn-contacts-surface" aria-busy={loading || refreshing}>
         <header className="rn-contacts-header">
@@ -324,7 +215,7 @@ export function ContactsPage() {
               <ContactRow
                 key={entry.key}
                 contact={entry.contact}
-                onOpenActions={openContactActions}
+                onOpenActions={actions.openContactActions}
               />
             ))
           ) : (
@@ -356,26 +247,28 @@ export function ContactsPage() {
             ))}
           </nav>
         ) : null}
-        {actionError ? <p className="rn-contact-action-error" role="alert">{actionError}</p> : null}
+        {actions.actionError ? (
+          <p className="rn-contact-action-error" role="alert">{actions.actionError}</p>
+        ) : null}
         <ContactActionMenu
-          menu={actionMenu}
-          pending={actionPending}
-          onClose={() => setActionMenu(null)}
-          onAction={handleContactAction}
+          menu={actions.actionMenu}
+          pending={actions.actionPending}
+          onClose={actions.closeActionMenu}
+          onAction={actions.handleContactAction}
         />
         <CallTypeActionSheet
-          open={Boolean(callTarget)}
-          peerName={callTarget?.displayName ||
-            formatIMUserDisplayName(callTarget?.userID)}
-          pending={actionPending}
-          onClose={() => setCallTarget(null)}
-          onSelect={mediaType => void startContactCall(mediaType)}
+          open={Boolean(actions.callTarget)}
+          peerName={actions.callTarget?.displayName ||
+            formatIMUserDisplayName(actions.callTarget?.userID)}
+          pending={actions.actionPending}
+          onClose={actions.closeCallTarget}
+          onSelect={mediaType => void actions.startContactCall(mediaType)}
         />
         <ContactDeleteSheet
-          contact={deleteTarget}
-          pending={actionPending}
-          onClose={() => setDeleteTarget(null)}
-          onDelete={scope => void deleteContact(scope)}
+          contact={actions.deleteTarget}
+          pending={actions.actionPending}
+          onClose={actions.closeDeleteTarget}
+          onDelete={scope => void actions.deleteContact(scope)}
         />
       </section>
     </main>
@@ -399,8 +292,3 @@ function ContactsPageState({
 }
 
 export default ContactsPage;
-
-/** 将未知联系人动作异常转换为不泄露 transport 细节的可见文案。 */
-function readContactActionError(cause: unknown, fallback: string): string {
-  return cause instanceof Error && cause.message ? cause.message : fallback;
-}

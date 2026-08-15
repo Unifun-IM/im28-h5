@@ -9,6 +9,7 @@
   width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
+  max-width: 480px;
   margin: 0 auto;
   padding-bottom: calc(88px + var(--im-safe-bottom));
   background: var(--im-bg-app);

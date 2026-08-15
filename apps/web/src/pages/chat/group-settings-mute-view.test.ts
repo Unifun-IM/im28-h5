@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import appSource from '../../app/App.tsx?raw';
+import chatRoutesSource from '../../app/AppChatRoutes.tsx?raw';
 import managementSource from './GroupManagementPage.tsx?raw';
 import muteSource from './GroupMutePage.tsx?raw';
 import speechSource from './GroupSpeechFrequencyPage.tsx?raw';
@@ -8,10 +8,10 @@ import speechSource from './GroupSpeechFrequencyPage.tsx?raw';
 /** H5 群设置和禁言页面不得复制 Gateway、SQL 或角色权限业务。 */
 describe('group settings and mute H5 contract', () => {
   it('两个详情页均由 React Router SPA 子路由拥有', () => {
-    expect(appSource).toContain('path="/conversations/:conversationID/settings/manage/mute"');
-    expect(appSource).toContain('path="/conversations/:conversationID/settings/manage/speech-frequency"');
-    expect(appSource).toContain('<GroupMutePage />');
-    expect(appSource).toContain('<GroupSpeechFrequencyPage />');
+    expect(chatRoutesSource).toContain('path="/conversations/:conversationID/settings/manage/mute"');
+    expect(chatRoutesSource).toContain('path="/conversations/:conversationID/settings/manage/speech-frequency"');
+    expect(chatRoutesSource).toContain('<GroupMutePage />');
+    expect(chatRoutesSource).toContain('<GroupSpeechFrequencyPage />');
   });
 
   it('三个页面只消费 shared groupManagement facade', () => {

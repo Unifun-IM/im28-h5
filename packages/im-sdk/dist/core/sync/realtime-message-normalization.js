@@ -2,7 +2,7 @@
 export function normalizeIMRealtimeMessages(value) {
     /** normalized 保留 wrapper 中的消息顺序，重复身份使用最后版本。 */
     const normalized = [];
-    visitRealtimeValue(value, undefined, normalized);
+    visitRealtimeValue(value, undefined, undefined, normalized);
     /** unique 对补拉或嵌套重复消息执行稳定身份去重。 */
     const unique = new Map();
     normalized.forEach((message, index) => {
@@ -14,10 +14,10 @@ export function normalizeIMRealtimeMessages(value) {
     return [...unique.values()];
 }
 /** 递归处理 JSON、数组、data/payload 与多会话批次包装。 */
-function visitRealtimeValue(value, inheritedConversationID, output) {
+function visitRealtimeValue(value, inheritedConversationID, inheritedServerTime, output) {
     if (typeof value === 'string') {
         try {
-            visitRealtimeValue(JSON.parse(value), inheritedConversationID, output);
+            visitRealtimeValue(JSON.parse(value), inheritedConversationID, inheritedServerTime, output);
         }
         catch {
             return;
@@ -25,7 +25,7 @@ function visitRealtimeValue(value, inheritedConversationID, output) {
         return;
     }
     if (Array.isArray(value)) {
-        value.forEach(item => visitRealtimeValue(item, inheritedConversationID, output));
+        value.forEach(item => visitRealtimeValue(item, inheritedConversationID, inheritedServerTime, output));
         return;
     }
     if (!isRecord(value))
@@ -34,28 +34,30 @@ function visitRealtimeValue(value, inheritedConversationID, output) {
     const conversationID = readString(value.conversation_id) ||
         readString(value.conversationID) ||
         inheritedConversationID;
+    /** serverTime 让只在批次声明时间的实时消息获得稳定 SQLite 排序时间。 */
+    const serverTime = readString(value.server_time) || inheritedServerTime;
     /** candidate 只在当前对象本身是消息时生成。 */
-    const candidate = normalizeMessageRecord(value, conversationID);
+    const candidate = normalizeMessageRecord(value, conversationID, serverTime);
     if (candidate)
         output.push(candidate);
     /** collectionKey 仅遍历协议允许承载批量消息的字段。 */
     for (const collectionKey of ['conversations', 'messages', 'list']) {
         if (Array.isArray(value[collectionKey])) {
-            value[collectionKey].forEach(item => visitRealtimeValue(item, conversationID, output));
+            value[collectionKey].forEach(item => visitRealtimeValue(item, conversationID, serverTime, output));
         }
     }
     if (isRecord(value.message)) {
-        visitRealtimeValue(value.message, conversationID, output);
+        visitRealtimeValue(value.message, conversationID, serverTime, output);
     }
     /** wrapperKey 只递归 Gateway 的通用单层包装字段。 */
     for (const wrapperKey of ['data', 'payload']) {
         if (value[wrapperKey] !== undefined) {
-            visitRealtimeValue(value[wrapperKey], conversationID, output);
+            visitRealtimeValue(value[wrapperKey], conversationID, serverTime, output);
         }
     }
 }
 /** 将 snake_case 与 RN 兼容字段收敛为 canonical Gateway 消息。 */
-function normalizeMessageRecord(record, inheritedConversationID) {
+function normalizeMessageRecord(record, inheritedConversationID, inheritedServerTime) {
     /** msgID 覆盖 Gateway 服务端 ID 与系统事件稳定 ID。 */
     const msgID = readString(record.msg_id) ||
         readString(record.serverMsgID) ||
@@ -90,6 +92,11 @@ function normalizeMessageRecord(record, inheritedConversationID) {
             : record.seq !== undefined
                 ? { msg_seq: String(record.seq) }
                 : {}),
+        ...(!readString(record.sent_at) &&
+            !readString(record.updated_at) &&
+            inheritedServerTime
+            ? { sent_at: inheritedServerTime }
+            : {}),
         ...(body ? { body: body } : {}),
     };
 }

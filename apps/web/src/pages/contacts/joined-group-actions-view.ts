@@ -4,7 +4,7 @@ import type { WebIMJoinedGroup } from '@im28/im-sdk/web';
 export type JoinedGroupActionKey = 'share-card' | 'quit' | 'edit-name';
 
 /** 群列表退出入口按 shared capability 收敛后的模式。 */
-export type JoinedGroupQuitMode = 'leave' | 'transfer-first' | 'unavailable';
+export type JoinedGroupQuitMode = 'leave' | 'owner' | 'unavailable';
 
 /** 群列表长按点位只保留浏览器视口坐标。 */
 export interface JoinedGroupActionPoint {
@@ -45,7 +45,7 @@ export function getJoinedGroupQuitMode(
   group: WebIMJoinedGroup,
 ): JoinedGroupQuitMode {
   if (group.permissions.canQuitGroup) return 'leave';
-  if (group.permissions.canTransferOwner) return 'transfer-first';
+  if (group.permissions.canTransferOwner) return 'owner';
   return 'unavailable';
 }
 
@@ -99,12 +99,4 @@ export function buildJoinedGroupProfileRoute(
   /** baseURL 只携带 canonical Conversation 身份。 */
   const baseURL = `/conversations/${encodeURIComponent(normalizedConversationID)}/settings/profile`;
   return editName ? `${baseURL}?edit=name` : baseURL;
-}
-
-/** 构造群主转让页稳定路由。 */
-export function buildJoinedGroupOwnerTransferRoute(conversationID: string): string {
-  /** normalizedConversationID 阻止群列表把群 ID 冒充会话 ID。 */
-  const normalizedConversationID = conversationID.trim();
-  if (!normalizedConversationID) throw new Error('群主转让需要会话 ID');
-  return `/conversations/${encodeURIComponent(normalizedConversationID)}/settings/manage/owner-transfer?from=joined-groups`;
 }

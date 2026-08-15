@@ -146,6 +146,10 @@ export function FriendApplicationsPage({ onUnreadChanged }: FriendApplicationsPa
     onTouchMove={pullRefresh.onTouchMove}
     onTouchEnd={pullRefresh.onTouchEnd}
     onTouchCancel={pullRefresh.onTouchCancel}
+    onPointerDown={pullRefresh.onPointerDown}
+    onPointerMove={pullRefresh.onPointerMove}
+    onPointerUp={pullRefresh.onPointerUp}
+    onPointerCancel={pullRefresh.onPointerCancel}
   >
     <PullRefreshIndicator refreshing={refreshing} pullDistance={pullRefresh.pullDistance} armed={pullRefresh.armed} />
     {pageContent}{confirmDialog}

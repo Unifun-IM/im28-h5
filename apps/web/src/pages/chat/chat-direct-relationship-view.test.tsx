@@ -2,7 +2,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 import hookSource from './useChatDirectRelationship.ts?raw';
+import messageOperationsSource from './useChatPageMessageOperations.ts?raw';
+import navigationSource from './useChatPageNavigationActions.ts?raw';
 import pageSource from './ChatPage.tsx?raw';
+import surfaceSource from './ChatPageSurface.tsx?raw';
 import { ChatRelationshipNotice } from './ChatRelationshipNotice.js';
 
 // 单聊关系页面必须消费 shared 投影，不得复制协议或伪造反向黑名单。
@@ -21,9 +24,11 @@ describe('chat direct relationship H5 contract', () => {
     expect(pageSource).toContain('directRelationship.presentation.composerUnavailableReason');
     expect(pageSource).toContain("? '正在恢复会话'");
     expect(pageSource).toContain("'会话暂不可用，无法发消息'");
-    expect(pageSource).toContain('directRelationship.markStrangerFromSendError(cause)');
+    expect(pageSource).toContain('onSendError: directRelationship.markStrangerFromSendError');
+    expect(messageOperationsSource).toContain('onSendError(cause)');
     expect(pageSource).toContain('snapshot.relationshipVersion');
-    expect(pageSource).toContain('/contacts/users/${encodeURIComponent(conversation.targetID)}/add');
+    expect(surfaceSource).toContain('navigationActions.openDirectContactApplication');
+    expect(navigationSource).toContain('/contacts/users/${encodeURIComponent(conversation.targetID)}/add');
   });
 
   it('按 RN 文案渲染可访问的消息列表底部动作', () => {

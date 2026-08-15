@@ -36,9 +36,9 @@ export { cancelIMGroupAdmins, filterIMGroupAdminCandidates, filterIMGroupOwnerTr
 /** 导出群设置与禁言的共享业务入口。 */
 export { createIMGroupManagementSync, updateIMGroupMemberMute, updateIMGroupMute, updateIMGroupSettings, } from './group-settings-mute.js';
 /** 导出群退出与解散的共享破坏性生命周期入口。 */
-export { createIMGroupLifecycleSync, dismissIMGroup, leaveIMGroup, } from './group-lifecycle.js';
+export { createIMGroupLifecycleSync, dismissIMGroup, leaveIMGroup, selectIMEarliestGroupAdmin, } from './group-lifecycle.js';
 /** 导出群生命周期的输入、结果和部分成功契约。 */
-export type { IMDismissGroupOptions, IMGroupLifecycleCacheState, IMGroupLifecycleOperation, IMGroupLifecycleResult, IMGroupLifecycleSync, IMGroupLifecycleSyncDependencies, IMLeaveGroupOptions, } from './group-lifecycle.js';
+export type { IMDismissGroupOptions, IMGroupLifecycleCacheState, IMGroupLifecycleOperation, IMGroupLifecycleResult, IMGroupLifecycleSync, IMGroupLifecycleSyncDependencies, IMGroupOwnerQuitAdminCandidate, IMLeaveGroupOptions, } from './group-lifecycle.js';
 /** 导出群设置与禁言的中性输入、结果和缓存状态。 */
 export type { IMGroupManagementSync, IMGroupManagementSyncDependencies, IMGroupMemberMuteMutationResult, IMGroupSettingsMutationResult, IMGroupSettingsMuteCacheState, IMGroupSpeechFrequencySeconds, IMUpdateGroupMemberMuteOptions, IMUpdateGroupMuteOptions, IMUpdateGroupSettingsOptions, } from './group-settings-mute.js';
 /** 导出群管理权限投影的中性契约。 */

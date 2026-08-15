@@ -144,6 +144,7 @@ async function mapCachedMembers(database, members) {
             avatarURL: profile.avatarURL,
             role: memberRole(member.roleLevel),
             roleLevel: member.roleLevel ?? 0,
+            ...(member.adminSince ? { adminSince: member.adminSince } : {}),
             isMuted: readMemberMuted(member),
             muteUntil: readMemberMuteUntil(member),
         };

@@ -218,6 +218,10 @@ export function GroupInviteMembersPage() {
       onTouchMove={pullRefresh.onTouchMove}
       onTouchEnd={pullRefresh.onTouchEnd}
       onTouchCancel={pullRefresh.onTouchCancel}
+      onPointerDown={pullRefresh.onPointerDown}
+      onPointerMove={pullRefresh.onPointerMove}
+      onPointerUp={pullRefresh.onPointerUp}
+      onPointerCancel={pullRefresh.onPointerCancel}
     >
       {loading ? <GroupInviteMembersState label="正在加载可邀请好友" /> : (
         <>

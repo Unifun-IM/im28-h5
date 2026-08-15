@@ -11,8 +11,7 @@ import { getRNAvatarGradient, getRNAvatarInitial } from '../../components/rn-ava
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { PageNavbar } from '../../components/navigation/PageNavbar.js';
 import { useAppToast } from '../../components/interaction/index.js';
-import { useWebIMRuntime } from '../../runtime/index.js';
-import { useWebIMCall } from '../../runtime/WebIMCallProvider.js';
+import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
 import {
   formatCallClock,
   formatCallDateHeader,

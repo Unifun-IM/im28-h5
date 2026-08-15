@@ -39,9 +39,9 @@
 }
 
 .rn-conversation-header-side {
-  width: 72px;
+  width: 44px;
   min-height: 48px;
-  flex: 0 0 72px;
+  flex: 0 0 44px;
 }
 
 .rn-conversation-header h1 {

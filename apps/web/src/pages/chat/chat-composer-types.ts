@@ -9,7 +9,7 @@ import type {
 
 import type { ChatAlbumSelectionItem } from './chat-attachment-selection.js';
 import type { ChatVoiceRecordingStatus } from './useChatVoiceRecorder.js';
-import type { ChatPendingForward } from './useChatForwardFlow.js';
+import type { ChatPendingForward } from './useChatPendingForward.js';
 
 /** Composer 的两个内嵌面板互斥且不承载发送状态。 */
 export type ChatComposerPanel = 'actions' | 'emoji' | null;

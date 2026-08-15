@@ -1,0 +1,144 @@
+.rn-group-owner-quit-modal {
+  width: min(100vw, 480px);
+  max-width: min(100vw, 480px);
+  max-height: 100dvh;
+  margin: auto auto 0;
+}
+
+.rn-group-owner-quit-sheet {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  color: var(--im-text-primary);
+  background: var(--im-bg-page);
+}
+
+.rn-group-owner-quit-message,
+.rn-group-owner-quit-actions,
+.rn-group-owner-quit-cancel {
+  background: var(--im-bg-card);
+}
+
+.rn-group-owner-quit-message {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
+}
+
+.rn-group-owner-quit-message > p {
+  margin: 0;
+  color: var(--im-text-secondary);
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 18px;
+  text-align: center;
+  white-space: pre-line;
+}
+
+.rn-group-owner-quit-admin {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--im-bg-card);
+  box-shadow: 0 6px 25px 1px rgba(29, 50, 77, 0.1);
+}
+
+.rn-group-owner-quit-avatar {
+  position: relative;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--group-owner-quit-avatar-gradient, var(--im-bg-input));
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rn-group-owner-quit-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rn-group-owner-quit-admin-copy {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+
+.rn-group-owner-quit-admin-copy strong,
+.rn-group-owner-quit-admin-copy small {
+  overflow: hidden;
+  color: var(--im-text-secondary);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rn-group-owner-quit-admin-copy strong {
+  font-size: 14px;
+  line-height: 14px;
+}
+
+.rn-group-owner-quit-admin-copy small {
+  font-size: 10px;
+  line-height: 10px;
+}
+
+.rn-group-owner-quit-admin > em {
+  padding: 2px 4px;
+  border-radius: 999px;
+  color: #985d13;
+  background: rgba(152, 93, 19, 0.05);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 15px;
+}
+
+.rn-group-owner-quit-actions {
+  display: grid;
+}
+
+.rn-group-owner-quit-actions button,
+.rn-group-owner-quit-cancel {
+  width: 100%;
+  min-height: 56px;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: 0;
+}
+
+.rn-group-owner-quit-actions button {
+  color: var(--im-status-danger);
+  border-bottom: var(--im-hairline-width) solid var(--im-border-subtle);
+}
+
+.rn-group-owner-quit-actions button:only-child {
+  color: var(--im-accent-primary);
+}
+
+.rn-group-owner-quit-cancel {
+  min-height: 48px;
+  margin-top: 8px;
+  color: var(--im-text-primary);
+}
+
+.rn-group-owner-quit-actions button:disabled,
+.rn-group-owner-quit-cancel:disabled {
+  cursor: default;
+  opacity: 0.55;
+}

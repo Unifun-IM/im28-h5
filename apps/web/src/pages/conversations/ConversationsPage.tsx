@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { WebIMConversationListItem } from '@im28/im-sdk/web';
 import { Navigate, useNavigate } from 'react-router-dom';
 
@@ -23,7 +23,7 @@ import {
   getNextUnreadConversationID,
 } from './conversation-list-view.js';
 import { useConversationActions } from './useConversationActions.js';
-import { useConversationPresence } from './useConversationPresence.js';
+import { useConversationsPageState } from './useConversationsPageState.js';
 import './conversations-page.css';
 
 /** RN 会话列表页复用 Web SDK cache-first 同步链和 React Router 路由。 */
@@ -39,138 +39,24 @@ export function ConversationsPage() {
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
   // sync 只在 runtime 已完成配置装配时存在。
   const sync = useMemo(() => runtime?.getSync() ?? null, [runtime]);
-  // items 保存由 SDK 组合的会话及其最新消息。
-  const [items, setItems] = useState<readonly WebIMConversationListItem[]>([]);
-  /** archivedItems 只用于 RN 归档通栏的名称和未读摘要。 */
-  const [archivedItems, setArchivedItems] = useState<readonly WebIMConversationListItem[]>([]);
-  // loading 仅用于首次无缓存渲染，已有 cache 时保持列表稳定。
-  const [loading, setLoading] = useState(false);
-  /** refreshing 区分用户下拉刷新和首次恢复状态。 */
-  const [refreshing, setRefreshing] = useState(false);
-  // error 显示真实 sync 错误，不回退 fake-success。
-  const [error, setError] = useState<string | null>(null);
-  /** onlineByID 和 refreshPresence 共用 SDK presence owner。 */
-  const {
-    onlineByID,
-    refresh: refreshPresence,
-  } = useConversationPresence({
+  /** pageState 统一承载 cache-first、realtime、归档摘要和 presence 状态。 */
+  const pageState = useConversationsPageState({
     runtime,
     accountUserID: snapshot.userID,
-    items,
+    dataVersion: snapshot.dataVersion,
+    sync,
   });
+  /** 页面渲染只读取状态 owner 投影。 */
+  const { items, archivedItems, loading, refreshing, error, onlineByID } = pageState;
   /** listRef 提供当前真实会话行的可见位置和滚动容器。 */
   const listRef = useRef<HTMLElement | null>(null);
   /** lastUnreadTargetIDRef 让连续双击按 RN 规则循环未读会话。 */
   const lastUnreadTargetIDRef = useRef('');
-  /** 先读账号 SQLite cache，再执行 Gateway 全量同步并重读组合列表。 */
-  const loadConversations = useCallback(async () => {
-    if (!sync || !snapshot.userID) {
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      // cachedItems 保证离线或慢网时先显示当前账号已有数据。
-      const cachedItems = await sync.conversations.listCachedItems({
-        archived: false,
-        limit: 100,
-      });
-      setItems(cachedItems);
-      /** cachedArchivedItems 让离线首屏也能展示归档入口。 */
-      const cachedArchivedItems = await sync.conversations.listCachedItems({
-        archived: true,
-        limit: 100,
-      });
-      setArchivedItems(cachedArchivedItems);
-      await sync.conversations.sync();
-      // syncedItems 包含同步刚写入的 latest message cache。
-      const syncedItems = await sync.conversations.listCachedItems({
-        archived: false,
-        limit: 100,
-      });
-      setItems(syncedItems);
-      /** 归档端点独立失败时保留旧 cache，不阻断普通会话首屏。 */
-      void sync.conversations.syncArchived()
-        .then(() => sync.conversations.listCachedItems({ archived: true, limit: 100 }))
-        .then(setArchivedItems)
-        .catch(() => undefined);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
-    } finally {
-      setLoading(false);
-    }
-  }, [snapshot.userID, sync]);
-
-  /** 从 canonical cache 重读未归档列表，供 mutation 和 realtime 共用。 */
-  const reloadCachedConversations = useCallback(async () => {
-    if (!sync || !snapshot.userID) return;
-    /** cachedItems 是 SDK 完成状态收敛后的唯一列表快照。 */
-    const cachedItems = await sync.conversations.listCachedItems({
-      archived: false,
-      limit: 100,
-    });
-    setItems(cachedItems);
-    /** cachedArchivedItems 与普通列表在同一动作后共同重读。 */
-    const cachedArchivedItems = await sync.conversations.listCachedItems({
-      archived: true,
-      limit: 100,
-    });
-    setArchivedItems(cachedArchivedItems);
-  }, [snapshot.userID, sync]);
-
-  /** 下拉刷新强制执行 canonical conversation sync 后重读 SQLite。 */
-  const refreshConversations = useCallback(async () => {
-    if (!sync || !snapshot.userID || refreshing) return;
-    setRefreshing(true);
-    setError(null);
-    try {
-      await sync.conversations.sync();
-      /** 归档端点失败不覆盖普通会话刷新结果，但成功时同步更新入口。 */
-      await sync.conversations.syncArchived().catch(() => undefined);
-      await reloadCachedConversations();
-      await refreshPresence();
-    } catch (cause) {
-      setError(readConversationPageError(cause));
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refreshPresence, refreshing, reloadCachedConversations, snapshot.userID, sync]);
-
-  /** pullRefresh 把触屏下拉手势映射为一次只读远端刷新。 */
+  /** pullRefresh 把触屏或 PC 鼠标下拉映射为一次只读远端刷新。 */
   const pullRefresh = usePullRefresh({
     refreshing,
-    onRefresh: refreshConversations,
+    onRefresh: pageState.refreshConversations,
   });
-
-  useEffect(() => {
-    void loadConversations();
-  }, [loadConversations]);
-
-  useEffect(() => {
-    if (!sync || !snapshot.userID) {
-      return;
-    }
-    // active 阻止路由卸载后的 cache 读取回写页面。
-    let active = true;
-    void Promise.all([
-      sync.conversations.listCachedItems({ archived: false, limit: 100 }),
-      sync.conversations.listCachedItems({ archived: true, limit: 100 }),
-    ])
-      .then(([cachedItems, cachedArchivedItems]) => {
-        if (active) {
-          setItems(cachedItems);
-          setArchivedItems(cachedArchivedItems);
-        }
-      })
-      .catch(cause => {
-        if (active) {
-          setError(cause instanceof Error ? cause.message : String(cause));
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, [snapshot.dataVersion, snapshot.userID, sync]);
 
   // unreadTotal 仅汇总非静音会话。
   const unreadTotal = useMemo(() => getConversationUnreadTotal(items), [items]);
@@ -232,8 +118,8 @@ export function ConversationsPage() {
   const actions = useConversationActions({
     sync,
     archiveValue: true,
-    reloadCachedConversations,
-    reportError: setError,
+    reloadCachedConversations: pageState.reloadCachedConversations,
+    reportError: pageState.reportError,
   });
 
   if (restoring) {
@@ -260,6 +146,10 @@ export function ConversationsPage() {
       onTouchMove={pullRefresh.onTouchMove}
       onTouchEnd={pullRefresh.onTouchEnd}
       onTouchCancel={pullRefresh.onTouchCancel}
+      onPointerDown={pullRefresh.onPointerDown}
+      onPointerMove={pullRefresh.onPointerMove}
+      onPointerUp={pullRefresh.onPointerUp}
+      onPointerCancel={pullRefresh.onPointerCancel}
     >
       <section className="rn-conversation-surface" aria-busy={loading || refreshing}>
         <header
@@ -374,11 +264,6 @@ function ConversationArchiveUnread({
       {unread > 999 ? '999+' : unread}
     </span>
   ) : null;
-}
-
-/** 将未知会话页异常转换为稳定中文提示。 */
-function readConversationPageError(cause: unknown): string {
-  return cause instanceof Error && cause.message ? cause.message : '会话操作失败，请稍后重试';
 }
 
 /** 统一承载启动和配置错误的全屏状态。 */

@@ -6,6 +6,7 @@ export interface ChatMediaDownloadEnvironment {
   readonly createObjectURL: (blob: Blob) => string;
   readonly releaseObjectURL: (url: string) => void;
   readonly triggerDownload: (url: string, fileName: string) => void;
+  readonly requiresSynchronousDownload: boolean;
   readonly openExternal: (url: string) => boolean;
 }
 
@@ -33,6 +34,8 @@ const browserDownloadEnvironment: ChatMediaDownloadEnvironment = {
     anchor.click();
     anchor.remove();
   },
+  // Safari 会在异步 fetch 后撤销下载所需的用户手势，必须同步提交远端 URL。
+  requiresSynchronousDownload: isSafariBrowser(),
   openExternal: url => {
     // opened 在用户手势内同步创建，null 才能可靠表示弹窗被拦截。
     const opened = window.open('', '_blank');
@@ -78,6 +81,11 @@ export async function downloadChatMedia(
   if (!url) throw new Error('文件地址不可用。');
   // fileName 禁止携带目录和控制字符。
   const fileName = sanitizeChatDownloadName(request.fileName) || '下载文件';
+  if (environment.requiresSynchronousDownload) {
+    // Safari 直接提交已校验的 HTTP(S) URL，由服务端 Content-Disposition 驱动保存。
+    environment.triggerDownload(url, fileName);
+    return;
+  }
   // response 是下载是否真实完成的唯一网络证据。
   const response = await environment.fetchResource(url);
   if (!response.ok) throw new Error(`下载失败（HTTP ${response.status}）。`);
@@ -90,6 +98,13 @@ export async function downloadChatMedia(
   } finally {
     environment.releaseObjectURL(objectURL);
   }
+}
+
+/** 识别需要保留同步用户手势的 Safari 浏览器，不包含 Chromium 衍生实现。 */
+function isSafariBrowser(): boolean {
+  // userAgent 在非浏览器测试环境中可能不存在。
+  const userAgent = typeof navigator === 'undefined' ? '' : navigator.userAgent;
+  return /Safari/i.test(userAgent) && !/(Chrome|Chromium|CriOS|Edg|OPR|Android)/i.test(userAgent);
 }
 
 /** 在用户手势内用隔离标签页打开真实远端文件。 */

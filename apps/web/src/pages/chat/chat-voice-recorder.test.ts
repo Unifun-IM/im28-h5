@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
   startChatVoiceRecording,
-  type ChatVoiceMediaRecorder,
-  type ChatVoiceRecorderDependencies,
 } from './chat-voice-recorder.js';
+import type {
+  ChatVoiceMediaRecorder,
+  ChatVoiceRecorderDependencies,
+} from './chat-voice-recorder-platform.js';
 
 /** 创建可触发 data/stop 事件的最小录音器。 */
 function createRecorderHarness(mimeType = 'audio/webm;codecs=opus') {

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { PullRefreshIndicator } from '../../components/interaction/index.js';
-import appSource from '../../app/App.tsx?raw';
+import chatRoutesSource from '../../app/AppChatRoutes.tsx?raw';
 import inviteSource from './GroupInviteMembersPage.tsx?raw';
 import modalSource from './GroupMemberPickerModal.tsx?raw';
 import removeSource from './GroupRemoveMembersPage.tsx?raw';
@@ -33,6 +33,6 @@ describe('group member selection pull refresh', () => {
     expect(modalSource).toContain('className={`rn-group-member-picker-modal');
     expect(inviteSource).toContain('<GroupMemberPickerModal');
     expect(removeSource).toContain('<GroupMemberPickerModal');
-    expect(appSource.match(/<ChatSettingsPage \/>/g)).toHaveLength(3);
+    expect(chatRoutesSource.match(/<ChatSettingsPage \/>/g)).toHaveLength(3);
   });
 });

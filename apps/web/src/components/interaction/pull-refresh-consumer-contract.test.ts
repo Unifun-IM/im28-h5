@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import pullRefreshSource from '../../hooks/use-pull-refresh.ts?raw';
+
 /** 页面源码用于结构校验，不执行任何页面数据或路由副作用。 */
 const PAGE_SOURCES = import.meta.glob('../../pages/**/*.tsx', {
   eager: true,
@@ -27,6 +29,26 @@ describe('pull refresh consumer contract', () => {
       expect(source, path).toContain('PullRefreshIndicator');
       expect(source, path).not.toMatch(/className=.*rn-[a-z0-9-]*pull/);
     });
+  });
+
+  /** 所有页面必须同时接入触摸和 PC 鼠标手势，避免平台能力只在局部页面生效。 */
+  it('wires touch and pointer handlers in every pull-refresh page', () => {
+    /** consumers 排除测试源码，只保留真实页面手势消费者。 */
+    const consumers = Object.entries(PAGE_SOURCES).filter(
+      ([path, source]) => !path.includes('.test.') && source.includes('usePullRefresh'),
+    );
+    consumers.forEach(([path, source]) => {
+      expect(source, path).toContain('onTouchStart={pullRefresh.onTouchStart}');
+      expect(source, path).toContain('onTouchCancel={pullRefresh.onTouchCancel}');
+      expect(source, path).toContain('onPointerDown={pullRefresh.onPointerDown}');
+      expect(source, path).toContain('onPointerCancel={pullRefresh.onPointerCancel}');
+    });
+  });
+
+  /** 祖先刷新容器不得捕获 Pointer，避免截断行长按和按钮松开事件。 */
+  it('does not capture child pointer interactions at the page root', () => {
+    expect(pullRefreshSource).not.toContain('setPointerCapture');
+    expect(pullRefreshSource).not.toContain('releasePointerCapture');
   });
 
   /** 页面 CSS 不得重新声明已经退出的局部提示选择器。 */

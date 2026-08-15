@@ -202,6 +202,10 @@ export function GroupRemoveMembersPage() {
       onTouchMove={pullRefresh.onTouchMove}
       onTouchEnd={pullRefresh.onTouchEnd}
       onTouchCancel={pullRefresh.onTouchCancel}
+      onPointerDown={pullRefresh.onPointerDown}
+      onPointerMove={pullRefresh.onPointerMove}
+      onPointerUp={pullRefresh.onPointerUp}
+      onPointerCancel={pullRefresh.onPointerCancel}
     >
       {loading ? <GroupRemoveMembersState label="正在加载群成员" /> : (
         <>

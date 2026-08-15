@@ -1,4 +1,4 @@
-import type { ReactNode, TouchEventHandler } from 'react';
+import type { PointerEventHandler, ReactNode, TouchEventHandler } from 'react';
 
 import closeIconURL from '../../assets/rn/assets/icons/imm28/xmark.regular.svg';
 import { InteractionModal } from '../../components/interaction/index.js';
@@ -18,6 +18,10 @@ interface GroupMemberPickerModalProps {
   readonly onTouchMove?: TouchEventHandler<HTMLElement>;
   readonly onTouchEnd?: TouchEventHandler<HTMLElement>;
   readonly onTouchCancel?: TouchEventHandler<HTMLElement>;
+  readonly onPointerDown?: PointerEventHandler<HTMLElement>;
+  readonly onPointerMove?: PointerEventHandler<HTMLElement>;
+  readonly onPointerUp?: PointerEventHandler<HTMLElement>;
+  readonly onPointerCancel?: PointerEventHandler<HTMLElement>;
 }
 
 /** 统一投影 RN 群设置上的邀请与移除成员底部选择层。 */
@@ -33,6 +37,10 @@ export function GroupMemberPickerModal({
   onTouchMove,
   onTouchEnd,
   onTouchCancel,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
 }: GroupMemberPickerModalProps) {
   return (
     <InteractionModal
@@ -49,6 +57,10 @@ export function GroupMemberPickerModal({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         onTouchCancel={onTouchCancel}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
       >
         <PageNavbar className="rn-group-remove-header">
           <button

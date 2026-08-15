@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { createGroupPermissionsFixture } from '../../test-fixtures/group-permissions.js';
 
 import {
-  buildJoinedGroupOwnerTransferRoute,
   buildJoinedGroupProfileRoute,
   getJoinedGroupActionMenuState,
   getJoinedGroupActions,
@@ -44,7 +43,7 @@ describe('joined group actions view', () => {
   it('退出模式只读取 shared lifecycle capability', () => {
     expect(getJoinedGroupQuitMode(createGroup('member'))).toBe('leave');
     expect(getJoinedGroupQuitMode(createGroup('admin'))).toBe('leave');
-    expect(getJoinedGroupQuitMode(createGroup('owner'))).toBe('transfer-first');
+    expect(getJoinedGroupQuitMode(createGroup('owner'))).toBe('owner');
   });
 
   it('按动作数量计算气泡翻转并限制在视口内', () => {
@@ -62,10 +61,8 @@ describe('joined group actions view', () => {
     expect(above.top).toBe(420);
   });
 
-  it('路由始终编码 canonical Conversation 身份', () => {
+  it('资料路由始终编码 canonical Conversation 身份', () => {
     expect(buildJoinedGroupProfileRoute('sg/a', true))
       .toBe('/conversations/sg%2Fa/settings/profile?edit=name');
-    expect(buildJoinedGroupOwnerTransferRoute('sg/a'))
-      .toBe('/conversations/sg%2Fa/settings/manage/owner-transfer?from=joined-groups');
   });
 });

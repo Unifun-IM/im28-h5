@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getPullRefreshDistance,
+  shouldStartPointerPullRefresh,
   shouldTriggerPullRefresh,
 } from './use-pull-refresh.js';
 
@@ -18,5 +19,13 @@ describe('pull refresh', () => {
   it('arms refresh at the visible threshold', () => {
     expect(shouldTriggerPullRefresh(55.9)).toBe(false);
     expect(shouldTriggerPullRefresh(56)).toBe(true);
+  });
+
+  /** PC 只接受鼠标主键，触摸 pointer 继续由既有 Touch Events 处理。 */
+  it('accepts only the primary mouse pointer', () => {
+    expect(shouldStartPointerPullRefresh('mouse', 0)).toBe(true);
+    expect(shouldStartPointerPullRefresh('mouse', 2)).toBe(false);
+    expect(shouldStartPointerPullRefresh('touch', 0)).toBe(false);
+    expect(shouldStartPointerPullRefresh('pen', 0)).toBe(false);
   });
 });

@@ -11,6 +11,7 @@ import {
   getChatDeleteForAllLabel,
   getChatDeleteResultNotice,
 } from './chat-message-delete-view.js';
+import deleteFlowSource from './useChatMessageDeleteFlow.ts?raw';
 
 /** 创建删除权限测试使用的会话。 */
 function createConversation(type: Conversation['type']): Conversation {
@@ -92,5 +93,12 @@ describe('chat message delete view', () => {
       failedCount: 1,
       list: [],
     })).toBe('删除完成：1条成功，1条失败');
+  });
+
+  it('草稿只改变会话对象引用时不重新读取群权限缓存', () => {
+    expect(deleteFlowSource).toContain("const groupID = conversation?.type === 'group' ? conversation.targetID.trim() : ''");
+    expect(deleteFlowSource).toContain("const conversationID = conversation?.conversationID.trim() ?? ''");
+    expect(deleteFlowSource).toContain('}, [conversationID, groupID, sync]);');
+    expect(deleteFlowSource).not.toContain('}, [conversation, sync]);');
   });
 });

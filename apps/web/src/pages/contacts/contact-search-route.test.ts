@@ -24,8 +24,9 @@ describe('contact search route', () => {
   });
 
   it('本地群和服务器已加入群共用唯一 route 投影', () => {
-    expect(pageSource.match(/buildConversationRoute\([^\n]+, true\)/g)).toHaveLength(2);
-    expect(pageSource.match(/navigate\(route\.href, \{ replace: route\.replace \}\)/g)).toHaveLength(2);
+    expect(pageSource.match(/buildConversationRoute\([^\n]+, true\)/g)).toHaveLength(1);
+    expect(pageSource.match(/navigate\(route\.href, \{ replace: route\.replace \}\)/g)).toHaveLength(1);
+    expect(pageSource).toContain('onOpenConversation: openConversation');
     expect(pageSource).not.toContain('window.history');
   });
 });

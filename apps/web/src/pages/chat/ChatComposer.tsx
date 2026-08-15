@@ -1,9 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import {
-  createIMComposerSubmissionPlan,
   resolveIMGroupMemberDisplayName,
-  trimPresetEmojiDocument,
-  type IMComposerSubmissionPlan,
   type PresetEmojiDocument,
 } from '@im28/im-sdk/web';
 
@@ -18,6 +15,7 @@ import { getChatMessageEditDocument } from './chat-message-edit-view.js';
 import { useChatComposerAttachments } from './useChatComposerAttachments.js';
 import { ChatMentionPickerPanel } from './ChatMentionPickerPanel.js';
 import { useChatComposerMentions } from './useChatComposerMentions.js';
+import { useChatComposerSubmission } from './useChatComposerSubmission.js';
 import { ChatForwardComposer } from './ChatForwardComposer.js';
 import type {
   ChatComposerProps,
@@ -26,41 +24,43 @@ import type {
 } from './chat-composer-types.js';
 
 /** 呈现 RN input pill、发送按钮和真实附件功能面板。 */
-export function ChatComposer({
-  initialDraftDocument,
-  onDraftDocumentChange,
-  forwardDraft,
-  sending,
-  voiceRecordingStatus,
-  voiceRecordingSeconds,
-  voiceRecordingLevel,
-  onSendText,
-  onSendMention,
-  mentionMembers,
-  canMentionAll,
-  currentUserID,
-  mentionRequest,
-  editingMessage,
-  onCancelEdit,
-  onEditText,
-  quoteMessage,
-  isGroup,
-  onCancelQuote,
-  onSendQuote,
-  onSendAlbum,
-  onSendSubmission,
-  showCallAction,
-  onOpenCallPicker,
-  onOpenCardPicker,
-  loadCachedCustomEmojis,
-  syncCustomEmojis,
-  onSendCustomEmoji,
-  onManageCustomEmojis,
-  onVoiceRecordStart,
-  onVoiceRecordSend,
-  onVoiceRecordCancel,
-  onError,
-}: ChatComposerProps) {
+export function ChatComposer(props: ChatComposerProps) {
+  /** 页面 actions 解构后仅用于既有 Composer 状态与视图组合。 */
+  const {
+    initialDraftDocument,
+    onDraftDocumentChange,
+    forwardDraft,
+    sending,
+    voiceRecordingStatus,
+    voiceRecordingSeconds,
+    voiceRecordingLevel,
+    onSendText,
+    onSendMention,
+    mentionMembers,
+    canMentionAll,
+    currentUserID,
+    mentionRequest,
+    editingMessage,
+    onCancelEdit,
+    onEditText,
+    quoteMessage,
+    isGroup,
+    onCancelQuote,
+    onSendQuote,
+    onSendAlbum,
+    onSendSubmission,
+    showCallAction,
+    onOpenCallPicker,
+    onOpenCardPicker,
+    loadCachedCustomEmojis,
+    syncCustomEmojis,
+    onSendCustomEmoji,
+    onManageCustomEmojis,
+    onVoiceRecordStart,
+    onVoiceRecordSend,
+    onVoiceRecordCancel,
+    onError,
+  } = props;
   // draftDocument 从当前账号 SDK SQLite 恢复，仍由 Composer 持有即时编辑状态。
   const [draftDocument, setDraftDocument] = useState<PresetEmojiDocument>(
     initialDraftDocument,
@@ -124,12 +124,6 @@ export function ChatComposer({
     setVoiceMode(false);
     setActivePanel(null);
   }, [editingMessage, isGroup, mentionRequest, mentions.append, quoteMessage]);
-  // canSend 统一控制键盘提交与可见发送按钮。
-  const canSend = Boolean(forwardDraft
-    ? forwardSelection?.sourceClientMsgIDs.length && !forwardDraft.pending.loading
-    : draftDocument.text.trim() || attachments.pendingMedia || attachments.pendingFile
-  ) && !sending && !voiceMode;
-
   useEffect(() => {
     setForwardSelection(null);
     setVoiceMode(false);
@@ -145,98 +139,18 @@ export function ChatComposer({
     setActivePanel(null);
   }, [editingMessage]);
 
-  /** 提交前固定当前文本并清空 RN composer 草稿。 */
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!canSend) return;
-    // document 同步裁剪正文和实体偏移，防止异步期间受后续输入影响。
-    const document = trimPresetEmojiDocument(draftDocument);
-    if (forwardDraft) {
-      if (!forwardSelection) return;
-      /** completed 只在 shared 转发确认完成后清空复用输入框。 */
-      const completed = await forwardDraft.onSubmit({
-        ...forwardSelection,
-        comment: document.text,
-      });
-      if (completed && document.text) {
-        updateDraftDocument({ text: '', entities: [] });
-        mentions.clear();
-      }
-      return;
-    }
-    // selectedEdit 固定提交瞬间的原消息，失败时保留当前草稿。
-    const selectedEdit = editingMessage;
-    // pendingMedia/pendingFile 固定本次选择，清空行为与 RN 提交时机一致。
-    const pendingMedia = attachments.pendingMedia;
-    const pendingFile = attachments.pendingFile;
-    // plan 先执行跨端互斥校验，再允许编辑或组合发送继续。
-    let plan: IMComposerSubmissionPlan;
-    try {
-      plan = createIMComposerSubmissionPlan({
-        text: document.text,
-        hasPendingMedia: Boolean(pendingMedia),
-        hasPendingFile: Boolean(pendingFile),
-        editing: Boolean(selectedEdit),
-      });
-    } catch (cause) {
-      onError(cause instanceof Error ? cause.message : '消息暂不可发送');
-      return;
-    }
-    if (selectedEdit) {
-      const completed = await onEditText(selectedEdit, document);
-      if (completed) setDraftDocument(initialDraftDocument);
-      return;
-    }
-    if (pendingMedia || pendingFile) {
-      // selectedQuote 和 visibleMentions 都必须取提交瞬间快照。
-      const selectedQuote = quoteMessage;
-      const visibleMentions = mentions.collect(document.text);
-      attachments.clearPendingMedia();
-      attachments.clearPendingFile();
-      setActivePanel(null);
-      /** completed 只在组合发送全部步骤成功后清空文本草稿。 */
-      const completed = await onSendSubmission(
-        plan,
-        document,
-        visibleMentions,
-        selectedQuote,
-        pendingMedia,
-        pendingFile,
-      );
-      if (completed && document.text) {
-        updateDraftDocument({ text: '', entities: [] });
-        mentions.clear();
-        if (selectedQuote) onCancelQuote();
-      }
-      return;
-    }
-    // selectedQuote 固定提交瞬间的来源，避免异步期间被新动作替换。
-    const selectedQuote = quoteMessage;
-    setActivePanel(null);
-    if (selectedQuote) {
-      /** completed 保护失败发送时的草稿和引用来源。 */
-      const completed = await onSendQuote(selectedQuote, document.text);
-      if (completed) {
-        updateDraftDocument({ text: '', entities: [] });
-        onCancelQuote();
-      }
-      return;
-    }
-    // visibleMentions 只包含仍存在于提交正文中的用户选择。
-    const visibleMentions = mentions.collect(document.text);
-    if (visibleMentions.length) {
-      /** completed 保护失败提及发送时的文本与 mention identity。 */
-      const completed = await onSendMention(document, visibleMentions);
-      if (completed) {
-        updateDraftDocument({ text: '', entities: [] });
-        mentions.clear();
-      }
-      return;
-    }
-    /** completed 只在 shared message 状态机确认成功后清空草稿。 */
-    const completed = await onSendText(document);
-    if (completed) updateDraftDocument({ text: '', entities: [] });
-  }
+  /** submission 是转发、编辑、媒体、引用、提及与文本的唯一提交 owner。 */
+  const submission = useChatComposerSubmission({
+    composer: props,
+    draftDocument,
+    forwardSelection,
+    voiceMode,
+    attachments,
+    mentions,
+    updateDraftDocument,
+    resetEditingDraft: () => setDraftDocument(initialDraftDocument),
+    closePanel: () => setActivePanel(null),
+  });
 
   /** Enter 发送、Shift+Enter 换行，并尊重中文输入法合成态。 */
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -291,7 +205,7 @@ export function ChatComposer({
         draftDocument={draftDocument}
         textareaRef={draftEditing.textareaRef}
         sending={sending}
-        canSend={canSend}
+        canSend={submission.canSend}
         showSendButton={Boolean(
           forwardDraft || editingMessage || draftDocument.text.trim() ||
           attachments.pendingMedia || attachments.pendingFile
@@ -302,7 +216,7 @@ export function ChatComposer({
         voiceRecordingSeconds={voiceRecordingSeconds}
         voiceRecordingLevel={voiceRecordingLevel}
         activePanel={activePanel}
-        onSubmit={handleSubmit}
+        onSubmit={submission.submit}
         onKeyDown={handleKeyDown}
         onChangeText={draftEditing.changeText}
         onFocusText={() => setActivePanel(null)}

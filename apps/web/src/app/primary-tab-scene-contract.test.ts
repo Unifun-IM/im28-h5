@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import appSource from './App.tsx?raw';
+import coreRoutesSource from './AppCoreRoutes.tsx?raw';
 import layoutSource from './PrimaryTabsLayout.tsx?raw';
 import pullRefreshSource from '../hooks/use-pull-refresh.ts?raw';
 
@@ -20,10 +20,10 @@ describe('primary tab scene retention contract', () => {
   });
 
   it('keeps React Router as the canonical SPA URL owner without route-owned page instances', () => {
-    expect(appSource).toContain('<Route path="/conversations" element={<></>} />');
-    expect(appSource).toContain('<Route path="/contacts" element={<></>} />');
-    expect(appSource).toContain('<Route path="/calls" element={<></>} />');
-    expect(appSource).toContain('<Route path="/me" element={<></>} />');
+    expect(coreRoutesSource).toContain('<Route path="/conversations" element={<></>} />');
+    expect(coreRoutesSource).toContain('<Route path="/contacts" element={<></>} />');
+    expect(coreRoutesSource).toContain('<Route path="/calls" element={<></>} />');
+    expect(coreRoutesSource).toContain('<Route path="/me" element={<></>} />');
   });
 
   it('gives retained scenes independent scrolling and refresh top detection', () => {

@@ -1,6 +1,7 @@
 import {
   canCreateIMGroupWithMemberCount,
   formatIMUserDisplayName,
+  IM_GROUP_CREATION_MAX_MEMBER_COUNT,
   type Conversation,
   type WebIMContact,
 } from '@im28/im-sdk/web';
@@ -9,6 +10,12 @@ import {
 export interface CreateGroupCandidate {
   readonly contact: WebIMContact;
   readonly displayName: string;
+}
+
+/** 建群成员切换结果同时返回稳定集合和是否触发人数上限。 */
+export interface CreateGroupSelectionResult {
+  readonly selectedUserIDs: ReadonlySet<string>;
+  readonly limitReached: boolean;
 }
 
 /** 按昵称、备注归一结果和用户 ID 本地过滤创建群好友。 */
@@ -36,6 +43,39 @@ export function buildSelectedCreateGroupCandidates(
   selectedUserIDs: ReadonlySet<string>,
 ): readonly CreateGroupCandidate[] {
   return candidates.filter(candidate => selectedUserIDs.has(candidate.contact.userID));
+}
+
+/** 切换单个建群成员，并在达到共享人数上限时保留原集合。 */
+export function toggleCreateGroupMemberSelection(
+  current: ReadonlySet<string>,
+  userID: string,
+  fixedCount: number,
+): CreateGroupSelectionResult {
+  if (!current.has(userID) && current.size + fixedCount >= IM_GROUP_CREATION_MAX_MEMBER_COUNT) {
+    return { selectedUserIDs: current, limitReached: true };
+  }
+  /** next 创建新集合保证 React 可观察。 */
+  const next = new Set(current);
+  if (next.has(userID)) next.delete(userID);
+  else next.add(userID);
+  return { selectedUserIDs: next, limitReached: false };
+}
+
+/** 更新当前可见候选，普通入口全量替换，单聊筛选只修改可见项。 */
+export function updateVisibleCreateGroupMemberSelection(
+  current: ReadonlySet<string>,
+  visibleUserIDs: readonly string[],
+  allSelected: boolean,
+  preserveHidden: boolean,
+): ReadonlySet<string> {
+  if (!preserveHidden) return allSelected ? new Set() : new Set(visibleUserIDs);
+  /** next 保留单聊搜索中当前不可见的既有选择。 */
+  const next = new Set(current);
+  for (const userID of visibleUserIDs) {
+    if (allSelected) next.delete(userID);
+    else next.add(userID);
+  }
+  return next;
 }
 
 /** 合并固定成员与页面选择成员，并按首次出现顺序去重。 */

@@ -23,7 +23,7 @@
 | group settings | `GroupManageScreen`; `GroupSpeechFrequencyScreen` | RN `updateGroupAdminPermissions/updateGroupSettings` 冻结 | neutral Web owner: `createIMGroupManagementSync.updateSettings` -> field permission -> one explicit patch -> strict group merge | `/settings/manage`、`/manage/speech-frequency` | `shared-core-ready/web-consumed/rn-frozen`；真实 toggle 未执行 |
 | group/member mute | `GroupMuteScreen`; `UserProfileScreen` | RN `changeGroupMute/updateGroupMemberMute` 冻结 | neutral Web owner: `updateMute/updateMemberMute` -> capability/target preflight -> one write -> strict group/member merge | `/settings/manage/mute` | `shared-core-ready/web-consumed/rn-frozen`；真实 mute 未执行 |
 | transfer owner | `GroupTransferOwnerScreen`; owner-exit selection flow | RN `transferGroupOwner` 保持冻结基线 | neutral Web owner: owner/active-target preflight -> one transfer -> atomic role swap/group owner update -> independent refresh | `/settings/manage` -> `groupMembers.transferOwner` | `shared-core-ready/web-consumed/rn-frozen`；真实转让未执行 |
-| leave group | `GroupSettingsScreen`; `GroupRowActionMenu` | RN `quitGroup` 保持冻结基线 | neutral Web owner: `groupLifecycle.leave` -> permission -> one Gateway write -> group-domain transaction | 群设置确认层 -> `groupLifecycle.leave` | `shared-core-ready/web-consumed/rn-frozen`；真实退群未执行 |
+| leave group | `GroupSettingsScreen`; `GroupRowActionMenu`; `GroupOwnerQuitActionSheets` | RN `quitGroup` 与 earliest-admin UI 保持冻结基线 | neutral Web owner: `selectIMEarliestGroupAdmin` -> permission/admin successor -> one Gateway leave -> group-domain transaction | 普通成员确认层或群主双分支底部面板 -> `groupLifecycle.leave` | `shared-core-ready/web-consumed/rn-frozen`；群主无管理员 fail-closed，有管理员由 Gateway 自动转移；真实退群未执行 |
 | dismiss group | `GroupSettingsScreen` | RN `dismissGroup` 保持冻结基线 | neutral Web owner: `groupLifecycle.dismiss` -> owner permission -> one Gateway write -> group-domain transaction | 群设置确认层 -> `groupLifecycle.dismiss` | `shared-core-ready/web-consumed/rn-frozen`；真实解散未执行 |
 
 ## Frozen Behavior
@@ -68,7 +68,7 @@
 | leave | cached group/current member；reject owner；`canQuitGroup=true` | one `leaveGroup`；`clear_history` only when explicit | strict group ID -> transaction deletes attachments/messages/all group conversations/members/group；failure=`remote-only` |
 | dismiss | cached group/current member；owner role + `canDismissGroup=true` | one `dismissGroup` | same transaction；single conversation with same target ID is preserved |
 
-H5 设置页只消费 `WebIMJoinedGroup.permissions` 和 `WebIMSync.groupLifecycle`。native dialog 提供二次确认；`remote-only` 关闭 modal、显示远端已成功，并锁定当前页面危险按钮，禁止重放。真实退群/解散未执行；当前账号仅有两个单聊，认证群确认层视觉验收 data-gated。
+H5 设置页只消费 `WebIMJoinedGroup.permissions`、完整成员快照和 `WebIMSync.groupLifecycle`。普通成员使用确认层；群主使用 RN 同款底部动作面板，并由 shared `selectIMEarliestGroupAdmin` 决定无管理员阻断或最早管理员继任分支。页面不调用显式 transfer；确认后一次 leave 由 Gateway 自动转移。`remote-only` 关闭 modal、显示远端已成功，并锁定当前页面危险按钮，禁止重放。真实退群/解散未执行；本轮浏览器登录态已失效，认证群主面板视觉与真实动作保持 gated。
 
 ## Settings And Mute Contract Resolution (2026-08-13)
 

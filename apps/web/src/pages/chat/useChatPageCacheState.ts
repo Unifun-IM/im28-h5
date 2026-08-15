@@ -18,7 +18,6 @@ interface UseChatPageCacheStateOptions {
   readonly dataVersion: number;
   readonly sync: WebIMSync | null;
   readonly messageListRef: RefObject<HTMLElement | null>;
-  readonly onReset: () => void;
 }
 
 /** 统一拥有聊天页的 SQLite 首屏恢复、实时重读和搜索目标定位状态。 */
@@ -29,7 +28,6 @@ export function useChatPageCacheState({
   dataVersion,
   sync,
   messageListRef,
-  onReset,
 }: UseChatPageCacheStateOptions) {
   // conversation 为 header 和发送能力提供当前账号缓存身份。
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -66,7 +64,6 @@ export function useChatPageCacheState({
     setMessages([]);
     setHistoryPage({ hasMore: false });
     setQuoteMessage(null);
-    onReset();
     void (async () => {
       try {
         // cachedConversations 确认目标属于当前认证账号 SQLite。
@@ -103,7 +100,7 @@ export function useChatPageCacheState({
     return () => {
       active = false;
     };
-  }, [accountUserID, conversationID, focusedMessageID, onReset, sync]);
+  }, [accountUserID, conversationID, focusedMessageID, sync]);
 
   useEffect(() => {
     if (!sync || !accountUserID || !conversationID || dataVersion === 0) return;

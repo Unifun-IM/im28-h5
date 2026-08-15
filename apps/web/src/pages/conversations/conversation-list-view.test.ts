@@ -2,10 +2,10 @@ import type { WebIMConversationListItem } from '@im28/im-sdk/web';
 import { describe, expect, it } from 'vitest';
 
 import {
-  getConversationDisplayPreview,
   getConversationTitle,
   getNextUnreadConversationID,
 } from './conversation-list-view.js';
+import { getConversationDisplayPreview } from './conversation-preview-view.js';
 import { shouldShowConversationUnreadBadge } from './conversation-unread-view.js';
 
 /** 构造带插画表情实体的静音会话缓存项。 */

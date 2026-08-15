@@ -35,13 +35,13 @@ export function useChatMentionMembers(
 ): ChatMentionMembersState {
   // state 不在页面复制群成员 cache，只保留当前 route projection。
   const [state, setState] = useState<ChatMentionMembersState>(EMPTY_CHAT_MENTION_MEMBERS_STATE);
+  // groupID 隔离草稿保存返回的新 Conversation 引用，避免逐字输入重拉群与成员。
+  const groupID = conversation?.type === 'group' ? conversation.targetID.trim() : '';
   useEffect(() => {
-    if (!sync || conversation?.type !== 'group' || !conversation.targetID) {
+    if (!sync || !groupID) {
       setState(EMPTY_CHAT_MENTION_MEMBERS_STATE);
       return;
     }
-    /** groupID 来自当前缓存会话 target identity。 */
-    const groupID = conversation.targetID;
     /** active 阻止路由切换后的旧请求覆盖。 */
     let active = true;
     void (async () => {
@@ -134,10 +134,10 @@ export function useChatMentionMembers(
       }
     })();
     return () => { active = false; };
-  }, [conversation, onError, sync]);
-  if (conversation?.type === 'group' && conversation.targetID && state.groupID !== conversation.targetID) {
+  }, [groupID, onError, sync]);
+  if (groupID && state.groupID !== groupID) {
     return {
-      groupID: conversation.targetID,
+      groupID,
       members: [],
       canMentionAll: false,
       composerUnavailableReason: IM_GROUP_COMPOSER_RECOVERING_REASON,

@@ -184,7 +184,7 @@ class WebIMConversationSyncImpl {
     async syncDirect(context, options) {
         // pageSize 限制异常调用造成的服务端或内存压力。
         const pageSize = clampPageSize(options.pageSize);
-        if (this.dependencies.useGatewayDifference) {
+        if (this.dependencies.useGatewayDifference && !options.forceFullSnapshot) {
             // Difference owner 负责分页、双游标和原子持久化，页面只读取最终 cache。
             await syncIMGatewayDifference(this.dependencies.gatewayClient, context, pageSize);
             return new ConversationRepository(context.database).list();
@@ -226,7 +226,10 @@ class WebIMConversationSyncImpl {
                 limit: pageSize,
                 ...(pageToken ? { page_token: pageToken } : {}),
             });
-            conversations.push(...(response.conversations ?? []));
+            if (!Array.isArray(response.conversations)) {
+                throw createWebIMSyncError('SYNC_INVALID_RESPONSE', 'Gateway conversation list did not explicitly return conversations.');
+            }
+            conversations.push(...response.conversations);
             // nextPageToken 只接受非空稳定 token。
             const nextPageToken = response.next_page_token?.trim();
             if (!nextPageToken) {

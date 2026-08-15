@@ -1,7 +1,8 @@
-import type { Conversation, WebIMGroupApplication, WebIMSync } from '@im28/im-sdk/web';
+import type { WebIMGroupApplication, WebIMSync } from '@im28/im-sdk/web';
 import { describe, expect, it, vi } from 'vitest';
 
 import { readChatGroupApplicationCount } from './useChatGroupApplicationCount.js';
+import hookSource from './useChatGroupApplicationCount.ts?raw';
 
 /** 创建头部计数测试使用的最小审核记录。 */
 function createApplication(
@@ -32,7 +33,7 @@ describe('readChatGroupApplicationCount', () => {
     ]);
     expect(await readChatGroupApplicationCount(
       fixture.sync,
-      { type: 'group', targetID: 'g1' } as Conversation,
+      'g1',
     )).toBe(1);
     expect(fixture.list).toHaveBeenCalledWith({ pageSize: 100 });
   });
@@ -42,8 +43,14 @@ describe('readChatGroupApplicationCount', () => {
     const fixture = createSync([]);
     expect(await readChatGroupApplicationCount(
       fixture.sync,
-      { type: 'single', targetID: 'u1' } as Conversation,
+      '',
     )).toBe(0);
     expect(fixture.list).not.toHaveBeenCalled();
+  });
+
+  it('草稿只改变会话对象引用时不重新触发审核列表', () => {
+    expect(hookSource).toContain("const groupID = conversation?.type === 'group' ? conversation.targetID.trim() : ''");
+    expect(hookSource).toContain('}, [dataVersion, groupID, sync]);');
+    expect(hookSource).not.toContain('}, [conversation, dataVersion, sync]);');
   });
 });

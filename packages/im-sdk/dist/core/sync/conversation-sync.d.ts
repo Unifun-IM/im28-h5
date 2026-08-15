@@ -9,6 +9,8 @@ import { type IMConversationDraftSync } from './conversation-draft.js';
 /** 单次远端会话同步的分页限制。 */
 export interface WebIMConversationSyncOptions {
     readonly pageSize?: number;
+    /** forceFullSnapshot 强制使用会话列表端点拉取全量快照，供用户主动刷新。 */
+    readonly forceFullSnapshot?: boolean;
 }
 /** 会话列表缓存项同时提供对应的最新消息，避免页面直接查询 Repository。 */
 export interface WebIMConversationListItem {

@@ -45,9 +45,13 @@ export function useChatMessageDeleteFlow({
   const [joinedGroup, setJoinedGroup] = useState<WebIMJoinedGroup | null>(null);
   // confirming 阻止确认层重复提交真实 mutation。
   const [confirming, setConfirming] = useState(false);
+  // groupID 隔离草稿保存返回的新 Conversation 引用，只观察群身份变化。
+  const groupID = conversation?.type === 'group' ? conversation.targetID.trim() : '';
+  // conversationID 兼容 Gateway 群缓存使用会话身份匹配的情况。
+  const conversationID = conversation?.conversationID.trim() ?? '';
 
   useEffect(() => {
-    if (!sync || conversation?.type !== 'group') {
+    if (!sync || !groupID) {
       setJoinedGroup(null);
       return;
     }
@@ -58,8 +62,8 @@ export function useChatMessageDeleteFlow({
         if (!active) return;
         // matched 同时兼容 group ID 和 Gateway conversation ID。
         const matched = groups.find(group =>
-          group.groupID === conversation.targetID ||
-          group.conversationID === conversation.conversationID,
+          group.groupID === groupID ||
+          group.conversationID === conversationID,
         );
         setJoinedGroup(matched ?? null);
       })
@@ -67,7 +71,7 @@ export function useChatMessageDeleteFlow({
         if (active) setJoinedGroup(null);
       });
     return () => { active = false; };
-  }, [conversation, sync]);
+  }, [conversationID, groupID, sync]);
 
   /** 打开单条或多条确认层，并拒绝过期的可见身份。 */
   function requestDelete(clientMsgIDs: readonly string[], onDeleted?: () => void) {

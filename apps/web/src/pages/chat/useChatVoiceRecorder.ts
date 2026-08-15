@@ -186,8 +186,23 @@ export function useChatVoiceRecorder({
   };
 }
 
-/** 将浏览器录音异常转换为不泄漏设备细节的文案。 */
-function readChatVoiceError(cause: unknown): string {
+/** 将浏览器录音异常转换为不泄漏设备细节的中文文案。 */
+export function readChatVoiceError(cause: unknown): string {
+  if (cause instanceof DOMException) {
+    if (cause.name === 'NotAllowedError' || cause.name === 'SecurityError') {
+      return '无法访问麦克风，请检查浏览器权限';
+    }
+    if (cause.name === 'NotFoundError' || cause.name === 'DevicesNotFoundError') {
+      return '未检测到可用麦克风';
+    }
+    if (
+      cause.name === 'NotReadableError' ||
+      cause.name === 'TrackStartError' ||
+      cause.name === 'AbortError'
+    ) {
+      return '麦克风暂时不可用，请稍后重试';
+    }
+  }
   return cause instanceof Error && cause.message
     ? cause.message
     : '语音录制失败';

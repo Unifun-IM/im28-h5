@@ -345,7 +345,7 @@ function normalizeListConversationsData(data) {
         .filter((item) => Boolean(item));
     const nextPageToken = readString(data, 'next_page_token');
     return {
-        ...(conversations?.length ? { conversations } : {}),
+        ...(conversations ? { conversations } : {}),
         ...(nextPageToken ? { next_page_token: nextPageToken } : {}),
     };
 }

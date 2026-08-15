@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import appSource from '../../app/App.tsx?raw';
+import chatRoutesSource from '../../app/AppChatRoutes.tsx?raw';
 import managementSource from './GroupManagementPage.tsx?raw';
 import ownerTransferSource from './GroupOwnerTransferPage.tsx?raw';
 
 /** 群主转让必须由单一 SPA 页面消费 shared SDK 能力。 */
 describe('group owner transfer route contract', () => {
   it('群管理入口只导航到独立 React Router 子路由', () => {
-    expect(appSource).toContain('path="/conversations/:conversationID/settings/manage/owner-transfer"');
-    expect(appSource).toContain('<GroupOwnerTransferPage />');
+    expect(chatRoutesSource).toContain('path="/conversations/:conversationID/settings/manage/owner-transfer"');
+    expect(chatRoutesSource).toContain('<GroupOwnerTransferPage />');
     expect(managementSource).toContain('label="群主转让"');
     expect(managementSource).toContain('to={ownerTransferURL}');
     expect(managementSource).not.toContain('MemberPickerModal');

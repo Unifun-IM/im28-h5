@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import composerSource from './ChatForwardComposer.tsx?raw';
 import chatComposerSource from './ChatComposer.tsx?raw';
+import submissionSource from './useChatComposerSubmission.ts?raw';
 import inputRowSource from './ChatComposerInputRow.tsx?raw';
 import footerSource from './ChatPageFooter.tsx?raw';
 import modalSource from './ChatForwardPreviewModal.tsx?raw';
 import pageSource from './ChatPage.tsx?raw';
+import surfaceSource from './ChatPageSurface.tsx?raw';
 
 /** H5 转发预览必须复用 RN 生产结构，同时保持“预览不发送”的交互边界。 */
 describe('chat forward preview modal RN parity contract', () => {
@@ -43,15 +45,27 @@ describe('chat forward preview modal RN parity contract', () => {
     expect(composerSource).not.toContain('sendIconURL');
     expect(composerSource).toContain('onSelectionChange({ sourceClientMsgIDs: selectedIDs, hideSenderName })');
     expect(chatComposerSource).toContain('<ChatForwardComposer');
-    expect(chatComposerSource).toContain('const canSend = Boolean(forwardDraft');
-    expect(chatComposerSource).toContain('if (forwardDraft) {');
-    expect(chatComposerSource).toContain('if (!forwardSelection) return;');
-    expect(chatComposerSource).toContain('const completed = await forwardDraft.onSubmit({');
+    expect(chatComposerSource).toContain('useChatComposerSubmission({');
+    expect(chatComposerSource).not.toContain('createIMComposerSubmissionPlan');
+    expect(submissionSource).toContain('const canSend = Boolean(options.composer.forwardDraft');
+    expect(submissionSource).toContain('if (options.composer.forwardDraft) {');
+    expect(submissionSource).toContain(
+      'if (!options.composer.forwardDraft || !options.forwardSelection) return;',
+    );
+    expect(submissionSource).toContain('await options.composer.forwardDraft.onSubmit({');
     expect(chatComposerSource).toContain('forwarding={Boolean(forwardDraft)}');
     expect(inputRowSource).toContain("aria-label={forwarding ? '发送转发消息' : '发送消息'}");
     expect(footerSource).not.toContain('<ChatForwardComposer');
     expect(composerSource).toContain('function applyPreviewChanges(): void');
-    expect(pageSource).toContain('<ChatMediaInteractionProvider');
-    expect(pageSource.indexOf('<ChatPageFooter')).toBeLessThan(pageSource.indexOf('</ChatMediaInteractionProvider>'));
+    expect(pageSource).toContain('<ChatPageSurface');
+    expect(surfaceSource).toContain('<ChatMediaInteractionProvider');
+    /** conversationBodySource 只检查实际 Provider 组合函数，避免跨函数源码顺序误判。 */
+    const conversationBodySource = surfaceSource.slice(
+      surfaceSource.indexOf('function ChatPageConversationBody'),
+      surfaceSource.indexOf('function ChatPageMessageTimeline'),
+    );
+    expect(conversationBodySource).toContain('<ChatPageComposerArea');
+    expect(conversationBodySource.indexOf('<ChatPageComposerArea'))
+      .toBeLessThan(conversationBodySource.indexOf('</ChatMediaInteractionProvider>'));
   });
 });

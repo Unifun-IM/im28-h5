@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isCurrentInteractionRequest } from '../../components/interaction/index.js';
 import pageSource from './ContactSearchPage.tsx?raw';
+import stateOwnerSource from './useContactSearchPageState.ts?raw';
 
 /** 联系人服务器搜索只允许最后一次关键词和 Tab 请求更新页面。 */
 describe('contact search server request ownership', () => {
@@ -11,11 +12,11 @@ describe('contact search server request ownership', () => {
   });
 
   it('invalidates pending work on input changes and does not block tab switches', () => {
-    expect(pageSource).toContain('serverSearchRequestIDRef.current += 1;');
-    expect(pageSource).toContain(
+    expect(stateOwnerSource).toContain('serverSearchRequestIDRef.current += 1;');
+    expect(stateOwnerSource).toContain(
       'isCurrentInteractionRequest(serverSearchRequestIDRef.current, requestID)',
     );
-    expect(pageSource).not.toContain('normalizedKeyword || loadingServer) return');
+    expect(stateOwnerSource).not.toContain('normalizedKeyword || loadingServer) return');
   });
 
   it('dismisses the keyboard without coupling Enter to a server search', () => {

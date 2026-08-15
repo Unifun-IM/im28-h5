@@ -28,7 +28,7 @@
 | `.149.5a` | H5 operation feedback | 聊天、分享、二维码、资料、账号、通知、联系人与申请的瞬时结果收敛到唯一 Toast owner | consumer contract + full tests + typecheck + build + guest browser | `local-complete/authenticated-action-gated` |
 | `.149.5b` | H5 operation feedback | 剩余列表、群管理、群角色、群资料、群生命周期、建群、成员、通话记录和媒体操作拆分 load error 与 operation result | inventory + focused/full verification | `local-complete/authenticated-action-gated` |
 | `.149.6` | H5 chat forward orchestration | 多选目标确认进入单个目标聊天并生成待发送转发草稿；仅 Composer 点击发送调用 shared forward | no-auto-send regression + full tests + authenticated browser | `completed/send-action-gated` |
-| `.149.7` | H5 group owner lifecycle UI | 群主设置同时提供退出/解散；退出先进入现有群主转让，成功返回后再次确认才调用 shared leave | route-intent regression + full tests + owner browser readonly | `completed/transfer-and-leave-mutation-gated` |
+| `.149.7` | H5 group owner lifecycle UI | 旧显式 transfer-first 方案，已由 `.149.71` 按 frozen RN 真实合同替代 | historical route-intent regression | `superseded-by-.149.71` |
 | `.149.8` | SDK group detail + H5 conversation delete UI | 群聊“为我和所有群成员删除”只按群详情 `can_clear_message` 显式授权；确认层全宽贴底 | SDK/H5 focused + full tests + authenticated permission browser | `completed/destructive-action-gated` |
 | `.149.9` | H5 RTC startup composition | 复用 shared call control/LiveKit owner；只有启动成功后进入活动页，Gateway 失败留在来源页并使用错误 Toast | SDK RTC + H5 contract + typecheck/build + controlled real start | `completed/client-converged/external-rtc-gated` |
 | `.149.10` | RN/H5 parity inventory | 重新按 frozen RN route/feature/operation 建立 H5 complete/partial/missing/acceptance-gated 清单并选择下一片 | read-only source/route/owner audit | `completed/read-only` |
@@ -42,6 +42,55 @@
 | `.149.18` | H5 recorder/group-card parity | 录音 HUD 使用真实 Web Audio 电平并复刻 RN 尺寸/取消态；群名片实时刷新入群关系，已加入直达 shared 群会话，未加入进入受控申请页 | focused + typecheck + build + authenticated card browser | `completed/card-browser-pass/physical-record-gated` |
 | `.149.19` | H5 forward composer convergence | `ChatForwardComposer` 只保留摘要/预览；转发条进入唯一 `ChatComposer`，复用其输入、表情和显式发送链 | focused + typecheck + build + authenticated readonly browser | `completed/structural-pass/forward-runtime-gated` |
 | `.149.20` | H5 group-member picker parity | 邀请/移除成员保持可追踪 SPA route，并共用群设置页上的 100% × 60dvh 底部选择弹窗 | focused + full tests + typecheck + build + authenticated readonly browser | `completed-local/browser-readonly-pass/mutation-gated` |
+| `.149.27` | H5 conversation-list state owner | 普通会话页 cache-first、归档摘要、realtime 重读、presence 刷新进入唯一状态 hook；页面保留展示、路由、未读滚动和现有 action owner | focused + full tests + typecheck + build + authenticated readonly browser | `completed-local/structural-pass/browser-readonly-pass` |
+| `.149.68` | H5 ordinary-image production acceptance | 精确授权单张图片走生产上传/发送、会话摘要、刷新回读和预览；不扩大到第二端 realtime 或其他媒体 | exact mutation + focused ratio tests + authenticated Chromium | `completed/receiver-realtime-gated` |
+| `.149.69` | H5 ordinary-image cross-browser acceptance | 复用已保留真实图片，只读验证 Firefox/WebKit 缩略图比例、全屏预览、刷新回读与运行时错误边界 | isolated production auth + computed metrics + screenshots + focused tests | `completed-image-readonly/runtime-clean-pass` |
+| `.149.70` | Web cross-browser Gateway transport audit | 定位 WebKit application-unread CORS 与 Firefox pending-call network failure 的 endpoint/header/config owner；禁止页面吞错或假成功 | OPTIONS/actual POST + WebKit header/auth probes + corrected browser rerun | `completed-audit/harness-false-positive-closed` |
+| `.149.71` | SDK/H5 group-owner leave parity | 群主无管理员时阻断并引导管理员设置；有管理员时展示最早添加者并单次 leave，由 Gateway 自动转移 | frozen RN/Figma + SDK tests/typecheck/build:web + H5 focused/typecheck/build + authenticated readonly browser | `completed-local/has-admin-browser-pass/no-admin-and-destructive-gated` |
+| `.149.72` | H5 group-state owner browser acceptance | 复用真实登录态只读验证已加入群 cache/search/菜单与群成员角色/presence/search/index，不执行群 mutation | authenticated production DOM + 382px overflow/console evidence | `completed-readonly/group-mutations-gated` |
+| `.149.73` | H5 call-record activation audit | 用当前真实登录态复核通话记录同步后数据、筛选/搜索空态与运行时健康；无自然记录时禁止伪造详情证据 | authenticated production DOM + 382px overflow/console evidence | `audited-empty/natural-call-data-gated` |
+| `.149.74` | H5 verification-history readonly acceptance | 复用真实好友申请历史验证分组、来源/文案/终态、资料进入和来源返回；群申请空态只证明运行健康 | authenticated production DOM + route round-trip + 382px overflow/console evidence | `completed-readonly/pending-actions-gated` |
+| `.149.75` | H5 verification dark readonly acceptance | 复用既有显示偏好验证好友历史、群验证聚合与单群申请空态的 dark token/runtime；验收后恢复 light | authenticated production DOM + theme/computed-color + 382px overflow/console evidence | `completed-dark-readonly/desktop-gated` |
+| `.149.76` | H5 verification desktop responsive regression | 修复真实 1280px 验收发现的验证中心/单群申请 Surface 全宽回归；保持移动端满宽与既有 shared read owner | CSS contract + H5 typecheck + authenticated 1280x800 dark/382x786 light geometry/reload evidence | `completed-responsive-readonly/pending-actions-and-gateway-gated` |
+| `.149.77` | H5 create-group desktop responsive regression | 修复真实 1280px 验收发现的建群主体与既有 Footer/复核层宽度失配；保持 shared 人数规则和 create transaction 不变 | CSS contract + focused/typecheck + authenticated 1280x800 dark/382x786 light selection/review geometry | `completed-responsive-readonly/create-and-device-gated` |
+| `.149.78` | SDK/H5 conversation full refresh + member leave parity | 会话列表保持 SQLite 首屏，首屏后台校准与下拉刷新强制走 `postV1ConversationList` 全量快照且仅明确成功数据替换缓存；普通成员退出复用 RN 两种清理选择 | SDK/H5 focused + transport + typecheck/build:web + authenticated readonly member sheet | `completed-local-readonly/destructive-and-second-account-gated` |
+| `.149.79` | H5 migration closeout SSOT reconciliation | 把 `.149.78` 的 canonical owner、测试角色、浏览器能力边界和 activation residual 同步到 PLAN/CLEANUP/INVENTORY；不重复实现或执行 mutation | docs cross-reference + anti-mock/owner scan + diff check | `completed-docs/no-new-activation` |
+| `.149.80` | SDK/H5 Web full regression closeout | 在 H5 授权边界内执行 SDK Web 全量测试、runtime boundary、assets、两侧 typecheck 与 H5 production build；不编译/同步 RN/Desktop | 101 files/431 tests + 466 assets + typecheck + build + diff check | `completed-regression/no-new-activation` |
+| `.149.81` | H5 PC pointer conversation refresh | 扩展既有 `usePullRefresh` 平台适配器，使 `platform=pc` 鼠标主键下拉与 Touch Events 共用同一阈值并调用唯一会话状态 owner；不复制同步、DTO 或缓存逻辑 | focused/full H5 tests + typecheck/build + authenticated PC mouse drag | `completed-pc-browser-pass/physical-touch-gated` |
+| `.149.82` | H5 global PC pull-refresh convergence | 让全部 17 个生产 `usePullRefresh` 消费者接入同一组 mouse Pointer handlers，并移除页面祖先 pointer capture 以保护行长按和按钮点击；各页面刷新动作与 shared owner 不变 | global consumer contract + full H5 tests + typecheck/build + authenticated create-group mouse/click smoke | `completed-global-pc-browser-pass/physical-touch-gated` |
+| `.149.94` | H5 migration final local closeout audit | 在不执行业务 mutation 的边界内复核反 mock/fake-success、页面 Gateway/SQL 边界、重复/孤立 owner、生产 LoC、临时标记、全量测试与生产构建 | H5 182 files/589 tests + typecheck + 466 assets + 1242-module build + source/import/diff audit | `completed-local/P0-P1-zero/external-activation-gated` |
+| `.149.95` | H5 production vendor chunk convergence | 仅在 Vite/Rolldown 构建层拆出 React、Zod 与二维码 vendor，降低主应用和 shared runtime 首屏 chunk，不移动任何业务或 SDK owner | H5 182 files/589 tests + typecheck + 466 assets + 1242-module build + production preview/chunk HTTP | `completed-local/vendor-chunks-converged/livekit-warning-retained` |
+| `.149.96` | H5 personal QR Safari download acceptance | 复用唯一 `QRCodeDisplay` 与浏览器 PNG 导出 owner，在真实 system Safari 完成个人二维码落盘、文件合同和业务 payload 反解；不修改业务代码或执行消息/关系 mutation | authenticated Safari + PNG metadata + Vision QR decode + exact-file cleanup | `completed-production/local-file-decoded` |
+| `.149.97` | H5 ordinary video/file dual-account acceptance | 在用户确认后向真实单聊发送一个普通文件和一个普通视频，验证接收端活动聊天 WebSocket 即时更新、双端 SQLite 刷新回读及会话摘要收敛 | exact mutation authorization + isolated receiver origin + active-chat DOM + reload/list-back evidence | `completed-production/dual-account-realtime-persisted` |
+| `.149.98` | H5 ordinary video/file cross-browser acceptance | 复用 `.149.97` 保留的真实文件和视频，只读验证 Firefox/WebKit 文件卡片、视频实际播放、刷新回读与运行时错误边界 | isolated production auth + real media timeline + screenshots + reload/runtime evidence | `completed-readonly/firefox-webkit-playback-pass` |
+| `.149.99` | H5 ordinary video/file system Safari acceptance | 复用同一真实文件和视频，在 macOS system Safari 只读验证卡片、视频实际播放、刷新回读与像素证据 | authenticated system Safari + playback frame + reload/runtime evidence | `completed-readonly/system-safari-playback-pass` |
+| `.149.32` | H5 joined-groups state owner | 已加入群 cache-first/刷新、群会话解析、长按动作与退群事务进入唯一 Hook；页面保留 auth guard、下拉手势和 presentation | focused + full tests + verify + readonly browser | `completed-local/structural-pass/browser-readonly-pass` |
+| `.149.33` | H5 group-members state owner | 群会话解析、群/成员 cache-first 同步、请求代次、搜索投影与 presence observation 进入唯一 Hook；页面保留路由、下拉手势、索引 DOM 和 presentation | focused + full tests + verify + readonly browser | `completed-local/structural-pass/browser-readonly-pass` |
+| `.149.34` | H5 chat-card presentation owner | 名片 JSX、头像 fallback 与可访问名称进入独立 presentation；`ChatMessageContent` 只保留既有消息类型分发和页面动作透传 | focused + full tests + verify + prior natural-data card proof | `completed-local/structural-pass` |
+| `.149.35` | H5 chat-media presentation owner | 通话/图片/视频/语音/文件 JSX 进入独立 presentation；媒体预览、播放、URL/尺寸与页面动作继续使用既有 owner | focused + full tests + verify + prior natural-data voice proof | `completed-local/structural-pass` |
+| `.149.36` | H5 chat-text presentation owner | 引用/普通文本/系统/不支持消息 JSX 进入独立 presentation；引用解析、实体 renderer 与页面动作继续使用既有 owner | focused + full tests + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.37` | H5 chat-page surface owner | Header、消息区、Composer 与弹层 JSX 进入唯一 Surface；页面只保留 Router/runtime/hooks 编排 | focused + full tests + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.38` | H5 chat-composer submission owner | 转发、编辑、组合媒体、引用、提及与普通文本的提交顺序进入唯一 Hook；Composer 保留草稿/面板状态和视图组合 | chat-domain + full tests + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.39` | H5 pending-forward recovery owner | 稳定来源 ID、cache 恢复、来源会话/群成员名称增强和异步隔离进入唯一 Hook；转发选择/目标/发送与 Router 保持原 owner | chat-domain + full tests + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.40` | H5 chat-bubble chrome owner | sending/pending/failed 状态、shared retry capability 消费和 RN 双主题尾角进入唯一 presentation owner；消息编排与 retry action 保持原 owner | chat-domain + full tests + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.41` | H5 chat-message-view primitives owner | unknown payload 收窄与纯展示格式化进入独立 primitive owner；`getChatMessageView` 保持唯一 contentType dispatcher | chat-domain + full tests + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.42` | H5 conversation-preview owner | 草稿、消息类型、mention 与群发送者摘要进入独立 preview owner；`conversation-list-view` 只保留列表 metadata | conversations-domain + full tests + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.43` | H5 chat-voice recorder platform owner | 浏览器麦克风、MediaRecorder、MIME 与 track cleanup 进入独立 platform owner；会话 exactly-once terminal 保持 recorder owner | chat-domain + full tests + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.44` | H5 contact-profile surface owner | 联系人资料 Header、hero、快捷动作与资料卡片进入唯一 Surface；页面保留 runtime/state/router/dialog/actions | contacts-domain + full tests + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.45` | H5 chat-settings data owner | 会话、群资料与成员 cache-first/完整同步进入唯一 Hook；页面保留 Router、toast 和危险 mutation | chat-domain + full tests + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.46` | H5 app-route owner | 根 provider 装配、唯一 Routes 组合、通用域与聊天域路由账本分离；路径、懒加载与 fallback 不变 | route contracts + full tests + typecheck + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.47` | H5 incoming-call presentation owner | 来电资料恢复、banner/fullscreen/floating 形态、铃声与 autoplay 恢复进入唯一 Hook；Provider 保留接听/拒绝、媒体和终态信令 | call contracts + full tests + typecheck + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.48` | H5 call-context contract owner | 通话公共 view/snapshot/context/hook 从生命周期 Provider 分离，经 runtime facade 唯一暴露；RTC 时序不移动 | call contracts + full tests + typecheck + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.49` | H5 remote-terminal lifecycle owner | 当前 callID 匹配、六类终态白名单及 SDK terminal -> 挂断音 -> dispose -> replace 时序进入唯一 Hook；Provider 保留错误呈现和 owner 编排 | call contracts + full tests + typecheck + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.50` | H5 outgoing-call startup owner | 登录/待处理来电/重复启动守卫、媒体 owner 创建、stale 清理与 start 后状态/route 提交进入唯一 Hook；Provider 仅注入活动生命周期依赖 | call contracts + full tests + typecheck + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.51` | H5 active-call control/cleanup owner | dispose、媒体操作错误收敛、结束返回、DOM 媒体绑定及 logout/unmount cleanup 进入唯一 Hook；Provider 保留来电动作与 Context/Overlay 组合 | call contracts + full tests + typecheck + verify + structural closeout | `completed-local/structural-pass` |
+| `.149.52` | H5 chat-page CSS owner | 唯一超千行 chat stylesheet 按页面、消息、Composer、状态责任拆分；原入口成为顺序稳定 facade | mechanical selector/declaration compare + focused/full/typecheck/build + structural closeout | `completed-local/structural-pass` |
+| `.149.53` | H5 chat-page CSS visual acceptance | 复用现有登录态，对拆分后的聊天页执行移动/桌面与亮/暗主题只读视觉门禁 | real runtime screenshot + overflow/console/layout evidence + closeout | `completed-local/browser-readonly-pass` |
+| `.149.54` | H5 rich-message CSS natural-sample acceptance | 复用当前已读单聊中的名片、语音与转发自然样本，验证 message/composer CSS owner | real cached message DOM + light/dark mobile screenshots + overflow/console evidence | `completed-local/browser-readonly-pass` |
+| `.149.55` | H5 incoming group-bubble natural-sample acceptance | 复用当前群聊中的真实接收方向群主消息，验证 shared 昵称/角色投影、userID 哈希强调色与消息/Composer 布局 | real cached incoming DOM + light/dark mobile screenshots + computed style/overflow/console evidence | `completed-local/browser-readonly-pass` |
+| `.149.56` | H5 incoming admin custom-emoji natural-sample acceptance | 复用已读群聊中的真实接收方向管理员自定义表情，验证管理员 shared 投影、表情资源和 message/composer CSS owner | real cached incoming emoji DOM + light/dark mobile screenshots + image/computed style/overflow/console evidence | `completed-local/browser-readonly-pass` |
+| `.149.57` | H5 current-account ordinary-media inventory audit | 只读盘点当前账号全部已读会话，确认普通图片、视频、文件自然样本是否已出现 | conversation unread guard + four-chat production DOM inventory + media subtype cross-check | `completed-local/blocked-natural-data` |
+| `.149.58` | H5 migration phase regression and browser-runtime gate audit | 对当前累积迁移执行全量 H5 回归、anti-mock/cleanup、仓库边界和跨浏览器运行时可用性审计 | 179-file test + typecheck + assets + production build + static/runtime boundary checks | `completed-local/regression-pass/browser-matrix-blocked-env` |
 
 ## W6.a6.20.148 Cold-Start Offline Safety Contract Freeze
 
@@ -1495,7 +1544,7 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实
   - `W6.a6.20.12-home-search-clear-control` 已完成本地闭环：H5 复用 RN `xmark-circle` 补齐 AppSearchBox 默认清除按钮，页面统一复位 request generation、结果、分页和错误态；清除后显式恢复 input focus。412px 真实账号证明 2 行结果归零、历史恢复、input active 且零横向溢出；RN/SDK 业务均未改。
   - `W6.a6.20.13-group-admin-routes` 已完成本地闭环：H5 将 RN 群管理员列表和添加候选对齐为 `/settings/manage/admins`、`/admins/add` 两个独立 route，删除管理页旧管理员 modal/action；SDK 公开并唯一校验 `IM_GROUP_ADMIN_LIMIT`，H5 候选刷新时裁剪失效选择。`.112` 已用真实 owner 群证明空管理员列表、10 人上限与两位非本人候选；未执行角色 mutation，RN 业务未改。
   - `W6.a6.20.14-group-owner-transfer-route` 已完成本地闭环：H5 将 RN 群主转让对齐为 `/settings/manage/owner-transfer` 独立 route，删除管理页旧 picker、成员加载与 mutation action；管理员/群主页面共用 cache-first route data adapter，SDK 继续唯一持有候选、权限、exactly-once 与角色缓存事务。`.112` 已用真实 owner 群证明本人排除、成员分组与关闭返回；未选择目标或执行角色 mutation，RN 业务未改。
-  - `W6.a6.20.15-joined-group-row-actions` 已完成本地闭环：H5 我的群聊行复用 RN `300ms/8px` 长按合同，按 shared capability 展示分享群名片、退出群聊和修改群名称；分享/改名先由 shared `openGroup` 解析 canonical Conversation，再进入既有 SPA route，普通成员退出只调用 `groupLifecycle.leave(clearHistory)`。群主不复制 RN 客户端挑管理员并隐式退出的双轨编排，而是显式进入现有群主转让 route，转让后回我的群聊并由用户再次确认退出。focused 10/10 和 full verify 通过；当前账号群列表为空，非空气泡视觉与所有 destructive mutation 仍 data-gated/未授权，RN 业务未改。
+  - `W6.a6.20.15-joined-group-row-actions` 的长按、分享、改名和普通成员退出合同继续有效；其中旧群主显式转让分支已由 `.149.71` 替代。当前群主退出先经 shared 成员完整同步，再与群设置页复用 earliest-admin 双分支和单次 `groupLifecycle.leave`，由 Gateway 自动转移；真实 destructive mutation 仍未授权，RN 业务未改。
   - `W6.a6.20.16-chat-text-link-actions` 已完成本地闭环：SDK shared core 对齐 RN HTTP(S)/www 链接边界、尾随标点和 www->HTTPS；H5 富文本气泡实际消费 shared 片段，普通点击开隔离新标签，500ms 长按/右键只显示打开/复制，复制保留原文并阻断外层消息菜单。当前真实群聊无链接消息，只完成 412px 健康/零溢出/零 console 证明；未发送测试消息，RN business/caller 均未改。
   - `W6.a6.20.25-chat-audio-played-auto-next` 已完成本地闭环：SDK 纯规则统一语音稳定身份、RN localEx 已播放兼容和下一条 incoming type103 选择；H5 chat route 只持有账号/会话 localStorage、未播放红点和唯一 HTMLAudio，自然结束连播、手动停止/失败不推进。RN caller 冻结，真实认证媒体播放仍 data-gated。
   - `W6.a5.2.1.1-contact-pinyin-index-parity` 已完成本地闭环：H5 联系人展示层复用 RN `pinyin-pro@3.28.1` 和同一姓氏优先参数，中文索引、数字/符号 fallback 与分组顺序均有纯函数回归和真实 7 行只读证明；SDK/RN runtime 未改动。
@@ -1921,3 +1970,364 @@ W4 本地实现以 W3 code/contract/storage gates 为 entry；已通过的真实
 - focused 73 files/245 tests、H5 full 152 files/505 tests、Web typecheck、1207-module production build 和 diff check 通过；既有 >500kB chunk warning 不变。
 - 382x786 已登录真实群聊完成只读烟测：会话、1 人在线、群主备注名/标签、消息气泡和唯一 Composer 均正常；未发送消息或执行群 mutation。
 - SDK source/generated package 零改动；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；未执行 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.149.22
+
+- 将 `ChatComposer` 内唯一输入行表单抽为纯展示组件 `ChatComposerInputRow`，继续复用现有 `ChatVoiceInput`、文本输入、表情与功能面板入口。
+- `ChatComposer` 仍唯一持有 submit、转发草稿、提及、附件、面板状态和 availability 编排；本片不改变发送、转发、上传、录音或 SDK 调用链。
+- `ChatComposer.tsx` 从 419 行收敛为 353 行；新输入行 138 行且只有一个生产消费者，`rn-chat-composer` 表单 owner 保持唯一。
+- focused 4 files/14 tests、H5 full 152 files/505 tests、Web typecheck、1208-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 382x786 已登录真实群聊完成只读烟测：输入框聚焦无 border/outline/box-shadow，表情与功能面板可切换，功能项相册/文件/名片可见，收起后 viewport/scrollWidth=`382/382`；未输入、发送或执行 mutation。
+- SDK source/generated package 零改动；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；未执行 SDK build/sync、RN/Desktop/all 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.149.23
+
+- 将聊天页资料、群申请、公告、名片、引用定位、好友申请和表情管理的 React Router 动作抽入唯一 `useChatPageNavigationActions` owner。
+- 群名片继续沿用 `groups.sync -> conversations.openGroup -> apply fallback` 生产链；消息发送、缓存、RTC、录音和 SDK mutation owner 均未移动。
+- `ChatPage.tsx` 从 595 行收敛为 514 行；新导航 Hook 156 行且只有一个生产消费者，无第二 route owner 或 compat wrapper。
+- focused 4 files/10 tests、H5 full 152 files/505 tests、Web typecheck、1209-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 382x786 已登录真实群聊完成“群资料 -> 资料页 -> 返回聊天”只读验收：群名、2 人在线、消息和唯一 Composer 恢复，两个 route 均 viewport/scrollWidth=`382/382`，warning/error 为零。
+- 本片未点击名片、群申请、公告或发送动作，不把只读导航扩大为 mutation 成功；SDK source/generated package 零改动，RN 仅保留用户既有 `src/config/appVersion.ts` 修改，未执行 SDK/RN/Desktop/all build/sync 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.149.24
+
+- 将 `ChatPage` 的消息 operation、名片/通话瞬时弹层、Composer 草稿/提及和聊天头部投影拆入四个页面专用 hook；`useChatPageCacheState` 不再反向接收 UI reset callback。
+- 消息发送继续保持 `shared operation -> failure relationship projection -> SQLite getCachedHistory -> busy release`；名片只在 type108 真实成功后关闭，通话继续复用全局 `WebIMCallProvider.startOutgoing`。
+- `ChatPage.tsx` 从 514 行收敛为 399 行；新增 owner 均低于 300 行、内部 action 函数低于 50 行，只有一个生产消费者，无 compat wrapper、第二业务 owner、TODO/FIXME/HACK 或调试日志。
+- focused 4 files/11 tests、H5 full 153 files/508 tests、Web typecheck、466 assets、1213-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 382x786 已登录真实群聊/单聊完成只读验收：群在线/群主气泡、名片单选弹层、单聊在线、通话类型弹层、消息与唯一 Composer 正常，viewport/scrollWidth=`382/382`，cold reload 后零新增 warning/error。
+- 未点击分享、语音/视频通话或发送，不扩大 mutation/RTC 成功声明；仅执行允许的 SDK `build:web/sync:web`，SDK worktree clean，RN 仅保留用户既有 `src/config/appVersion.ts` 修改，未运行 RN/Desktop/all 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.149.25
+
+- 将联系人资料页的打开会话、复制 ID、音视频呼出、星标、备注、黑名单和删除好友编排抽入唯一 `useContactProfileActions`；页面继续持有资料读取、presence、群上下文和弹层展示。
+- action owner 只委托既有 shared contact/peer facade、全局 `WebIMCallProvider` 与浏览器 clipboard port，不新增 DTO、缓存、route、retry 或 mutation 语义。
+- `ContactProfilePage.tsx` 从 467 行收敛为 344 行；新 Hook 208 行且只有一个生产消费者，页面不再直接出现联系人 mutation、通话启动或剪贴板调用。
+- focused 4 files/21 tests、H5 full 154 files/510 tests、Web typecheck、466 assets、1214-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 382x786 已登录真实好友资料完成 cold reload 与只读弹层验收：备注名、离线状态、通话/星标/发消息入口、更多操作和备注编辑正常，viewport/scrollWidth=`382/382`，warning/error 为零。
+- 未保存备注、切换星标/黑名单、删除好友、复制 ID、打开会话或正式呼出；仅执行允许的 SDK `build:web/sync:web` 且 SDK clean，RN 仅保留用户既有 `src/config/appVersion.ts` 修改，未运行 RN/Desktop/all 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.149.26
+
+- 将通讯录页的长按菜单、打开会话、分享名片、音视频呼出和删除好友编排抽入唯一 `useContactsPageActions`；页面继续持有 cache-first 联系人读取、下拉刷新、分组索引与列表展示。
+- action owner 只委托既有 `peerProfile/contacts` shared facade、全局 `WebIMCallProvider` 和 React Router，不新增 DTO、Gateway、SQLite、retry、route 或 mutation 语义。
+- `ContactsPage.tsx` 从 406 行收敛为 290 行；新 Hook 200 行且只有一个生产消费者，页面不再直接出现联系人删除、会话创建或通话启动调用。
+- focused 3 files/7 tests、H5 full 155 files/512 tests、Web typecheck、466 assets、1215-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 382x786 已登录真实通讯录完成只读验收：2 个联系人、备注名、搜索、验证消息、我的群聊、索引栏和全局 Tabbar 正常；截图无横向裁切。
+- 未打开会话、分享名片、正式呼出或删除好友；仅执行允许的 SDK `build:web/sync:web` 且 SDK clean，RN 仅保留用户既有 `src/config/appVersion.ts` 修改，未运行 RN/Desktop/all 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.149.27
+
+- 将普通会话页的 SQLite cache-first 首屏、归档摘要、realtime cache 重读、下拉同步和 presence 刷新抽入唯一 `useConversationsPageState`；页面保留 React Router、展示、未读会话滚动和现有 `useConversationActions` mutation owner。
+- 状态 hook 只编排既有 `WebIMSync` 与 `useConversationPresence`，不新增 DTO、Gateway、Repository、retry、权限或 mutation 语义；动作完成后仍通过同一 cache reload 回读普通/归档列表。
+- `ConversationsPage.tsx` 从 398 行收敛为 279 行；新 Hook 152 行且只有一个生产消费者，页面不再直接出现 `listCachedItems/syncArchived`。
+- focused 4 files/4 tests、H5 full 156 files/513 tests、Web typecheck、466 assets、1216-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 已登录真实会话列表完成只读烟测：从通讯录切换消息 Tab 后恢复 4 条会话，单聊在线状态、好友备注名、群摘要与全局 Tabbar 正常。
+- 未执行下拉刷新、打开会话、已读、置顶、静音、归档或删除；仅执行允许的 SDK `build:web/sync:web` 且 SDK clean，RN 仅保留用户既有 `src/config/appVersion.ts` 修改，未运行 RN/Desktop/all 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.149.28
+
+- 将会话搜索页的四类 SQLite cache 聚合、请求代次隔离、消息分页、分区展开和本地搜索历史抽入唯一 `useConversationSearchState` owner；页面只保留 React Router、下拉手势和结果展示。
+- 继续复用 `WebIMSync.contacts/groups/conversations/messages` 与既有纯聚合函数，不新增远端搜索、DTO、SQL、Gateway、Repository、retry 或 mutation 语义。
+- `ConversationSearchPage.tsx` 从 376 行收敛为 203 行；新 Hook 271 行且只有一个生产消费者，页面不再直接调用 `searchCached/listCached/localStorage/isCurrentInteractionRequest`。
+- focused 2 files/8 tests、H5 full 157 files/514 tests、SDK Web 101 files/426 tests、根级 Web/H5 typecheck、466 assets、1217-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 已登录真实链从会话列表进入搜索，读取既有历史并以 `123` 聚合出 2 个会话、3 条缓存消息；点击结果正确进入目标聊天，未调用远端搜索或业务 mutation。
+- 仅执行允许的 SDK `build:web/sync:web` 且 SDK source clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改，未运行 RN/Desktop/all 或 `build:package:desktop:web`。
+
+## Completed W6.a6.20.149.29
+
+- 将发起群聊页的 cache-first 好友读取、单聊固定对端校验、成员选择、人数门槛和创建事务抽入唯一 `useCreateGroupPageState` owner；页面只保留 React Router、下拉手势和展示。
+- 选择算法归并到既有 `create-group-view` 纯函数 owner，严格保留普通入口全量替换、单聊筛选保留隐藏选择、2–998 人规则和 remote-only 防重放语义。
+- `CreateGroupPage.tsx` 从 388 行收敛为 187 行；新 Hook 283 行且只有一个生产消费者，页面不再直接调用 contacts/conversations/groups facade 或 Toast。
+- focused 4 files/27 tests、H5 full 158 files/517 tests、SDK Web 101 files/426 tests、Web typecheck、466 assets、1218-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 已登录真实建群页加载 2 位好友；单选保持创建按钮禁用，全选显示“已选 2 位好友”并启用按钮，恢复选择后新增 warning/error 为零；未提交创建。
+- SDK source/generated package 零改动；RN 仅保留用户既有 `src/config/appVersion.ts` 修改，未运行 RN/Desktop/all 或 `build:package:desktop:web`；仓库仍无 `scripts/check-convergence.sh`。
+
+## Completed W6.a6.20.149.30
+
+- 将联系人搜索页的本地好友/已加入群/会话 fallback 快照、服务器好友/群聊双 Tab、请求代次隔离和群会话打开抽入唯一 `useContactSearchPageState` owner；页面只保留 React Router、资料返回 state、键盘与结果展示。
+- 继续复用 `WebIMSync.contacts/groups/conversations/groupApplications` 和既有 `contact-search-view` 纯投影，不新增 DTO、SQL、Gateway、Repository、retry、好友申请或入群语义。
+- `ContactSearchPage.tsx` 从 384 行收敛为 208 行；新 Hook 241 行且只有一个生产消费者，页面不再直接调用 `searchUsers/listCached/openGroup/isCurrentInteractionRequest`。
+- focused 7 files/31 tests、H5 full 159 files/519 tests、SDK Web 101 files/426 tests、根级 Web/H5 typecheck、466 assets、1219-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 临时验收标签正常进入手机号登录页；使用既有固定验证码提交后，sql.js 按设计拒绝第二标签并提示现有预览标签占用本地消息缓存。未关闭用户当前标签，真实已登录搜索/双 Tab visual 保持显式 gate。
+- SDK source/generated package clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；未运行 RN/Desktop/all 或 `build:package:desktop:web`；仓库仍无 `scripts/check-convergence.sh`。
+
+## Completed W6.a6.20.149.31
+
+- 将通话列表的 cache-first 首屏、强制同步、dataVersion 重读、下一页加载、筛选/搜索、全量缓存选择和删除事务抽入唯一 `useCallsPageState` owner；页面只保留全局 TabBar 联动、下拉手势和展示。
+- 严格保留 RN/H5 既有合同：筛选或搜索变化清空选择；全选扫描当前筛选的全部缓存分页；删除先提交 `WebIMCallSync.delete`，成功后退出编辑态并重读首屏，失败只显示 error Toast。
+- `CallsPage.tsx` 从 355 行收敛为 145 行；新 Hook 285 行且只有一个生产消费者，页面不再直接调用 `sync/listCached/delete/refreshCallListPage/useAppToast`。
+- focused 4 files/23 tests、H5 full 160 files/521 tests、SDK Web 101 files/426 tests、根级 Web/H5 typecheck、466 assets、1220-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 新受控标签直达 `/calls` 后由真实 auth guard 跳转手机号登录；未接管用户当前登录标签，未提交验证码或执行通话删除，登录态列表/编辑视觉和真实删除 list-back 保持显式 gate。
+- SDK source clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；未运行 RN/Desktop/all 或 `build:package:desktop:web`；仓库仍无 `scripts/check-convergence.sh`。
+
+## Completed W6.a6.20.149.32
+
+- 将已加入群列表的 cache-first 恢复、完整同步、群会话解析、长按动作和退群事务抽入唯一 `useJoinedGroupsPageState` owner；页面只保留 auth guard、下拉手势与展示。
+- 严格保留 frozen RN/H5 合同：普通成员可选择是否清理本人群消息；群主先进入既有转让页；`remote-only` 阻止重复退群；分享/资料路由只消费 canonical Conversation。
+- `JoinedGroupsPage.tsx` 从 325 行收敛为 138 行；新 Hook 265 行且只有一个生产消费者，页面不再直调 `groups/conversations/groupLifecycle/useAppToast`。
+- focused 4 files/20 tests、H5 full 161 files/523 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1221-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 新受控标签直达 `/contacts/groups` 后由真实 auth guard 跳转手机号登录，零 console warning/error；未接管用户当前登录标签，未提交验证码或执行退群/转让。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；未运行 RN/Desktop/all 或 `build:package:desktop:web`；仓库仍无 `scripts/check-convergence.sh`。
+
+## Completed W6.a6.20.149.33
+
+- 将群成员完整页的群会话解析、cache-first 群/成员读取、完整远端同步、请求代次、搜索投影和 presence observation 抽入唯一 `useGroupMembersPageState` owner；页面只保留 auth route、下拉手势、索引滚动和展示。
+- 严格保留 frozen RN/H5 合同：真实 Conversation targetID 是唯一群身份；cache 失败继续 canonical sync；成员名称、拼音分组、role 标签和 normal-group presence 继续消费既有 shared/view owner。
+- `GroupMembersPage.tsx` 从 312 行收敛为 178 行；新 Hook 186 行且只有一个生产消费者，页面不再直调 `getSync/groupMembers.sync/useObservedUserPresence`。
+- focused 3 files/9 tests、H5 full 162 files/525 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1222-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 新受控标签直达群成员 route 后由真实 auth guard 跳转 `/auth/phone`；未接管用户当前标签、未提交验证码或执行群成员 mutation，登录态成员/搜索/presence visual 保持显式 gate。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；未运行 RN/Desktop/all 或 `build:package:desktop:web`；仓库仍无 `scripts/check-convergence.sh`。
+
+## Completed W6.a6.20.149.34
+
+- 将用户/群名片的 JSX、头像 fallback、目标可用性和可访问名称抽入唯一 `ChatCardMessageContent` presentation owner；`ChatMessageContent` 继续只消费既有 `ChatMessageView` 并透传 `onOpenCard`。
+- 严格保留 frozen RN/H5 合同：用户/群目标文案、缺失 target/action 时禁用、群名片入群关系刷新和 SPA route 动作均未改变；不移动 DTO、SDK、缓存、申请入群或发送逻辑。
+- `ChatMessageContent.tsx` 从 307 行收敛为 272 行；新组件 41 行、唯一生产消费者；源码护栏禁止其引入 Router、WebIMSync 或 SDK runtime。
+- focused 3 files/7 tests、H5 full 163 files/527 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1223-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 浏览器能力证据沿用 `.149.18` 已登录真实群名片直达 canonical 群会话；本片只移动同一 JSX，未重复执行申请入群、发送、验证码或其他 mutation。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script/system contract 仍缺失。
+
+## Completed W6.a6.20.149.35
+
+- 将通话/图片/视频/语音/文件 JSX 抽入唯一 `ChatMediaMessageContent` presentation owner；`ChatMessageContent` 仅识别媒体消息族并透传既有 message/action。
+- 严格保留 frozen RN/H5 合同：媒体 URL 安全化、图片比例/自然尺寸、音频稳定身份/已播放状态、预览/下载与 RTC 动作均继续消费既有 helper、Provider 和页面 owner。
+- `ChatMessageContent.tsx` 从 272 行收敛为 98 行；新组件 232 行、唯一生产消费者；未引入 Router、WebIMSync、`new Audio` 或第二套媒体运行逻辑。
+- focused 6 files/19 tests、H5 full 164 files/531 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1224-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 浏览器能力证据沿用 `.149.15` 已登录真实 5 秒语音播放终态；本片只移动同一 JSX，图片/视频/文件自然数据、下载和跨浏览器验收继续保持 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script/system contract 仍缺失。
+
+## Completed W6.a6.20.149.36
+
+- 将引用/普通文本/系统/不支持消息 JSX 抽入唯一 `ChatTextMessageContent` presentation owner；`ChatMessageContent` 只保留媒体、名片、自定义表情和文本族四路分发。
+- 严格保留 frozen RN/H5 合同：引用来源/删除态继续消费 `chat-quote-view`，链接与 preset emoji 继续消费 `PresetEmojiTextContent`，页面跳转/复制动作只透传。
+- `ChatMessageContent.tsx` 从 98 行收敛为 60 行；新组件 93 行、唯一生产消费者；未引入消息 mapper、引用解析、WebIMSync、Gateway 或第二业务 owner。
+- focused 6 files/21 tests、H5 full 165 files/536 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1225-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 本片只移动已验证 JSX，未执行发送、复制、引用跳转或其他 operation；自然 quote/deleted-source 像素与跨浏览器验收继续保持 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script/system contract 仍缺失。
+
+## Completed W6.a6.20.149.37
+
+- 将 Header、公告、消息列表、Composer 和删除/转发/通话/名片弹层 JSX 收敛到唯一 `ChatPageSurface` presentation owner；`ChatPage` 只保留 Router、runtime、shared facade 和 hooks 编排。
+- 严格保留 frozen RN/H5 合同：媒体 Provider 继续同时包裹消息区和转发 Composer，输入可用性、多选优先级、名片/转发单选、关系提示和群名片动作继续消费原 owner。
+- `ChatPage.tsx` 从 399 行收敛为 255 行；新 Surface 247 行、唯一生产消费者；页面不再持有 `ChatComposer`、`ChatMessageList` 或目标弹窗 JSX，Surface 不持有 state/effect/runtime/Gateway。
+- focused 8 files/26 tests、H5 full 165 files/537 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1226-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 本片只移动既有 JSX 和属性映射，未执行发送、通话、转发、删除或其他 operation；自然数据像素与跨浏览器验收继续保持 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script/system contract 仍缺失。
+
+## Completed W6.a6.20.149.38
+
+- 将转发、编辑、组合媒体、引用、提及与普通文本六类提交顺序收敛到唯一 `useChatComposerSubmission`；`ChatComposer` 继续持有草稿、面板、附件、mention 和视图组合，不建立第二发送入口。
+- 严格保留 frozen RN/H5 合同：`createIMComposerSubmissionPlan` 仍先于编辑/媒体分派，附件仍先清 pending 再发送，各分支仍只在既有 action 成功后清草稿/mention/quote。
+- `ChatComposer.tsx` 从 353 行收敛为 267 行；新 Hook 194 行、唯一生产消费者；旧内联提交分支已删除，无 compat、孤立导出或 test-only production path。
+- chat-domain 78 files/260 tests、H5 full 166 files/539 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1227-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 本片只移动已验证的客户端提交编排，未执行发送、编辑、转发、附件、引用或提及 operation；自然结果、跨浏览器和实体设备验收继续保持 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script/system contract 仍缺失。
+
+## Completed W6.a6.20.149.39
+
+- 将待转发来源消息精确回读、来源会话/群成员名称增强、异步代次隔离和失效回调抽入唯一 `useChatPendingForward`；`useChatForwardFlow` 继续持有多选、目标弹窗、Router state 清理和 shared forward 提交。
+- 严格保留 frozen RN/H5 合同：只按 1–100 个稳定 client ID 从当前账号缓存恢复；来源不完整仍报错并清 state；名称增强失败仍只降级展示，不破坏完整草稿。
+- `useChatForwardFlow.ts` 从 353 行收敛为 286 行；新 Hook 101 行且只有一个生产消费者；两个类型消费者直接引用新 owner，旧类型 re-export 已删除，无 compat wrapper 或第二发送入口。
+- focused 5 files/19 tests + 最终 2 files/6 tests、chat-domain 79 files/262 tests、H5 full 167 files/541 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1228-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 本片只移动缓存恢复 effect 和类型入口，未执行真实转发、目标切换或消息 mutation；自然 result/list-back、跨浏览器和实体设备验收继续保持 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script 仍缺失。
+
+## Completed W6.a6.20.149.40
+
+- 将 sending/pending/failed 状态、可重试按钮和双方向 RN 气泡尾角收敛到唯一 `ChatMessageBubbleChrome`；`ChatMessageBubble` 继续只编排消息方向、分组、内容、动作与状态位置。
+- 严格保留 frozen RN/H5 合同：class、ARIA、disabled、稳定 client ID 回调、shared `canRetryWebIMMessage` 支持矩阵、明暗主题资源和尾角 DOM 均未改变。
+- `ChatMessageBubble.tsx` 从 339 行收敛为 278 行；新组件 78 行且只有一个生产消费者；旧内联实现已删除，无 compat、孤立导出、test-only production path 或第二 retry owner。
+- focused 3 files/13 tests、chat-domain 80 files/267 tests、H5 full 168 files/546 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1229-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 本片只移动同一 JSX 与 asset imports，未执行消息 retry/send 或其他 operation；自然 failed/retry 像素、跨浏览器和实体设备验收继续保持 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script 仍缺失。
+
+## Completed W6.a6.20.149.41
+
+- 将 unknown payload 对象/数组/字符串/数值收窄、真实媒体尺寸、时长/文件大小和秒/毫秒短时钟格式化抽入唯一 `chat-message-view-primitives`；`getChatMessageView` 继续唯一持有 contentType 分发和 shared parser 消费。
+- 严格保留 frozen RN/H5 合同：普通字段仍 trim，实体敏感正文仍只校验空白并保留 UTF-16 原文；无效数值、非正尺寸、时长/大小和时间戳边界均不变；原模块继续重导出短时钟 API。
+- `chat-message-view.ts` 从 370 行收敛为 294 行；primitive 87 行且只有一个生产消费者；旧内联实现已删除，无 compat、孤立导出、test-only production path 或第二消息 parser。
+- focused 3 files/19 tests、chat-domain 81 files/271 tests、H5 full 169 files/550 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1230-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 本片只移动纯函数，未改变 DOM/CSS/route，未执行发送、媒体、缓存或其他 operation；自然 uncommon payload、跨浏览器和实体设备验收继续保持 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script 仍缺失。
+
+## Completed W6.a6.20.149.42
+
+- 将草稿优先、消息类型摘要、静音 mention、群发送者前缀和未知类型 fallback 抽入唯一 `conversation-preview-view`；`conversation-list-view` 只保留标题、未读汇总/循环定位、badge 和列表时间。
+- 严格保留 frozen RN/H5 合同：shared draft reader、mention projection、群系统类型 classifier、好友消息文案与 raw content fallback 均未改变。
+- `conversation-list-view.ts` 从 353 行收敛为 96 行；preview owner 263 行且只有 `ConversationRow` 与归档过滤两个生产消费者；旧内联实现删除，无 re-export、compat、孤立导出、test-only production path 或第二 parser。
+- focused 4 files/21 tests、conversations-domain 15 files/47 tests、H5 full 170 files/552 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1231-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 本片只移动纯 projection 与 import，未改变 DOM/CSS/route，未执行发送、缓存写入或其他 operation；5176 route HTTP 200，自然 preview 数据、跨浏览器和实体设备验收继续 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script 仍缺失。
+
+## Completed W6.a6.20.149.43
+
+- 将 `getUserMedia`、`MediaRecorder` 构造、MIME negotiation、扩展名映射与 track cleanup 抽入唯一 `chat-voice-recorder-platform`；`chat-voice-recorder` 继续唯一持有 start/stop/cancel/error 和 exactly-once terminal。
+- `chat-voice-recorder.ts` 从 314 行收敛为 224 行，新 platform owner 103 行且有生产消费者；旧内联 browser primitives 已删除，无 re-export、compat、孤立导出、test-only production path 或第二 recorder。
+- focused 3 files/8 tests、chat-domain 82 files/273 tests、H5 full 171 files/554 tests、Web/H5 typecheck、`npm run verify`、production build 与 diff check 均通过；纯 adapter/type relocation 未重跑浏览器，真实 trusted hold、权限、录音、上传、发送和跨浏览器/实体设备矩阵继续 gated。
+
+## Completed W6.a6.20.149.44
+
+- 将联系人资料 Header、hero、快捷动作、主动作和资料卡片 JSX 抽入唯一 `ContactProfileSurface`；`ContactProfilePage` 继续持有 runtime、资料恢复、presence、群上下文、Router、弹窗状态和 `useContactProfileActions`。
+- 严格保留 frozen RN/H5 合同：显示事实、子路由 state、action 回调与弹窗在 `main` 内的 DOM 层级未改变；不移动 SDK DTO、Gateway、SQLite、RTC 或 mutation owner。
+- `ContactProfilePage.tsx` 从 344 行收敛为 224 行；Surface 205 行、唯一生产消费者；旧内联正文删除，无 compat、孤立导出、test-only production path 或第二 runtime owner。
+- focused 4 files/10 tests、contacts 27 files/91 tests、H5 full 172 files/556 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、`npm run verify`、1232-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 本片只移动同一 JSX、资源和回调映射，未重跑浏览器或执行资料 mutation/RTC；自然资料数据、跨浏览器和实体设备验收继续 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script 仍缺失。
+
+## Completed W6.a6.20.149.45
+
+- 将 conversation、group 和 member 的 cache-first 读取、完整同步、请求代次与局部快照更新抽入唯一 `useChatSettingsData`；`ChatSettingsPage` 继续持有 React Router、toast、清空记录、退群/解散和确认层。
+- 严格保留 frozen RN/H5 合同：读取与同步顺序、群身份来源、错误文案、remote-only 防重放和 shared mutation facade 均未改变。
+- `ChatSettingsPage.tsx` 从 343 行收敛为 292 行；Hook 139 行且只有一个生产消费者；无 compat、孤立导出、test-only production path 或第二 cache owner。
+- focused 4 files/19 tests、chat-domain 83 files/276 tests、H5 full 173 files/559 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、`npm run verify`、1233-module production build和 diff check通过；既有 >500kB chunk warning 不变。
+- 本片只移动数据 effect 与本地快照动作，未重跑浏览器或执行设置 mutation；真实操作、自然数据、跨浏览器和实体设备验收继续 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；convergence script 仍缺失。
+
+## Completed W6.a6.20.149.46
+
+- 将 475 行 `App.tsx` 中的 provider 装配、唯一根路由树、通用域路由与聊天域路由拆为 `App`、`AppRouteTree`、`AppCoreRoutes`、`AppChatRoutes` 四个明确 owner。
+- 严格保留 frozen RN/H5 合同：全部 URL、redirect、Primary Tab 嵌套、页面元素、lazy import、Suspense fallback、provider 顺序与最终 wildcard 均未改变。
+- `App.tsx` 收敛为 26 行；`AppRouteTree` 16 行、通用路由 133 行、聊天路由 91 行；源码契约测试改为读取真实 owner，并新增 provider/route/transport 边界回归。
+- focused 9 files/31 tests、H5 full 174 files/562 tests、Web typecheck、1236-module production build和 diff check通过；最终 `npm run verify` 结果见 status；既有 >500kB chunk warning 不变。
+- 本片只搬迁路由 JSX 与 imports，未重跑浏览器或执行任何 operation；生产构建是 React Router 组合的运行时代码解析门禁，自然数据、RTC、跨浏览器和实体设备验收继续 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只允许 SDK `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；不新增 convergence 声明。
+
+## Completed W6.a6.20.149.47
+
+- 将来电资料、展示形态、铃声/autoplay、前台 pending refresh 与 cleanup 收敛到唯一 `useWebIMIncomingCallPresentation`；Provider 保留接听/拒绝、媒体、终态信令与 Router 提交。
+- Provider 从 488 行收敛为 423 行；表现 Hook 179 行且只有一个生产消费者，无媒体创建、Gateway、SQLite、navigate、compat 或第二 call runtime。
+- focused 3 files/8 tests、H5 full 175 files/564 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1237-module production build、`npm run verify` 和 diff check 通过。
+- 本片未执行真实双账号通话或改变 DOM/CSS；RTC deployment、后台、多 tab、权限、弱网及跨浏览器继续 gated。
+
+## Completed W6.a6.20.149.48
+
+- 将通话 view、启动参数、活动快照、Context value、Context 实例与 `useWebIMCall` 抽入唯一 `WebIMCallContext`；页面只经邻近 `runtime/index.ts` facade 消费。
+- 严格保留 frozen RN/H5 合同：Provider value、缺失 Provider 错误、呼出/接听/拒绝、LiveKit port、媒体控制、终态信令和 React Router 时序均未改变。
+- `WebIMCallProvider.tsx` 从 423 行收敛为 386 行；Context owner 46 行，未创建 Gateway、SQLite、LiveKit 或第二生命周期。Provider 超过 300 行登记为后续 guarded split 债务。
+- focused 3 files/7 tests、H5 full 176 files/567 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1238-module production build、`npm run verify`、HTTP 200 和 diff check 通过；既有 >500kB chunk warning 不变。
+- 本片只移动公共 React Context/type/hook 和一个页面 import，未重跑视觉或执行 RTC operation；真实双账号、权限、弱网、终态 list-back 与浏览器矩阵继续 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；不新增 convergence 声明。
+
+## Completed W6.a6.20.149.49
+
+- 将当前 callID 匹配、六类远端终态白名单和 `SDK terminal -> 挂断音 -> dispose -> replace 返回会话` 串行时序抽入唯一 `useWebIMCallRemoteTerminal`；Provider 继续拥有可见错误状态和活动 owner 编排。
+- `WebIMCallProvider.tsx` 从 386 行收敛为 365 行；终态 Hook 72 行且只有一个生产消费者，无 incoming/media 创建、Gateway、SQLite、compat 或第二 call runtime。Provider 超过 300 行继续登记为 guarded split 债务。
+- focused 4 files/10 tests、H5 full 177 files/570 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1239-module production build、`npm run verify`、HTTP 200 和 diff check 通过；既有 >500kB chunk warning 不变。
+- 本片仅搬迁相同 effect 与顺序合同，未改变 DOM/CSS/route 或执行 RTC operation，故未重跑视觉；真实双账号终态、权限、弱网、list-back 和浏览器矩阵继续 gated。
+- cleanup P0/P1 zero；SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；只运行允许的 `build:web/sync:web`，未运行 RN/Desktop/all 或 `build:package:desktop:web`；不新增 convergence 声明。
+
+## Completed W6.a6.20.149.50
+
+- 将登录、待处理来电和重复启动守卫，LiveKit/media/outgoing owner 创建，版本失效 dispose，以及 `outgoing.start -> owner/snapshot/subscription -> /calls/active` 提交顺序抽入唯一 `useWebIMOutgoingCallStartup`。
+- `WebIMCallProvider.tsx` 从 365 行收敛为 321 行；呼出启动 Hook 115 行且只有一个生产消费者。Provider 不再创建 `WebIMOutgoingCall`，无第二呼出路径、compat、Gateway/SQLite 或 fake-success。
+- focused 4 files/11 tests、H5 full 177 files/571 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1240-module production build、`npm run verify`、HTTP 200 和 diff check 通过；既有 >500kB chunk warning 不变。
+- 本片只移动相同呼出生命周期和依赖注入，未改变 DOM/CSS/route contract 或执行 RTC operation，故未重跑视觉；真实双账号呼出、媒体权限、弱网和浏览器矩阵继续 gated。
+- Provider 仍超出 H5 300 行约束 21 行；下一独立 guarded slice 收敛活动通话控制/清理 owner，不在本片混入第二职责。SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；未运行 RN/Desktop/all 或 `build:package:desktop:web`；不新增 convergence 声明。
+
+## Completed W6.a6.20.149.51
+
+- 将活动 owner dispose、媒体操作与错误收敛、结束后 replace 返回、DOM 媒体节点绑定、logout 和 unmount cleanup 抽入唯一 `useWebIMActiveCallControls`；Provider 保留来电接听/拒绝及 Context/Overlay 组合。
+- 严格保持 `捕获 owner -> 摘除 refs/订阅 -> 使启动失效 -> 清空公开状态 -> SDK dispose`，以及 `捕获来源会话 -> dispose -> replace 返回` 顺序；不存在第二 call runtime 或媒体 owner 创建路径。
+- `WebIMCallProvider.tsx` 从 321 行收敛为 278 行，回到 H5 300 行约束内；活动控制 Hook 117 行且只有一个生产消费者，无 compat、orphan、Gateway/SQLite 或 fake-success。
+- focused 5 files/14 tests、H5 full 178 files/574 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1241-module production build、`npm run verify`、HTTP 200 和 diff check 通过；既有 >500kB chunk warning 不变。
+- 本片只移动相同控制/清理 effect，未改变 DOM/CSS/route contract 或执行 RTC operation，故未重跑视觉；真实双账号、媒体权限、弱网、后台和浏览器矩阵继续 gated。SDK clean；RN 仅保留用户既有 `src/config/appVersion.ts` 修改；未运行 RN/Desktop/all 或 `build:package:desktop:web`；不新增 convergence 声明。
+
+## Completed W6.a6.20.149.52
+
+- 将 1067 行 `chat-page.css` 收敛为 57 行稳定 facade，并按原始顺序拆为 shell 419 行、message 289 行、composer 282 行、state 25 行四个 presentation owner。
+- 拆分前后通过机械重组逐字对比；selector、声明、级联顺序、dark/mobile/reduced-motion 覆盖、DOM 与 route import 均未改变，没有第二 stylesheet 或 compat path。
+- 新增 Node 文件系统 owner contract，锁定 facade import 顺序、职责 selector 与 Composer owner 唯一性；focused 3 files/9 tests、H5 full 179 files/576 tests、SDK Web 101 files/426 tests、Web/H5 typecheck、466 assets、1241-module production build、`npm run verify`、HTTP 200 和 diff check 通过。
+- 本片没有 SDK、Gateway/SQLite、消息 operation、路由或 RN 业务改动；因规则序列逐字等价且 DOM 不变未重跑视觉。真实消息、RTC、跨浏览器/设备和验证码 contract 继续 gated；SDK clean，RN 仅保留用户既有 `src/config/appVersion.ts`。
+
+## Completed W6.a6.20.149.53
+
+- 复用用户已授权的当前联调账号恢复本地 H5 登录态；未调用验证码发送 operation，目标真实群会话进入前没有未读角标。
+- 382x786 与 1280x800、light 与 dark 四种组合均显示 Header、消息列表和 Composer；短消息保持底部布局，`documentElement.scrollWidth === clientWidth`，console warning/error 为 0。
+- dark 只通过既有显示设置切换，验收后恢复原 `light` 偏好；临时 viewport 已 reset，标签回到目标聊天 route。
+- 本片没有发送、mark-read、RTC、Gateway mutation、代码或 SDK/RN 改动；真实消息类型丰富样本、双账号 RTC、跨浏览器/设备和验证码 contract 继续 gated。
+
+## Completed W6.a6.20.149.54
+
+- 当前真实已读单聊 production route 恢复 11 条缓存消息：1 条群名片、7 条语音、3 条带 `转发自 donk` 的语音及普通文本；未注入 fixture 或测试消息。
+- 382x786 light/dark 下全部 11 条为真实 outgoing 方向，语音 icon 位于右侧；可见气泡均在 viewport 内，Composer 与可见消息不相交，`scrollWidth=clientWidth=382`。
+- 上滚取得群名片、文本、语音与转发 origin 同屏暗色活动帧；console warning/error 为 0。验收后恢复原 light 偏好、reset viewport 并返回原目标群聊。
+- 本片未播放语音、点击名片、发送、mark-read、触发 RTC 或 Gateway mutation；incoming、图片、视频、文件、Safari/Firefox 与实体设备样本继续 gated，生产代码、SDK、RN 零改动。
+
+## Completed W6.a6.20.149.55
+
+- 当前真实目标群恢复 1 条 incoming 群主文本消息；发送人展示为备注名 `donk二大爷备注名`，没有回退到 userID，角色标签为 `群主`。
+- 382x786 light/dark 下昵称和角色标签均消费同一 `userID` 哈希强调色 `#FF9850`；头像可见、接收气泡在视口内、Composer 不遮挡且横向 overflow 为 0。
+- 深色气泡背景按既有 token 计算为 `rgb(46, 46, 46)`；console warning/error 为 0。验收后恢复 light 偏好、默认 viewport 和原目标群聊。
+- 本片未点击消息/头像、发送、mark-read、触发 RTC 或 Gateway mutation；图片、视频、文件、其他角色、Safari/Firefox 与实体设备样本继续 gated，生产代码、SDK、RN 零改动。
+
+## Completed W6.a6.20.149.56
+
+- 当前真实已读群聊恢复 2 条消息，其中 1 条为 incoming 管理员自定义表情；发送人展示备注名 `donk二大爷备注名`，角色标签为 `管理员`。
+- 自定义表情原图 `750x1624` 解码完成，按 frozen RN “最大宽度 180、高度保持原比例”合同渲染为 `180x390`；没有擅自改成方形或裁剪。
+- 382x786 light/dark 下昵称与管理员标签共用 `#FF9850` 哈希强调色；头像、气泡、Composer 均不越界或遮挡，横向 overflow 与 console warning/error 为 0；focused 2 files/8 tests 通过。
+- 验收后恢复 light 偏好、默认 viewport 和原目标群聊；未点击表情、发送、mark-read、触发 RTC 或 Gateway mutation，生产代码、SDK、RN 零改动。
+
+## Completed W6.a6.20.149.57
+
+- 会话列表确认当前 4 个真实会话均无未读角标后，逐个进入 production chat route 做只读 DOM 盘点；没有点击消息、播放、发送或执行任何 Gateway/SQLite mutation。
+- 共恢复 16 条可见消息：文本、群名片 1、语音 7、forward origin 3、自定义表情 1；普通图片、视频、文件均为 0，因此对应验收门禁继续保持 `blocked-natural-data`。
+- 自定义表情最终资源状态复核为 `complete=true`、自然尺寸 `750x1624`，不把首屏异步占位文本误判为资源失败；该证据沿用 `.149.56`，不外推到普通媒体。
+- 本片只更新执行文档；生产代码、SDK 和 RN 零改动。标签恢复原群聊 route，验证码、RTC、跨浏览器与实体设备门禁不变。
+
+## Completed W6.a6.20.149.58
+
+- 当前 H5 累积迁移通过全量 `179 files / 576 tests`、Web TypeScript、466 个 RN 复用资源校验及 1241 模块生产构建；仅保留既有大 chunk warning。
+- production source 未发现 `parityRuntime`、`localMock`、test-mode 业务分支、`setTimeout(resolve)` fake success、`console.log` 或 `TODO/FIXME/HACK`；当前没有超过 1000 行的待触达源文件。
+- 本机不存在已安装的 Playwright Firefox/WebKit 或可复用跨浏览器登录态，因此 browser matrix 保持 `blocked-env`，不下载大型运行时、不迁移 token、不把 Chromium 结果外推。
+- dev route HTTP 200、diff check 通过；SDK clean，RN 仅保留用户既有 `src/config/appVersion.ts`，生产代码与 SDK/RN 均未改动。
+
+## Completed W6.a6.20.149.59
+
+- 逐项核对 frozen RN `AuthFlowScreen` 的忘记密码和网络设置入口，与 H5 React Router/Modal owner 及迁移 SSOT 对照；普通 auth production entry 无新增漏迁。
+- H5 账号登录已经通过 `ForgotPasswordMethodsDialog` 复刻 RN 替代登录路径：手机号、邮箱和客服说明；既有回归明确禁止调用已下线的 `forgotPassword` operation，不制造假成功。
+- RN `NetworkSettingsScreen` 依赖 native HTTP/OpenIM HTTP/SOCKS proxy；浏览器 `fetch/WebSocket` 无等价 per-app proxy 注入，继续登记 `web-not-applicable`，不新增保存后不生效的页面；Desktop 后续走独立 adapter。
+- 本片只更新执行文档；H5 production、SDK 和 RN 零改动。普通媒体自然数据、验证码 contract、RTC deployment、跨浏览器和实体设备门禁保持不变。
+
+## Completed W6.a6.20.149.60
+
+- 对 H5 production 页面执行 interaction/action-chain 静态审计：未发现空 `onClick/onSubmit`、hash route、开发中占位或默认 fake-success；不可用文案均对应真实 runtime/capability fail-visible 边界。
+- frozen RN auth、home、conversation、contacts、calls、chat、group、QR、profile/settings 屏幕族逐项映射到 H5 React Router route、短期 modal 或已登记 platform exclusion；普通生产入口新增缺口为 0。
+- H5 production TSX 最大 299 行；好友/群验证、日期/媒体/文件搜索、群公告/简介等非直达 Page 均有唯一生产消费者，没有孤立业务页面或第二 owner。
+- focused route owner regression 2 files/6 tests 通过；本片只更新执行文档，H5 production、SDK 和 RN 零改动。后续禁止重复相同静态扫描，必须由 external activation ledger 激活。
+
+## Completed W6.a6.20.149.61
+
+- 通过官方 npm Playwright 临时工具安装 Firefox 141 与 WebKit 26 runtime；依赖未写入仓库 `package.json/package-lock`，两个浏览器使用独立临时 profile。
+- Firefox 使用账号 2、WebKit 使用账号 3 完成 production 手机号固定码登录；每端真实恢复 4 个会话与 2 个联系人，382px 下 `scrollWidth === clientWidth`。
+- 最终按 route 稳定阶段分别采样，会话与通讯录的 console error、page error、failed request、HTTP error 均为 0；初次快速换页产生的 cancelled request 不被误报为 CORS 缺陷。
+- 未打开未读聊天、发送、RTC 或业务 mutation，也未读取/复制当前 Chromium token；H5 production、SDK 和 RN 零改动。系统 Safari、媒体/长按/权限/RTC 和实体设备仍按功能 gated。
+
+## Completed W6.a6.20.149.62
+
+- Firefox 141 与 WebKit 26 分别以账号 2/3 的独立临时 profile 完成 production 登录；进入聊天前读取每个会话行的未读可访问标签，只选择无未读真实群聊。
+- Firefox 群聊恢复 1 条消息与 `2人在线`，WebKit 群聊恢复 2 条消息与 `1人在线`；两端真实 Composer 可用、消息栈 `flex-end`、382/382 无横向 overflow，消息列表底边与 Composer 顶边相等且不重叠。
+- Firefox 短消息在未满一屏时从底部渲染；WebKit 群主文本和管理员长表情保持 RN 比例完整可见。两端点击 `返回会话` 后均恢复 4 rows，chat/back 稳定阶段 console/page/request/HTTP errors 为 0。
+- focused chat list/CSS/route regression 3 files/6 tests 通过；未点击消息或媒体、未发送、未触发 RTC/Gateway mutation，production、SDK、RN 零改动。媒体操作、长按、录音/权限、系统 Safari、实体设备与 RTC 继续 gated。
+
+## Completed W6.a6.20.149.63
+
+- Firefox 141 与 WebKit 26 分别使用独立账号和 production 登录，选择无未读真实群聊；会话行按住 430ms 后均显示标记未读、置顶、免打扰、归档、删除五项 RN 顺序菜单。
+- 两端关闭会话遮罩后 URL 保持列表；进入安全群聊后，对真实消息按住 650ms，Firefox 显示 6 个适用动作，WebKit 显示 5 个适用动作，差异来自消息编辑资格而非浏览器分支。
+- 四张 382x786 截图确认会话菜单、原消息预览及消息动作菜单均在视口内；Esc 关闭消息菜单后 URL 不变，返回均恢复 4 rows，console/page/request/HTTP errors 为 0。
+- focused conversation-row/action-layout regression 2 files/6 tests 通过；未点击任何 menuitem，未执行 clipboard、编辑、转发、删除、发送、RTC 或 Gateway mutation，production、SDK、RN 零改动。实体触控、系统 Safari 和所有动作结果继续 gated。
+
+## Completed W6.a6.20.149.64
+
+- 先审计 Firefox/WebKit 账号 2/3 的全部无未读会话，均没有语音样本；随后用两个新隔离 profile 登录主账号，在同一无未读单聊恢复 7 条真实可播放语音，没有注入 fixture 或发送测试消息。
+- 两端点击第一条 5 秒语音后均从 `播放语音/false` 进入 `停止语音/true/is-playing`，自然结束后回到 `播放语音/false`；聊天 URL 全程稳定，console/page/request/HTTP errors 为 0。
+- Firefox 捕获真实 OSS `.m4a` HTTP 206；WebKit 没有把请求报告为 Playwright `media` resource，但按钮状态、`is-playing` 和自然 `ended` 事件完整，不能把分类差异误报为播放失败。
+- focused audio preference/content/layout/view regression 4 files/14 tests 通过；四张 382x786 playing/ended 截图无越界或 Composer 遮挡。未执行 send、Gateway/SQLite mutation、SDK build/sync 或 production/RN 改动；系统 Safari、实体设备听感、后台中断与过期 URL 继续 gated。
+
+## Completed W6.a6.20.149.65
+
+- 复核 `ChatVoiceInput -> useChatVoiceRecorder -> chat-voice-recorder platform -> ChatPageFeedback -> AppToast` 唯一链；权限失败在生成 `MediaRecorder/File` 之前 fail-closed，不触发 upload/send。
+- H5 将麦克风权限拒绝、设备缺失和临时不可读的 DOMException 归一化为稳定中文提示；不改变 recorder session、shared audio owner 或 RN 业务合同。
+- Firefox 141 通过浏览器原生拒绝策略触发真实 `getUserMedia` failure；382x786 下中文 error Toast 可见，HUD 清理、hold 恢复、route stable，手势后非 GET/upload/message 请求 0，console/page errors 0。
+- Playwright WebKit 26 的 `getUserMedia` 在无系统交互时保持 permission pending，且 WebKit 不支持 microphone permission override；未用 navigator/MediaRecorder stub 冒充通过，继续标记 `blocked-env`。
+- H5 focused 6 files/27 tests、SDK Web 101 files/426 tests、Web typecheck、1241-module production build 通过；既有 >500kB chunk warning 未扩大；成功录音/上传/发送、system Safari、实体设备、后台/中断继续 gated。

@@ -1,37 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { formatIMUserDisplayName, type WebIMPeerProfile } from '@im28/im-sdk/web';
-import {
-  Link,
-  Navigate,
-  useLocation,
-  useNavigate,
-  useParams,
-} from 'react-router-dom';
+import { type WebIMPeerProfile } from '@im28/im-sdk/web';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import copyIconURL from '../../assets/rn/assets/icons/imm28/copy.regular.svg';
-import chatIconURL from '../../assets/rn/assets/icons/imm28/chat-bubble-empty.regular.svg';
-import moreIconURL from '../../assets/rn/assets/icons/imm28/more-horiz.regular.svg';
-import phoneIconURL from '../../assets/rn/assets/icons/imm28/phone.regular.svg';
-import starIconURL from '../../assets/rn/assets/icons/imm28/star.regular.svg';
-import starSelectedIconURL from '../../assets/rn/assets/icons/imm28/star.solid.svg';
-import videoIconURL from '../../assets/rn/assets/icons/imm28/video-camera.regular.svg';
-import { copyUserIDToClipboard } from '../../components/clipboard/user-id-clipboard.js';
-import { RNAssetIcon } from '../../components/RNAssetIcon.js';
-import { useAppToast } from '../../components/interaction/index.js';
-import { useWebIMCall, useWebIMRuntime } from '../../runtime/index.js';
+import { useWebIMRuntime } from '../../runtime/index.js';
 import { ContactDeleteSheet } from './ContactActionSheets.js';
 import {
-  ContactProfileRow,
-  ContactProfileError,
   ContactProfilePageState,
   ProfileConfirmDialog,
   ProfileMoreSheet,
-  ProfileQuickAction,
   ProfileRemarkDialog,
   readContactProfileError,
 } from './ContactProfileActions.js';
 import {
-  buildContactFriendApplicationRoute,
   formatContactProfileAddedAt,
   getContactProfileGenderLabel,
   getContactProfileGroupPresentation,
@@ -42,24 +22,16 @@ import {
 } from './contact-profile-view.js';
 import { createContactCardShareLocationState } from './contact-action-view.js';
 import { createContactProfileChildRouteState } from './contact-profile-route-state.js';
-import {
-  ContactProfileAvatar,
-  ContactProfileBlacklistStatus,
-  ContactProfileHeader,
-  ContactProfileOnlineStatus,
-} from './ContactProfileShared.js';
+import { ContactProfileSurface } from './ContactProfileSurface.js';
 import { useContactProfilePresence } from './useContactProfilePresence.js';
 import { useContactProfileGroupContext } from './useContactProfileGroupContext.js';
+import { useContactProfileActions } from './useContactProfileActions.js';
 import './contact-profile-page.css';
 
 /** RN 联系人资料核心页只调用 Web SDK peerProfile facade。 */
 export function ContactProfilePage() {
   // runtime context 是页面唯一 SDK 入口。
   const { runtime, snapshot, restoring, startupError } = useWebIMRuntime();
-  /** toast 只承载剪贴板等瞬时操作结果。 */
-  const { toast } = useAppToast();
-  /** callOwner 是 H5 全局唯一通话生命周期 owner。 */
-  const callOwner = useWebIMCall();
   // routeParams 提供稳定联系人 ID deep link。
   const routeParams = useParams<{ userID: string }>();
   // location 只为受控的内部资料返回路由提供 state。
@@ -72,7 +44,7 @@ export function ContactProfilePage() {
   const profileRouteState = createContactProfileChildRouteState(location.state);
   // groupConversationID 只是候选，权限和成员关系仍由 shared facades 校验。
   const groupConversationID = readContactProfileGroupConversationID(location.state);
-  // navigate 仅负责真实 operation 成功后的 SPA 切换。
+  // navigate 仅负责资料子路由的 SPA 切换。
   const navigate = useNavigate();
   // profile 保存 Gateway 归一化的资料和关系状态。
   const [profile, setProfile] = useState<WebIMPeerProfile | null>(null);
@@ -82,8 +54,6 @@ export function ContactProfilePage() {
   const [blockedByMe, setBlockedByMe] = useState(false);
   // loading 覆盖首次读取和手动重试。
   const [loading, setLoading] = useState(false);
-  // actionPending 阻止重复创建单聊。
-  const [actionPending, setActionPending] = useState(false);
   /** remarkOpen 控制 RN 备注编辑层。 */
   const [remarkOpen, setRemarkOpen] = useState(false);
   /** remarkDraft 保存本次提交前的备注文本。 */
@@ -143,136 +113,20 @@ export function ContactProfilePage() {
     targetUserID: userID,
   });
 
-  /** 创建并持久化真实单聊后进入现有聊天 route。 */
-  const openConversation = useCallback(async (): Promise<void> => {
-    if (!runtime || !profile || actionPending) return;
-    setActionPending(true);
-    setError(null);
-    try {
-      // conversation 已由 SDK 写入当前账号 SQLite。
-      const conversation = await runtime.getSync().peerProfile
-        .openConversation(profile.userID);
-      navigate(`/conversations/${encodeURIComponent(conversation.conversationID)}`);
-    } catch (cause) {
-      toast.error(readContactProfileError(cause, '打开会话失败，请重试'));
-    } finally {
-      setActionPending(false);
-    }
-  }, [actionPending, navigate, profile, runtime, toast]);
-
-  /** 复制按钮只在浏览器 clipboard 成功后结束。 */
-  const copyUserID = useCallback(async (): Promise<void> => {
-    if (!profile) return;
-    try {
-      await copyUserIDToClipboard(profile.userID);
-      setError(null);
-      toast.success('复制ID成功');
-    } catch (cause) {
-      toast.error(readContactProfileError(cause, '复制用户ID失败'));
-    }
-  }, [profile, toast]);
-
-  /** 发起通话前通过 shared peer facade 获取真实单聊主键。 */
-  const startCall = useCallback(async (mediaType: 'audio' | 'video'): Promise<void> => {
-    if (!runtime || !profile || profile.relationship !== 'friend' || actionPending) return;
-    setActionPending(true);
-    setError(null);
-    try {
-      /** conversation 由 Gateway 与 SQLite 收敛，页面不拼接 conversation ID。 */
-      const conversation = await runtime.getSync().peerProfile.openConversation(profile.userID);
-      await callOwner.startOutgoing({
-        conversationID: conversation.conversationID,
-        peerName: profile.displayName,
-        peerAvatarURL: profile.avatarURL,
-        mediaType,
-      });
-    } catch (cause) {
-      toast.error(readContactProfileError(cause, '发起通话失败'));
-    } finally {
-      setActionPending(false);
-    }
-  }, [actionPending, callOwner, profile, runtime, toast]);
-
-  /** 星标更新只在 shared facade 成功后替换页面关系快照。 */
-  const toggleStar = useCallback(async (): Promise<void> => {
-    if (!runtime || !profile || actionPending) return;
-    setActionPending(true);
-    setError(null);
-    try {
-      /** result 是 SDK 成功写入关系缓存后的标准投影。 */
-      const result = await runtime.getSync().contacts.updateFriendStar(
-        profile.userID,
-        !profile.isStarred,
-      );
-      setProfile(current => current ? { ...current, isStarred: result.isStarred } : current);
-      toast.success(result.isStarred ? '已设为星标好友' : '已取消星标');
-    } catch (cause) {
-      toast.error(readContactProfileError(cause, '星标设置失败'));
-    } finally {
-      setActionPending(false);
-    }
-  }, [actionPending, profile, runtime, toast]);
-
-  /** 备注保存调用 SDK success-only 关系写入并更新展示优先级。 */
-  const saveRemark = useCallback(async (): Promise<void> => {
-    if (!runtime || !profile || actionPending) return;
-    setActionPending(true);
-    setError(null);
-    try {
-      /** result 保留远端确认后的备注、昵称和头像。 */
-      const result = await runtime.getSync().contacts.updateFriendRemark(
-        profile.userID,
-        remarkDraft,
-      );
-      setProfile(current => current ? {
-        ...current,
-        remark: result.remark,
-        displayName: result.remark || result.nickname ||
-          formatIMUserDisplayName(current.userID),
-      } : current);
-      setRemarkOpen(false);
-      toast.success('备注保存成功');
-    } catch (cause) {
-      toast.error(readContactProfileError(cause, '备注保存失败'));
-    } finally {
-      setActionPending(false);
-    }
-  }, [actionPending, profile, remarkDraft, runtime, toast]);
-
-  /** 黑名单二次确认后只调用共享联系人动作 facade。 */
-  const updateBlacklist = useCallback(async (): Promise<void> => {
-    if (!runtime || !profile || actionPending) return;
-    setActionPending(true);
-    setError(null);
-    try {
-      /** nextBlocked 是本次用户明确选择的目标状态。 */
-      const nextBlocked = !blockedByMe;
-      await runtime.getSync().contacts.setBlacklist(profile.userID, nextBlocked);
-      setBlockedByMe(nextBlocked);
-      setConfirmBlacklist(false);
-      toast.success(nextBlocked ? '已加入黑名单' : '已移出黑名单');
-    } catch (cause) {
-      toast.error(readContactProfileError(cause, '黑名单设置失败'));
-    } finally {
-      setActionPending(false);
-    }
-  }, [actionPending, blockedByMe, profile, runtime, toast]);
-
-  /** 删除好友在明确消息清理范围后执行 shared 原子状态机。 */
-  const deleteFriend = useCallback(async (scope: 'self' | 'both'): Promise<void> => {
-    if (!runtime || !profile || actionPending) return;
-    setActionPending(true);
-    setError(null);
-    try {
-      await runtime.getSync().contacts.deleteFriend({ friendUserID: profile.userID, clearScope: scope });
-      toast.success('好友已删除');
-      navigate('/contacts', { replace: true });
-    } catch (cause) {
-      toast.error(readContactProfileError(cause, '删除好友失败'));
-    } finally {
-      setActionPending(false);
-    }
-  }, [actionPending, navigate, profile, runtime, toast]);
+  /** actions 集中持有资料 mutation、通话和浏览器剪贴板编排。 */
+  const actions = useContactProfileActions({
+    runtime,
+    profile,
+    blockedByMe,
+    remarkDraft,
+    setProfile,
+    setBlockedByMe,
+    closeRemark: () => setRemarkOpen(false),
+    closeBlacklistConfirm: () => setConfirmBlacklist(false),
+    clearPageError: () => setError(null),
+  });
+  /** actionPending 供页面统一禁用写操作入口。 */
+  const { actionPending } = actions;
 
   // primaryAction 只公开本切片已具备真实 owner 的动作。
   const primaryAction = useMemo(
@@ -306,138 +160,41 @@ export function ContactProfilePage() {
     ? groupContext.displayName
     : profile?.displayName ?? '';
   return (
-    <main className="rn-contact-profile-page" aria-busy={loading || actionPending}>
-      <section className="rn-contact-profile-surface">
-        <ContactProfileHeader
-          backHref={backHref}
-          titleNode={navbarState.kind === 'blacklist' ? (
-            <ContactProfileBlacklistStatus />
-          ) : navbarState.kind === 'presence' ? (
-            <ContactProfileOnlineStatus online={navbarState.online} />
-          ) : null}
-          trailing={profile?.relationship === 'friend' && !groupPresentation.restricted ? (
-            <button
-              type="button"
-              className="rn-contact-profile-more"
-              aria-label="更多联系人操作"
-              onClick={() => setMoreOpen(true)}
-            >
-              <RNAssetIcon assetURL={moreIconURL} />
-            </button>
-          ) : null}
-        />
-        {loading && !profile ? (
-          <div className="rn-contact-profile-loading" aria-label="正在加载联系人资料"><span /></div>
-        ) : profile ? (
-          <div className="rn-contact-profile-content">
-            {error ? <ContactProfileError error={error} onRetry={loadProfile} /> : null}
-            <div className="rn-contact-profile-hero">
-              <ContactProfileAvatar {...profile} displayName={displayName} />
-              <div className="rn-contact-profile-name-row">
-                <h2>{displayName}</h2>
-                {genderLabel && !groupPresentation.restricted ? (
-                  <span
-                    className={genderLabel === '男' ? 'is-male' : 'is-female'}
-                    aria-label={`性别${genderLabel}`}
-                  >
-                    {genderLabel === '男' ? '♂' : '♀'}
-                  </span>
-                ) : null}
-              </div>
-              {!groupPresentation.restricted && profile.nickname && profile.nickname !== displayName ? (
-                <p className="rn-contact-profile-nickname">昵称：{profile.nickname}</p>
-              ) : null}
-              {!groupPresentation.restricted ? (
-                <button type="button" className="rn-contact-profile-id" onClick={() => void copyUserID()}>
-                  <span>ID：{profile.userID}</span>
-                  <RNAssetIcon assetURL={copyIconURL} />
-                </button>
-              ) : null}
-              {!groupPresentation.restricted && profile.relationship === 'stranger' && profile.bio ? (
-                <p className="rn-contact-profile-bio">{profile.bio}</p>
-              ) : null}
-            </div>
-
-            {groupPresentation.notice ? (
-              <p className="rn-contact-profile-group-notice">{groupPresentation.notice}</p>
-            ) : null}
-
-            {profile.relationship === 'friend' && !groupPresentation.restricted ? (
-              <div className="rn-contact-profile-quick-actions" aria-label="联系人快捷操作">
-                <ProfileQuickAction iconURL={phoneIconURL} label="语音通话" disabled={actionPending} onClick={() => void startCall('audio')} />
-                <ProfileQuickAction iconURL={videoIconURL} label="视频通话" disabled={actionPending} onClick={() => void startCall('video')} />
-                <ProfileQuickAction
-                  iconURL={profile.isStarred ? starSelectedIconURL : starIconURL}
-                  label={profile.isStarred ? '取消星标' : '设为星标'}
-                  selected={profile.isStarred}
-                  disabled={actionPending}
-                  onClick={() => void toggleStar()}
-                />
-              </div>
-            ) : null}
-
-            {!groupPresentation.restricted && primaryAction === 'message' ? (
-              <button
-                type="button"
-                className="rn-contact-profile-primary"
-                disabled={actionPending}
-                onClick={() => void openConversation()}
-              >
-                {actionPending ? '正在打开' : '发消息'}
-              </button>
-            ) : !groupPresentation.restricted && primaryAction === 'add-friend' ? (
-              <Link
-                className="rn-contact-profile-primary"
-                to={buildContactFriendApplicationRoute(profile.userID)}
-                state={profileRouteState}
-              >
-                加好友
-              </Link>
-            ) : null}
-
-            {profile.relationship === 'friend' && !groupPresentation.restricted ? (
-              <>
-                <div className="rn-contact-profile-card">
-                  <ContactProfileRow label="备注名" value={profile.remark} onClick={() => setRemarkOpen(true)} />
-                  {profile.bio ? <ContactProfileRow label="个性签名" value={profile.bio} last /> : null}
-                </div>
-                <div className="rn-contact-profile-card rn-contact-profile-card-gap">
-                  <ContactProfileRow label="来源" value={profile.sourceLabel} />
-                  <ContactProfileRow label="添加时间" value={addedAt} last />
-                </div>
-                <div className="rn-contact-profile-card rn-contact-profile-card-gap">
-                  <ContactProfileRow
-                    label="共同的群聊"
-                    value={commonGroupsCount ? String(commonGroupsCount) : ''}
-                    onClick={() => navigate(`/contacts/users/${encodeURIComponent(profile.userID)}/groups`, {
-                      state: profileRouteState,
-                    })}
-                  />
-                  <ContactProfileRow
-                    label="分享好友名片"
-                    value=""
-                    last
-                    onClick={() => navigate(`/contacts/users/${encodeURIComponent(profile.userID)}/share`, {
-                      state: createContactCardShareLocationState(profile),
-                    })}
-                  />
-                </div>
-              </>
-            ) : null}
-          </div>
-        ) : error ? (
-          <div className="rn-contact-profile-empty-error">
-            <ContactProfileError error={error} onRetry={loadProfile} />
-          </div>
-        ) : null}
-      </section>
+    <ContactProfileSurface
+      backHref={backHref}
+      profile={profile}
+      profileRouteState={profileRouteState}
+      loading={loading}
+      actionPending={actionPending}
+      error={error}
+      displayName={displayName}
+      genderLabel={genderLabel}
+      addedAt={addedAt}
+      commonGroupsCount={commonGroupsCount}
+      navbarState={navbarState}
+      groupPresentation={groupPresentation}
+      primaryAction={primaryAction}
+      onRetry={loadProfile}
+      onOpenMore={() => setMoreOpen(true)}
+      onCopyUserID={() => void actions.copyUserID()}
+      onStartCall={mediaType => void actions.startCall(mediaType)}
+      onToggleStar={() => void actions.toggleStar()}
+      onOpenConversation={() => void actions.openConversation()}
+      onOpenRemark={() => setRemarkOpen(true)}
+      onOpenCommonGroups={() => profile && navigate(`/contacts/users/${encodeURIComponent(profile.userID)}/groups`, {
+        state: profileRouteState,
+      })}
+      onShareCard={() => profile && navigate(`/contacts/users/${encodeURIComponent(profile.userID)}/share`, {
+        state: createContactCardShareLocationState(profile),
+      })}
+    >
       <ProfileRemarkDialog
         open={remarkOpen}
         value={remarkDraft}
         pending={actionPending}
         onChange={setRemarkDraft}
         onClose={() => setRemarkOpen(false)}
-        onSave={() => void saveRemark()}
+        onSave={() => void actions.saveRemark()}
       />
       <ProfileMoreSheet
         open={moreOpen}
@@ -454,14 +211,14 @@ export function ContactProfilePage() {
         description={blockedByMe ? '移出后将恢复接收对方消息。' : '加入后将不再接收对方消息，可在黑名单中解除。'}
         confirmLabel={blockedByMe ? '确认移出' : '确认加入'}
         onClose={() => setConfirmBlacklist(false)}
-        onConfirm={() => void updateBlacklist()}
+        onConfirm={() => void actions.updateBlacklist()}
       />
       <ContactDeleteSheet
         contact={deleteOpen && profile ? profile : null}
         pending={actionPending}
         onClose={() => setDeleteOpen(false)}
-        onDelete={scope => void deleteFriend(scope)}
+        onDelete={scope => void actions.deleteFriend(scope)}
       />
-    </main>
+    </ContactProfileSurface>
   );
 }

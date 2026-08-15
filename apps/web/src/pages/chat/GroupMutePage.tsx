@@ -178,6 +178,10 @@ export function GroupMutePage() {
       onTouchMove={pullRefresh.onTouchMove}
       onTouchEnd={pullRefresh.onTouchEnd}
       onTouchCancel={pullRefresh.onTouchCancel}
+      onPointerDown={pullRefresh.onPointerDown}
+      onPointerMove={pullRefresh.onPointerMove}
+      onPointerUp={pullRefresh.onPointerUp}
+      onPointerCancel={pullRefresh.onPointerCancel}
     >
       <section className="rn-group-action-surface">
         <PageNavbar className="rn-group-action-header"><Link to={manageURL} aria-label="返回群管理"><RNAssetIcon assetURL={backIconURL} /></Link><h1>群禁言</h1><span /></PageNavbar>

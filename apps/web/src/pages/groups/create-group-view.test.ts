@@ -8,6 +8,8 @@ import {
   canSubmitCreateGroup,
   isGroupCreationRemoteCompletedError,
   resolveSingleChatCreateGroupPeer,
+  toggleCreateGroupMemberSelection,
+  updateVisibleCreateGroupMemberSelection,
 } from './create-group-view.js';
 
 /** 创建确定性的好友候选。 */
@@ -55,6 +57,21 @@ describe('create group view', () => {
       candidates,
       new Set(['u-3', 'stale-user', 'u-1']),
     ).map(candidate => candidate.contact.userID)).toEqual(['u-1', 'u-3']);
+  });
+
+  it('preserves RN member toggle and visible-selection semantics', () => {
+    /** selected 保存不可见成员，覆盖单聊筛选时保留和普通入口替换两种语义。 */
+    const selected = new Set(['hidden', 'u-1']);
+    expect([...toggleCreateGroupMemberSelection(selected, 'u-2', 0).selectedUserIDs])
+      .toEqual(['hidden', 'u-1', 'u-2']);
+    expect([...toggleCreateGroupMemberSelection(selected, 'u-1', 0).selectedUserIDs])
+      .toEqual(['hidden']);
+    expect([...updateVisibleCreateGroupMemberSelection(selected, ['u-1', 'u-2'], false, true)])
+      .toEqual(['hidden', 'u-1', 'u-2']);
+    expect([...updateVisibleCreateGroupMemberSelection(selected, ['u-1'], true, true)])
+      .toEqual(['hidden']);
+    expect([...updateVisibleCreateGroupMemberSelection(selected, ['u-2'], false, false)])
+      .toEqual(['u-2']);
   });
 
   it('binds single-chat creation to the cached peer and excludes it from candidates', () => {

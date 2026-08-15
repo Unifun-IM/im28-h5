@@ -20,11 +20,10 @@ interface JoinedGroupActionMenuProps {
 /** 群列表退出确认层参数不包含 SDK owner。 */
 interface JoinedGroupQuitModalProps {
   readonly groupName: string;
-  readonly mode: JoinedGroupQuitMode | null;
+  readonly mode: Exclude<JoinedGroupQuitMode, 'owner'> | null;
   readonly submitting: boolean;
   readonly onCancel: () => void;
   readonly onLeave: (clearHistory: boolean) => void;
-  readonly onTransferOwner: () => void;
 }
 
 /** 群列表动作图标和文案保持 RN 当前顺序。 */
@@ -75,35 +74,30 @@ export function JoinedGroupActionMenu({
   );
 }
 
-/** 普通成员显示双退出选项，群主明确转入 shared 群主转让流程。 */
+/** 普通成员显示双退出选项，权限缺失时保持 fail-closed。 */
 export function JoinedGroupQuitModal({
   groupName,
   mode,
   submitting,
   onCancel,
   onLeave,
-  onTransferOwner,
 }: JoinedGroupQuitModalProps) {
-  /** transferFirst 标记当前 capability 只允许先转让群主。 */
-  const transferFirst = mode === 'transfer-first';
   /** unavailable 标记服务端未授予任何退出路径。 */
   const unavailable = mode === 'unavailable';
   return (
     <InteractionModal
       open={Boolean(mode)}
-      ariaLabel={transferFirst ? '请先转让群主' : '确认退出群聊'}
+      ariaLabel="确认退出群聊"
       className="rn-joined-group-quit-backdrop"
       closeOnBackdrop={!submitting}
       onRequestClose={onCancel}
     >
       <section className="rn-joined-group-quit-modal im-modal-sheet" role="alertdialog">
-        <h2>{transferFirst ? '请先转让群主' : '退出群聊'}</h2>
+        <h2>退出群聊</h2>
         <p>
-          {transferFirst
-            ? `退出${groupName || '该群聊'}前，需要先将群主身份转让给其他成员。`
-            : unavailable
-              ? '当前群聊未授予退出权限，请刷新群资料后重试。'
-              : '确定要退出群聊吗 ?'}
+          {unavailable
+            ? '当前群聊未授予退出权限，请刷新群资料后重试。'
+            : `确定要退出${groupName || '该群聊'}吗 ?`}
         </p>
         {mode === 'leave' ? (
           <div className="rn-joined-group-quit-actions">
@@ -117,11 +111,6 @@ export function JoinedGroupQuitModal({
           </div>
         ) : (
           <div className="rn-joined-group-quit-actions">
-            {transferFirst ? (
-              <button type="button" disabled={submitting} onClick={onTransferOwner}>
-                去转让群主
-              </button>
-            ) : null}
             <button type="button" disabled={submitting} onClick={onCancel}>
               {unavailable ? '我知道了' : '取消'}
             </button>

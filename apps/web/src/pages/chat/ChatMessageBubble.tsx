@@ -2,15 +2,11 @@ import type { CSSProperties } from 'react';
 import {
   canEditWebIMTextMessage,
   canForwardWebIMMessage,
-  canRetryWebIMMessage,
   reconcilePresetEmojiEntitiesAfterTextChange,
   type Message,
   type WebIMGroupMember,
 } from '@im28/im-sdk/web';
 
-import incomingTailDarkURL from '../../assets/rn/assets/icons/chat/bubbletail-left-dark.svg';
-import incomingTailLightURL from '../../assets/rn/assets/icons/chat/bubbletail-left-light.svg';
-import outgoingTailURL from '../../assets/rn/assets/icons/chat/bubbletail-right.svg';
 import checkIconURL from '../../assets/rn/assets/icons/imm28/check-circle.solid.svg';
 import circleIconURL from '../../assets/rn/assets/icons/imm28/circle.regular.svg';
 import { RNAssetIcon } from '../../components/RNAssetIcon.js';
@@ -20,6 +16,10 @@ import {
   getRNAvatarInitial,
 } from '../../components/rn-avatar-view.js';
 import { ChatMessageContent } from './ChatMessageContent.js';
+import {
+  ChatBubbleTail,
+  OutgoingMessageStatus,
+} from './ChatMessageBubbleChrome.js';
 import { ChatForwardOrigin } from './ChatForwardOrigin.js';
 import { ChatGroupSenderAvatar } from './ChatGroupSenderAvatar.js';
 import { ChatMessageShatterParticles } from './ChatMessageShatterParticles.js';
@@ -274,66 +274,5 @@ export function ChatMessageBubble({
       </span>
       {exiting ? <ChatMessageShatterParticles /> : null}
     </article>
-  );
-}
-
-/** 按 shared capability 将可恢复 failed 状态呈现为 RN 重试按钮。 */
-function OutgoingMessageStatus({
-  message,
-  disabled,
-  onRetry,
-}: {
-  readonly message: ChatMessageBubbleProps['entry']['message'];
-  readonly disabled: boolean;
-  readonly onRetry: (clientMsgID: string) => Promise<void>;
-}) {
-  // status 缩短状态分支并保持消息实体完整传给 capability owner。
-  const { status } = message;
-  if (status === 'sending' || status === 'pending') {
-    return (
-      <span
-        className="rn-chat-message-status is-sending"
-        role="status"
-        aria-label="发送中"
-      />
-    );
-  }
-  if (status === 'failed') {
-    if (canRetryWebIMMessage(message)) {
-      return (
-        <button
-          className="rn-chat-message-status is-failed is-action"
-          type="button"
-          disabled={disabled}
-          aria-label="重新发送消息"
-          onClick={() => void onRetry(message.clientMsgID)}
-        >
-          !
-        </button>
-      );
-    }
-    return (
-      <span
-        className="rn-chat-message-status is-failed"
-        role="status"
-        aria-label="发送失败，无法直接重试"
-      >
-        !
-      </span>
-    );
-  }
-  return null;
-}
-
-/** 使用 RN 原始 SVG 呈现气泡尾部并随明暗主题切换。 */
-function ChatBubbleTail({ mine }: { readonly mine: boolean }) {
-  if (mine) {
-    return <RNAssetIcon assetURL={outgoingTailURL} className="rn-chat-tail is-mine" />;
-  }
-  return (
-    <span className="rn-chat-tail is-peer">
-      <img className="light-only" src={incomingTailLightURL} alt="" />
-      <img className="dark-only" src={incomingTailDarkURL} alt="" />
-    </span>
   );
 }

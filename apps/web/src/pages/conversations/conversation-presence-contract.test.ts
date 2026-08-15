@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import archivedPageSource from './ArchivedConversationsPage.tsx?raw';
-import conversationPageSource from './ConversationsPage.tsx?raw';
 import presenceHookSource from './useConversationPresence.ts?raw';
+import conversationStateHookSource from './useConversationsPageState.ts?raw';
 
 /** 会话 presence wiring 必须保持 shared owner、实时更新和 RN 刷新语义。 */
 describe('conversation presence wiring contract', () => {
@@ -11,7 +11,7 @@ describe('conversation presence wiring contract', () => {
     expect(presenceHookSource).toContain('runtime.getSync().presence.observe');
     expect(presenceHookSource).toContain('runtime.getSync().presence.list');
     expect(presenceHookSource).toContain('CONVERSATION_PRESENCE_REFRESH_INTERVAL_MS = 60_000');
-    expect(conversationPageSource).toContain('await refreshPresence()');
+    expect(conversationStateHookSource).toContain('await refreshPresence()');
     expect(archivedPageSource).toContain('await refreshPresence()');
   });
 });

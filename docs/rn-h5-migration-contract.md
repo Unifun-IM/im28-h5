@@ -1571,13 +1571,13 @@ Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-login-lock/
 | RN truth | `ContactGroupListScreen + GroupRowActionMenu` 的 `300ms` 长按、`8px` 移动取消、分享群名片、退出群聊和 manager 改名为视觉/入口基线；RN source 只读冻结 |
 | capability | 菜单只读取 `WebIMJoinedGroup.permissions.canEditGroupInfo/canQuitGroup/canTransferOwner`；不得读取 `roleLevel/myRoleLevel` 或本地猜测 owner/admin |
 | conversation | 分享、改名、群主转让必须先调用 `conversations.openGroup`，随后仅用其 canonical `conversationID` 构造 React Router URL；群 ID 不得冒充会话 ID |
-| routes | 分享复用 `/settings/share-group-card`；改名复用 `/settings/profile?edit=name`；群主退出入口复用 `/settings/manage/owner-transfer?from=joined-groups` |
+| routes | 分享复用 `/settings/share-group-card`；改名复用 `/settings/profile?edit=name`；群主无管理员时复用 `/settings/manage/admins` 进入管理员设置 |
 | lifecycle | 普通成员显示 `退出群聊` 与 `退出, 并删除我发的群消息`，分别调用 `groupLifecycle.leave({clearHistory:false|true})`；`remote-only` 必须阻止重放并显示可见错误 |
-| owner difference | RN 当前 owner flow 在客户端选 earliest admin 后调用旧 `quitGroup`；H5 不复制该 orchestration。群主先显式转让，返回群列表后由用户再次发起退群，禁止转让成功后自动串联 destructive leave |
+| owner parity | SDK `selectIMEarliestGroupAdmin` 统一按 `adminSince/admin_since` 选择最早添加管理员；无管理员 fail-closed 并引导管理员设置，有管理员时 H5 展示 RN 同款继任卡片，确认后只调用一次 `groupLifecycle.leave`，由 Gateway 自动转移，禁止额外显式 transfer |
 | fail-closed | runtime、登录、真实群、canonical Conversation 或 capability 缺失时不得伪造 route/mutation；群设置中的解散入口保持独立，不进入群列表菜单 |
 | acceptance | view/route contract 已证明动作顺序、定位、路由和无业务双轨；当前账号群列表为空，只完成真实空态，非空菜单、触屏、分享/改名/退群/转让及第二账号回读均 data-gated/未授权 |
 
-Closeout verdict: `shared-core-ready/web-consumed/rn-frozen; browser-empty-data-gated`。H5 focused 3 files/10 tests；full verify 包含 SDK Web 85 files/357 tests、466 assets、boundary/typecheck 与 1106-module build。SDK 业务源码与 RN business 均未修改，未运行 RN/desktop build 或 `build:package:desktop:web`。
+Closeout verdict: `superseded-owner-leave-by-W6.a6.20.149.71`。本节的列表动作与普通成员退群合同继续有效；群主退群改以 `.149.71` 的 earliest-admin + single-leave/Gateway-auto-transfer 合同为准。
 
 ## 72. W6.a6.20.16 Chat Text Link Actions Contract
 

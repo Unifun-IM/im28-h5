@@ -9,7 +9,10 @@ import {
 } from './chat-media-download.js';
 
 /** 构造无 DOM、无真实网络的浏览器媒体环境。 */
-function createEnvironment(response = new Response('file-body')) {
+function createEnvironment(
+  response = new Response('file-body'),
+  requiresSynchronousDownload = false,
+) {
   // triggerDownload 记录最终 object URL 与文件名。
   const triggerDownload = vi.fn();
   // releaseObjectURL 记录短期 URL 已安排释放。
@@ -22,6 +25,7 @@ function createEnvironment(response = new Response('file-body')) {
     createObjectURL: vi.fn(() => 'blob:download-1'),
     releaseObjectURL,
     triggerDownload,
+    requiresSynchronousDownload,
     openExternal,
   };
   return { environment, triggerDownload, releaseObjectURL, openExternal };
@@ -56,6 +60,21 @@ describe('chat media download', () => {
       ),
     ).rejects.toThrow('下载失败（HTTP 403）。');
     expect(harness.triggerDownload).not.toHaveBeenCalled();
+    expect(harness.releaseObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('Safari 在同步用户手势内直接提交安全远端 URL', async () => {
+    // harness 模拟 Safari 必须保留同步下载手势的运行环境。
+    const harness = createEnvironment(new Response('file-body'), true);
+    await downloadChatMedia(
+      { url: 'https://media.example.com/photo.png', fileName: 'photo.png' },
+      harness.environment,
+    );
+    expect(harness.triggerDownload).toHaveBeenCalledWith(
+      'https://media.example.com/photo.png',
+      'photo.png',
+    );
+    expect(harness.environment.fetchResource).not.toHaveBeenCalled();
     expect(harness.releaseObjectURL).not.toHaveBeenCalled();
   });
 

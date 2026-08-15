@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import joinedGroupsSource from './JoinedGroupsPage.tsx?raw';
+import joinedGroupsSource from './useJoinedGroupsPageState.ts?raw';
 import groupProfileSource from '../chat/GroupProfilePage.tsx?raw';
 import ownerTransferSource from '../chat/GroupOwnerTransferPage.tsx?raw';
 
@@ -20,11 +20,11 @@ describe('joined group actions route contract', () => {
     expect(joinedGroupsSource).not.toMatch(/roleLevel|myRoleLevel|GatewayHTTPClient|GroupRepository|@openim\//);
   });
 
-  it('群主转让保持显式两步流程并返回群列表', () => {
-    expect(joinedGroupsSource).toContain('buildJoinedGroupOwnerTransferRoute');
-    expect(ownerTransferSource).toContain("const closeURL = fromJoinedGroups ? '/contacts/groups'");
-    expect(ownerTransferSource).toContain("const successURL = fromJoinedGroups");
-    expect(ownerTransferSource).toContain("? '/contacts/groups'");
+  it('群主退出复用 shared 最早管理员选择与同一退群 facade', () => {
+    expect(joinedGroupsSource).toContain('selectIMEarliestGroupAdmin(members)');
+    expect(joinedGroupsSource).toContain('groupMembers.sync(group.groupID, { pageSize: 100 })');
+    expect(joinedGroupsSource).toContain('settings/manage/admins');
+    expect(joinedGroupsSource).not.toContain('buildJoinedGroupOwnerTransferRoute');
     expect(ownerTransferSource).not.toContain('groupLifecycle.leave');
   });
 });

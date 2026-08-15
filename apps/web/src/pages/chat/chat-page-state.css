@@ -1,0 +1,25 @@
+.rn-chat-page-state {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 28px;
+  color: var(--im-text-muted);
+  background: var(--im-bg-page);
+  text-align: center;
+}
+
+.rn-chat-page-state strong {
+  color: var(--im-text-primary);
+  font-size: 14px;
+}
+
+.rn-chat-page-state span {
+  max-width: 560px;
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+

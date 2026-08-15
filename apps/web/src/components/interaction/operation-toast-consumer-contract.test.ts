@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import pickerSource from '../chat-target-picker/ChatTargetPickerModal.tsx?raw';
-import contactProfileSource from '../../pages/contacts/ContactProfilePage.tsx?raw';
+import contactProfileActionsSource from '../../pages/contacts/useContactProfileActions.ts?raw';
 import friendApplicationSource from '../../pages/contacts/ContactFriendApplicationPage.tsx?raw';
 import friendApplicationsSource from '../../pages/contacts/FriendApplicationsPage.tsx?raw';
 import groupApplicationsSource from '../../pages/contacts/GroupApplicationsPage.tsx?raw';
-import callsSource from '../../pages/calls/CallsPage.tsx?raw';
+import callsStateSource from '../../pages/calls/useCallsPageState.ts?raw';
 import blacklistSource from '../../pages/me/MeBlacklistPage.tsx?raw';
 import groupManagementSource from '../../pages/chat/GroupManagementPage.tsx?raw';
 import groupMuteSource from '../../pages/chat/GroupMutePage.tsx?raw';
@@ -16,11 +16,11 @@ import groupAddAdminsSource from '../../pages/chat/GroupAddAdminsPage.tsx?raw';
 import groupOwnerTransferSource from '../../pages/chat/GroupOwnerTransferPage.tsx?raw';
 import groupInviteSource from '../../pages/chat/GroupInviteMembersPage.tsx?raw';
 import groupRemoveSource from '../../pages/chat/GroupRemoveMembersPage.tsx?raw';
-import createGroupSource from '../../pages/groups/CreateGroupPage.tsx?raw';
+import createGroupSource from '../../pages/groups/useCreateGroupPageState.ts?raw';
 import groupProfileSource from '../../pages/chat/GroupProfilePage.tsx?raw';
 import groupTextSource from '../../pages/chat/GroupTextDetailPage.tsx?raw';
 import chatSettingsSource from '../../pages/chat/ChatSettingsPage.tsx?raw';
-import joinedGroupsSource from '../../pages/contacts/JoinedGroupsPage.tsx?raw';
+import joinedGroupsSource from '../../pages/contacts/useJoinedGroupsPageState.ts?raw';
 import notificationSource from '../../pages/me/MeNotificationSettingsPage.tsx?raw';
 import profileEditorSource from '../../pages/me/MeProfileEditorPage.tsx?raw';
 import qrApplySource from '../../pages/qr/GroupQRCodeApplyPage.tsx?raw';
@@ -42,7 +42,7 @@ describe('operation toast consumer contract', () => {
     expect(profileEditorSource).toContain('toast.error(readEditorError(cause))');
     expect(notificationSource).toContain("toast.success('设置成功')");
     expect(notificationSource).toContain('toast.error(readNotificationError(cause))');
-    expect(contactProfileSource).toContain("toast.success('备注保存成功')");
+    expect(contactProfileActionsSource).toContain("toast.success('备注保存成功')");
   });
 
   it('好友与群申请使用 Toast 并保留加载错误状态', () => {
@@ -62,9 +62,9 @@ describe('operation toast consumer contract', () => {
     expect(blacklistSource).toContain("toast.success('已移出黑名单')");
     expect(blacklistSource).toContain("toast.error(readBlacklistError(cause, '解除黑名单失败'))");
     expect(blacklistSource).toContain("setError(readBlacklistError(cause, '黑名单加载失败'))");
-    expect(callsSource).toContain("toast.success('通话记录已删除')");
-    expect(callsSource).toContain("toast.error(readError(cause, '通话记录删除失败'))");
-    expect(callsSource).toContain('setError(readError(cause))');
+    expect(callsStateSource).toContain("toast.success('通话记录已删除')");
+    expect(callsStateSource).toContain("toast.error(readError(cause, '通话记录删除失败'))");
+    expect(callsStateSource).toContain('setError(readError(cause))');
   });
 
   it('群设置 mutation 使用 Toast 并保留 remote-only 恢复状态', () => {
@@ -98,7 +98,8 @@ describe('operation toast consumer contract', () => {
     expect(groupRemoveSource).toContain('toast.error(readGroupRemoveError(cause))');
     expect(groupRemoveSource).toContain("setError('成员已在服务端移除，本地成员列表尚未刷新；请返回群设置后下拉刷新。')");
     expect(createGroupSource).toContain("toast.success('群聊创建成功')");
-    expect(createGroupSource).toContain("toast.error(readCreateGroupError(cause, '创建群聊失败，请稍后重试'))");
+    expect(createGroupSource).toContain('handleCreateGroupFailure(cause, setRemoteCompleted, setError, toast.error)');
+    expect(createGroupSource).toContain("notifyError(readCreateGroupError(cause, '创建群聊失败，请稍后重试'))");
     expect(createGroupSource).toContain("setError('群聊已在服务端创建，本地会话尚未保存；请返回会话列表并下拉刷新。')");
   });
 
@@ -116,9 +117,9 @@ describe('operation toast consumer contract', () => {
 
   it('聊天设置 mutation 使用 Toast 并保留群生命周期 remote-only 状态', () => {
     expect(chatSettingsSource).toContain("toast.success('聊天记录已清空')");
-    expect(chatSettingsSource).toContain("toast.success(lifecycleAction === 'leave' ? '已退出群聊' : '群聊已解散')");
+    expect(chatSettingsSource).toContain("toast.success(requestedAction === 'leave' ? '已退出群聊' : '群聊已解散')");
     expect(chatSettingsSource).toContain('toast.error(readChatSettingsError(cause))');
-    expect(chatSettingsSource).toContain("setError('群操作已在服务端完成，本地缓存同步失败；为避免重复操作，请返回会话列表刷新')");
+    expect(chatSettingsSource).toContain("showError('群操作已在服务端完成，本地缓存同步失败；为避免重复操作，请返回会话列表刷新')");
     expect(chatSettingsSource).not.toContain('<OperationToastFeedback');
   });
 

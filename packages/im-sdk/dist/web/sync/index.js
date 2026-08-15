@@ -28,7 +28,7 @@ export { cancelIMGroupAdmins, filterIMGroupAdminCandidates, filterIMGroupOwnerTr
 /** 导出群设置与禁言的共享业务入口。 */
 export { createIMGroupManagementSync, updateIMGroupMemberMute, updateIMGroupMute, updateIMGroupSettings, } from './group-settings-mute.js';
 /** 导出群退出与解散的共享破坏性生命周期入口。 */
-export { createIMGroupLifecycleSync, dismissIMGroup, leaveIMGroup, } from './group-lifecycle.js';
+export { createIMGroupLifecycleSync, dismissIMGroup, leaveIMGroup, selectIMEarliestGroupAdmin, } from './group-lifecycle.js';
 /** 创建认证账号绑定的 cache-first 我的群聊 service。 */
 export { createWebIMJoinedGroupSync } from './joined-group-sync.js';
 /** 导出跨端统一的群模式归一化与普通群判定。 */

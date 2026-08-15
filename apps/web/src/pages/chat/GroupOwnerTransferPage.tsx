@@ -102,6 +102,10 @@ export function GroupOwnerTransferPage() {
             onTouchMove={pullRefresh.onTouchMove}
             onTouchEnd={pullRefresh.onTouchEnd}
             onTouchCancel={pullRefresh.onTouchCancel}
+            onPointerDown={pullRefresh.onPointerDown}
+            onPointerMove={pullRefresh.onPointerMove}
+            onPointerUp={pullRefresh.onPointerUp}
+            onPointerCancel={pullRefresh.onPointerCancel}
           >
             <PullRefreshIndicator refreshing={false} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
             {entries.map(entry => entry.type === 'section'

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import footerSource from './ChatPageFooter.tsx?raw';
 import pageSource from './ChatPage.tsx?raw';
+import surfaceSource from './ChatPageSurface.tsx?raw';
 import hookSource from './useChatMentionMembers.ts?raw';
 import { ChatUnavailableComposerBar } from './ChatUnavailableComposerBar.js';
 
@@ -16,6 +17,9 @@ describe('chat composer availability H5 contract', () => {
     expect(hookSource).toContain('IM_GROUP_COMPOSER_RECOVERING_REASON');
     expect(hookSource).toContain('IM_GROUP_COMPOSER_MISSING_REASON');
     expect(hookSource).toContain('IM_GROUP_COMPOSER_UNRESOLVED_REASON');
+    expect(hookSource).toContain("const groupID = conversation?.type === 'group' ? conversation.targetID.trim() : ''");
+    expect(hookSource).toContain('}, [groupID, onError, sync]);');
+    expect(hookSource).not.toContain('}, [conversation, onError, sync]);');
     expect(hookSource).not.toContain('member_muted');
     expect(hookSource).not.toContain('can_send_message');
   });
@@ -28,7 +32,7 @@ describe('chat composer availability H5 contract', () => {
     expect(multiIndex).toBeGreaterThan(-1);
     expect(unavailableIndex).toBeGreaterThan(multiIndex);
     expect(footerSource).not.toContain('if (forwardFlow.pending)');
-    expect(pageSource).toContain('forwardDraft={forwardFlow.pending ? {');
+    expect(surfaceSource).toContain('forwardDraft={props.forwardFlow.pending ? {');
     expect(pageSource).toContain('mentionMembers.composerUnavailableReason ||');
     expect(pageSource).toContain('directRelationship.presentation.composerUnavailableReason');
   });

@@ -13,9 +13,9 @@ import {
 import {
   formatConversationListTime,
   formatConversationUnread,
-  getConversationDisplayPreview,
   getConversationTitle,
 } from './conversation-list-view.js';
+import { getConversationDisplayPreview } from './conversation-preview-view.js';
 import { getConversationPresenceUserID } from './conversation-presence-view.js';
 import { shouldShowConversationUnreadBadge } from './conversation-unread-view.js';
 import type { ConversationActionAnchor } from './ConversationActionMenu.js';

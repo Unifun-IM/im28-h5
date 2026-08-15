@@ -13,6 +13,7 @@ export interface WebIMGroupMember {
     readonly avatarURL: string;
     readonly role: WebIMGroupMemberRole;
     readonly roleLevel: number;
+    readonly adminSince?: string;
     readonly isMuted?: boolean;
     readonly muteUntil?: string;
 }

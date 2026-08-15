@@ -7,7 +7,7 @@ import { RNAssetIcon } from '../../components/RNAssetIcon.js';
 import { buildChatForwardComposerSummary } from './chat-forward-composer-view.js';
 import { ChatForwardPreviewModal } from './ChatForwardPreviewModal.js';
 import type { ChatForwardSelection } from './chat-composer-types.js';
-import type { ChatPendingForward } from './useChatForwardFlow.js';
+import type { ChatPendingForward } from './useChatPendingForward.js';
 import './chat-forward.css';
 
 /** 待发送转发条只负责摘要、预览和选择状态。 */

@@ -1,9 +1,7 @@
 import type { WebIMConversationListItem } from '@im28/im-sdk/web';
 
-import {
-  getConversationDisplayPreview,
-  getConversationTitle,
-} from './conversation-list-view.js';
+import { getConversationTitle } from './conversation-list-view.js';
+import { getConversationDisplayPreview } from './conversation-preview-view.js';
 
 /** 判断归档通栏是否需要延续 RN 的置顶会话背景。 */
 export function shouldUsePinnedArchiveBackground(

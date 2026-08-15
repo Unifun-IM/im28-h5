@@ -93,6 +93,10 @@ export function GroupAddAdminsPage() {
             onTouchMove={pullRefresh.onTouchMove}
             onTouchEnd={pullRefresh.onTouchEnd}
             onTouchCancel={pullRefresh.onTouchCancel}
+            onPointerDown={pullRefresh.onPointerDown}
+            onPointerMove={pullRefresh.onPointerMove}
+            onPointerUp={pullRefresh.onPointerUp}
+            onPointerCancel={pullRefresh.onPointerCancel}
           >
             <PullRefreshIndicator refreshing={false} armed={pullRefresh.armed} pullDistance={pullRefresh.pullDistance} />
             {candidates.map(member => <GroupAdminMemberRow key={member.userID} member={member} selected={selectedIDs.has(member.userID)} disabled={data.submitting} onAction={() => toggleMember(member.userID)} />)}
