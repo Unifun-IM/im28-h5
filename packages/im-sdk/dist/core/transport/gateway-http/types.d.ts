@@ -235,6 +235,8 @@ export interface GatewayRegisterUserRequest {
     readonly password?: string;
     readonly phone_area_code?: string;
     readonly verification_code?: string;
+    /** 冻结 RN 调用方仍传入的设备标识；新调用方应通过 X-Device-ID Header 注入。 */
+    readonly device_id?: string;
     readonly invite_code?: string;
 }
 export interface GatewayUserLoginRequest {
@@ -243,6 +245,8 @@ export interface GatewayUserLoginRequest {
     readonly password?: string;
     readonly phone_area_code?: string;
     readonly verification_code?: string;
+    /** 冻结 RN 调用方仍传入的设备标识；新调用方应通过 X-Device-ID Header 注入。 */
+    readonly device_id?: string;
 }
 export interface GatewayForgotPasswordRequest {
     readonly account: string;
@@ -270,6 +274,8 @@ export interface GatewayUpdatePhoneRequest {
 }
 export interface GatewayRefreshTokenRequest {
     readonly refresh_token: string;
+    /** 冻结 RN 调用方仍传入的设备标识；新调用方应通过 X-Device-ID Header 注入。 */
+    readonly device_id?: string;
 }
 export interface GatewayLogoutRequest {
     readonly access_token?: string;
@@ -1293,6 +1299,8 @@ export interface GatewayListGroupsData {
 /** 群搜索响应保留端点特有的 wrapper 字段。 */
 export interface GatewaySearchGroupsData {
     readonly list?: readonly GatewayGroupSearchItem[];
+    /** 冻结 RN 调用方使用的扁平群列表，由同一搜索 wrapper 投影生成。 */
+    readonly groups?: readonly GatewayGroup[];
 }
 export interface GatewayGroupMemberData {
     readonly member?: GatewayGroupMember;

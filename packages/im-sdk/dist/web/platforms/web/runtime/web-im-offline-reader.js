@@ -1,5 +1,5 @@
-import { listWebIMCachedConversationItems, } from '../../../sync/conversation-sync.js';
-import { getWebIMCachedMessageHistory } from '../../../sync/message-sync.js';
+import { listWebIMCachedConversationItems, } from '../../../sync/conversation/index.js';
+import { getWebIMCachedMessageHistory } from '../../../sync/message/index.js';
 /** 创建没有写入、远端同步或 realtime 表面的离线 reader。 */
 export function createWebIMOfflineReader(dependencies) {
     return {

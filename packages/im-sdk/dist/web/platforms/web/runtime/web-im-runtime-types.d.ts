@@ -9,8 +9,7 @@ import type { WebIMRuntimeConfig } from './runtime-config.js';
 import type { WebIMRuntimeState } from './runtime-lifecycle.js';
 import type { WebIMUserSettings } from './web-im-user-settings.js';
 import type { WebIMOfflineReader } from './web-im-offline-reader.js';
-import type { IMIncomingCallSnapshot } from '../../../sync/incoming-call-lifecycle.js';
-import type { IMCallRealtimeSignal } from '../../../sync/call-realtime-signal.js';
+import type { IMCallRealtimeSignal, IMIncomingCallSnapshot } from '../../../sync/call/index.js';
 /** Web 登录请求只包含业务字段，设备身份由 runtime Header 统一注入。 */
 export type WebIMLoginRequest = GatewayUserLoginRequest;
 /** Web 注册请求只包含业务字段，设备身份由 runtime Header 统一注入。 */

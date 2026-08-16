@@ -510,7 +510,12 @@ function normalizeSearchGroupsData(data) {
                 ...(applicationStatus ? { application_status: applicationStatus } : {}),
             }];
     });
-    return { list: list ?? [] };
+    /** normalizedList 同时驱动 Web wrapper 与冻结 RN 扁平列表，避免两套解析。 */
+    const normalizedList = list ?? [];
+    return {
+        list: normalizedList,
+        groups: normalizedList.map(item => item.group),
+    };
 }
 /** 将搜索关系字段收窄到公开合同枚举。 */
 function readGroupSearchMembershipStatus(item) {

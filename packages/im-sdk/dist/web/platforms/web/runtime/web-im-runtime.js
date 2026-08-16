@@ -8,10 +8,8 @@ import { createWebIMUserSettings } from './web-im-user-settings.js';
 import { createWebIMClientVersion } from './web-im-client-version.js';
 import { createWebIMOfflineReader } from './web-im-offline-reader.js';
 import { createBrowserOSSUploadPort } from '../media/index.js';
-import { normalizeIMCallTerminalSignals } from '../../../sync/call-terminal-signal.js';
-import { normalizeIMCallRealtimeSignals } from '../../../sync/call-realtime-signal.js';
-import { isIMRelationshipRealtimeEvent, isIMVerificationRealtimeEvent, } from '../../../sync/relationship-realtime.js';
-import { createIMIncomingCallLifecycleState, dismissIMIncomingCall, reconcileIMPendingIncomingCall, reduceIMIncomingCallSignals, resetIMIncomingCallLifecycleState, } from '../../../sync/incoming-call-lifecycle.js';
+import { createIMIncomingCallLifecycleState, dismissIMIncomingCall, normalizeIMCallRealtimeSignals, normalizeIMCallTerminalSignals, reconcileIMPendingIncomingCall, reduceIMIncomingCallSignals, resetIMIncomingCallLifecycleState, } from '../../../sync/call/index.js';
+import { isIMRelationshipRealtimeEvent, isIMVerificationRealtimeEvent, } from '../../../sync/contact/index.js';
 /** 创建复用共享 Gateway HTTP/WebSocket clients 的浏览器 runtime。 */
 export function createWebIMRuntime(options) { return new WebIMRuntimeImpl(options); }
 /** Web runtime 实例显式持有 auth/realtime 状态和浏览器端口。 */

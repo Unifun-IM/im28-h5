@@ -1,5 +1,4 @@
-import type { IMCallControlSync } from '../../../sync/call-control.js';
-import type { IMIncomingCall } from '../../../sync/incoming-call-lifecycle.js';
+import type { IMCallControlSync, IMIncomingCall } from '../../../sync/call/index.js';
 import type { WebIMCallMediaSession, WebIMCallMediaSnapshot } from './browser-call-session.js';
 /** H5 接听页消费的无凭据来电媒体快照。 */
 export interface WebIMIncomingCallSnapshot extends WebIMCallMediaSnapshot {

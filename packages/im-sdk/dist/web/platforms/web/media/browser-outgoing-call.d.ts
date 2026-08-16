@@ -1,4 +1,4 @@
-import type { IMCallControlSync, IMStartCallOptions } from '../../../sync/call-control.js';
+import type { IMCallControlSync, IMStartCallOptions } from '../../../sync/call/index.js';
 import type { WebIMCallMediaSession, WebIMCallMediaSnapshot } from './browser-call-session.js';
 /** 暴露给 H5 通话页且不含媒体 token 的呼出快照。 */
 export interface WebIMOutgoingCallSnapshot extends WebIMCallMediaSnapshot {

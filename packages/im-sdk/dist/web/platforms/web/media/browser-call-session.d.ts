@@ -1,4 +1,4 @@
-import type { IMCallCredential } from '../../../sync/call-control.js';
+import type { IMCallCredential } from '../../../sync/call/index.js';
 /** 描述浏览器通话会话需要发布的媒体类型。 */
 export type WebIMCallMediaType = 'audio' | 'video';
 /** 描述浏览器通话会话的连接阶段。 */

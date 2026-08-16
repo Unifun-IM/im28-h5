@@ -1,24 +1,15 @@
 import type { GatewayHTTPClient } from '@im28/im-sdk/core';
-import { type WebIMCallSync } from '../../../sync/call-sync.js';
-import { type WebIMCustomEmojiSync } from '../../../sync/custom-emoji-sync.js';
-import { type WebIMBlacklistSync } from '../../../sync/blacklist-sync.js';
-import { type IMDirectChatRelationshipSync } from '../../../sync/direct-chat-relationship-sync.js';
-import { type WebIMFriendApplicationSync } from '../../../sync/friend-application-sync.js';
-import { type WebIMGroupApplicationSync } from '../../../sync/group-application-sync.js';
-import { type WebIMJoinedGroupSync } from '../../../sync/joined-group-sync.js';
-import { type IMGroupMentionSync } from '../../../sync/group-mention.js';
-import { type WebIMPeerProfileSync } from '../../../sync/peer-profile-sync.js';
-import { type IMUserPresenceSync } from '../../../sync/user-presence.js';
-import { type WebIMConversationSync } from '../../../sync/conversation-sync.js';
-import { type WebIMMessageSync } from '../../../sync/message-sync.js';
-import { type IMMessageBroadcastSync } from '../../../sync/message-broadcast.js';
-import { type WebIMRealtimeSync } from '../../../sync/realtime-sync.js';
-import type { WebIMSyncContextDependencies } from '../../../sync/sync-context.js';
-import type { IMMediaUploadPort } from '../../../sync/message-media-send.js';
-import { type WebIMContactSync } from '../../../sync/contact-sync.js';
-import { type WebIMProfileSync } from '../../../sync/profile-sync.js';
-import { type IMGroupManagementSync } from '../../../sync/group-settings-mute.js';
-import { type IMGroupLifecycleSync } from '../../../sync/group-lifecycle.js';
+import { type WebIMCallSync } from '../../../sync/call/index.js';
+import { type WebIMCustomEmojiSync } from '../../../sync/message/index.js';
+import { type WebIMBlacklistSync, type WebIMContactSync, type IMDirectChatRelationshipSync, type WebIMFriendApplicationSync, type WebIMPeerProfileSync } from '../../../sync/contact/index.js';
+import { type IMGroupLifecycleSync, type IMGroupManagementSync, type IMGroupMentionSync, type WebIMGroupApplicationSync, type WebIMJoinedGroupSync } from '../../../sync/group/index.js';
+import { type IMUserPresenceSync, type WebIMProfileSync } from '../../../sync/account/index.js';
+import { type WebIMConversationSync } from '../../../sync/conversation/index.js';
+import { type WebIMMessageSync } from '../../../sync/message/index.js';
+import { type IMMessageBroadcastSync } from '../../../sync/message/index.js';
+import { type WebIMRealtimeSync } from '../../../sync/realtime/index.js';
+import type { IMSyncContextDependencies } from '../../../sync/sync-context.js';
+import type { IMMediaUploadPort } from '../../../sync/message/index.js';
 /** Runtime 对页面公开的聚合数据同步入口。 */
 export interface WebIMSync {
     readonly blacklist: WebIMBlacklistSync;
@@ -56,7 +47,7 @@ export interface WebIMSync {
     readonly realtime: WebIMRealtimeSync;
 }
 /** 聚合入口依赖复用同一 Gateway、account DB 与 auth owner。 */
-export interface WebIMSyncDependencies extends WebIMSyncContextDependencies {
+export interface WebIMSyncDependencies extends IMSyncContextDependencies {
     readonly gatewayClient: GatewayHTTPClient;
     readonly mediaUploadPort?: IMMediaUploadPort;
     readonly createClientMessageID?: () => string;

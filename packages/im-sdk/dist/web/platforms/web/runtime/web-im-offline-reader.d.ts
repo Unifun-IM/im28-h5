@@ -1,5 +1,5 @@
 import type { ConversationListOptions, DatabaseAdapter, Message, MessageHistoryOptions } from '@im28/im-sdk/core';
-import { type WebIMConversationListItem } from '../../../sync/conversation-sync.js';
+import { type WebIMConversationListItem } from '../../../sync/conversation/index.js';
 /** 离线 reader 每次读取前获取由 runtime 状态门禁的账号上下文。 */
 export interface WebIMOfflineReadContext {
     readonly userID: string;
