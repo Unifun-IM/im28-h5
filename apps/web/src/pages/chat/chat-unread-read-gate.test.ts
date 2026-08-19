@@ -3,10 +3,26 @@ import { describe, expect, it } from 'vitest';
 import {
   CHAT_UNREAD_READ_IDLE_MS,
   canReportChatVisibleUnread,
+  getChatLatestMessageDelta,
   isChatUnreadAtLatestEdge,
   isChatUnreadRowReadable,
   shouldChatFollowLatest,
 } from './chat-unread-read-gate.js';
+import type { Message } from '@im28/im-sdk/web';
+
+/** 构造窗口增量测试所需的最小消息实体。 */
+function createMessage(clientMsgID: string, direction: Message['direction']): Message {
+  return {
+    clientMsgID,
+    conversationID: 'group-1',
+    senderID: direction === 'outgoing' ? 'self' : 'peer',
+    direction,
+    contentType: 101,
+    status: direction === 'outgoing' ? 'sent' : 'received',
+    sendTime: 1,
+    payload: {},
+  };
+}
 
 // 可见未读门禁锁定短列表、初始长列表和交互放行。
 describe('chat unread read gate', () => {
@@ -105,5 +121,36 @@ describe('chat unread read gate', () => {
     expect(shouldChatFollowLatest(false, true)).toBe(true);
     expect(shouldChatFollowLatest(true, false)).toBe(true);
     expect(shouldChatFollowLatest(false, false)).toBe(false);
+  });
+
+  it('classifies only newest additions and ignores older history pagination', () => {
+    /** current 表示更新前 newest-first 的稳定窗口。 */
+    const current = [
+      createMessage('current-2', 'incoming'),
+      createMessage('current-1', 'outgoing'),
+    ];
+    expect(getChatLatestMessageDelta(current, [
+      createMessage('new-incoming', 'incoming'),
+      ...current,
+    ])).toEqual({ hasIncoming: true, hasOutgoing: false });
+    expect(getChatLatestMessageDelta(current, [
+      createMessage('new-outgoing', 'outgoing'),
+      ...current,
+    ])).toEqual({ hasIncoming: false, hasOutgoing: true });
+    expect(getChatLatestMessageDelta(current, [
+      ...current,
+      createMessage('older', 'incoming'),
+    ])).toEqual({ hasIncoming: false, hasOutgoing: false });
+  });
+
+  it('does not treat status replacement or a completely different window as new', () => {
+    /** current 是发送状态更新前的同一 client identity。 */
+    const current = [createMessage('same-message', 'outgoing')];
+    expect(getChatLatestMessageDelta(current, [
+      { ...current[0]!, status: 'failed' },
+    ])).toEqual({ hasIncoming: false, hasOutgoing: false });
+    expect(getChatLatestMessageDelta(current, [
+      createMessage('focused-window', 'incoming'),
+    ])).toEqual({ hasIncoming: false, hasOutgoing: false });
   });
 });

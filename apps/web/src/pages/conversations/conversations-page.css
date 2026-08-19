@@ -331,9 +331,9 @@
 }
 
 .rn-conversation-preview .rn-preset-emoji-image {
-  width: 14px;
-  height: 14px;
-  flex-basis: 14px;
+  width: 1em;
+  height: 1em;
+  flex-basis: 1em;
 }
 
 .rn-conversation-draft {

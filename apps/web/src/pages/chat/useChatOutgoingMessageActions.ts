@@ -52,9 +52,9 @@ export function useChatOutgoingMessageActions({
   const sendText = useCallback(
     (document: PresetEmojiDocument) =>
       runMessageOperation(async activeSync => {
-        await sendTextDocument(activeSync, conversationID, document);
+        await sendTextDocument(activeSync, conversationID, document, onSending);
       }),
-    [conversationID, runMessageOperation],
+    [conversationID, onSending, runMessageOperation],
   );
 
   /** 发送 RN type106 群聊提及并让 SDK 持有 body/cache 语义。 */
@@ -67,9 +67,10 @@ export function useChatOutgoingMessageActions({
           groupID,
           document,
           mentions,
+          onSending,
         );
       }),
-    [conversationID, groupID, runMessageOperation],
+    [conversationID, groupID, onSending, runMessageOperation],
   );
 
   /** 发送 RN type114 引用并让 shared SDK 构造来源 body。 */
@@ -161,13 +162,16 @@ export function useChatOutgoingMessageActions({
             groupID,
             { text: plan.text, entities: document.entities },
             mentions,
+            onSending,
           );
           continue;
         }
-        await sendTextDocument(activeSync, conversationID, {
-          text: plan.text,
-          entities: document.entities,
-        });
+        await sendTextDocument(
+          activeSync,
+          conversationID,
+          { text: plan.text, entities: document.entities },
+          onSending,
+        );
       }
     }),
     [conversationID, groupID, onSending, runMessageOperation],
@@ -199,11 +203,13 @@ async function sendTextDocument(
   activeSync: WebIMSync,
   conversationID: string,
   document: PresetEmojiDocument,
+  onSending: (message: Message) => void,
 ): Promise<void> {
   await activeSync.messages.sendText({
     conversationID,
     text: document.text,
     entities: document.entities,
+    onSending,
   });
 }
 
@@ -214,6 +220,7 @@ async function sendMentionDocument(
   groupID: string,
   document: PresetEmojiDocument,
   mentions: readonly MessageMention[],
+  onSending: (message: Message) => void,
 ): Promise<void> {
   if (!groupID) throw new Error('群聊会话不存在或尚未同步');
   await activeSync.groupMentions.send({
@@ -222,6 +229,7 @@ async function sendMentionDocument(
     text: document.text,
     entities: document.entities,
     mentions,
+    onSending,
   });
 }
 

@@ -1,32 +1,32 @@
 import {
-  getIMInitialUnreadNavigation,
-  getIMVisibleUnreadReadSeq,
-  type IMInitialUnreadNavigation,
-  type Message,
+  getIMInitialUnreadNavigation, getIMVisibleUnreadReadSeq,
+  type IMInitialUnreadNavigation, type Message,
 } from '@im28/im-sdk/web';
 import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
+  useCallback, useEffect, useLayoutEffect, useRef, useState,
   type RefObject,
 } from 'react';
 
 import {
   CHAT_UNREAD_READ_IDLE_MS,
   canReportChatVisibleUnread,
+  getChatLatestMessageDelta,
   isChatUnreadAtLatestEdge,
   isChatUnreadRowReadable,
   shouldChatFollowLatest,
 } from './chat-unread-read-gate.js';
+import {
+  findChatMessageRow,
+  getChatMessageVisibleRatio,
+  positionInitialUnreadBoundary,
+} from './chat-unread-dom.js';
 
 /** H5 初始未读导航只接收当前路由事实和唯一滚动容器。 */
 interface ChatUnreadNavigationOptions {
   readonly conversationID: string;
   readonly lastReadSeq?: string;
   readonly messages: readonly Message[];
-  readonly hasUnreadMessages: boolean;
+  readonly unreadCount: number;
   readonly ready: boolean;
   readonly listRef: RefObject<HTMLElement | null>;
   readonly onMarkRead?: (readSeq: string) => Promise<void>;
@@ -42,7 +42,7 @@ export function useChatUnreadNavigation({
   conversationID,
   lastReadSeq,
   messages,
-  hasUnreadMessages,
+  unreadCount,
   ready,
   listRef,
   onMarkRead,
@@ -51,8 +51,6 @@ export function useChatUnreadNavigation({
   const [navigation, setNavigation] = useState<IMInitialUnreadNavigation>(
     EMPTY_UNREAD_NAVIGATION,
   );
-  /** remainingUnreadCount 只表示本页尚未达到 80% 可见的初始未读消息。 */
-  const [remainingUnreadCount, setRemainingUnreadCount] = useState(0);
   /** positionedConversationID 只在当前会话首屏定位完成后放行消息可见性。 */
   const [positionedConversationID, setPositionedConversationID] = useState('');
   /** initializedRef 保证同一路由只计算一次初始边界。 */
@@ -63,8 +61,8 @@ export function useChatUnreadNavigation({
   const atLatestRef = useRef(true);
   /** viewedUnreadIDsRef 累积本次入页已看过的未读身份，不写服务端。 */
   const viewedUnreadIDsRef = useRef<ReadonlySet<string>>(new Set());
-  /** previousMessageCountRef 识别后续消息窗口增长。 */
-  const previousMessageCountRef = useRef(0);
+  /** previousMessagesRef 识别最新端新增并排除顶部历史分页。 */
+  const previousMessagesRef = useRef<readonly Message[]>([]);
   /** hasUserInteractedRef 隔离首屏程序化滚动与真实用户阅读。 */
   const hasUserInteractedRef = useRef(false);
   /** allowProgrammaticReadRef 只放行显式未读定位或最新端新消息跟随。 */
@@ -81,7 +79,7 @@ export function useChatUnreadNavigation({
     positionedRef.current = false;
     atLatestRef.current = true;
     viewedUnreadIDsRef.current = new Set();
-    previousMessageCountRef.current = 0;
+    previousMessagesRef.current = [];
     hasUserInteractedRef.current = false;
     allowProgrammaticReadRef.current = false;
     reportedReadSeqRef.current = '';
@@ -89,7 +87,6 @@ export function useChatUnreadNavigation({
     if (readIdleTimerRef.current) clearTimeout(readIdleTimerRef.current);
     readIdleTimerRef.current = null;
     setNavigation(EMPTY_UNREAD_NAVIGATION);
-    setRemainingUnreadCount(0);
   }, [conversationID]);
 
   useLayoutEffect(() => {
@@ -100,19 +97,18 @@ export function useChatUnreadNavigation({
     const nextNavigation = getIMInitialUnreadNavigation(ordered, lastReadSeq);
     initializedRef.current = true;
     setNavigation(nextNavigation);
-    setRemainingUnreadCount(nextNavigation.unreadMessageIDs.length);
     /** container 在同一布局提交中使用 nextNavigation，不等待旧 state 重渲染。 */
     const container = listRef.current;
     if (!container) return;
     positionInitialUnreadBoundary(container, nextNavigation);
     positionedRef.current = true;
-    previousMessageCountRef.current = messages.length;
+    previousMessagesRef.current = messages;
     setPositionedConversationID(conversationID);
   }, [conversationID, lastReadSeq, listRef, messages, ready]);
 
   /** 提交当前允许消费的最高可见未读序列，失败后允许重试。 */
   const reportVisibleUnread = useCallback((container: HTMLElement) => {
-    if (!hasUnreadMessages || !onMarkRead || !positionedRef.current) return;
+    if (unreadCount <= 0 || !onMarkRead || !positionedRef.current) return;
     if (!canReportChatVisibleUnread({
       positioned: positionedRef.current,
       contentHeight: container.scrollHeight,
@@ -133,7 +129,7 @@ export function useChatUnreadNavigation({
       .forEach(row => {
         if (!isChatUnreadRowReadable({
           atLatestEdge,
-          visibleRatio: getVisibleRatio(container, row),
+          visibleRatio: getChatMessageVisibleRatio(container, row),
         })) return;
         /** identity 同 shared 规则使用 server 优先。 */
         const identity = row.dataset.serverMessageId?.trim() ||
@@ -155,7 +151,7 @@ export function useChatUnreadNavigation({
         reportedReadSeqRef.current = '';
       }
     });
-  }, [hasUnreadMessages, lastReadSeq, messages, onMarkRead]);
+  }, [lastReadSeq, messages, onMarkRead, unreadCount]);
 
   /** 在滚动停止后重新读取当前 DOM 位置并提交唯一最高可见序列。 */
   const scheduleVisibleUnreadReport = useCallback(() => {
@@ -168,7 +164,7 @@ export function useChatUnreadNavigation({
     }, CHAT_UNREAD_READ_IDLE_MS);
   }, [listRef, reportVisibleUnread]);
 
-  /** 更新最新端状态并累计达到可见阈值的初始未读消息。 */
+  /** 更新最新端状态并记录达到可见阈值的初始未读身份。 */
   const updateScrollState = useCallback(() => {
     /** container 是聊天页唯一消息滚动 owner。 */
     const container = listRef.current;
@@ -192,14 +188,12 @@ export function useChatUnreadNavigation({
     navigation.unreadMessageIDs.forEach(messageID => {
       /** row 使用气泡保存的 client/server 双身份匹配。 */
       const row = findChatMessageRow(container, messageID);
-      if (row && getVisibleRatio(container, row) >= 0.8) nextViewed.add(messageID);
+      if (row && getChatMessageVisibleRatio(container, row) >= 0.8) {
+        nextViewed.add(messageID);
+      }
     });
     if (nextViewed.size !== viewedUnreadIDsRef.current.size) {
       viewedUnreadIDsRef.current = nextViewed;
-      setRemainingUnreadCount(Math.max(
-        0,
-        navigation.unreadMessageIDs.length - nextViewed.size,
-      ));
     }
     scheduleVisibleUnreadReport();
   }, [listRef, navigation, scheduleVisibleUnreadReport]);
@@ -232,8 +226,14 @@ export function useChatUnreadNavigation({
     /** container 必须等消息 DOM 完成提交后再执行锚定或跟随。 */
     const container = listRef.current;
     if (!container) return;
-    /** outgoingMessageRequested 冻结当前布局提交是否来自本端发送。 */
-    const outgoingMessageRequested = forceLatestAfterOutgoingRef.current;
+    /** latestDelta 只识别 newest-first 窗口首部的新增消息。 */
+    const latestDelta = getChatLatestMessageDelta(
+      previousMessagesRef.current,
+      messages,
+    );
+    /** outgoingMessageRequested 合并 sending 回调与 cache 最新端增量。 */
+    const outgoingMessageRequested = forceLatestAfterOutgoingRef.current ||
+      latestDelta.hasOutgoing;
     /** shouldFollowLatestValue 保留实时消息旧规则并放行本端强制置底。 */
     const shouldFollowLatestValue = shouldChatFollowLatest(
       atLatestRef.current,
@@ -244,7 +244,7 @@ export function useChatUnreadNavigation({
       positionedRef.current = true;
       setPositionedConversationID(conversationID);
     } else if (
-      (messages.length !== previousMessageCountRef.current || outgoingMessageRequested) &&
+      (latestDelta.hasIncoming || outgoingMessageRequested) &&
       shouldFollowLatestValue
     ) {
       allowProgrammaticReadRef.current = true;
@@ -252,7 +252,7 @@ export function useChatUnreadNavigation({
       atLatestRef.current = true;
     }
     forceLatestAfterOutgoingRef.current = false;
-    previousMessageCountRef.current = messages.length;
+    previousMessagesRef.current = messages;
     updateScrollState();
   }, [conversationID, listRef, messages, navigation, updateScrollState]);
 
@@ -266,8 +266,13 @@ export function useChatUnreadNavigation({
     /** container 是唯一允许执行滚动的 DOM 节点。 */
     const container = listRef.current;
     if (!container) return;
+    /** currentNavigation 同步包含入页后到达、尚未越过已读边界的消息。 */
+    const currentNavigation = getIMInitialUnreadNavigation(
+      [...messages].reverse(),
+      reportedReadSeqRef.current || lastReadSeq,
+    );
     /** nextID 按 shared 阅读顺序选择首个未达到可见阈值的身份。 */
-    const nextID = navigation.unreadMessageIDs.find(
+    const nextID = currentNavigation.unreadMessageIDs.find(
       messageID => !viewedUnreadIDsRef.current.has(messageID),
     );
     /** row 缺失表示当前 50 条窗口无法承载该未读定位。 */
@@ -283,68 +288,13 @@ export function useChatUnreadNavigation({
         behavior: 'smooth',
       });
     }
-  }, [listRef, navigation]);
+  }, [lastReadSeq, listRef, messages]);
 
   return {
     navigation,
-    remainingUnreadCount,
+    remainingUnreadCount: Math.max(0, unreadCount),
     initialPositioned: positionedConversationID === conversationID,
     scrollToNextUnread,
     requestLatestForOutgoingMessage,
   };
-}
-
-/** 首入页把最后已读消息贴近底边；无已读上下文时显示首条未读。 */
-function positionInitialUnreadBoundary(
-  container: HTMLElement,
-  navigation: IMInitialUnreadNavigation,
-): void {
-  /** lastReadRow 是 RN 初始未读区域之前的视觉锚点。 */
-  const lastReadRow = navigation.lastReadMessageID
-    ? findChatMessageRow(container, navigation.lastReadMessageID)
-    : null;
-  if (lastReadRow) {
-    container.scrollTop = Math.max(
-      0,
-      lastReadRow.offsetTop + lastReadRow.offsetHeight - container.clientHeight,
-    );
-    return;
-  }
-  /** firstUnreadRow 覆盖未读从窗口首条开始的短历史。 */
-  const firstUnreadRow = navigation.firstUnreadMessageID
-    ? findChatMessageRow(container, navigation.firstUnreadMessageID)
-    : null;
-  if (firstUnreadRow) {
-    container.scrollTop = Math.max(0, firstUnreadRow.offsetTop - 32);
-    return;
-  }
-  container.scrollTop = container.scrollHeight;
-}
-
-/** 按 client/server 双身份查找普通气泡或系统消息。 */
-function findChatMessageRow(
-  container: HTMLElement,
-  messageID: string,
-): HTMLElement | null {
-  return Array.from(
-    container.querySelectorAll<HTMLElement>('[data-client-message-id]'),
-  ).find(row =>
-    row.dataset.clientMessageId === messageID ||
-    row.dataset.serverMessageId === messageID,
-  ) ?? null;
-}
-
-/** 计算消息行在滚动容器中的可见比例。 */
-function getVisibleRatio(container: HTMLElement, row: HTMLElement): number {
-  /** containerRect 提供当前滚动视口边界。 */
-  const containerRect = container.getBoundingClientRect();
-  /** rowRect 提供消息实际布局边界。 */
-  const rowRect = row.getBoundingClientRect();
-  /** visibleHeight 拒绝视口外的负相交高度。 */
-  const visibleHeight = Math.max(
-    0,
-    Math.min(containerRect.bottom, rowRect.bottom) -
-      Math.max(containerRect.top, rowRect.top),
-  );
-  return rowRect.height > 0 ? visibleHeight / rowRect.height : 0;
 }

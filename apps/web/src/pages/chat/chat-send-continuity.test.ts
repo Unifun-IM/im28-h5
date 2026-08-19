@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import composerSource from './ChatComposer.tsx?raw';
 import inputRowSource from './ChatComposerInputRow.tsx?raw';
+import outgoingActionsSource from './useChatOutgoingMessageActions.ts?raw';
 import pageSource from './ChatPage.tsx?raw';
 import unreadSource from './useChatUnreadNavigation.ts?raw';
 
@@ -17,8 +18,17 @@ describe('chat send continuity', () => {
 
   it('requests latest positioning before the local sending entity enters state', () => {
     expect(pageSource).toContain('unreadNavigation.requestLatestForOutgoingMessage();');
+    expect(outgoingActionsSource).toContain(
+      'sendTextDocument(activeSync, conversationID, document, onSending)',
+    );
+    expect(outgoingActionsSource).toContain('mentions,\n          onSending,');
     expect(unreadSource).toContain('forceLatestAfterOutgoingRef.current = true');
     expect(unreadSource).toContain('shouldChatFollowLatest(');
+  });
+
+  it('renders the authoritative conversation unread count after realtime updates', () => {
+    expect(pageSource).toContain('unreadCount: conversation?.unreadCount ?? 0');
+    expect(unreadSource).toContain('remainingUnreadCount: Math.max(0, unreadCount)');
   });
 
   it('debounces read reporting until scrolling has stopped', () => {

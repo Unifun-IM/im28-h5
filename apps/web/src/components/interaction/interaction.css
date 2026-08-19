@@ -61,21 +61,21 @@
 }
 
 .im-toast-icon {
-  display: grid;
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
-  place-items: center;
-  border: 2px solid currentColor;
-  border-radius: 50%;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 18px;
+  display: block;
+  flex-grow: 0;
+  flex-shrink: 0;
 }
 
-.im-toast.is-default .im-toast-icon { display: none; }
-.im-toast.is-success .im-toast-icon { color: var(--im-status-success); }
-.im-toast.is-error .im-toast-icon { color: var(--im-status-danger); }
+.im-toast-icon > .rn-asset-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.im-toast-icon.is-default { color: var(--im-icon-inverse); }
+.im-toast-icon.is-success { color: var(--im-status-success); }
+.im-toast-icon.is-error { color: var(--im-status-danger); }
+.im-toast-icon.is-info { color: var(--im-status-info); }
 
 .im-message-enter {
   transform-origin: bottom center;

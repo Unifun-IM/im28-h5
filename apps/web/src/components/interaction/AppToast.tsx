@@ -8,9 +8,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import successIconURL from '../../assets/rn/assets/icons/imm28/check-circle.solid.svg';
+import infoIconURL from '../../assets/rn/assets/icons/imm28/info-circle.solid.svg';
+import warningIconURL from '../../assets/rn/assets/icons/imm28/warning-circle.solid.svg';
+import { RNAssetIcon } from '../RNAssetIcon.js';
 
-/** 全局 Toast 只区分当前 H5 已使用的默认、成功和失败语义。 */
-export type AppToastVariant = 'default' | 'success' | 'error';
+/** 全局 Toast 对齐 RN 的默认、成功、失败和信息语义。 */
+export type AppToastVariant = 'default' | 'success' | 'error' | 'info';
 
 /** Toast 可选项允许调用方覆盖默认展示时长。 */
 interface AppToastOptions {
@@ -23,6 +27,7 @@ interface AppToastApi {
   readonly show: (message: string, options?: AppToastOptions) => void;
   readonly success: (message: string, options?: AppToastOptions) => void;
   readonly error: (message: string, options?: AppToastOptions) => void;
+  readonly info: (message: string, options?: AppToastOptions) => void;
 }
 
 /** Provider 上下文同时暴露命令 API 和显式关闭能力。 */
@@ -46,11 +51,15 @@ interface AppToastProviderProps {
 /** 默认展示时长复用 RN 的 1600ms 交互节奏。 */
 const DEFAULT_TOAST_DURATION_MS = 1600;
 
+/** Toast 图标严格使用 RN 组件的 22px 几何。 */
+const RN_TOAST_ICON_SIZE_PX = 22;
+
 /** 未挂载 Provider 时保持命令安全无副作用。 */
 const EMPTY_TOAST_API: AppToastApi = {
   show: () => undefined,
   success: () => undefined,
   error: () => undefined,
+  info: () => undefined,
 };
 
 /** ToastContext 是应用内唯一提示浮层命令通道。 */
@@ -98,11 +107,12 @@ export function AppToastProvider({
     }, options.duration ?? defaultDuration);
   }, [clearHideTimer, defaultDuration]);
 
-  // toastApi 提供与 RN 一致的 success/error 语义入口。
+  // toastApi 提供与 RN 视觉体系一致的 success/error/info 语义入口。
   const toastApi = useMemo<AppToastApi>(() => ({
     show: showToast,
     success: (message, options = {}) => showToast(message, { ...options, type: 'success' }),
     error: (message, options = {}) => showToast(message, { ...options, type: 'error' }),
+    info: (message, options = {}) => showToast(message, { ...options, type: 'info' }),
   }), [showToast]);
 
   // contextValue 保持稳定，避免命令消费者因提示状态变化重渲染。
@@ -122,9 +132,7 @@ export function AppToastProvider({
             className={`im-toast is-${visibleToast.type}`}
             role={visibleToast.type === 'error' ? 'alert' : 'status'}
           >
-            <span className="im-toast-icon" aria-hidden="true">
-              {visibleToast.type === 'success' ? '✓' : visibleToast.type === 'error' ? '!' : ''}
-            </span>
+            <AppToastIcon type={visibleToast.type} />
             <span>{visibleToast.message}</span>
           </p>
         ) : null}
@@ -136,4 +144,27 @@ export function AppToastProvider({
 /** 页面通过统一 Hook 触发全局提示，不直接操作 Toast DOM。 */
 export function useAppToast(): AppToastContextValue {
   return useContext(AppToastContext);
+}
+
+/** 使用 RN 字节镜像资产呈现 Toast 图标，不由 CSS 重绘符号。 */
+function AppToastIcon({ type }: { readonly type: AppToastVariant }) {
+  /** iconURL 复用 RN Toast 的实心圆图标，并为 info 使用同源信息图标。 */
+  const iconURL = type === 'success'
+    ? successIconURL
+    : type === 'info'
+      ? infoIconURL
+      : warningIconURL;
+  return (
+    <span
+      className={`im-toast-icon is-${type}`}
+      style={{
+        width: RN_TOAST_ICON_SIZE_PX,
+        height: RN_TOAST_ICON_SIZE_PX,
+        flexBasis: RN_TOAST_ICON_SIZE_PX,
+      }}
+      aria-hidden="true"
+    >
+      <RNAssetIcon assetURL={iconURL} />
+    </span>
+  );
 }

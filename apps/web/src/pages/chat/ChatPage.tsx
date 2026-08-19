@@ -75,7 +75,7 @@ export function ChatPage() {
       ? { lastReadSeq: conversation?.lastReadSeq ?? '0' }
       : {}),
     messages,
-    hasUnreadMessages: (conversation?.unreadCount ?? 0) > 0,
+    unreadCount: conversation?.unreadCount ?? 0,
     ready: !focusedMessageID &&
       conversation?.conversationID === conversationID &&
       (messages.length > 0 || !loading),

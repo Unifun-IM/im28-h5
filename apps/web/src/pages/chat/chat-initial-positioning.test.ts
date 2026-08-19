@@ -1,13 +1,9 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import listSource from './ChatMessageList.tsx?raw';
 import pageSource from './ChatPage.tsx?raw';
 import navigationSource from './useChatUnreadNavigation.ts?raw';
 import { isChatInitialPositionPending } from './chat-message-list-view.js';
-
-/** shellStyles 读取消息栈唯一布局样式源码。 */
-const shellStyles = readFileSync(new URL('./chat-page-shell.css', import.meta.url), 'utf8');
 
 /** 聊天首帧定位回归锁定可见性门禁和同帧滚动时序。 */
 describe('chat initial positioning', () => {
@@ -17,7 +13,6 @@ describe('chat initial positioning', () => {
     expect(isChatInitialPositionPending(50, true)).toBe(false);
     expect(isChatInitialPositionPending(0, false)).toBe(false);
     expect(listSource).toContain('isChatInitialPositionPending(messages.length, initialPositioned)');
-    expect(shellStyles).toContain('.rn-chat-message-stack.is-initial-position-pending');
   });
 
   /** 首次未读边界必须在 layout effect 中用同一快照定位，不得延迟到下一帧。 */

@@ -1,3 +1,5 @@
+import type { Message } from '@im28/im-sdk/web';
+
 /** H5 可见未读提交门禁的纯输入。 */
 export interface ChatUnreadReadGateInput {
   readonly positioned: boolean;
@@ -18,6 +20,12 @@ export interface ChatUnreadLatestEdgeInput {
 export interface ChatUnreadRowReadableInput {
   readonly atLatestEdge: boolean;
   readonly visibleRatio: number;
+}
+
+/** 消息窗口更新后只暴露最新端新增方向，排除顶部历史分页。 */
+export interface ChatLatestMessageDelta {
+  readonly hasIncoming: boolean;
+  readonly hasOutgoing: boolean;
 }
 
 /** 停滚 160ms 后再上报已读，合并触摸惯性滚动产生的高频事件。 */
@@ -62,4 +70,31 @@ export function shouldChatFollowLatest(
   outgoingMessageRequested: boolean,
 ): boolean {
   return atLatestEdge || outgoingMessageRequested;
+}
+
+/** 从 newest-first 窗口识别首个旧消息之前的真实新增消息。 */
+export function getChatLatestMessageDelta(
+  previousMessages: readonly Message[],
+  nextMessages: readonly Message[],
+): ChatLatestMessageDelta {
+  if (previousMessages.length === 0 || nextMessages.length === 0) {
+    return { hasIncoming: false, hasOutgoing: false };
+  }
+  /** previousMessageIDs 只使用列表稳定 key，状态替换不视为新消息。 */
+  const previousMessageIDs = new Set(
+    previousMessages.map(message => message.clientMsgID),
+  );
+  /** firstPreviousIndex 之前才是最新端增量，之后是历史或已有窗口。 */
+  const firstPreviousIndex = nextMessages.findIndex(message =>
+    previousMessageIDs.has(message.clientMsgID),
+  );
+  if (firstPreviousIndex <= 0) {
+    return { hasIncoming: false, hasOutgoing: false };
+  }
+  /** latestMessages 保守拒绝完全换窗，避免搜索定位误判为实时消息。 */
+  const latestMessages = nextMessages.slice(0, firstPreviousIndex);
+  return {
+    hasIncoming: latestMessages.some(message => message.direction === 'incoming'),
+    hasOutgoing: latestMessages.some(message => message.direction === 'outgoing'),
+  };
 }

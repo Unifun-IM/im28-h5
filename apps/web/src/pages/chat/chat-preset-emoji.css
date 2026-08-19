@@ -51,6 +51,12 @@
   pointer-events: none;
 }
 
+.rn-chat-composer-rich-preview .rn-preset-emoji-image {
+  width: 1em;
+  height: 1em;
+  flex-basis: 1em;
+}
+
 .rn-chat-composer textarea {
   position: relative;
   z-index: 1;
